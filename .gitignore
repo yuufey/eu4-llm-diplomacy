@@ -1,0 +1,9 @@
+__pycache__/
+*.pyc
+work/backup/
+work/runtime/
+.env
+local.env
+config.local.ps1
+dist/
+/work/native/automatic-war-script.path

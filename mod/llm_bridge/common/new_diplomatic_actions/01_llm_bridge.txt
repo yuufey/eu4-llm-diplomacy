@@ -1,0 +1,63 @@
+# ROOT is actor; FROM is recipient. Submission is unilateral and does not settle war.
+llm_submit_white_peace = {
+    category = influence
+    alert_index = 2
+    alert_tooltip = llm_submit_white_peace_alert_tooltip
+    require_acceptance = no
+    is_visible = {
+        tag = ENG
+        ai = no
+        war_with = FRA
+        FROM = { tag = FRA ai = yes has_country_flag = llm_bridge_enabled }
+    }
+    is_allowed = {
+        FROM = { NOT = { has_country_flag = llm_peace_pending_eng } }
+    }
+    on_accept = {
+        FROM = { set_country_flag = llm_peace_pending_eng }
+        log = "EU4LLM_PEACE|OFFER|peace_eng_01|ENG|FRA|white_peace"
+    }
+    on_decline = { }
+    ai_will_do = { always = no }
+}
+
+# The player accepts an existing France-originated external proposal.
+llm_accept_white_peace = {
+    category = influence
+    alert_index = 2
+    alert_tooltip = llm_accept_white_peace_alert_tooltip
+    require_acceptance = no
+    is_visible = {
+        tag = ENG
+        ai = no
+        war_with = FRA
+        FROM = {
+            tag = FRA
+            ai = yes
+            has_country_flag = llm_bridge_enabled
+            has_country_flag = llm_peace_pending_fra
+        }
+    }
+    is_allowed = {
+        war_with = FRA
+        FROM = { has_country_flag = llm_peace_pending_fra }
+    }
+    on_accept = {
+        FROM = {
+            if = {
+                limit = { war_with = ENG has_country_flag = llm_peace_pending_fra }
+                white_peace = ENG
+                if = {
+                    limit = { NOT = { war_with = ENG } }
+                    clr_country_flag = llm_peace_pending_fra
+                    clr_country_flag = llm_peace_pending_eng
+                    log = "EU4LLM|ACK|peace_fra_ui_accept_01|applied"
+                }
+                else = { log = "EU4LLM|ACK|peace_fra_ui_accept_01|rejected" }
+            }
+            else = { log = "EU4LLM|ACK|peace_fra_ui_accept_01|rejected" }
+        }
+    }
+    on_decline = { }
+    ai_will_do = { always = no }
+}

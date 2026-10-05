@@ -1,0 +1,11 @@
+﻿l_english:
+ llm_submit_white_peace:0 "LLM: Propose White Peace"
+ llm_submit_white_peace_title:0 "LLM: Propose White Peace"
+ llm_submit_white_peace_desc:0 "Submit a white-peace proposal to France's external LLM. The war continues until acceptance."
+ llm_submit_white_peace_tooltip:0 "Submit a white-peace proposal for external review."
+ llm_submit_white_peace_alert_tooltip:0 "External white-peace proposal"
+ llm_accept_white_peace:0 "LLM: Accept White Peace"
+ llm_accept_white_peace_title:0 "LLM: Accept White Peace"
+ llm_accept_white_peace_desc:0 "Accept France's pending external white-peace proposal and end the war."
+ llm_accept_white_peace_tooltip:0 "Accept the pending white peace."
+ llm_accept_white_peace_alert_tooltip:0 "Accept external white peace"

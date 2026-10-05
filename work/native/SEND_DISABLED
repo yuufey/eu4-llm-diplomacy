@@ -1,0 +1,2 @@
+Native white-peace receipt succeeded but subsequent UI/acceptance crashed on 2026-10-04.
+Do not load the sender build or submit further requests until the invalid offer state is diagnosed and repaired.

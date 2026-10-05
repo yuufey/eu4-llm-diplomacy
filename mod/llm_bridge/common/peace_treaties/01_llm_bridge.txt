@@ -1,0 +1,33 @@
+# Native peace-screen test. THIS = taker, FROM = giver.
+# The engine evaluates the proposal; this effect only runs on settlement.
+llm_test_pay_10 = {
+    category = 6
+    power_cost_base = 1.0
+    prestige_base = 0.0
+    ae_base = 0.0
+    warscore_cost = { no_provinces = 10.0 }
+    requires_is_allowed = no
+    is_visible = {
+        OR = {
+            AND = { tag = ENG FROM = { tag = FRA } }
+            AND = { tag = FRA FROM = { tag = ENG } }
+        }
+    }
+    is_allowed = { FROM = { treasury = 10 } }
+    effect = {
+        if = {
+            limit = { FROM = { treasury = 10 } }
+            FROM = {
+                add_treasury = -10
+                set_country_flag = llm_test_payment_paid
+            }
+            add_treasury = 10
+            set_country_flag = llm_test_payment_received
+            log = "EU4LLM|ACK|treaty_pay10_01|applied"
+        }
+        else = { log = "EU4LLM|ACK|treaty_pay10_01|rejected" }
+    }
+    ai_weight = {
+        export_to_variable = { variable_name = ai_value value = 10 }
+    }
+}

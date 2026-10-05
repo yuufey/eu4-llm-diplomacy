@@ -1,0 +1,4 @@
+﻿l_english:
+ llm_test_pay_10_desc:0 "The paying country transfers 10 ducats to the receiving country. Native peace-screen integration test."
+ CB_ALLOWED_llm_test_pay_10:0 "Test payment of 10 ducats"
+ PEACE_llm_test_pay_10:0 "LLM test: Payment of 10 ducats"

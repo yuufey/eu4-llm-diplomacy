@@ -1,0 +1,14 @@
+{
+  "version": "0.2.2-experimental",
+  "mode": "PeaceAuthorityLock + AuthorizedNativePeaceSend",
+  "dll": "eu4_bridge_authorized_peace_v7.dll",
+  "dll_sha256": "f989a4de0ba60c1285907752179dd9626aea2611ed1a1a42771410bf0952fad3",
+  "game_sha256": "b23fa0e1f698d31b01cdd1c3817a675805d8c6286cb66f9c231e6e2a42544d77",
+  "game_version": "1.37.4",
+  "capabilities": [
+    "Blocks unauthorized verified native peace actions involving FRA",
+    "Sends an authorized native FRA-to-ENG white peace",
+    "Sends an authorized native FRA-to-ENG gold peace clause"
+  ],
+  "validation": "v7 white peace and gold settlement were validated locally through save and reload; the portable loading entry has not been tested on another computer. Other diplomacy is not locked."
+}

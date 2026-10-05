@@ -1,0 +1,12 @@
+namespace = llm_bridge
+country_event = {
+    id = llm_bridge.1
+    title = llm_bridge_title
+    desc = llm_bridge_desc
+    picture = DIPLOMACY_eventPicture
+    hidden = yes
+    is_triggered_only = yes
+    trigger = { tag = FRA ai = yes has_country_flag = llm_bridge_enabled }
+    immediate = { llm_bridge_snapshot = yes }
+    option = { name = OK }
+}

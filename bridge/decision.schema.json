@@ -1,0 +1,26 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "EU4LLM Codex bridge decision",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "reply": {
+      "type": "string",
+      "description": "A concise response to the player's diplomatic message."
+    },
+    "strategy": {
+      "type": "string",
+      "description": "A short explanation of the proposed strategy."
+    },
+    "action": {
+      "type": "string",
+      "enum": ["hold", "improve_relations", "declare_war"]
+    },
+    "target": {
+      "type": "string",
+      "enum": ["ENG"]
+    }
+  },
+  "required": ["reply", "strategy", "action", "target"]
+}
+

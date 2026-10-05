@@ -1,0 +1,17 @@
+llm_bridge_snapshot = {
+    log = "EU4LLM|BEGIN|live|FRA"
+    export_to_variable = { which = llm_treasury value = treasury }
+    export_to_variable = { which = llm_manpower value = manpower }
+    export_to_variable = { which = llm_stability value = stability }
+    log = "EU4LLM|FIELD|live|treasury|[This.llm_treasury.GetValue]"
+    log = "EU4LLM|FIELD|live|manpower_raw|[This.llm_manpower.GetValue]"
+    log = "EU4LLM|FIELD|live|stability|[This.llm_stability.GetValue]"
+    log = "EU4LLM|FIELD|live|year|[GetYear]"
+    if = { limit = { ai = yes } log = "EU4LLM|FIELD|live|ai|1" }
+    else = { log = "EU4LLM|FIELD|live|ai|0" }
+    if = { limit = { is_at_war = yes } log = "EU4LLM|FIELD|live|war|1" }
+    else = { log = "EU4LLM|FIELD|live|war|0" }
+    if = { limit = { has_country_flag = llm_diplomacy_locked } log = "EU4LLM|FIELD|live|locked|1" }
+    else = { log = "EU4LLM|FIELD|live|locked|0" }
+    log = "EU4LLM|END|live"
+}
