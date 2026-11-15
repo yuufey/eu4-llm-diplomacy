@@ -52,20 +52,47 @@ try {
 
     $comSpec = [Environment]::GetEnvironmentVariable('ComSpec')
     if (-not $comSpec) { $comSpec = Join-Path $env:SystemRoot 'System32\cmd.exe' }
-    $command = ''
+    $workingDirectory = (Get-Location).Path
     if ($vcvars64) {
-        $command = 'call "{0}" >nul' -f $vcvars64
-        $command += "`r`nif errorlevel 1 exit /b 11"
-        $command += "`r`n"
+        $environmentInfo = New-Object System.Diagnostics.ProcessStartInfo
+        $environmentInfo.FileName = $comSpec
+        $environmentInfo.Arguments = '/d /c call "{0}" >nul & set' -f $vcvars64
+        $environmentInfo.UseShellExecute = $false
+        $environmentInfo.RedirectStandardOutput = $true
+        $environmentInfo.RedirectStandardError = $true
+        $environmentInfo.WorkingDirectory = $workingDirectory
+        $environmentProcess = [System.Diagnostics.Process]::Start($environmentInfo)
+        $environmentOutput = $environmentProcess.StandardOutput.ReadToEnd()
+        $environmentErrors = $environmentProcess.StandardError.ReadToEnd()
+        $environmentProcess.WaitForExit()
+        if ($environmentProcess.ExitCode -ne 0) {
+            throw "vcvars64.bat failed with exit code $($environmentProcess.ExitCode): $environmentErrors"
+        }
+
+        $vcEnvironment = @{}
+        foreach ($line in ($environmentOutput -split "`r?`n")) {
+            $separator = $line.IndexOf('=')
+            if ($separator -le 0) { continue }
+            $name = $line.Substring(0, $separator)
+            if ($name -match '^[A-Za-z_][A-Za-z0-9_]*$') {
+                $vcEnvironment[$name] = $line.Substring($separator + 1)
+            }
+        }
+        if ([string]::IsNullOrWhiteSpace($vcEnvironment['VSINSTALLDIR'])) {
+            throw 'vcvars64.bat did not establish VSINSTALLDIR.'
+        }
+        foreach ($name in $vcEnvironment.Keys) {
+            [Environment]::SetEnvironmentVariable($name, $vcEnvironment[$name], 'Process')
+        }
     }
-    $command += 'call "{0}" __codex_internal_msvc_build "{1}"' -f `
+
+    $command = 'call "{0}" __codex_internal_msvc_build "{1}"' -f `
         [IO.Path]::GetFullPath($BuildScript), $OutputDirectory
     $startInfo = New-Object System.Diagnostics.ProcessStartInfo
     $startInfo.FileName = $comSpec
     $startInfo.Arguments = '/d /c ' + $command
     $startInfo.UseShellExecute = $false
-    $startInfo.WorkingDirectory = (Get-Location).Path
-    [Console]::Out.WriteLine('run-msvc-build child command: ' + $startInfo.Arguments)
+    $startInfo.WorkingDirectory = $workingDirectory
     $process = [System.Diagnostics.Process]::Start($startInfo)
     $process.WaitForExit()
     exit $process.ExitCode
