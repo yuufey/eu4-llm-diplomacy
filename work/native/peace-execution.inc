@@ -257,10 +257,12 @@ static void execution_peace_submission(const ExecutionBinding& binding,
         snprintf(message,sizeof(message),
             "{\"event\":\"native_peace_inbound_submission_result\",\"family\":\"peace\","
             "\"session_id\":\"%.27s\",\"request_id\":\"%.64s\",\"action_id\":\"peace_offer\","
-            "\"actor\":\"%.3s\",\"recipient\":\"FRA\",\"decision_country\":\"FRA\",\"phase\":\"%.6s\","
+            "\"actor\":\"%.3s\",\"recipient\":\"%.3s\",\"decision_country\":\"%.3s\",\"phase\":\"%.6s\"," 
             "\"date_raw\":%d,\"submitted\":true,\"transport_verified\":true,\"request_binding_verified\":true}\n",
             binding.response_request.session_id,binding.response_request.request_id,
-            binding.response_request.original_actor,binding.response_request.decision,binding.response_request.date_raw);
+            binding.response_request.original_actor,binding.response_request.decision_country,
+            binding.response_request.decision_country,binding.response_request.decision,
+            binding.response_request.date_raw);
         line(message); return;
     }
     execution_peace_emit_submission(binding.peace_request,true,"NATIVE_ENTRY_VERIFIED",execution_header(entry));
@@ -272,17 +274,19 @@ static void execution_peace_inbound_unknown(const ResponseRequest& request,
     snprintf(message,sizeof(message),
         "{\"event\":\"native_peace_inbound_response_result\",\"family\":\"peace\","
         "\"session_id\":\"%.27s\",\"request_id\":\"%.64s\",\"action_id\":\"peace_offer\","
-        "\"actor\":\"%.3s\",\"recipient\":\"FRA\",\"decision_country\":\"FRA\",\"phase\":\"%.6s\","
+        "\"actor\":\"%.3s\",\"recipient\":\"%.3s\",\"decision_country\":\"%.3s\",\"phase\":\"%.6s\"," 
         "\"date_raw\":%d,\"native_state\":%d,\"outcome\":\"unknown\",\"war_before\":null,\"war_after\":%s,"
         "\"war_state_verified\":false,\"response_verified\":false,\"request_binding_verified\":false,"
         "\"pending_removed\":%s,\"terms_verified\":false,\"peace_context\":null}\n",
-        request.session_id,request.request_id,request.original_actor,request.decision,request.date_raw,state,
+        request.session_id,request.request_id,request.original_actor,request.decision_country,
+        request.decision_country,request.decision,request.date_raw,state,
         war_after?"true":"false",pending_removed?"true":"false");
     line(message);
 }
 
 static void execution_peace_response(const ExecutionBinding& binding,
-    int32_t state,bool war_after,bool verified,bool pending_removed) noexcept {
+    int32_t state,bool war_after,bool verified,bool pending_removed,
+    const ExecutionGameDate* observed_begin=nullptr) noexcept {
     const bool bound=binding.consumed && binding.transport_verified && !binding.invalidated;
     const bool baseline=binding.alliance_before_verified && binding.alliance_before;
     if (binding.inbound_response_request) {
@@ -302,17 +306,20 @@ static void execution_peace_response(const ExecutionBinding& binding,
         const int written=snprintf(message.text,message.capacity,
             "{\"event\":\"native_peace_inbound_response_result\",\"family\":\"peace\","
             "\"session_id\":\"%.27s\",\"request_id\":\"%.64s\",\"action_id\":\"peace_offer\","
-            "\"actor\":\"%.3s\",\"recipient\":\"FRA\",\"decision_country\":\"FRA\",\"phase\":\"%.6s\","
+            "\"actor\":\"%.3s\",\"recipient\":\"%.3s\",\"decision_country\":\"%.3s\",\"phase\":\"%.6s\"," 
             "\"date_raw\":%d,\"native_state\":%d,\"outcome\":\"%s\",\"war_before\":%s,\"war_after\":%s,"
             "\"war_state_verified\":%s,\"response_verified\":%s,\"request_binding_verified\":%s,"
             "\"execution_verified\":%s,\"pending_removed\":%s,\"terms_verified\":%s,\"peace_context\":%s,\"effects\":%s}\n",
             binding.response_request.session_id,binding.response_request.request_id,
-            binding.response_request.original_actor,binding.response_request.decision,binding.response_request.date_raw,
+            binding.response_request.original_actor,binding.response_request.decision_country,
+            binding.response_request.decision_country,binding.response_request.decision,
+            binding.response_request.date_raw,
             state,accepted?"accepted":rejected?"rejected":"unknown",baseline?"true":"false",war_after?"true":"false",
             verified && binding.alliance_before_verified?"true":"false",response?"true":"false",bound?"true":"false",
             accepted || rejected?"true":"false",pending_removed?"true":"false",
             terms_verified?"true":"false",context.json,effects.text());
-        if (written>=0 && static_cast<size_t>(written)<message.capacity) line(message.text);
+        if (written>=0 && static_cast<size_t>(written)<message.capacity)
+            execution_result_line(message.text,message.capacity,execution_result_game_date(observed_begin));
         return;
     }
     const bool settled=verified && bound && baseline && !war_after && (state==0 || state==2);
@@ -336,7 +343,8 @@ static void execution_peace_response(const ExecutionBinding& binding,
         state,outcome,binding.alliance_before?"true":"false",war_after?"true":"false",
         verified?"true":"false",bound?"true":"false",settled?"true":"false",
         settled && (binding.peace_request.white_peace || effects.terms_verified)?"true":"false",effects.text());
-    if (written>=0 && static_cast<size_t>(written)<message.capacity) line(message.text);
+    if (written>=0 && static_cast<size_t>(written)<message.capacity)
+        execution_result_line(message.text,message.capacity,execution_result_game_date(observed_begin));
 }
 
 static void execution_peace_pending_results() noexcept {
@@ -380,6 +388,10 @@ static void execution_peace_tick() noexcept {
     const uint64_t now=(ticks-epoch)/10000u;
     if (request.expiry_epoch_ms<=now) { fail("PEACE_EXECUTION_EXPIRED"); return; }
     if (request.expiry_epoch_ms-now>10000u) { fail("PEACE_EXECUTION_EXPIRY_WINDOW"); return; }
+    std::uint64_t controlled_actor=0;
+    if (!observation_control_country_tag(request.actor,controlled_actor)) {
+        fail("PEACE_EXECUTION_ACTOR_NOT_CONTROLLED"); return;
+    }
     uintptr_t game=0; int32_t date=0;
     if (!read(base+0x233fe58,game) || !read(game+0x1dd0,date)) {
         fail("PEACE_EXECUTION_GAME_CONTEXT_UNAVAILABLE"); return;
@@ -577,7 +589,7 @@ static bool execution_peace_country_inbound_fixture(const char* wire,DWORD size)
     const auto& scenario=scenarios[selected];
     uint64_t actor=0,recipient=0; uintptr_t country=0;
     PeaceWarReferenceList pair{};
-    const PeaceWarRegistryEntry* war=nullptr;
+    std::optional<PeaceWarRegistryEntry> war;
     if (alliance_query_country(scenario.actor,actor) && alliance_query_country("FRA",recipient)
         && peace_query_country_pointer(actor,country)
         && peace_query_pair_references(country,static_cast<unsigned>((recipient>>32)&0xffffu),pair)
@@ -643,7 +655,7 @@ static bool execution_peace_inbound_fixture(const char* wire,DWORD size) noexcep
         }
         uint64_t actor=0,recipient=0; uintptr_t country=0;
         PeaceWarReferenceList pair{};
-        const PeaceWarRegistryEntry* selected=nullptr;
+        std::optional<PeaceWarRegistryEntry> selected;
         if (alliance_query_country("ENG",actor) && alliance_query_country("FRA",recipient)
             && peace_query_country_pointer(actor,country)
             && peace_query_pair_references(country,static_cast<unsigned>((recipient>>32)&0xffffu),pair)
@@ -690,7 +702,7 @@ static bool execution_peace_inbound_fixture(const char* wire,DWORD size) noexcep
         }
         uint64_t actor=0,recipient=0; uintptr_t country=0;
         PeaceWarReferenceList pair{};
-        const PeaceWarRegistryEntry* selected=nullptr;
+        std::optional<PeaceWarRegistryEntry> selected;
         if (alliance_query_country("ENG",actor) && alliance_query_country("FRA",recipient)
             && peace_query_country_pointer(actor,country)
             && peace_query_pair_references(country,static_cast<unsigned>((recipient>>32)&0xffffu),pair)
@@ -738,7 +750,7 @@ static bool execution_peace_inbound_fixture(const char* wire,DWORD size) noexcep
         }
         uint64_t actor=0,recipient=0; uintptr_t country=0;
         PeaceWarReferenceList pair{};
-        const PeaceWarRegistryEntry* selected=nullptr;
+        std::optional<PeaceWarRegistryEntry> selected;
         if (alliance_query_country("ENG",actor) && alliance_query_country("FRA",recipient)
             && peace_query_country_pointer(actor,country)
             && peace_query_pair_references(country,static_cast<unsigned>((recipient>>32)&0xffffu),pair)
@@ -824,7 +836,7 @@ static bool execution_peace_inbound_fixture(const char* wire,DWORD size) noexcep
     uint64_t actor=0,recipient=0; uintptr_t country=0;
     const char* proposer=bur_white?"BUR":religion_small_offer?"LEI":"ENG";
     PeaceWarReferenceList pair{};
-    const PeaceWarRegistryEntry* selected=nullptr;
+    std::optional<PeaceWarRegistryEntry> selected;
     if (alliance_query_country(proposer,actor) && alliance_query_country("FRA",recipient)
         && peace_query_country_pointer(actor,country)
         && peace_query_pair_references(country,static_cast<unsigned>((recipient>>32)&0xffffu),pair)

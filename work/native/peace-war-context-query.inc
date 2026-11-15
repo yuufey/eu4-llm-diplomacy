@@ -6,15 +6,7 @@
 // participant vectors, and keeps the returned address private.  It never
 // treats the address as a public ID and never modifies the offer or war.
 
-struct PeaceWarSideMembers {
-    uint64_t handles[256]{};
-    char tags[256][4]{};
-    unsigned count=0;
-    bool readable=false;
-    bool complete=false;
-    bool tags_complete=false;
-    bool canonical=true;
-};
+#include "peace-war-side-members.inc"
 
 struct PeaceWarOfferContextCapture {
     uint64_t actor=0;
@@ -55,96 +47,6 @@ static uint64_t peace_offer_payer(uint64_t actor,uint64_t recipient,
     return demand?recipient:actor;
 }
 
-static bool peace_war_capture_vector(uintptr_t object,uintptr_t begin_offset,
-    uintptr_t end_offset,uintptr_t capacity_offset,PeaceWarSideMembers& output) noexcept {
-    output=PeaceWarSideMembers{};
-    uintptr_t begin=0,end=0,capacity=0;
-    if (!object || !read(object+begin_offset,begin)
-        || !read(object+end_offset,end) || !read(object+capacity_offset,capacity)
-        || end<begin || capacity<end || (end-begin)%8) return false;
-    const uintptr_t bytes=end-begin;
-    if (bytes/8>256 || (bytes && !begin)) return false;
-    output.readable=true;
-    output.count=static_cast<unsigned>(bytes/8);
-    for (unsigned i=0;i<output.count;++i) {
-        uint64_t handle=0; uintptr_t country=0;
-        if (!read(begin+static_cast<uintptr_t>(i)*8,handle)
-            || !handle || !peace_query_country_pointer(handle,country)) {
-            output.canonical=false;
-            output.complete=false;
-            return false;
-        }
-        output.handles[i]=handle;
-        const unsigned char tag0=static_cast<unsigned char>(handle&0xffu);
-        const unsigned char tag1=static_cast<unsigned char>((handle>>8)&0xffu);
-        const unsigned char tag2=static_cast<unsigned char>((handle>>16)&0xffu);
-        const auto ascii_alnum=[](unsigned char value) noexcept {
-            return (value>='A' && value<='Z')
-                || (value>='a' && value<='z')
-                || (value>='0' && value<='9');
-        };
-        if (!ascii_alnum(tag0) || !ascii_alnum(tag1) || !ascii_alnum(tag2)) {
-            output.canonical=false;
-            output.complete=false;
-            output.tags_complete=false;
-            return false;
-        }
-        output.tags[i][0]=static_cast<char>(tag0);
-        output.tags[i][1]=static_cast<char>(tag1);
-        output.tags[i][2]=static_cast<char>(tag2);
-        output.tags[i][3]=0;
-    }
-    output.tags_complete=true;
-    output.complete=true;
-    return true;
-}
-
-static bool peace_war_side_contains(const PeaceWarSideMembers& side,
-    uint64_t handle) noexcept {
-    for (unsigned i=0;i<side.count;++i)
-        if (side.handles[i]==handle) return true;
-    return false;
-}
-
-static bool peace_war_side_contains_slot(const PeaceWarSideMembers& side,
-    uint64_t handle) noexcept {
-    const unsigned slot=static_cast<unsigned>((handle>>32)&0xffffu);
-    for (unsigned i=0;i<side.count;++i)
-        if (static_cast<unsigned>((side.handles[i]>>32)&0xffffu)==slot) return true;
-    return false;
-}
-
-static bool peace_war_members_equal(const PeaceWarSideMembers& left,
-    const PeaceWarSideMembers& right) noexcept {
-    if (!left.readable || !left.complete || !right.readable || !right.complete
-        || left.count!=right.count) return false;
-    for (unsigned i=0;i<left.count;++i)
-        if (left.handles[i]!=right.handles[i]) return false;
-    return true;
-}
-
-static bool peace_war_side_tags_json(const PeaceWarSideMembers& side,
-    char* output,size_t capacity) noexcept {
-    if (!output || !capacity || !side.tags_complete || side.count>256) return false;
-    size_t used=0;
-    if (used+1>=capacity) return false;
-    output[used++]='[';
-    for (unsigned i=0;i<side.count;++i) {
-        if (i && used+1>=capacity) return false;
-        if (i) output[used++]=',';
-        if (used+5>=capacity) return false;
-        output[used++]='"';
-        output[used++]=side.tags[i][0];
-        output[used++]=side.tags[i][1];
-        output[used++]=side.tags[i][2];
-        output[used++]='"';
-    }
-    if (used+2>capacity) return false;
-    output[used++]=']';
-    output[used]=0;
-    return true;
-}
-
 static bool peace_war_capture_offer_context(const void* offer_object,
     uint64_t actor,uint64_t recipient,PeaceWarOfferContextCapture& output,
     bool demand=true) noexcept {
@@ -174,10 +76,11 @@ static bool peace_war_capture_offer_context(const void* offer_object,
     if (!war) return false;
     output.war_context_resolved=true;
 
-    // 0x97bd10 uses begin/end; the capacity words are checked here as part of
-    // the three-pointer vector identity before any element is consumed.
-    if (!peace_war_capture_vector(war,0x48,0x50,0x58,output.side_a)
-        || !peace_war_capture_vector(war,0x78,0x80,0x88,output.side_b)) return false;
+    // 0x97bd10 uses begin/end; capture both vectors twice so a concurrent
+    // native update cannot be presented as a complete participant list.
+    const char* participant_reason=nullptr;
+    if (!peace_war_capture_vectors_stable(war,0x48,0x50,0x58,0x78,0x80,
+        0x88,output.side_a,output.side_b,participant_reason)) return false;
 
     const bool actor_a=peace_war_side_contains(output.side_a,actor);
     const bool actor_b=peace_war_side_contains(output.side_b,actor);

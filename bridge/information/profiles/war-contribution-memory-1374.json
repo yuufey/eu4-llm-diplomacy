@@ -1,0 +1,44 @@
+{
+  "schema": "information.war_contribution_memory.v1",
+  "game_version": "1.37.4",
+  "game_sha256": "b23fa0e1f698d31b01cdd1c3817a675805d8c6286cb66f9c231e6e2a42544d77",
+  "layout": {
+    "participation_points_offset": "0x18"
+  },
+  "code_guards": [
+    {
+      "name": "native_participation_share",
+      "rva": "0xd95820",
+      "end_rva_exclusive": "0xd95987",
+      "bytes": "48895c240848896c2410488974241848897c2420415541564157488b714833c04c8b59504533c94c8bf2488bf94c8bd6493bf37420498bd848c1eb200f1f4000498b0a48c1e920663bcb74094983c2084d3bd375eb4c8bafc00000004d3bd3488bafc800000048b9398ee3388ee3388e410f95c7492bed48c1fd04480fafe94863fd85ed0f8e98000000498d5d186690488bce493bf3741e4c8b53f849c1ea20488b1148c1ea2066413bd274094883c108493bcb75ea493bcb0f95c1443af9751b488b53f8498bc848c1e92048c1ea20663bd18b0b750203c14403c94881c3900000004883ef0175a74585c97e348d887393180081f90d583900770f69c0e80300009941f7f9418906eb3e4863c84869c1e80300004963c9489948f7f9418906eb274885ed741b498b451048c1e82049c1e82066443bc0750941c706e8030000eb0741c70600000000488b5c2420498bc6488b6c2428488b742430488b7c2438415f415e415dc3",
+      "sha256": "261c296d6b5157ca2de52f804b24b1b81ebf1b3374aa1c0766b75815d03ebc71",
+      "aslr_invariant": true,
+      "relocation_sites": []
+    },
+    {
+      "name": "war_overview_participation_read",
+      "rva": "0x148c115",
+      "end_rva_exclusive": "0x148c130",
+      "bytes": "4c8b4668488d95b0040000498bcde8f89690ff8b00898648020000",
+      "sha256": "b49eba753b040ccd76f8860aca8824a0aa639527844b17bfbb2ee96590b59078",
+      "aslr_invariant": true,
+      "relocation_sites": []
+    },
+    {
+      "name": "war_overview_participation_binding",
+      "rva": "0x148c54b",
+      "end_rva_exclusive": "0x148c571",
+      "bytes": "488b4e40488b01488d150fd28f00ff90980000004533c0488d9650020000488bc8e81fe70900",
+      "sha256": "3f15247f0db189e130b4612830c1b411c085d1fcc87199b06e740d5ab3eac2e7",
+      "aslr_invariant": true,
+      "relocation_sites": []
+    }
+  ],
+  "evidence": {
+    "directory": "work/runtime/information-war-contribution-20261115-001",
+    "getter_rva": "0xd95820",
+    "ui_function_rva": "0x148b610",
+    "ui_control": "participationValue",
+    "scope": "native per-side share for current active visible participants"
+  }
+}

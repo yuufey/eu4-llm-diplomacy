@@ -28,10 +28,22 @@
 
 namespace bridge_entry_patch {
 
+#if defined(INFORMATION_BATTLE_RETREAT) && defined(INFORMATION_BATTLE_NAME_HANDOFF)
+static constexpr unsigned kMaxTargets=10;
+#elif defined(INFORMATION_BATTLE_RETREAT)
+static constexpr unsigned kMaxTargets=9;
+#elif defined(INFORMATION_BATTLE_NAME_HANDOFF)
+static constexpr unsigned kMaxTargets=7;
+#elif defined(INFORMATION_BATTLE_GATE_TRACE)
+static constexpr unsigned kMaxTargets=6;
+#elif defined(INFORMATION_BATTLE_NATIVE_TEXT)
+static constexpr unsigned kMaxTargets=5;
+#else
 static constexpr unsigned kMaxTargets=4;
+#endif
 static constexpr unsigned kMaxPatchBytes=32;
 static constexpr unsigned kMaxRegistryTargets=64;
-static constexpr unsigned kMaxPages=8;       // 2 pages per target at most.
+static constexpr unsigned kMaxPages=2*kMaxTargets;
 static constexpr unsigned kMaxThreads=2048;  // bounded snapshot/pending store.
 static constexpr unsigned kMaxErrorRecords=256;
 

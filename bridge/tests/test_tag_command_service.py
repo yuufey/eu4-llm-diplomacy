@@ -46,8 +46,11 @@ class TagCommandHTTPTests(unittest.TestCase):
         self.assertTrue(value["reused"])
         self.assertEqual(len(list(self.directory.glob("*.request"))),1)
     def test_http_missing_token_cannot_publish(self):
-        status,_ = self.call("POST","/native/v1/commands",self.command,False)
-        self.assertEqual(status,403)
+        for attempt in range(8):
+            with self.subTest(attempt=attempt):
+                status,value = self.call("POST","/native/v1/commands",self.command,False)
+                self.assertEqual(status,403)
+                self.assertEqual(value["error"], "unauthorized")
         self.assertFalse(list(self.directory.glob("*.request")))
     def test_http_unknown_action_cannot_publish(self):
         status,_ = self.call("POST","/native/v1/commands",dict(self.command,action="unknown"))

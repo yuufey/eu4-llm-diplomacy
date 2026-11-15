@@ -19,16 +19,25 @@ static bool automated_control_start(const wchar_t* directory) {
     if (swprintf(control_request,MAX_PATH,L"%ls\\game-control.request",directory)<0) return false;
     return GetFileAttributesW(control_request)==INVALID_FILE_ATTRIBUTES || DeleteFileW(control_request);
 }
-static bool control_call(int save,const char* argument) {
+static bool control_call(int operation,const char* argument) {
     if (!control_ready()) return false;
     uintptr_t entry=0;
-    uintptr_t slot=save==2?0x1fc7558:save?0x1fc74b8:0x1fce998;
-    uintptr_t function=save==2?0xe7ac80:save?0xe7b250:0xe91210;
+    uintptr_t slot=0x1fce998,function=0xe91210;
+    const char* command=argument;
+    if (operation==1) {
+        slot=0x1fc74b8; function=0xe7b250; command="savegame";
+    } else if (operation==2) {
+        slot=0x1fc7558; function=0xe7ac80; command="autosave";
+    } else if (operation==3) {
+        slot=0x1fc2558; function=0xe4f040; command="run_p1_script";
+    }
     if (!read(base+slot,entry) || entry!=base+function) return false;
     NativeShortString value{}; value.capacity=15;
     NativeStringVector args{};
     if (argument) {
-        value.text[0]=argument[0]; value.size=1;
+        const size_t length=strlen(argument);
+        if (length>15) return false;
+        memcpy(value.text,argument,length+1); value.size=length;
         args={&value,&value+1,&value+1};
     }
     NativeConsoleResult result{};
@@ -38,14 +47,18 @@ static bool control_call(int save,const char* argument) {
     reinterpret_cast<void (*)(void*)>(base+0x95660)(&result.message);
     char message[200];
     snprintf(message,sizeof(message),"{\"event\":\"control_console_result\",\"command\":\"%s\",\"success\":%s,\"thread\":%lu}\n",
-        save==2?"autosave":save?"savegame":argument,success?"true":"false",static_cast<unsigned long>(GetCurrentThreadId()));
+        command,success?"true":"false",static_cast<unsigned long>(GetCurrentThreadId()));
     line(message); return success;
 }
 static void automated_control_tick() {
     uintptr_t game=0; uint64_t player=0; int32_t date=0;
     if (!read(base+0x233fe58,game) || !read(game+0x1e60,player)
-        || (player&0xffffff)!=0x524f50 || ((player>>32)&0xffff)!=189
         || !read(game+0x1dd0,date)) return;
+#ifdef BRIDGE_CURRENT_COUNTRY_CONTROL
+    if (!current_country_control_allows_automation(player)) return;
+#else
+    if ((player&0xffffff)!=0x524f50 || ((player>>32)&0xffff)!=189) return;
+#endif
     if (control_load_wait_frames) { --control_load_wait_frames; return; }
     if (!control_ready()) return;
     if (control_pause_after_load) {
@@ -77,6 +90,13 @@ static void automated_control_tick() {
     }
     if (strcmp(request,"TEST_ONLY pause\n")==0) {
         control_call(false,"0"); control_target=0; return;
+    }
+    // Operator-owned source acceptance effects run through the game's script
+    // interpreter on this frame thread. The request selects a fixed filename.
+    if (strcmp(request,"TEST_ONLY run_p1_script\n")==0) {
+        if (!control_target)
+            control_call(3,"llm_p1.txt");
+        return;
     }
     if (strcmp(request,"TEST_ONLY advance_35_days\n")==0
         || strcmp(request,"TEST_ONLY advance_5_days\n")==0

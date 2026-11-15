@@ -1,0 +1,46 @@
+{
+  "schema": "native-current-country-control-policy-test.v1",
+  "status": "passed",
+  "compiler": {
+    "path": "C:\\Strawberry\\c\\bin\\g++.exe",
+    "version": "g++.exe (MinGW-W64 x86_64-ucrt-posix-seh, built by Brecht Sanders, r8) 13.2.0",
+    "standard": "C++17",
+    "flags": [
+      "-O2",
+      "-Wall",
+      "-Wextra",
+      "-Werror",
+      "-pedantic"
+    ]
+  },
+  "command": "g++ -std=c++17 -O2 -Wall -Wextra -Werror -pedantic -I work/native -o stage/native-policy-001/information-current-country-control-policy-final.exe work/native/tests/information-current-country-control-policy-test.cpp",
+  "final_run": {
+    "log": "stage/native-policy-001/test-final.log",
+    "passed": 77,
+    "failed": 0,
+    "exit_code": 0
+  },
+  "history": "A preliminary compile/run passed before aligning Request field order and predicate parameter passing to the fixed API. Its test.log is retained. This final compile/run tests the aligned API; no failure artifacts were deleted.",
+  "files": [
+    {
+      "path": "work/native/information-current-country-control-policy.h",
+      "bytes": 13307,
+      "sha256": "2E5E16B7F723C9C78EDF4121A8209C9D4AB908881FF718EBFE532E037755395A"
+    },
+    {
+      "path": "work/native/tests/information-current-country-control-policy-test.cpp",
+      "bytes": 15039,
+      "sha256": "64C419E43EB74DD0D992022C94A597F63BF75A51EE1B1E0F35CCEC72CA4BF27C"
+    },
+    {
+      "path": "stage/native-policy-001/test-final.log",
+      "bytes": 2686,
+      "sha256": "C0298DF7AF7A5C2DB6EA489B8340A26B47AC0AE04F8F6774AF528B16BA6EE261"
+    },
+    {
+      "path": "stage/native-policy-001/information-current-country-control-policy-final.exe",
+      "bytes": 104574,
+      "sha256": "1CB95314FAF7DC8F3D8FAC49242C0E1EC62C043D292B1339297320CA2F4858F9"
+    }
+  ]
+}

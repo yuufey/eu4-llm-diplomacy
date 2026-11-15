@@ -1,0 +1,93 @@
+{
+  "profile_id": "opinion-modifiers-memory-1374-v1",
+  "profile_version": 1,
+  "game_version": "1.37.4",
+  "executable": {
+    "sha256": "b23fa0e1f698d31b01cdd1c3817a675805d8c6286cb66f9c231e6e2a42544d77",
+    "image_base": "0x140000000"
+  },
+  "base_profile_id": "opinion-memory-1374",
+  "base_profile_sha256": "813cf74947f2a825a313b5520ae716661014d2a019326990346f92e03d014d0a",
+  "observer": "FRA",
+  "source_evidence": [
+    {
+      "path": "work/runtime/information-opinion-modifiers-20261105-185-001/rea-modifier-serializer-001/evidence.json",
+      "bytes": 139446,
+      "sha256": "0465abd5c75ea1f732cf172ac6fb424c1ba7007347fe8d092e3440ed477b4302",
+      "role": "accepted current B23 modifier serializer"
+    }
+  ],
+  "layout": {
+    "holder_relation_array_offset": "0x1510",
+    "relation_stride": 72,
+    "relation_fullref_offset": 16,
+    "manager_outer_offset": "0x308",
+    "outer_pointer_offset": 0,
+    "outer_count_offset": 12,
+    "candidate_stride": 24,
+    "candidate_entries_offset": 8,
+    "candidate_count_offset": 20,
+    "fallback_offset": "0x318",
+    "selected_entries_offset": 8,
+    "selected_count_offset": 20,
+    "object_header_width": 24,
+    "object_vtable_offset": 0,
+    "object_definition_offset": 16,
+    "object_fields_date_offset": "0x18",
+    "object_fields_multiplier_offset": "0x1c",
+    "object_fields_current_offset": "0x20",
+    "object_fields_flag24_offset": "0x24",
+    "object_fields_flag26_offset": "0x26",
+    "modifier_vtable_rva": "0x1ccf388",
+    "modifier_serializer_slot": 2,
+    "modifier_serializer_rva": "0x9494a0",
+    "max_records_per_direction": 256,
+    "max_direction_bytes": 196608,
+    "max_total_bytes": 524288,
+    "max_key_bytes": 128,
+    "max_string_capacity": 8192,
+    "pointer_min": "0x10000",
+    "pointer_max": "0x7fffffffffff"
+  },
+  "code_guards": [
+    {
+      "name": "opinion_modifier_serializer",
+      "rva": "0x9494a0",
+      "end_rva_exclusive": "0x9495a7",
+      "bytes": "48895c24104889742418574883ec20488b5910488bfa488bf1ba68290000488bcf4883c310e8e6fcdb0048837b18107203488b1b4533c94533c0488bd3488bcfe8dbe7db00488d4e18e8b22a81ffba4d280000488bcf488bd8e8b2fcdb004c8b03488bd7488bcb41ff50088b5e20baca2d0000488bcfe895fcdb00488d542430895c2430488bcfe8c4d68fff488bcfe89ceedb000fb65e26bab0280000488bcfe86bfcdb000fb6d3488bcfe8c030aeff488bcfe878eedb000fb65e2484db7420ba6f2e0000488bcfe843fcdb000fb6d3488bcfe89830aeff488bcfe850eedb00448b461c4183f8017e0dbaa32a0000488bcfe899e5db00488b5c2438488b7424404883c4205fc3",
+      "sha256": "8885e65d741c5ecf055f4bc1f6d602ef9b44c5a9b7b26add8ae1aed5af8d9c40",
+      "aslr_invariant": true,
+      "evidence_id": "ev_1867d8ff5251f5ec8d425cc57f3c70f1311a77ba4edc396521d93066b0a73c2d"
+    }
+  ],
+  "semantics": {
+    "fields": [
+      "R04.opinion_modifiers.outgoing",
+      "R04.opinion_modifiers.incoming"
+    ],
+    "unit": "opinion_points",
+    "scale": 1000,
+    "period": "current",
+    "complete": false,
+    "basis": "native_current_bilateral_opinion_modifier_records",
+    "value_origin": "copied_native_opinion_modifier_records",
+    "current_value": "signed32_raw_divided_by_1000",
+    "record_date": "raw_only",
+    "multiplier": "raw_only",
+    "flags": "raw_only",
+    "loaded_membership_verified": false,
+    "expiry_decay_evaluated": false
+  },
+  "source_compatibility": {
+    "original_profile": "bridge/information/profiles/opinion-modifiers-memory-1374-v1.json",
+    "original_sha256": "f32964d38ed5009b5a584f173ef16f46a80a1efc0985c4dbcc11cdf4070ad4e8",
+    "native_layout_and_guard_bytes_changed": false,
+    "updates": [
+      {
+        "field": "base_profile_sha256",
+        "before": "c318df0c678eb804c5fc55efc5f0022d6b5208850c9ef685a23b3753e7dc802a",
+        "after": "813cf74947f2a825a313b5520ae716661014d2a019326990346f92e03d014d0a"
+      }
+    ]
+  }
+}

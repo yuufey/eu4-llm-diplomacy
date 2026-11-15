@@ -1,0 +1,20 @@
+[
+  {
+    "source": "docs/05-历史记录/信息导出开发进展.md",
+    "source_sha256": "5f432646451c0adc38f01b54696752c3f6fdfd5f5d91b749d421d4375d78a74f",
+    "archive": "logs\\文档迁出记录\\2026-11-11-信息导出开发进展-运行履历.md",
+    "prefix_only": false
+  },
+  {
+    "source": "docs/04-实现研究/战报/战报正文与结果框组成.md",
+    "source_sha256": "75fcf96060925f749da6297596ef7986a04b342760e4ba4e7d80f5ed1bb067f5",
+    "archive": "logs\\文档迁出记录\\2026-11-11-战报正文与结果框组成-运行履历.md",
+    "prefix_only": true
+  },
+  {
+    "source": "docs/外交开发推进复盘.md",
+    "source_sha256": "c343025d4091769009e6a93b7c78e4d3436dcd70e61504a972ff2a17afbbc837",
+    "archive": "logs\\文档迁出记录\\2026-11-11-外交开发推进复盘-运行履历.md",
+    "prefix_only": true
+  }
+]

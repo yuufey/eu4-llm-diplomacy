@@ -1,0 +1,67 @@
+{
+  "profile_id": "country-force-types-memory-1374",
+  "profile_version": 1,
+  "game_version": "1.37.4",
+  "executable": {
+    "sha256": "b23fa0e1f698d31b01cdd1c3817a675805d8c6286cb66f9c231e6e2a42544d77",
+    "image_base": "0x140000000"
+  },
+  "semantics": {
+    "field": "unit_type",
+    "key_grammar": "[A-Za-z0-9_][A-Za-z0-9_.-]{0,127}",
+    "max_key_bytes": 128,
+    "complete": false,
+    "partial": true,
+    "native_function_invoked": false
+  },
+  "layout": {
+    "record_type_pointer_offset": "0x20",
+    "type_vptr_offset": "0x0",
+    "type_vtable_rva": "0x1ce3700",
+    "vtable_member_offset": "0x40",
+    "member_rva": "0xad8c10",
+    "string_object_offset": "0x60",
+    "capacity_offset": "0x78",
+    "inline_when_capacity_less_than": 16,
+    "pointer_min": "0x10000",
+    "pointer_max": "0x800000000000"
+  },
+  "limits": {
+    "max_total_rpm": 1048576,
+    "max_single_rpm": 65536,
+    "max_key_bytes": 128,
+    "max_type_capacity": 4096,
+    "max_read_bytes": 129
+  },
+  "code_guards": [
+    {
+      "name": "unit_type_key_member_sso_heap_and_nul_prefix",
+      "rva": "0xad8c10",
+      "rva_end_exclusive": "0xad8c2c",
+      "hex": "40534883ec40488bda488d516048837a18107203488b1248c7442420",
+      "sha256": "54836054ebcc706fb8ea7abc887237236a5e302209ba8e859eeab798c8dac2e3",
+      "aslr_invariant": true,
+      "source": "ordinary-type-members-001.json bounded full-function entry bytes"
+    }
+  ],
+  "source_evidence": [
+    {
+      "path": "work/runtime/information-unit-type-keys-20261107-241-001/native-type-key-contract-001.json",
+      "sha256": "102b1103d39b0550546ee89c0259e2a67a001bcd3d55ed06e2abf94daddb0813",
+      "bytes": 8865,
+      "role": "fixed production-reader contract and limitations"
+    },
+    {
+      "path": "work/runtime/information-unit-type-keys-20261107-241-001/rea-type-member-002/evidence.json",
+      "sha256": "1980e3912b9a6780c0492af3777c8bb6840b990562c498171db2afe7d13b9f68",
+      "bytes": 34579,
+      "role": "REA member behavior evidence, distinct from ordinary disassembly"
+    },
+    {
+      "path": "work/runtime/information-unit-type-keys-20261107-241-001/ordinary-type-members-001.json",
+      "sha256": "96863db4b29ee964da70ff7323e1af0f7ce440c78d5e79cdcddf8a0de77ef59a",
+      "bytes": 50256,
+      "role": "bounded ordinary PE bytes and objdump observations"
+    }
+  ]
+}

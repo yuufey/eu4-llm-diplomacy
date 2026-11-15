@@ -1,0 +1,352 @@
+{
+  "schema": "information.discipline_breakdown_recorded_fixture.v1",
+  "recorded_from": {
+    "path": "work/runtime/information-mechanism-reuse-20261104-146-001/mcp-002/baseline.json",
+    "sha256": "94b48f24dfc24a579ed1e83e4e212a5767c04446d893a468a8b2667f197c0a5d"
+  },
+  "scope": "Prior validated public N03 compact observation; tests cover projection, not fresh memory.",
+  "context": {
+    "complete": true,
+    "dll_sha256": "f1c0a589a9922bae5c395b564b3419748f5d6d789d565d5d78b0f86ab8358138",
+    "game_date": 56556984,
+    "game_date_kind": "eu4_hour_tick",
+    "game_date_raw": 56556984,
+    "game_day": 2356541,
+    "game_sha256": "b23fa0e1f698d31b01cdd1c3817a675805d8c6286cb66f9c231e6e2a42544d77",
+    "game_version": "1.37.4",
+    "mode": "live",
+    "observer": "FRA",
+    "observer_binding": "operator_configuration",
+    "paused": null,
+    "reasons": [],
+    "session_id": "45688-1dd6b3ed674d8d0",
+    "status": "ready",
+    "world_id": null
+  },
+  "compact": {
+    "basis": "native_country_discipline_calculation",
+    "country_pointer": "0x2048a828770",
+    "field": {
+      "basis": "native_country_discipline_calculation",
+      "complete": false,
+      "period": "current",
+      "raw": 1000,
+      "raw_hex": "e8030000",
+      "scale": 1000,
+      "status": "known",
+      "unit": "ratio",
+      "value": 1000,
+      "value_origin": "derived_from_copied_native_inputs"
+    },
+    "module_base": "0x7ff7ba160000",
+    "observation": {
+      "basis": "native_country_discipline_calculation",
+      "callback_raw": 0,
+      "callback_raw_hex": "00000000",
+      "code_guard": {
+        "bytes_reserved": 1084,
+        "checks": {
+          "discipline_helper_341850": true,
+          "discipline_processor_8f71d0_full": true
+        },
+        "limit": 98304,
+        "module_base": "0x7ff7ba160000",
+        "records": {
+          "discipline_helper_341850": {
+            "actual_hex": "48895c24205556574154415541564157488d6c24d94881ecc0000000498bf8488bf24c8be9c702e8030000488d81c028000048894577488bc8e832bd5f004c8d40084533f645387010740c498b40588b80bc030000eb28496350644885d27e1c498bce498b40588338770f842504000048ffc14883c008483bca7ceb418bc6894567488b0d87670102488b89e02c00004885c97411488b014c8d4d67488d556fff50088b456f01068b06b90a0000003bc10f4cc1",
+            "actual_sha256": "d151f0bd133ee6942ec0a19d77a1697b6f18fadf665dab3d194a9555f596a922",
+            "address": "0x7ff7ba4a1850",
+            "expected_hex": "48895c24205556574154415541564157488d6c24d94881ecc0000000498bf8488bf24c8be9c702e8030000488d81c028000048894577488bc8e832bd5f004c8d40084533f645387010740c498b40588b80bc030000eb28496350644885d27e1c498bce498b40588338770f842504000048ffc14883c008483bca7ceb418bc6894567488b0d87670102488b89e02c00004885c97411488b014c8d4d67488d556fff50088b456f01068b06b90a0000003bc10f4cc1",
+            "expected_sha256": "d151f0bd133ee6942ec0a19d77a1697b6f18fadf665dab3d194a9555f596a922",
+            "rva": "0x341850",
+            "rva_end_exclusive": "0x341904"
+          },
+          "discipline_processor_8f71d0_full": {
+            "actual_hex": "48895c241048896c241856574154415541574883ec20418b0133f68902498bd8403835158da401488bfa440fb605b48ca40149bd4b598638d6c56d344c8974245074164584c0751141bf1000000041be0c000000e98c00000065488b04255800000041be0c000000458be6488b284138342e750de8d3c11301440fb605658ca401b810000000448bf840383428755940387310740f488b43588b8014080000e99a0000004863436485c07e1e488bd0488bce488b4358813802010000747d48ffc14883c008483bca7cec8bc669c8e8030000b8ad8bdb68f7e9c1fa0b8bc2c1e81f03d00117458be64038356d8ca40174094584c00f84b600000065488b042558000000488b28418bc640383428750de838c11301440fb605ca8ba4014138342f0f858a000000403873107443488b43588b80dc0d0000e9cb0000008b40048d887393180081f90d58390076804863c8498bc54869d1e803000048f7ea48c1fa0a488bc248c1e83f4803d0e974ffffff4863436485c07e1e488bd0488bce488b43588138bb010000747a48ffc14883c008483bca7cec8bc669c8e8030000b8ad8bdb68f7e9c1fa0c8bc2c1e81f03d00117403835cd8ba40174094584c00f84bd00000065488b042558000000488b28418bc640383428750de870c01301440fb605028ba4014138342f0f8591000000403873107443488b43588b80940e0000e9cc0000008b40048d887393180081f90d58390076834863c8498bc54869d1e803000048f7ea48c1fa0b488bc248c1e83f4803d0e977ffffff4863436485c07e25488bd0488bce488b43580f1f80000000008138d2010000747448ffc14883c008483bca7cec8bc669c8e8030000b8ad8bdb68f7e9c1fa0c8bc2c1e81f03d00117403835fe8aa4014c8b74245074094584c00f84a700000065488b042558000000488b284138342c7505e89fbf13014138342f0f8586000000403873107440488b43588bb0140e0000e98e0000008b40048d887393180081f90d58390076894863c8498bc54869d1e803000048f7ea48c1fa0b488bc248c1e83f4803d0eb804863436485c07e1f488bd0488bce488b4358908138c2010000743f48ffc14883c008483bca7cec69cee8030000b8ad8bdb68f7e9c1fa0c8bc2c1e81f03d00117488b5c2458488bc7488b6c24604883c420415f415d415c5f5ec38b70048d8e7393180081f90d58390076bc4863ce498bc54869d1e803000048f7ea48c1fa0b488bc248c1e83f4803d0ebb3",
+            "actual_sha256": "4c04668e3f4239ae56aee1cd23eb8888a9a524505fb3120d76ecbc031d23124b",
+            "address": "0x7ff7baa571d0",
+            "expected_hex": "48895c241048896c241856574154415541574883ec20418b0133f68902498bd8403835158da401488bfa440fb605b48ca40149bd4b598638d6c56d344c8974245074164584c0751141bf1000000041be0c000000e98c00000065488b04255800000041be0c000000458be6488b284138342e750de8d3c11301440fb605658ca401b810000000448bf840383428755940387310740f488b43588b8014080000e99a0000004863436485c07e1e488bd0488bce488b4358813802010000747d48ffc14883c008483bca7cec8bc669c8e8030000b8ad8bdb68f7e9c1fa0b8bc2c1e81f03d00117458be64038356d8ca40174094584c00f84b600000065488b042558000000488b28418bc640383428750de838c11301440fb605ca8ba4014138342f0f858a000000403873107443488b43588b80dc0d0000e9cb0000008b40048d887393180081f90d58390076804863c8498bc54869d1e803000048f7ea48c1fa0a488bc248c1e83f4803d0e974ffffff4863436485c07e1e488bd0488bce488b43588138bb010000747a48ffc14883c008483bca7cec8bc669c8e8030000b8ad8bdb68f7e9c1fa0c8bc2c1e81f03d00117403835cd8ba40174094584c00f84bd00000065488b042558000000488b28418bc640383428750de870c01301440fb605028ba4014138342f0f8591000000403873107443488b43588b80940e0000e9cc0000008b40048d887393180081f90d58390076834863c8498bc54869d1e803000048f7ea48c1fa0b488bc248c1e83f4803d0e977ffffff4863436485c07e25488bd0488bce488b43580f1f80000000008138d2010000747448ffc14883c008483bca7cec8bc669c8e8030000b8ad8bdb68f7e9c1fa0c8bc2c1e81f03d00117403835fe8aa4014c8b74245074094584c00f84a700000065488b042558000000488b284138342c7505e89fbf13014138342f0f8586000000403873107440488b43588bb0140e0000e98e0000008b40048d887393180081f90d58390076894863c8498bc54869d1e803000048f7ea48c1fa0b488bc248c1e83f4803d0eb804863436485c07e1f488bd0488bce488b4358908138c2010000743f48ffc14883c008483bca7cec69cee8030000b8ad8bdb68f7e9c1fa0c8bc2c1e81f03d00117488b5c2458488bc7488b6c24604883c420415f415d415c5f5ec38b70048d8e7393180081f90d58390076bc4863ce498bc54869d1e803000048f7ea48c1fa0b488bc248c1e83f4803d0ebb3",
+            "expected_sha256": "4c04668e3f4239ae56aee1cd23eb8888a9a524505fb3120d76ecbc031d23124b",
+            "rva": "0x8f71d0",
+            "rva_end_exclusive": "0x8f7558"
+          }
+        },
+        "status": "observed",
+        "unknown_conditions": []
+      },
+      "complete": false,
+      "country_pointer": "0x2048a828770",
+      "effective_before_clamp": 1000,
+      "effective_before_clamp_hex": "e8030000",
+      "effective_raw": 1000,
+      "effective_raw_hex": "e8030000",
+      "minimum_clamp": 10,
+      "modifier": {
+        "cache_state": 2,
+        "cache_state_address": "0x2048a82b038",
+        "cache_state_raw_hex": "02000000",
+        "dense_flag_address": "0x2048a82b050",
+        "dense_flag_hex": "01",
+        "dense_flag_raw": 1,
+        "entries": [],
+        "first_match_index": null,
+        "mode": "dense",
+        "modifier_id": 119,
+        "modifier_object": "0x2048a82b040",
+        "modifier_raw": 0,
+        "modifier_raw_hex": "00000000",
+        "sparse_count": 699,
+        "sparse_count_address": "0x2048a82b0a4",
+        "storage_address": "0x2051d9b34ac",
+        "storage_raw_hex": "00000000",
+        "values_pointer": "0x2051d9b30f0",
+        "values_pointer_address": "0x2048a82b098"
+      },
+      "module_base": "0x7ff7ba160000",
+      "period": "current",
+      "processor": {
+        "callback_raw": 0,
+        "callback_raw_hex": "00000000",
+        "contributions": {
+          "0x102": {
+            "denominator": 5000,
+            "enabled": false,
+            "raw": 0,
+            "raw_hex": "00000000",
+            "scaled": 0,
+            "special_flag_raw": 0,
+            "specific_flag_raw": 1
+          },
+          "0x1bb": {
+            "denominator": 10000,
+            "enabled": false,
+            "raw": 0,
+            "raw_hex": "00000000",
+            "scaled": 0,
+            "special_flag_raw": 0,
+            "specific_flag_raw": 1
+          },
+          "0x1c2": {
+            "denominator": 10000,
+            "enabled": false,
+            "raw": 0,
+            "raw_hex": "00000000",
+            "scaled": 0,
+            "special_flag_raw": 0,
+            "specific_flag_raw": 1
+          },
+          "0x1d2": {
+            "denominator": 10000,
+            "enabled": false,
+            "raw": 0,
+            "raw_hex": "00000000",
+            "scaled": 0,
+            "special_flag_raw": 0,
+            "specific_flag_raw": 1
+          }
+        },
+        "global_flags": {
+          "0x102": {
+            "address": "0x7ff7bc49ff0c",
+            "enabled": false,
+            "raw": 1,
+            "raw_hex": "01",
+            "rva": "0x233ff0c"
+          },
+          "0x1bb": {
+            "address": "0x7ff7bc49ff2c",
+            "enabled": false,
+            "raw": 1,
+            "raw_hex": "01",
+            "rva": "0x233ff2c"
+          },
+          "0x1c2": {
+            "address": "0x7ff7bc49ff54",
+            "enabled": false,
+            "raw": 1,
+            "raw_hex": "01",
+            "rva": "0x233ff54"
+          },
+          "0x1d2": {
+            "address": "0x7ff7bc49ff54",
+            "enabled": false,
+            "raw": 1,
+            "raw_hex": "01",
+            "rva": "0x233ff54"
+          },
+          "special": {
+            "address": "0x7ff7bc49feb6",
+            "raw": 0,
+            "raw_hex": "00",
+            "rva": "0x233feb6"
+          }
+        },
+        "inputs": {
+          "0x102": {
+            "address": "0x2051d9b3904",
+            "denominator": 5000,
+            "id": 258,
+            "id_hex": "0x102",
+            "raw": 0,
+            "raw_hex": "00000000",
+            "source": "dense_values",
+            "source_index": null
+          },
+          "0x1bb": {
+            "address": "0x2051d9b3ecc",
+            "denominator": 10000,
+            "id": 443,
+            "id_hex": "0x1bb",
+            "raw": 0,
+            "raw_hex": "00000000",
+            "source": "dense_values",
+            "source_index": null
+          },
+          "0x1c2": {
+            "address": "0x2051d9b3f04",
+            "denominator": 10000,
+            "id": 450,
+            "id_hex": "0x1c2",
+            "raw": 0,
+            "raw_hex": "00000000",
+            "source": "dense_values",
+            "source_index": null
+          },
+          "0x1d2": {
+            "address": "0x2051d9b3f84",
+            "denominator": 10000,
+            "id": 466,
+            "id_hex": "0x1d2",
+            "raw": 0,
+            "raw_hex": "00000000",
+            "source": "dense_values",
+            "source_index": null
+          }
+        },
+        "manager_global_address": "0x7ff7bc4b8060",
+        "manager_global_rva": "0x2358060",
+        "manager_pointer": "0x204842ebdc0",
+        "method_pointer": "0x7ff7baa571d0",
+        "method_rva": "0x8f71d0",
+        "processor_pointer": "0x2048288d860",
+        "slot_address": "0x204842eeaa0",
+        "slot_offset": "0x2ce0",
+        "status": "recognized",
+        "thread_context_status": "not_required_zero_contribution",
+        "thread_context_unknown_for": [],
+        "vtable_pointer": "0x7ff7bbe29400",
+        "vtable_rva": "0x1cc9400"
+      },
+      "profile_id": "military-effective-memory-1374",
+      "profile_sha256": "018fa77f0774e53075dd3536bd9578880fbc903f8074709b46755f5a34045868",
+      "read_budget": {
+        "bytes_reserved": 1158,
+        "limit": 98304,
+        "post_guard_bytes": 74
+      },
+      "record_key": "military_effective",
+      "scale": 1000,
+      "static_contract_guard": {
+        "checks": {
+          "code_guards": true,
+          "executable_sha256": true,
+          "game_version": true,
+          "layout": true,
+          "profile_id": true,
+          "semantics": true,
+          "source_evidence": true
+        },
+        "profile_id": "military-effective-memory-1374",
+        "profile_sha256": "018fa77f0774e53075dd3536bd9578880fbc903f8074709b46755f5a34045868",
+        "source_evidence": [
+          {
+            "bytes": 1983,
+            "path": "work/runtime/information-military-effective-20261027-001/source-contract-002.json",
+            "role": "corrected embedded modifier-object address contract; contract-001 remains preserved in correction provenance",
+            "sha256": "e31e4f1726f2303e79aaf7665c97acebd37fe005eab6869a218e65a5d4ba9a50"
+          },
+          {
+            "bytes": 89435,
+            "path": "work/runtime/information-military-effective-20261027-001/morale-effective-source-001.json",
+            "role": "bounded effective-source index; no runtime values imported",
+            "sha256": "f9a68ad086c2b6686a8f0e14c0c6fdb1d6cf411dcd7b950f9fdf44a7a520f9b9"
+          },
+          {
+            "bytes": 60786,
+            "path": "work/runtime/information-military-effective-20261027-001/discipline-links-003.json",
+            "role": "bounded ordinary-PE indexed slot and processor-vtable construction",
+            "sha256": "490cf7c0fc0fcf239289dda677f4d24d0d11a09d75102bbd8d359899764c27e2"
+          },
+          {
+            "bytes": 44232,
+            "path": "work/runtime/information-military-quality-20261027-001/morale-discipline-source-002.json",
+            "role": "bounded discipline helper and keyed modifier layout",
+            "sha256": "db4bd888912fca012c32bed29fda79e6c45f0d1dfc03b989158d97a6b89baf67"
+          },
+          {
+            "bytes": 6117,
+            "path": "docs/\u5b97\u6559\u7edf\u4e00\u8ba1\u7b97\u8def\u5f84.md",
+            "role": "mature dense/sparse modifier-cache layout reference",
+            "sha256": "a296496b0d2b46698cbb3a021dffc4b5627fb8b4652b335b190816e4bf1377fc"
+          },
+          {
+            "bytes": 7546,
+            "path": "bridge/information/profiles/religious-unity-memory-1374.json",
+            "role": "mature bounded modifier-cache profile reference",
+            "sha256": "281c45c5dfee98a366858e212eefc52c26c907d8695b3802538fcd2bde4caef7"
+          }
+        ],
+        "status": "observed",
+        "unknown_conditions": []
+      },
+      "unit": "ratio",
+      "value_origin": "derived_from_copied_native_inputs"
+    },
+    "period": "current",
+    "profile_sha256": "018fa77f0774e53075dd3536bd9578880fbc903f8074709b46755f5a34045868",
+    "raw_hex": {
+      "discipline": "e8030000"
+    },
+    "reason": null,
+    "scale": 1000,
+    "status": "observed",
+    "unit": "ratio",
+    "value_origin": "derived_from_copied_native_inputs",
+    "values": {
+      "discipline": 1000
+    }
+  },
+  "discipline": {
+    "basis": "native_country_discipline_calculation",
+    "complete": false,
+    "period": "current",
+    "raw": 1000,
+    "raw_hex": "e8030000",
+    "scale": 1000,
+    "status": "known",
+    "unit": "ratio",
+    "value": 1000,
+    "value_origin": "derived_from_copied_native_inputs"
+  },
+  "morale": {
+    "basis": "native_country_morale_caches",
+    "complete": true,
+    "period": "current",
+    "raw": {
+      "army": 2486,
+      "navy": 1710
+    },
+    "raw_hex": {
+      "army": "b6090000",
+      "navy": "ae060000"
+    },
+    "scale": 1000,
+    "status": "known",
+    "unit": "morale",
+    "value": {
+      "army": 2486,
+      "navy": 1710
+    },
+    "value_origin": "copied_native_country_morale_cache"
+  }
+}

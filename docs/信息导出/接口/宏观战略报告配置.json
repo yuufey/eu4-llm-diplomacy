@@ -1,0 +1,249 @@
+{
+  "name": "法国宏观战略决策基础报告",
+  "detail": "brief",
+  "queries": [
+    {
+      "topic": "C01",
+      "object": {
+        "type": "session"
+      },
+      "fields": [
+        "observer",
+        "game_date"
+      ],
+      "parameters": {}
+    },
+    {
+      "topic": "C03",
+      "object": {
+        "type": "session"
+      },
+      "fields": [
+        "pending_matters"
+      ],
+      "parameters": {}
+    },
+    {
+      "topic": "N01",
+      "object": {
+        "type": "country",
+        "country": "FRA"
+      },
+      "fields": [
+        "treasury",
+        "monthly_income",
+        "monthly_expenses",
+        "monthly_balance",
+        "loan_summary"
+      ],
+      "parameters": {}
+    },
+    {
+      "topic": "N02",
+      "object": {
+        "type": "country",
+        "country": "FRA"
+      },
+      "fields": [
+        "army_size",
+        "navy_size",
+        "manpower",
+        "max_manpower",
+        "sailors",
+        "max_sailors",
+        "force_limits"
+      ],
+      "parameters": {
+        "reference_recipient": "ENG"
+      }
+    },
+    {
+      "topic": "N03",
+      "object": {
+        "type": "country",
+        "country": "FRA"
+      },
+      "fields": [
+        "military_technology",
+        "morale",
+        "discipline"
+      ],
+      "parameters": {}
+    },
+    {
+      "topic": "N04",
+      "object": {
+        "type": "country",
+        "country": "FRA"
+      },
+      "fields": [
+        "stability",
+        "war_exhaustion",
+        "overextension",
+        "unrest",
+        "corruption",
+        "religious_unity"
+      ],
+      "parameters": {}
+    },
+    {
+      "topic": "N05",
+      "object": {
+        "type": "country",
+        "country": "FRA"
+      },
+      "fields": [
+        "diplomats_available",
+        "relations_count",
+        "relations_limit"
+      ],
+      "parameters": {
+        "reference_recipient": "ENG"
+      }
+    },
+    {
+      "topic": "N06",
+      "object": {
+        "type": "country",
+        "country": "FRA"
+      },
+      "fields": [
+        "monarch_points",
+        "diplomatic_reputation",
+        "prestige"
+      ],
+      "parameters": {
+        "reference_recipient": "ENG"
+      }
+    },
+    {
+      "topic": "R01",
+      "object": {
+        "type": "country",
+        "country": "FRA"
+      },
+      "fields": [
+        "relation_type",
+        "grantor",
+        "recipient",
+        "status"
+      ],
+      "parameters": {}
+    },
+    {
+      "topic": "R03",
+      "object": {
+        "type": "country",
+        "country": "FRA"
+      },
+      "fields": [
+        "wars",
+        "rivals",
+        "coalition_members",
+        "targets"
+      ],
+      "parameters": {}
+    },
+    {
+      "topic": "R03",
+      "object": {
+        "type": "country_pair",
+        "actor": "FRA",
+        "recipient": "ENG"
+      },
+      "fields": [
+        "truce_until"
+      ],
+      "parameters": {}
+    },
+    {
+      "topic": "R04",
+      "object": {
+        "type": "country_pair",
+        "actor": "FRA",
+        "recipient": "ENG"
+      },
+      "fields": [
+        "opinion"
+      ],
+      "parameters": {}
+    },
+    {
+      "topic": "R07",
+      "object": {
+        "type": "country_pair",
+        "actor": "FRA",
+        "recipient": "ENG"
+      },
+      "fields": [
+        "land_commitments",
+        "war_commitments",
+        "economic_support",
+        "expiry"
+      ],
+      "parameters": {}
+    },
+    {
+      "topic": "F01",
+      "object": {
+        "type": "country",
+        "country": "ENG"
+      },
+      "fields": [
+        "development",
+        "major_power",
+        "wars"
+      ],
+      "parameters": {}
+    },
+    {
+      "topic": "F02",
+      "object": {
+        "type": "country",
+        "country": "ENG"
+      },
+      "fields": [
+        "visible_army",
+        "visible_navy",
+        "military_technology"
+      ],
+      "parameters": {}
+    },
+    {
+      "topic": "F03",
+      "object": {
+        "type": "country",
+        "country": "ENG"
+      },
+      "fields": [
+        "income",
+        "debt"
+      ],
+      "parameters": {}
+    },
+    {
+      "topic": "T02",
+      "object": {
+        "type": "country",
+        "country": "FRA"
+      },
+      "fields": [
+        "home_node",
+        "collect_node"
+      ],
+      "parameters": {}
+    },
+    {
+      "topic": "T05",
+      "object": {
+        "type": "country",
+        "country": "FRA"
+      },
+      "fields": [
+        "income",
+        "collection"
+      ],
+      "parameters": {}
+    }
+  ]
+}

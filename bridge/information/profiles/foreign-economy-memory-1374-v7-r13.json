@@ -1,0 +1,1788 @@
+{
+  "profile_id": "foreign-economy-memory-1374",
+  "profile_version": 7,
+  "game_version": "1.37.4",
+  "executable": {
+    "path_from_game_exe": "D:\\Downloads\\Europa Universalis IV（1.37.4）\\Europa Universalis IV\\eu4.exe",
+    "bytes": 38463016,
+    "sha256": "b23fa0e1f698d31b01cdd1c3817a675805d8c6286cb66f9c231e6e2a42544d77",
+    "image_base": "0x140000000",
+    "runtime_aslr_va_observed": false
+  },
+  "observer": {
+    "tag": "FRA",
+    "role": "logical_nonplayer_observer"
+  },
+  "target_scope": {
+    "kind": "foreign_country",
+    "target_must_differ_from_observer": true
+  },
+  "public_fields": [
+    "F03.income",
+    "F03.debt",
+    "F03.bankruptcy_risk",
+    "F03.reparations",
+    "F03.subsidies"
+  ],
+  "source_evidence": [
+    {
+      "path": "bridge/information/profiles/foreign-quality-memory-1374-v2.json",
+      "bytes": 37710,
+      "sha256": "97866049085cd687f5d66c46a8884526ea6efc3897d99be1fe7234610439d7f6",
+      "role": "Inherited fixed-B23 observer identity and country-view guard profile; only selected guards are copied."
+    },
+    {
+      "path": "work/runtime/information-foreign-economy-20261029-001/economy-core-ordinary-review-004.json",
+      "bytes": 24424,
+      "sha256": "365213a5438681176ab7529f7bbc7fe3bec9ae287292762acd40c98f533ef5ab",
+      "role": "Bounded ordinary-PE analysis for current income cell, total components, category keys, and local income predicate."
+    },
+    {
+      "path": "work/runtime/information-foreign-economy-20261029-001/ordinary-economy-loans-001/economy-loans-ordinary-review-003.json",
+      "bytes": 36209,
+      "sha256": "515520482debf3c42b166f990f5f98e136012d922c2d1f41c52baedca81d94e1",
+      "role": "Bounded ordinary-PE analysis for loan rows, loan scalar reads, and local page registration guards."
+    },
+    {
+      "path": "work/runtime/information-foreign-economy-20261029-001/economy-existing-leaf-inventory-001.json",
+      "bytes": 16763,
+      "sha256": "81ae43328ec11690a535df9cb4a2f7adc68f22d37a19bb15c1c0d86f4995885d",
+      "role": "Existing leaf inventory and previously established reader boundaries."
+    },
+    {
+      "path": "work/runtime/information-foreign-economy-20261029-001/rea-country-income-cell-001/evidence.json",
+      "bytes": 10586,
+      "sha256": "bbad356cdb10c4004ca8e4eb5b03760d9fe97a2a3f1aa0e150275f7e8b3472e3",
+      "role": "REA evidence for the income cell path; static REA evidence, not runtime observation."
+    },
+    {
+      "path": "work/runtime/information-foreign-economy-20261029-001/rea-country-income-total-components-001/evidence.json",
+      "bytes": 11171,
+      "sha256": "726ec98f00f009e15ba9578098eeb9dde4c5bcc4a31c665a549816e8382a3279",
+      "role": "REA evidence for income total component construction; static REA evidence, not runtime observation."
+    },
+    {
+      "path": "work/runtime/information-foreign-economy-20261029-001/rea-income-category-keys-001/evidence.json",
+      "bytes": 6845,
+      "sha256": "8d6b48c67844581123007e23e703c94c49895fff530f1aad77b9a7944783a74e",
+      "role": "REA evidence for income category key registration; static REA evidence, not runtime observation."
+    },
+    {
+      "path": "work/runtime/information-foreign-economy-20261029-001/rea-income-category-labels-001/evidence.json",
+      "bytes": 4395,
+      "sha256": "b440ecdba1a28d7a211f8c3ebc615b4271cec895fd1e3bc0f1b44eaa3ea86788",
+      "role": "REA evidence for category label selection; text does not establish current UI rendering."
+    },
+    {
+      "path": "work/runtime/information-foreign-economy-20261029-001/rea-ledger-loan-row-enumerator-001/evidence.json",
+      "bytes": 7627,
+      "sha256": "5e081547bef3796a8f397e0fb0a09bfe2bc2543cfa1ea9c388734ca42991d98e",
+      "role": "REA evidence for loan row enumeration; static REA evidence, not runtime observation."
+    },
+    {
+      "path": "work/runtime/information-foreign-economy-20261029-001/rea-ledger-loan-cell-001/evidence.json",
+      "bytes": 33704,
+      "sha256": "e34b9d268d7a3a732821dd4254f226b9386228090b6413cdc75a07ca1a8c7208",
+      "role": "REA evidence for loan row scalar fields; static REA evidence, not runtime observation."
+    },
+    {
+      "path": "work/runtime/information-foreign-economy-20261029-001/rea-daily-update-loans-001/evidence.json",
+      "bytes": 34478,
+      "sha256": "0687deb3b179996db513e3c2f436f563c278963054f993711ab2ffe76f31b8c7",
+      "role": "Static loan update evidence; does not make a foreign risk forecast available."
+    },
+    {
+      "path": "work/runtime/information-foreign-economy-20261029-001/rea-bankrupt-label-function-001/evidence.json",
+      "bytes": 69888,
+      "sha256": "30c9891bbb9b3632e7290514ed42ea8ee00e41052d87d83851efdebbe4a9725e",
+      "role": "REA evidence for bankruptcy label construction; not a foreign bankruptcy risk formula."
+    },
+    {
+      "path": "work/runtime/information-foreign-economy-20261029-001/rea-go-bankrupt-callers-001/evidence.json",
+      "bytes": 4038,
+      "sha256": "70f9cf8b00be96fe441e793d5b168af97c3bc0d9faf0205de60de454dac70840",
+      "role": "REA evidence for bankruptcy action callers; not a read-only risk forecast."
+    },
+    {
+      "path": "work/runtime/information-foreign-military-quality-20261029-001/quality-core-ordinary-review-001.json",
+      "bytes": 124009,
+      "sha256": "42164443f3aeb5b4f4271db2fd6e66e3456fca3a6cc7d10d336e01ec70bd33e3",
+      "role": "Retained batch-88 ordinary evidence for observer country selection and country enumeration guards."
+    },
+    {
+      "path": "work/runtime/information-foreign-military-quality-20261029-001/quality-registration-ordinary-001.json",
+      "bytes": 20144,
+      "sha256": "a91c25d680d9e1cec12dde49409e532ab0a8a7720fa51d636411f2959ea40e2e",
+      "role": "Retained batch-88 ordinary registration evidence; inherited guards remain separate from income-page gates."
+    },
+    {
+      "path": "work/runtime/information-foreign-military-quality-20261029-001/quality-page-registration-review-001.json",
+      "bytes": 22357,
+      "sha256": "ec2d0db17cc61c1652c8c6df4b1f9cee16602551d713cb197f901556aedf95f6",
+      "role": "Retained batch-88 page registration evidence; does not establish economy-page runtime visibility."
+    },
+    {
+      "path": "work/runtime/information-foreign-economy-20261029-001/economy-financial-string-context-001.json",
+      "bytes": 261082,
+      "sha256": "0e56a0c1c60cfcc1b6b9ee8f85203c9d7180d0b3a784c7f3e59060e0eece6f1a",
+      "role": "Bounded static financial-string context; strings are not a value formula or proof of rendered UI."
+    },
+    {
+      "path": "work/runtime/information-foreign-economy-20261029-001/economy-option23-metadata-correction-001.json",
+      "bytes": 7919,
+      "sha256": "dd70449635383af182b6c3e4ec9dbdd814c9b6764c6d8aa0a93939392bec7c69",
+      "role": "Explicitly supersedes only the v1 income option-index metadata value; all v1 profile evidence is retained."
+    },
+    {
+      "path": "bridge/information/profiles/foreign-economy-memory-1374.json",
+      "bytes": 33135,
+      "sha256": "835855b4040a4f32347cec78538a763fe399a5295db559d084aa509653ddf1fe",
+      "role": "Immutable v1 profile preserved for historical saved-capture validation."
+    },
+    {
+      "path": "work/runtime/information-foreign-economy-contracts-20261031-001/stage90/ordinary-reparations-001/ordinary-reparations-review-001.json",
+      "bytes": 107967,
+      "sha256": "0557ee0fbbcbdc8ea2f808809c385eb159d263c44cb8ea481f5c41aad4ff7c78",
+      "role": "Batch-90 ordinary corroboration for the 864-byte creator, registration, and vector-mutator body guards."
+    },
+    {
+      "path": "work/runtime/information-reparations-capture-20261031-001/rea-economy-expense-tooltip-001/evidence.json",
+      "bytes": 304091,
+      "sha256": "bde63e0506ba4d82ab74aa7d0dc025b5fe87f2896618977f84539c719546f988",
+      "role": "REA evidence for the FRA own-economy reparations tooltip and current-country binding."
+    },
+    {
+      "path": "work/runtime/information-reparations-capture-20261031-001/rea-observer-reparations-pair-getter-001/evidence.json",
+      "bytes": 4871,
+      "sha256": "7a3e9f41a03a5704c1a9813c372a2037df6d94e572c2497f271e37f17a8be59e",
+      "role": "REA evidence for pair row access through the observer economy relation getter."
+    },
+    {
+      "path": "work/runtime/information-reparations-capture-20261031-001/rea-reparations-expiry-pair-getter-001/evidence.json",
+      "bytes": 4845,
+      "sha256": "b9fcafca3d9b8ff539188417ea9b0e4e819e65a05aa5402e0a7b0a0b614fddfe",
+      "role": "REA evidence for relation end-date access used by the observer economy tooltip."
+    },
+    {
+      "path": "work/runtime/information-reparations-capture-20261031-001/ordinary-observer-reparations-001/review-001.json",
+      "bytes": 27984,
+      "sha256": "5525bfe465444c6df6e0f95bb441cf9a19841c8bab397e9d9903ddd465a0edc2",
+      "role": "Batch-91 bounded ordinary-PE guard review for the FRA own-economy observer reparations path."
+    },
+    {
+      "path": "work/runtime/information-foreign-economy-contracts-20261031-001/stage90/ordinary-reparations-001/rva_9b6270.bin",
+      "bytes": 355,
+      "sha256": "96a4f161e085432c2827754c4dcbd422930d61bc5d1662b47d392d8c622bdc66",
+      "role": "Previously reviewed creator body bytes reused in the new v3 runtime guard set."
+    },
+    {
+      "path": "work/runtime/information-foreign-economy-contracts-20261031-001/stage90/ordinary-reparations-001/rva_a68c40.bin",
+      "bytes": 196,
+      "sha256": "a217329289b8855f4f691eb2ecfde3df9cfa917668cbcda1f0a23180a074001e",
+      "role": "Previously reviewed pair-registration body bytes reused in the new v3 runtime guard set."
+    },
+    {
+      "path": "work/runtime/information-foreign-economy-contracts-20261031-001/stage90/ordinary-reparations-001/rva_28d840.bin",
+      "bytes": 313,
+      "sha256": "3b009cc27ad7f2fdfc76134ee5daa5774ac3743e00e06a251b73be08b79ef589",
+      "role": "Previously reviewed vector-mutator body bytes reused in the new v3 runtime guard set."
+    },
+    {
+      "path": "work/runtime/information-subsidies-contracts-20261031-001/ordinary-subsidy-tooltip-001/ordinary-subsidy-tooltip-002.json",
+      "bytes": 38004,
+      "sha256": "36bf4df430e5e1ef763cf16240b383024d9febae8d3df9688bddf81c8c49d1e1",
+      "role": "bounded_ordinary_code_evidence"
+    },
+    {
+      "path": "work/runtime/information-subsidies-contracts-20261031-001/ordinary-subsidy-caller-windows-001/ordinary-subsidy-caller-windows-001.json",
+      "bytes": 75322,
+      "sha256": "b1f00a7ece742959d5b61c79031a9868615f41679a7da08d32c8384a72267e28",
+      "role": "bounded_ordinary_code_evidence"
+    },
+    {
+      "path": "work/runtime/information-subsidies-contracts-20261031-001/ordinary-subsidy-getters-001/ordinary-subsidy-getters-002.json",
+      "bytes": 38873,
+      "sha256": "c4a0be08aeb8d1aebe09b4e9237f7a0e7cbf9a8994f346fbbbcede6037fe231a",
+      "role": "bounded_ordinary_code_evidence"
+    },
+    {
+      "path": "work/runtime/information-subsidies-contracts-20261031-001/ordinary-subsidy-creation-001/ordinary-subsidy-creation-001.json",
+      "bytes": 39041,
+      "sha256": "f6c6cbf1a899f6ae74e98ae27cd1c9af7a7c569fa070c2ca376a3082d6c83c2c",
+      "role": "bounded_ordinary_code_evidence"
+    },
+    {
+      "path": "work/runtime/information-subsidies-contracts-20261031-001/rea-subsidy-creator-001/evidence.json",
+      "bytes": 60656,
+      "sha256": "c5514bf5432f16d931d1d0f18a5135213b39b433583eefad9a53c6889708fe33",
+      "role": "retained_REA_static_evidence"
+    },
+    {
+      "path": "work/runtime/information-subsidies-contracts-20261031-001/rea-subsidy-creator-001/run.json",
+      "bytes": 1747,
+      "sha256": "dca365f58233e40dea567174d55348273742f52dba8e9fcef12441e9a3d05518",
+      "role": "retained_REA_static_evidence"
+    },
+    {
+      "path": "work/runtime/information-subsidies-contracts-20261031-001/rea-subsidy-pair-registration-001/evidence.json",
+      "bytes": 6829,
+      "sha256": "62e90a1e3e96d2db4c19aa817be1cbef443254c01ccffc0239a6532fcdb8296f",
+      "role": "retained_REA_static_evidence"
+    },
+    {
+      "path": "work/runtime/information-subsidies-contracts-20261031-001/rea-subsidy-pair-registration-001/run.json",
+      "bytes": 1747,
+      "sha256": "f6eb7aecaf575804e064371dbe3da3ba8679404eca7b604de1eebd588b859964",
+      "role": "retained_REA_static_evidence"
+    },
+    {
+      "path": "work/runtime/information-subsidies-contracts-20261031-001/rea-subsidy-pair-getter-001/evidence.json",
+      "bytes": 4849,
+      "sha256": "07aac76f3577c57eb0938c3e565f3e060a40db0cc02af822534e550f728d4af4",
+      "role": "retained_REA_static_evidence"
+    },
+    {
+      "path": "work/runtime/information-subsidies-contracts-20261031-001/rea-subsidy-pair-getter-001/run.json",
+      "bytes": 1746,
+      "sha256": "c89723663b94797a7c45c28da746685ddbfe50c5b6f05d77eb31a14ebb68c28e",
+      "role": "retained_REA_static_evidence"
+    },
+    {
+      "path": "work/runtime/information-subsidies-contracts-20261031-001/rea-subsidy-date-value-001/evidence.json",
+      "bytes": 4271,
+      "sha256": "c4903b928d37aae072abb1ed28086652df0d09f9e2b6ec9e3f6e3e4614e0fbd9",
+      "role": "retained_REA_static_evidence"
+    },
+    {
+      "path": "work/runtime/information-subsidies-contracts-20261031-001/rea-subsidy-date-value-001/run.json",
+      "bytes": 1747,
+      "sha256": "366e6475bf88998d8eb04dd48af0e74d42a342228d793dd64cf5001e382114ed",
+      "role": "retained_REA_static_evidence"
+    },
+    {
+      "path": "work/runtime/information-subsidies-contracts-20261031-001/rea-subsidy-duration-value-001/evidence.json",
+      "bytes": 4177,
+      "sha256": "9a89f84778f8560538f0842e502bf1c3f628835a3785f1786596e574baf9dfb6",
+      "role": "retained_REA_static_evidence"
+    },
+    {
+      "path": "work/runtime/information-subsidies-contracts-20261031-001/rea-subsidy-duration-value-001/run.json",
+      "bytes": 1746,
+      "sha256": "def546ebc1666c33e77b8d108de0ae5634a45ffee093a435bd585c993263bf13",
+      "role": "retained_REA_static_evidence"
+    },
+    {
+      "path": "work/runtime/information-subsidies-contracts-20261031-001/rea-subsidy-amount-value-001/evidence.json",
+      "bytes": 4271,
+      "sha256": "9025af482d0b402f51a76b8308762e9fdb3ebc1460a40fefb6286a94dd65e15c",
+      "role": "retained_REA_static_evidence"
+    },
+    {
+      "path": "work/runtime/information-subsidies-contracts-20261031-001/rea-subsidy-amount-value-001/run.json",
+      "bytes": 1746,
+      "sha256": "9bbeed8de616ec628997e38f8f04b6245957000657d2b12c5e7b882659d330e0",
+      "role": "retained_REA_static_evidence"
+    },
+    {
+      "path": "work/runtime/information-subsidies-contracts-20261031-001/rea-subsidy-tooltip-date-composition-001/evidence.json",
+      "bytes": 4207,
+      "sha256": "53d03aebe83e8b3da2837679caa44c2f5e70a53f4ffee60b60f7ea1ea0599561",
+      "role": "retained_REA_static_evidence"
+    },
+    {
+      "path": "work/runtime/information-subsidies-contracts-20261031-001/rea-subsidy-tooltip-date-composition-001/run.json",
+      "bytes": 1746,
+      "sha256": "83d6464a59ee3b3796ae483a62cee9b221de94abe7c294148796d4c3d23a66a3",
+      "role": "retained_REA_static_evidence"
+    },
+    {
+      "path": "work/runtime/information-subsidies-contracts-20261031-001/rea-subsidy-relation-tooltip-001/evidence.json",
+      "bytes": 8383,
+      "sha256": "318f263fe147591e879a3f295acd04d5ca82f3d2e0f177df4c2381ed0237d59a",
+      "role": "retained_REA_static_evidence"
+    },
+    {
+      "path": "work/runtime/information-subsidies-contracts-20261031-001/rea-subsidy-relation-tooltip-001/run.json",
+      "bytes": 1746,
+      "sha256": "4adfe832d87b7d3bbc72567f7e9f1c5cfd811ac753fba5fe24515443755a68ce",
+      "role": "retained_REA_static_evidence"
+    },
+    {
+      "path": "work/runtime/information-subsidies-contracts-20261031-001/rea-diplomatic-relations-instructions-001/evidence.json",
+      "bytes": 518463,
+      "sha256": "100bc361558fc523d256af99a6cda885249eb7ca8d718cdd3d364c501dfe3324",
+      "role": "retained_REA_static_evidence"
+    },
+    {
+      "path": "work/runtime/information-subsidies-contracts-20261031-001/rea-diplomatic-relations-instructions-001/run.json",
+      "bytes": 1746,
+      "sha256": "8675a597d2dc2555afd5c1925f70cd5e57553a9b9b34dcf47d949a5ebe0af42f",
+      "role": "retained_REA_static_evidence"
+    },
+    {
+      "path": "work/runtime/information-foreign-debt-20261031-001/private-profile-001.json",
+      "bytes": 70791,
+      "sha256": "77fd1f09a8e64196f26b9692e6fe307fa41edcac298a5cf9458585d4f21447ff",
+      "role": "Batch-94 private debt profile carrying the exact 1876-byte native principal-reason guard."
+    },
+    {
+      "path": "work/runtime/information-foreign-debt-20261031-001/stage94/ordinary-diplo-loans-reason-001/ordinary-diplo-loans-reason-001.json",
+      "bytes": 125962,
+      "sha256": "5aaa30e420b205d0fbd2bf223714322e44877a0b2e191bb9011da178cecf9e5e",
+      "role": "Batch-94 bounded ordinary-PE review for the complete DIPLO_LOANS principal loop."
+    },
+    {
+      "path": "work/runtime/information-foreign-debt-20261031-001/stage94/ordinary-diplo-loans-reason-001/semantic-correction-004.json",
+      "bytes": 4196,
+      "sha256": "95fc5741ae63a0504b5543ef30508918d6f9c64555b569a5de60eca8b499cffa",
+      "role": "Batch-94 semantic correction: lender +0x27 comparison is not a business flag; amount loop is unfiltered by it."
+    },
+    {
+      "path": "work/runtime/information-foreign-debt-20261031-001/stage94/ordinary-diplo-loans-reason-001/rva_4f5e90.bin",
+      "bytes": 1876,
+      "sha256": "3a4bc590eabcd3965f064d510394782d5ee07515571b2da25c5f327bb6c26bbf",
+      "role": "Exact reused 1876-byte B23 body for the diplomatic principal reason."
+    },
+    {
+      "path": "work/runtime/information-foreign-debt-20261031-001/stage94/class-token-candidate-002/getter-ordinary-003/getter-ordinary-003.json",
+      "bytes": 7018,
+      "sha256": "cd61df7afa39af0ae7a53d8dcc32de6f8b881b5d61c16e358aa396e4842473f3",
+      "role": "Batch-94 bounded six-byte straight-line token getter evidence; no full pdata boundary was claimed."
+    },
+    {
+      "path": "work/runtime/information-foreign-debt-20261031-001/stage94/class-token-candidate-002/getter-ordinary-003/rva-4f5960-window-10.bin",
+      "bytes": 16,
+      "sha256": "8ad3700b3d6c973913bd7de256eabd0211a48ec8162081497312400b5d9e56d3",
+      "role": "Exact 16-byte B23 window; only its first six bytes through RET are used as a guard."
+    },
+    {
+      "path": "work/runtime/information-foreign-debt-public-20261031-001/ordinary-native-ai-accept-guards-001/ordinary-native-ai-accept-guards-001.raw-002.json",
+      "bytes": 20409,
+      "sha256": "ff013ae242474300b9a7221f08f9ec8b70cda2c43ba3be1cec4fe860176ff758",
+      "role": "Batch-95 ordinary bounded B23 bodies for tooltip, refresh, acceptance predicate, and required-diplomat helper."
+    },
+    {
+      "path": "work/runtime/information-foreign-debt-public-20261031-001/ordinary-ai-accept-predicate-seeds-001/ai-accept-seeds-001.json",
+      "bytes": 6375,
+      "sha256": "fe970d236143dbd5649817c462f5b259fa26d9cf24b92f70153c9d5b01587134",
+      "role": "Batch-95 ordinary B23 seed report for the current action exclusion table and vtable mapping evidence."
+    },
+    {
+      "path": "work/runtime/information-foreign-debt-public-20261031-001/ordinary-native-ai-accept-guards-001/tooltip_entry_EF2050.bin",
+      "bytes": 2730,
+      "sha256": "fe928371ee95d04d211cc88368eab66d565a41a8686b0b99b49f4a4495f10638",
+      "role": "Exact 2730-byte B23 tooltip entry guard."
+    },
+    {
+      "path": "work/runtime/information-foreign-debt-public-20261031-001/ordinary-native-ai-accept-guards-001/refresh_entry_EF2B00.bin",
+      "bytes": 1730,
+      "sha256": "5f85f114bda44da5458ebb98319bca9f6012d1e96cdcaf6afac9173163a08076",
+      "role": "Exact 1730-byte B23 refresh entry guard."
+    },
+    {
+      "path": "work/runtime/information-foreign-debt-public-20261031-001/ordinary-native-ai-accept-guards-001/acceptance_predicate_4EA210.bin",
+      "bytes": 146,
+      "sha256": "cd76ccdf767feb86e611fd102171a41f0410f01331de1dcb58b4cf9e8075213f",
+      "role": "Exact 146-byte B23 native acceptance predicate guard."
+    },
+    {
+      "path": "work/runtime/information-foreign-debt-public-20261031-001/ordinary-native-ai-accept-guards-001/required_diplomat_leaf_8F440.bin",
+      "bytes": 3,
+      "sha256": "e18aacce29affcdddaa5f641ac1ec12552e0fe9d066e6408941b1792818b8619",
+      "role": "Exact three-byte constant-true required-diplomat helper guard."
+    },
+    {
+      "path": "work/runtime/information-foreign-debt-public-20261031-001/ordinary-ai-accept-predicate-seeds-001/exe-rva-1c35460-48.bin",
+      "bytes": 48,
+      "sha256": "a04f3645880f469de2959747a3b1c02acaf6d52aa506975e27cde9b7382cc0f9",
+      "role": "Exact 48-byte B23 .rdata exclusion token table guard."
+    },
+    {
+      "path": "work/runtime/information-foreign-debt-public-20261031-001/rea-native-action-entry-tooltip-001/evidence.json",
+      "bytes": 42390,
+      "sha256": "40f8aa2d64cb922b9f10aa7facd659f26c5afb31b834721614743fae5c660a08",
+      "role": "REA static tooltip-entry evidence; not runtime UI observation."
+    },
+    {
+      "path": "work/runtime/information-foreign-debt-public-20261031-001/rea-native-action-entry-refresh-001/evidence.json",
+      "bytes": 26468,
+      "sha256": "ab69e4919ad014d5d08a72886541cca395ebfd2f8c8c2125320c57572ca79f02",
+      "role": "REA static refresh-entry evidence; not runtime action execution."
+    },
+    {
+      "path": "work/runtime/information-foreign-debt-20261031-001/rea-diplo-loans-reason-001/evidence.json",
+      "bytes": 30024,
+      "sha256": "083b71aaa38d4cb86e327bdbd4e350ea7387198763eba88895f4f40bceaf4f31",
+      "role": "REA static DIPLO_LOANS principal-reason evidence."
+    },
+    {
+      "path": "bridge/information/profiles/foreign-economy-memory-1374-v6.json",
+      "bytes": 104203,
+      "sha256": "3fbb65eadc9301765896bdde35d84e19f9e93e4b28f54a9820b30d5c2f213626",
+      "role": "Immutable v6 base profile; v7 does not rewrite the v33 contract."
+    },
+    {
+      "path": "work/runtime/information-debt-quote-query-20261101-001/foreign-economy-v34-compatibility-plan-002/audit_v34_forwarder.py",
+      "bytes": 16965,
+      "sha256": "a57d61d23ec04ff25745480e755e2c3b2a297917e0f60cc5167a6ea0ad9bcabb",
+      "role": "Bounded ordinary-PE audit generator; no native execution."
+    },
+    {
+      "path": "work/runtime/information-debt-quote-query-20261101-001/foreign-economy-v34-compatibility-plan-002/report.json",
+      "bytes": 26697,
+      "sha256": "1b09d28349e03cac7457f2bce1aeb5023274a431788b4f78df322f238e6e8d07",
+      "role": "Ordinary bounded PE/COFF/Capstone evidence for the v34 source-installed forwarder."
+    },
+    {
+      "path": "work/runtime/information-debt-quote-query-20261101-001/foreign-economy-v34-compatibility-plan-002/hook-00059690-00059b1f.bin",
+      "bytes": 1167,
+      "sha256": "766c88fe5209fd49507ace2ec822b555b9c9d8455ca56bb1d638208fe9cda4c5",
+      "role": "Exact 1167-byte v34 forwarder body from its pdata span."
+    },
+    {
+      "path": "work/runtime/information-debt-quote-query-20261101-001/foreign-economy-v34-compatibility-plan-002/hook-00059690-00059b1f.disasm.txt",
+      "bytes": 12713,
+      "sha256": "4c28b59a5f4e9d773f5beb6590408e83f65b30e8908e1510809573a510f0c3b9",
+      "role": "Bounded Capstone decode of the exact v34 forwarder body."
+    },
+    {
+      "path": "work/runtime/diplomacy-observer-20261101-r75-interest-quote-001/build-manifest.json",
+      "bytes": 22361,
+      "sha256": "b53091c948a637897f37f8004569bdf7014c695b58cecad35a27f9c9ac08db2c",
+      "role": "Static v34 build manifest; runtime_verified remains false."
+    },
+    {
+      "path": "work/runtime/information-debt-quote-query-20261101-001/foreign-economy-v34-compatibility-plan-002/build_v34_mapping_asset.py",
+      "bytes": 5196,
+      "sha256": "74bb6e3b9cf4765ee02a627704ad968ad9257bc0239dd2726fd945932dc79bfd",
+      "role": "Reproducible generation of the v34 mapping asset from the bounded audit."
+    },
+    {
+      "path": "work/runtime/information-debt-quote-query-20261101-001/foreign-economy-v34-compatibility-plan-002/build_v7_profile.py",
+      "bytes": 11198,
+      "sha256": "ff76b031e5025476493d78d8126b5118c96a8e04832b02b3a64b802b75096fa4",
+      "role": "Reproducible v7 profile generation from immutable v6 plus v34 evidence."
+    }
+  ],
+  "layout_dependencies": [
+    {
+      "path": "bridge/information/profiles/monthly-economy-memory-1374.json",
+      "bytes": 6252,
+      "sha256": "bd5e3ee39b02e4b5f183790d4550f394c6248eaa4dc4c68e9c17d9ec3254d831",
+      "role": "Existing previous-month ledger layout and units; not substituted for the current income comparison cache."
+    },
+    {
+      "path": "work/runtime/information-economy-20261027-001/monthly-ledger-source-001.json",
+      "bytes": 10349,
+      "sha256": "7fd7af774a6c75731b3f54874ef179444c19b28ddf58845e867cac32462468ac",
+      "role": "Pinned source index for the prior monthly-ledger profile."
+    },
+    {
+      "path": "bridge/information/profiles/country-loans-memory-1374-v2.json",
+      "bytes": 9901,
+      "sha256": "686d88ef6b2dd02e12067d3fc2e7a942c39b131cf504bbe7bcf4f130d706cf69",
+      "role": "Existing bounded loan-list layout and lender/date interpretation; total debt remains out of scope."
+    },
+    {
+      "path": "work/runtime/information-loans-20261027-001/loans-source-001.json",
+      "bytes": 18855,
+      "sha256": "309e4e26895a5e74d6c2733b4e333f09aebdbdadd710d6ce90bb9f1d27463091",
+      "role": "Pinned source for loan row scalar layout."
+    },
+    {
+      "path": "work/runtime/information-country-records-localization-20261027-001/loan-lender-date-source-001.json",
+      "bytes": 17402,
+      "sha256": "a43a2bc9bd258670ff3e9531b13b66388fc72cb84434b4967ec9a93b83d7d62a",
+      "role": "Pinned source for strict lender identity and loan date interpretation."
+    },
+    {
+      "path": "work/runtime/information-country-records-localization-20261027-001/date-calendar-source-002.json",
+      "bytes": 32231,
+      "sha256": "fd851ea9a6869e61b2ae05dbb251136ff281fe3801907568900a60a8fa800957",
+      "role": "Pinned engine-date calendar contract used by the existing loan reader."
+    },
+    {
+      "path": "bridge/information/bilateral_reparations_memory.py",
+      "bytes": 22287,
+      "sha256": "2c4720d2018bd76046122038382a80182856a2edcc0bd445e73a6e4430f4795b",
+      "role": "Current pinned source for the bounded two-direction FRA/target relation leaf."
+    },
+    {
+      "path": "bridge/information/observer_reparations_memory.py",
+      "bytes": 21814,
+      "sha256": "052ebb316ee703b174be92e3cd821b3b51ee730c549e9315dc3aacb5b99e5edd",
+      "role": "Current pinned parent adapter for independent FRA own-economy pair/date permission and field wrapping."
+    },
+    {
+      "path": "bridge/information/bilateral_subsidies_memory.py",
+      "bytes": 28628,
+      "sha256": "b40b8368f5af42d7157099c4e86bb998fe38672f9b1ae9ae5759939a37250e7d",
+      "role": "observer_fiscal_subsidy_pair_reader"
+    },
+    {
+      "path": "bridge/information/observer_subsidies_memory.py",
+      "bytes": 21209,
+      "sha256": "14878432e0674f25c89f7a4c2702efbef2dc7691403e7e69b9067366720e6537",
+      "role": "observer_fiscal_subsidy_pair_reader"
+    },
+    {
+      "path": "work/runtime/information-subsidies-public-20261031-001/build_production_profile_001.py",
+      "bytes": 5183,
+      "sha256": "a8af0bde14189464f74d5dfc2ce750eec318f73578863cc1749d8cb82a7a3b5e",
+      "role": "profile_builder"
+    },
+    {
+      "path": "bridge/information/profiles/foreign-economy-memory-1374-v4.json",
+      "bytes": 66917,
+      "sha256": "6c6d92a14f4db20931a31c0ff01305f7f04ce6721f600455b8d9908def386196",
+      "role": "Immutable parent production profile; source of the unchanged income, debt-subset, reparations, and subsidy guards."
+    },
+    {
+      "path": "bridge/information/foreign_debt_principal_memory.py",
+      "bytes": 17649,
+      "sha256": "0044c0153cef9edbfcbf8d46455457ada1531a4fdc727d4c984e792b23ac0a81",
+      "role": "Bounded all-target loan-list principal leaf; replays signed32 principal arithmetic only."
+    },
+    {
+      "path": "bridge/information/foreign_debt_projection.py",
+      "bytes": 19841,
+      "sha256": "f300c24811963f25313dc8d1c218e84e462a29ee83dab162504db87e4334d3e2",
+      "role": "Public independent-scope debt projection; emits only scaled diplomatic principal amount and the existing observer-lent subset."
+    },
+    {
+      "path": "bridge/information/foreign_debt_disclosure.py",
+      "bytes": 38974,
+      "sha256": "d154ad4ce36481875b39f1afef9576c589673862246f4a25183513f29a304a1f",
+      "role": "Validated native AI-accept selector and host-controlled/POR scope proof helper."
+    },
+    {
+      "path": "work/runtime/information-foreign-debt-public-20261031-001/build_production_profile_001.py",
+      "bytes": 31706,
+      "sha256": "483ee0f0ccf8351ddf5d1ec1244e7b9ae039bee0db60b5302a45a9519a543951",
+      "role": "v5 production profile builder"
+    },
+    {
+      "path": "work/runtime/information-foreign-debt-public-20261031-001/build_production_profile_002.py",
+      "bytes": 26175,
+      "sha256": "86cf36788d8aa16fcfc51f722f05d73a260c3b45ea8358c6229329da442b2c46",
+      "role": "v6 production profile builder"
+    },
+    {
+      "path": "bridge/information/target_debt_principal_memory_v34.py",
+      "bytes": 28319,
+      "sha256": "e7246fd78d7a23f43c326e38ef88d8f910ae0688a59a3c309a387167fa988f5b",
+      "role": "Strict pinned v34/v41 GUI-forwarder compatibility and existing principal candidate scope"
+    },
+    {
+      "path": "bridge/information/native_ai_choice_mapping_memory_v34.py",
+      "bytes": 27711,
+      "sha256": "696f606f72c235048118f002f2c05a76f15275a9b70676bf11cdde644a5e27b4",
+      "role": "Strict pinned v34/v41 GUI-forwarder compatibility and existing principal candidate scope"
+    },
+    {
+      "path": "bridge/information/profiles/native-ai-choice-hook-v34.json",
+      "bytes": 4003,
+      "sha256": "0c7431ff6aa035804950c142c38b905e91b5b6d672737aa8fc20c4c3a40c6413",
+      "role": "Pinned v34 hook body/header/global contract asset."
+    },
+    {
+      "path": "bridge/information/foreign_economy_projection_v7.py",
+      "bytes": 70860,
+      "sha256": "36fbae6881fc51b1a3e77e4a1c10a7873f9a6a4049c5f8d0b12f1efb8f82445d",
+      "role": "Schema-specific v7 public F03 projector; preserves exact v2/v3 private permission routing."
+    },
+    {
+      "path": "bridge/information/foreign_debt_projection_v34.py",
+      "bytes": 19876,
+      "sha256": "f296873440296f2e9f8a00ffba794b86ca6c7b2f491126ac5d6ed46e53892a0b",
+      "role": "Strict v34-only public principal projection; replays the v3 permission and native leaf before exposing a safe total."
+    },
+    {
+      "path": "bridge/information/foreign_economy.py",
+      "bytes": 22121,
+      "sha256": "e9490d2f933c1c820928ba437f29c7dbb3be5753c14ded81656e62b68a7e58d2",
+      "role": "Default public F03 source route to the explicitly versioned v7 projection and v7 capture."
+    },
+    {
+      "path": "bridge/information/profiles/native-ai-choice-hook-v41.json",
+      "bytes": 3936,
+      "sha256": "e509ba76c62ac46fe30d0dadc73cac70a27057f7fe0df014dfcf1ebc91c3df39",
+      "role": "Pinned v41 own-DLL header/body/global contract; GUI forwarding only"
+    },
+    {
+      "path": "bridge/information/profiles/native-ai-choice-hook-v41-expiry.json",
+      "bytes": 3936,
+      "sha256": "482f5ba299c88c553d927bc7d1ef267d5ec1d851b56eb6013d1c52e0b775ec47",
+      "role": "Pinned v41 own-DLL header/body/global contract; GUI forwarding only"
+    },
+    {
+      "path": "bridge/information/profiles/native-ai-choice-hook-v41-peace-return.json",
+      "bytes": 3936,
+      "sha256": "fe9c9b12e81c8756b7d3accca7abde647cf395097303181add89377a8fe8ef32",
+      "role": "Pinned v41 peace-return build header/body/global contract; GUI forwarding only"
+    },
+    {
+      "path": "bridge/information/profiles/native-ai-choice-hook-v41-result-date.json",
+      "bytes": 3936,
+      "sha256": "b43c9fd874e614995cd106b95fa2777e486442870a2d691224ee34ac19fa06ab",
+      "role": "Pinned v41 result-date build header/body/global contract, GUI forwarding only"
+    },
+    {
+      "path": "bridge/information/profiles/native-ai-choice-hook-v42-independent-line.json",
+      "bytes": 3968,
+      "sha256": "de51d711ca64ea000f722497a4210a18af7c2e0a436cecaa694a05f87ef4db30",
+      "role": "Pinned v42 independent-line build header/body/global contract, GUI forwarding only"
+    },
+    {
+      "path": "bridge/information/profiles/native-ai-choice-hook-v43-flag-inputs.json",
+      "bytes": 3968,
+      "sha256": "25b4a5933ad0d24c6437eea85ff6cf54b68895d2b9ffe44b3f92fdbe4e147576",
+      "role": "Pinned v43 flag-input build header/body/global contract, GUI forwarding only"
+    },
+    {
+      "path": "bridge/information/profiles/native-ai-choice-hook-v44-support-roles.json",
+      "bytes": 3936,
+      "sha256": "8d8e9aae72efd2981ede263a5b92c84bef39df287d65c72fb68be48172623364",
+      "role": "Pinned v44 support-role build header/body/global contract, GUI forwarding only"
+    },
+    {
+      "path": "bridge/information/profiles/native-ai-choice-hook-v44-router-origin.json",
+      "bytes": 3883,
+      "sha256": "bbc5efe5496b2466b1c0c9dba593ef56ff0e01b441d4c4d96d773f145f0a6ec3",
+      "role": "Pinned v44 router-origin build header/body/global contract, GUI forwarding only"
+    },
+    {
+      "path": "bridge/information/profiles/native-ai-choice-hook-v44-fragment-retry.json",
+      "bytes": 3898,
+      "sha256": "4c7ff88102bb2e5360f6fd08b6473659c37b5f73bedfe01695521d6cd1692227",
+      "role": "Pinned v44 fragment-retry build header/body/global contract, GUI forwarding only"
+    },
+    {
+      "path": "bridge/information/profiles/native-ai-choice-hook-v44-ui-cleanup.json",
+      "bytes": 3895,
+      "sha256": "410aeebc885d40cb05317b6cbafb7a4f8a47d21a368b6eeb4ed2bbc1b897ba9e",
+      "role": "Pinned v44 UI-cleanup build header/body/global contract, GUI forwarding only"
+    },
+    {
+      "path": "bridge/information/profiles/native-ai-choice-hook-v44-unit-removal-retreat.json",
+      "bytes": 3940,
+      "sha256": "ae511bebdc290538015b3c1a0f362baf305ec6fc9e05f6bf734df9a97f499624",
+      "role": "Pinned v44 unit-removal-retreat build header/body/global contract, GUI forwarding only"
+    },
+    {
+      "path": "bridge/information/profiles/native-ai-choice-hook-v44-unit-removal-retreat-capacity.json",
+      "bytes": 3953,
+      "sha256": "c4bc8aa8fe6acd89bc07af5a92846909d08b607dc118d24cf70bb584ccc1a4dc",
+      "role": "Pinned v44-312-002 unit-removal-retreat capacity-fix header/body/global contract, GUI forwarding only"
+    }
+  ],
+  "code_guards": [
+    {
+      "name": "foreign-technology-memory-1374.diplomacy_country_selection",
+      "rva": "0xf016e0",
+      "end_rva_exclusive": "0xf01c2e",
+      "bytes": "488954241053574883ec58488bf9488bda488b0d907d4401488b01ff50284c8b1553e74301f20f1187080e00004180ba661e00000775134180ba6f1e00000074094d8b92681e0000eb074d8b92601e0000807c247f004c8997480100000f84df040000807c247e070f84d40400000fbf44247c3b052bc143010f84c30400003b0553c143010f84b70400003b054bc143010f84ab040000488b0d32c14301498bc248c1e8204c0fbfd8488bc348c1e8204889b42480000000480fbff08bc64c89b424880000004c8bb1180100004c8d0cc04b8b0cde4c8b81101500004b8b44c81048c1e820480fbfc0488d14404b8b04c8488b4838837cd114007f4a498b0cf6488b91b0140000f68259090000107436498bc248c1e83884c0742b49c1ea304180fa077421488b92e0050000418bcb458bc383e11f49c1e805428b04820fa3c80f83ec0300004533f6413bf3746a83bfb8090000010f850c010000e84037a7ff488bcf4489b7b8090000e8d1c20000488b8fa0000000488d15e3c1e300c687be09000001488b01ff5068418d5601488b084c8b81a8000000488bc841ffd0488b8fa0000000488d15dcc1e300488b01ff5068418d5602eb6d4439b7b80900000f85a2000000e8d636a7ff488bcfc787b809000001000000e864c20000488b8fa0000000488d1576c1e300c687be09000001488b01ff5068ba02000000488b084c8b81a8000000488bc841ffd0488b8fa0000000488d156ec1e300488b01ff5068ba01000000488b084c8b81a8000000488bc841ffd0e86636a7ff84c07429488b8fa0000000488d1524c1e300488b01ff5068ba01000000488b084c8b81a8000000488bc841ffd0488b873801000048c1e8200fbfc848896c24703bce0f84160100004c89742430488d54243048899f38010000bd0f000000c687e80d00000141b0018b05f048db00894424300fb605e948db0088442434488b0592a5520148896c244848c7442440050000004488742435488b8848030000488b09e840187a00488b542448488bd84883fa107232488b4c243048ffc2488bc14881fa001000007219488b49f84883c227482bc14883c0f84883f81f0f872e020000e8207a8300488bcb4c8974244048896c24484488742430e889166cff84c0752d488b050ea552010f57c0f30f101d6ffbeb004533c0488bd3f30f11442420488b8848030000488b09e8e8617a00488b0561be4301488bcf488b8018010000488b1cf0488d9348220000e867adffff488d9318220000488bcfe898b3ffff488b8fb00000008b412c83f805740c83c0f883f8010f876b010000ba05000000e843867eff488b8fb0000000ba06000000e842a17eff488b8fb0000000ba08000000e821867eff488b8fb0000000ba09000000e810867eff488b8fb0000000ba07000000e80fa17eff488b8fb0000000ba1e000000e8fea07eff488b05b7bd4301488b8018010000488b0cf0488bb1b01400004885f60f84ea0000004883c6100f84e0000000488b87b00000004c897c24504c8bb8801b0000498b5728488bc24885d274140f1f004839307411488b4810488bc14885c975ef4885c074244885d274160f1f440000483932740c488b4210488bd04885c075ef498d4f28e826d61dffb920000000453977387437498b6f28e8a216b3004889304c8970084889681044887018418b5738498947288d4a0141894f3885d2740648894508eb3b49894730eb35498b6f30e86b16b300488930488968084c89701044887018418b5738498947308d4a0141894f3885d2740648894510eb0449894728498bcfe8b7ae26004c8b7c2450488bcfe81abf0000488b6c2470c687be09000001488bb424800000004c8bb424880000004883c4585f5bc3e89effb300",
+      "sha256": "f2fc1747a0a6bd54e3bdcb6d395843b0bec1904e27be10d9117ab8a190aaec79",
+      "relocation_sites": [],
+      "source_report": {
+        "path": "bridge/information/profiles/foreign-quality-memory-1374-v2.json",
+        "guard_name": "foreign-technology-memory-1374.diplomacy_country_selection"
+      }
+    },
+    {
+      "name": "quality.descriptor_constructor",
+      "rva": "0x117ada0",
+      "end_rva_exclusive": "0x117ae70",
+      "bytes": "48895c2408574883ec2048895108488d058b46f1fe488b54246833ff48894120488bd98939488d0594d60100488941284c8949104c8941184883c13048837a18107203488b1248893949c7c0ffffffff4088394889791048c741180f0000009049ffc042383c0275f7e802a3f1fe488b44246048897b5048897b5848897b6048897b6848897b7048897b78488983800000008b44247089bb880000004889bb900000004889bb980000004889bba00000008983a80000000fb64424788883ac000000488bc3488b5c24304883c4205fc3",
+      "sha256": "ed45d4a8cba6f6fb067c5eec2b8f02a900a935b02f1662e0eeae6d4c8ec32265",
+      "relocation_sites": [],
+      "source_report": {
+        "path": "bridge/information/profiles/foreign-quality-memory-1374-v2.json",
+        "guard_name": "quality.descriptor_constructor"
+      }
+    },
+    {
+      "name": "quality.country_enumeration",
+      "rva": "0x1198960",
+      "end_rva_exclusive": "0x1198a9a",
+      "bytes": "48896c2418565741564883ec20488b35e4741a01488be9488bbe081d0000486386141d00004c8d34c7493bfe0f84fa00000048895c2440660f1f840000000000488b1f488b432048c1e8200fbfc83b0dd04e1a010f84c00000003b0df84e1a010f84b40000003b0df04e1a010f84a800000080be661e0000074c8b83b0140000751280be6f1e0000007409488b86681e0000eb07488b86601e0000488bc8488bd048c1e93848c1ea3048c1e82041f6805909000010742484c9742080fa07741b0fbfc8498b80e00500008bd183e11f48c1ea058b04900fa3c8733f488bd3488bcde82afaffff84c07530488b95b8000000488d8db000000048895c2448483b95c0000000740a48891a4883410808eb0a4c8d442448e8a637f3fe4883c708493bfe0f8519ffffff488b5c2440488b6c24504883c420415e5f5ec3",
+      "sha256": "3dc347444cbb5c02e8ca945a751decd8574bf01951ad2918809e9a20b9094578",
+      "relocation_sites": [],
+      "source_report": {
+        "path": "bridge/information/profiles/foreign-quality-memory-1374-v2.json",
+        "guard_name": "quality.country_enumeration"
+      }
+    },
+    {
+      "name": "quality.helper_095740",
+      "rva": "0x95740",
+      "end_rva_exclusive": "0x95748",
+      "bytes": "488d8140210000c3",
+      "sha256": "006bb36d34e7c2ee9ac8c40ea5bf2de1082d558e971080a1cb6e748c4200a780",
+      "relocation_sites": [],
+      "source_report": {
+        "path": "bridge/information/profiles/foreign-quality-memory-1374-v2.json",
+        "guard_name": "quality.helper_095740"
+      }
+    },
+    {
+      "name": "quality.helper_095760",
+      "rva": "0x95760",
+      "end_rva_exclusive": "0x95768",
+      "bytes": "488b05f1a62a02c3",
+      "sha256": "5968a425a83e805c530442b533d319a91f0ac53a71a37983b7628caf6ffa7610",
+      "relocation_sites": [],
+      "source_report": {
+        "path": "bridge/information/profiles/foreign-quality-memory-1374-v2.json",
+        "guard_name": "quality.helper_095760"
+      }
+    },
+    {
+      "name": "quality.helper_0985d0",
+      "rva": "0x985d0",
+      "end_rva_exclusive": "0x985d8",
+      "bytes": "807906070f94c0c3",
+      "sha256": "4932ab853f6119311eb7be6724887a7bfd73c60d4f1da9678452f63012278ed0",
+      "relocation_sites": [],
+      "source_report": {
+        "path": "bridge/information/profiles/foreign-quality-memory-1374-v2.json",
+        "guard_name": "quality.helper_0985d0"
+      }
+    },
+    {
+      "name": "quality.option_array_reader_0747050",
+      "rva": "0x747050",
+      "end_rva_exclusive": "0x74705a",
+      "bytes": "488b41108bd28b0490c3",
+      "sha256": "65a1f8be4827a92fca0c93b5ec571c13fe632f2f4f05ee627098379efafffe36",
+      "relocation_sites": [],
+      "source_report": {
+        "path": "bridge/information/profiles/foreign-quality-memory-1374-v2.json",
+        "guard_name": "quality.option_array_reader_0747050"
+      }
+    },
+    {
+      "name": "quality.physical_ref_selector_0763840",
+      "rva": "0x763840",
+      "end_rva_exclusive": "0x76386e",
+      "bytes": "80b9661e000007751780b96f1e000000740e488b81681e0000488902488bc2c3488b81601e0000488902488bc2c3",
+      "sha256": "c65e4ee4d2e23ba5039cd6f7071cffe030ad92f14666532684490f47e48509b7",
+      "relocation_sites": [],
+      "source_report": {
+        "path": "bridge/information/profiles/foreign-quality-memory-1374-v2.json",
+        "guard_name": "quality.physical_ref_selector_0763840"
+      }
+    },
+    {
+      "name": "economy.income_cell",
+      "rva": "0x119c850",
+      "end_rva_exclusive": "0x119ca95",
+      "bytes": "48895c2418564881ecb0000000498bd9488bf24585c00f84c00100004183f8010f84d100000033c9448d51020f1f40008bc183e809741c83e801741783e801741283e802740d83f8017408453bd0747941ffc2ffc183f9137cd6488d542460488bcee8f9d91cff4c8bc08b480803080348108b501803d18b481c03ca8b50248b402803d1418b483003c24103402c03c8418b403403c1418b483803c8418b403c03c1418b484003c8c7030a000000894b40c7430402000000488b9c24d00000004881c4b00000005ec34863c18b84827007000041c7010a0000004189414041c7410402000000488b9c24d00000004881c4b00000005ec34533c94c89b424c80000004533c0488d4e2033d2e870c90effc7030700000048837818107203488b0049c7c0ffffffff660f1f84000000000049ffc042803c000075f6488d8bc0000000488bd0e87787effe4883bc24e000000000746f488b86b0140000488bce4889bc24c0000000488bb8600500004883c748e8cab017ff4533c9488d4e204533c033d2488bd8e8f6c80eff4c8bc848897c2438488d4c244048895c2428e8df880100488b8c24e0000000488bd0e82f85effe488d4c2440e8558ceffe488bbc24c00000004c8bb424c8000000488b9c24d00000004881c4b00000005ec3488b4220488d4a20488b9c24e000000048c1e820984189414441c701170000004885db74ca4533c94533c033d2e872c80eff48837818107203488b0049c7c0ffffffff9049ffc042803c000075f6488bd0488bcb488b9c24d00000004881c4b00000005ee97b86effe",
+      "sha256": "ab294dc717016e4cfeb4e80f2e27fbb597b4d34557e874a12f903ff65aa8f63a",
+      "relocation_sites": [],
+      "source_report": {
+        "path": "work/runtime/information-foreign-economy-20261029-001/economy-core-ordinary-review-004.json",
+        "guard_name": "income_cell"
+      }
+    },
+    {
+      "name": "economy.income_total_components",
+      "rva": "0x36a2b0",
+      "end_rva_exclusive": "0x36a4cb",
+      "bytes": "48895c241848896c2420565741564883ec30488bf2488be933ff48893a48897a0848897a1048897a1848897a2048897a2848897a3048897a38897a408b817007000089024881c1c0280000e8c0325d004c8d400841387810740c498b40588b80d4000000eb23496350644885d27e18488bcf498b405883381a747548ffc14883c008483bca7cef8bc789442450488b0d1cddfe01488b89000a00004885c97414488b014c8d4c2450488d542458ff50088b4424586bc0648946048b8574070000894608488d8dc0280000e841325d004c8d4008488b85402400008b582441807810007411498b40588bb894000000eb2b8b4004eb94496350644885d27e1d488bcf498b4058833812740e48ffc14883c008483bca7cefeb038b7804897c2450488b058adcfe01488b88000700004885c97414488b014c8d4c2450488d542458ff50088b7c245803df83fb0a7d07bb0a000000eb0ab8d00700003bd80f4fd86bc36489460c8b8578070000894610488d8dc0280000e897315d004c8d40084533c9488d542450488bcde8638cfcff6b442450648946148b857c0700008946188b858007000089461c6b85d0240000648946208b85840700008946248b85880700008946288b858c07000089462c8b95b40700000395a00700000395b80700008956308b85900700008946348b85a80700008946388b85ac07000089463c8b85b0070000894640488bc6488b5c2460488b6c24684883c430415e5f5ec3",
+      "sha256": "61855c83d3ac3bd537c08cdeed5bd797941e8e5db0e44829b1754cc42fe24105",
+      "relocation_sites": [],
+      "source_report": {
+        "path": "work/runtime/information-foreign-economy-20261029-001/economy-core-ordinary-review-004.json",
+        "guard_name": "income_total_components"
+      }
+    },
+    {
+      "name": "economy.income_column_key",
+      "rva": "0xaf2710",
+      "end_rva_exclusive": "0xaf285c",
+      "bytes": "40534883ec20488bd983fa120f87d00000004863c2488d0dd4d850ff8b94811028af004803d1ffe2488d1511181f01e9b5000000488d15f5171f01e9a9000000488d15d9171f01e99d000000488d15bd171f01e991000000488d1521181f01e985000000488d1505181f01eb7c488d15ec171f01eb73488d15d3171f01eb6a488d15b2151f01eb61488d1599151f01eb58488d1580151f01eb4f488d155f151f01eb46488d15de151f01eb3d488d15bd151f01eb34488d15a4151f01eb2b488d158b151f01eb22488d15da291901eb19488d15f9151f01eb10488d15e0151f01eb07488d1507321b014533c94533c0488bcbe8990b9c00488bc34883c4205bc33827af009827af005027af005c27af004427af006827af00aa27af00a127af00b327af007427af007d27af008627af008f27af00bc27af00c527af00ce27af00d727af00e027af00e927af00",
+      "sha256": "569b3d136c002bf31cc72361a10aa899bc5f16245a75236a3b7ca70a288193ca",
+      "relocation_sites": [],
+      "source_report": {
+        "path": "work/runtime/information-foreign-economy-20261029-001/economy-core-ordinary-review-004.json",
+        "guard_name": "income_column_key"
+      }
+    },
+    {
+      "name": "economy.income_column_predicate_local_cfg",
+      "rva": "0xaf26a0",
+      "end_rva_exclusive": "0xaf26bf",
+      "bytes": "83e909741783e901741283e901740d83e902740883f9017403b001c332c0c3",
+      "sha256": "dfe2e1af9aee4d209d4c8bc7a6b03c514ae51f6f8b054d172a642d30d71711ee",
+      "relocation_sites": [],
+      "source_report": {
+        "path": "work/runtime/information-foreign-economy-20261029-001/economy-core-ordinary-review-004.json",
+        "guard_name": "income_column_predicate_local_cfg"
+      }
+    },
+    {
+      "name": "economy.loan_row_enumerator",
+      "rva": "0x11ae510",
+      "end_rva_exclusive": "0x11ae658",
+      "bytes": "48895c241048896c2418565741564883ec20488b152f191901488bf180ba661e000007751280ba6f1e0000007409488bba681e0000eb07488bba601e0000488b055bf3180148c1ef20480fbfdf488b8818010000488b1cd9488b9be80d00004885db74520f1f40000f1f840000000000488b0b488b96b8000000488b5b1048894c2440483b96c0000000740d48890a488386b800000008eb114c8d442440488d8eb0000000e866dcf1fe4885db75c1488b15921819014c8bb2081d0000486382141d0000498d2cc64c3bf574680f1f00498b1e488b9be80d00004885db744d90488b0b488b5b10488b412048c1e820663bc77533488b96b800000048894c2440483b96c0000000740d48890a488386b800000008eb114c8d442440488d8eb0000000e8e9dbf1fe4885db75b44983c6084c3bf5759b488b5c2448488b6c24504883c420415e5f5ec3",
+      "sha256": "9cfec1be4890a00c8ae19dcf4eea353b991715abeea944676bf8eeab61a5cd02",
+      "relocation_sites": [],
+      "source_report": {
+        "path": "work/runtime/information-foreign-economy-20261029-001/ordinary-economy-loans-001/economy-loans-ordinary-review-003.json",
+        "guard_name": "loan_row_enumerator"
+      }
+    },
+    {
+      "name": "economy.loan_cell",
+      "rva": "0x11ae660",
+      "end_rva_exclusive": "0x11aeff4",
+      "bytes": "4183f8050f873a09000048895c2408488974242055574157488d6c24c14881ecc0000000498bf9488bda4533ff44897d6f4963c0488d156519e5fe8b8c82dcef1a014803caffe1488b4b20488bc148c1e83884c00f84d308000048894d674533c94533c033d2488d4d67e801ac0dff488bd0488bcfe836c1fcff488b7d7f4885ff0f84a6080000488b4320488945674533c94533c033d2488d4d67e8d0ab0dff48837818107203488b0048c7c3ffffffff48ffc344383c1875f74c8bc3488bd0488bcfe8e869eefee960080000488b0524171901488b88081d0000486380141d00004c8d04c1493bc80f843e080000488b11488b82e80d00004885c074106690483918740f488b40104885c075f24883c108ebd2488d72204533c94533c033d2488bcee848ab0dffc7070500000048837818107203488b0048c7c3ffffffff4c8bc349ffc046383c0075f7488d8fc0000000488bd0e85669eefe488b7d7f4885ff0f84c60700004533c94533c033d2488bcee8f9aa0dff48837818107203488b0048ffc344383c1875f74c8bc3488bd0488bcfe81869eefee9900700008b433089456f488d559f488d4d6fe8406453ff90488bd0488bcfe8f4bffcff90488d4d9fe83a6eeefe488b7d7f4885ff0f845a0700008b433089456f488d559f488d4d6fe80a6453ff488bd0488bcfe8df66eefe488d4d9fe8066eeefee92e0700008b4b2c69c1e803000041c7010a0000004189414041c7410402000000488b7d7f4885ff0f84050700004c897dbf660f6f059c33c100f30f7f45cf44887dbf488d55dfe8fa78550048c7c3ffffffff0f1f0048ffc3803c180075f74c8bc3488bd0488d4dbfe84868eefe904533c94533c0488d15329db900488d4d9fe8c14a3000900f10459f0f1145df0f104daf0f114def660f6f053833c100f30f7f45afc6459f00c7456f0300000041b804000000488d15a3bfaa00488d4ddfe8d249eefe4c8d45bf488d55df488d4d1fe81154f3fe900f10000f1145ff0f1048100f114d0f4c89781048c740180f000000c60000c7456f0700000041b803000000488d15f6a6b200488d4dffe88549eefe488d55ff488bcfe8b965eefe90488b55174883fa10723248ffc2488b4dff488bc14881fa0010000072194883c227488b49f8482bc14883c0f84883f81f0f8709060000e86daa580090488d4d1fe8a36ceefe90488b55f74883fa10723248ffc2488b4ddf488bc14881fa0010000072194883c227488b49f8482bc14883c0f84883f81f0f87c9050000e827aa580090488d4d9fe85d6ceefe90488b55d74883fa100f827b05000048ffc2488b4dbf488bc14881fa001000000f825f0500004883c227488b49f8482bc14883c0f84883f81f0f8769050000e94105000048634b288d81739318003d0d583900771969c9e8030000b889b5f814f7e9c1fa0d8bc2c1e81f03d0eb224869c9e803000048b809e1d1c6116bf12948f7e948c1fa0e488bc248c1e83f4803d041c7010b000000418951404c397d7f0f84e50400006bc2644c897dbf660f6f057931c100f30f7f45cf44887dbf0fb64d9f41b82d00000085c0410f48c8884d9f8bf8f7df85c00f49f8488d5d9f488d4da0480f48d9b8d34d6210f7ef8bf2c1fe068bc6c1e81f03f0488bd38bcee89b765500803b00740e660f1f44000048ffc3803b0075f869c6e80300002bf88d8fe8030000488bd3e872765500c6032ec6430200488d459f48c7c3ffffffff48ffc3803c180075f74c8bc3488d559f488d4dbfe8b765eefe904533c94533c0488d15b959bb00488d4dffe830483000900f1045ff0f1145df0f104d0f0f114def660f6f05a730c100f30f7f450fc645ff00c7456f1800000041b804000000488d1512bdaa00488d4ddfe84147eefe4c8d45bf488d55df488d4d1fe88051f3fe900f10000f11459f0f1048100f114daf4c89781048c740180f000000c60000c7456f3800000041b803000000488d1541b2a900488d4d9fe8f446eefe488d559f488b4d7fe82763eefe90488b55b74883fa10723248ffc2488b4d9f488bc14881fa0010000072194883c227488b49f8482bc14883c0f84883f81f0f8783030000e8dba7580090488d4d1fe8116aeefe90488b55f74883fa10723248ffc2488b4ddf488bc14881fa0010000072194883c227488b49f8482bc14883c0f84883f81f0f8743030000e895a7580090488d4dffe8cb69eefe90488b55d74883fa100f82e902000048ffc2488b4dbf488bc14881fa001000000f82cd0200004883c227488b49f8482bc14883c0f84883f81f0f87dd020000e9af02000048634b288d81739318003d0d583900771969c9e8030000b889b5f814f7e9c1fa0d8bc2c1e81f03d0eb224869c9e803000048b809e1d1c6116bf12948f7e948c1fa0e488bc248c1e83f4803d069432ce80300004863c84863c2480fafc848b8cff753e3a59bc42048f7e948c1fa07488bc248c1e83f4803d041c7010a0000004189514041c74104020000004c397d7f0f841f0200004c897dbf660f6f05b62ec100f30f7f45cf44887dbf0fb6459f41b82d00000085d2410f48c088459f8bfaf7df85d20f49fa488d5d9f488d45a0480f48d8b8d34d6210f7ef8bf2c1fe068bc6c1e81f03f0488bd38bcee8d8735500803b00740b0f1f0048ffc3803b0075f869c6e80300002bf88d8fe8030000488bd3e8b2735500c6032ec6430300488d459f48c7c3ffffffff48ffc3803c180075f74c8bc3488d559f488d4dbfe8f762eefe904533c94533c0488d150957bb00488d4dffe870453000900f1045ff0f1145df0f104d0f0f114def660f6f05e72dc100f30f7f450fc645ff00c7456fc000000041b804000000488d1552baaa00488d4ddfe88144eefe4c8d45bf488d55df488d4d1fe8c04ef3fe900f10000f11459f0f1048100f114daf4c89781048c740180f000000c60000c7456fc001000041b803000000488d15a5a1b200488d4d9fe83444eefe488d559f488b4d7fe86760eefe90488b55b74883fa10723248ffc2488b4d9f488bc14881fa0010000072194883c227488b49f8482bc14883c0f84883f81f0f87cf000000e81ba5580090488d4d1fe85167eefe90488b55f74883fa10723248ffc2488b4ddf488bc14881fa0010000072194883c227488b49f8482bc14883c0f84883f81f0f878f000000e8d5a4580090488d4dffe80b67eefe90488b55d74883fa10722d48ffc2488b4dbf488bc14881fa0010000072154883c227488b49f8482bc14883c0f84883f81f771de893a458004c8d9c24c0000000498b5b20498b7338498be3415f5f5dc3e8222c8900cce81c2c8900cce8162c890090e8102c890090e80a2c890090e8042c890090e8fe2b890090e8f82b890090e8f22b8900cc90a7e61a012de71a01fde71a015fe81a0147ea1a01d9ec1a01",
+      "sha256": "9584fe6b13e025ea4cf6ea9b5a98578713bfa58d4c0dbdd1c6cc741ab57e0e78",
+      "relocation_sites": [],
+      "source_report": {
+        "path": "work/runtime/information-foreign-economy-20261029-001/ordinary-economy-loans-001/economy-loans-ordinary-review-003.json",
+        "guard_name": "loan_cell"
+      }
+    },
+    {
+      "name": "economy.registration.income_local_option_gate_and_descriptor",
+      "rva": "0x1185c94",
+      "end_rva_exclusive": "0x1185d1e",
+      "bytes": "4584ff7521488b0db8a11b01e89bfaf0feba17000000488bc8e89e135cff85c00f8516030000488d151fe4bd00488d8db03b0000e8b3d7570090c644244801c744244001000000488d85b03b000048894424384c896c24304c89742428488d054897f0fe48894424204c8d0d6c4301004c8d05552c0100488d153e6b0100488d8d50d40000e88250ffff",
+      "sha256": "79fdc09598d161c35ada082fe2dcc0a2fa44d8f450ab41c4a30bf1cb1bf1bd0a",
+      "relocation_sites": [],
+      "source_report": {
+        "path": "work/runtime/information-foreign-economy-20261029-001/ordinary-economy-loans-001/economy-loans-ordinary-review-003.json",
+        "guard_name": "income_local_option_gate_and_descriptor"
+      }
+    },
+    {
+      "name": "economy.registration.ledger_loans_title_and_descriptor",
+      "rva": "0x1186a9d",
+      "end_rva_exclusive": "0x1186afd",
+      "bytes": "488d1524d5bd00488d8d70400000e8d0c9570090c644244800c744244001000000488d857040000048894424384c896c24304c89742428488d056589f0fe48894424204533c94c8d05267a0200488d156f7b0200488d8d20d90000e8a342ffff",
+      "sha256": "e0f00c07919567752f994e841bbb827644b377863954cf876290c960490521ac",
+      "relocation_sites": [],
+      "source_report": {
+        "path": "work/runtime/information-foreign-economy-20261029-001/ordinary-economy-loans-001/economy-loans-ordinary-review-003.json",
+        "guard_name": "ledger_loans_title_and_descriptor"
+      }
+    },
+    {
+      "name": "observer_reparations_ui_entry_currentcountry_bind_first_3d7a20",
+      "rva": "0xeb7b20",
+      "end_rva_exclusive": "0xeb7bda",
+      "bytes": "48894c2408555356574154415541564157488dac2438c6ffffb8c83a0000e80dbcb700482be00f29b424b03a00000f29bc24a03a00004c8be933ff897c2440448be7897c2448897c2440488b05e7824801488945904038b8181e0000740d4038b9f60500000f85888f000080b8661e00000775124038b86f1e00007409488bb0681e0000eb07488bb0601e000048897588488b15f85c4801488bc648c1e820480fbfc8488b82180100004c8b3cc84c897d98498bcfe846fe51ff",
+      "sha256": "03f28b983b7a694ab8f746737ed21bba228e7e6453925461dab7b2f844c4ad20",
+      "relocation_sites": [],
+      "source_report": {
+        "path": "D:\\Downloads\\Europa Universalis IV（1.37.4）\\Europa Universalis IV\\eu4.exe",
+        "sha256": "b23fa0e1f698d31b01cdd1c3817a675805d8c6286cb66f9c231e6e2a42544d77",
+        "basis": "ordinary PE bytes at this exact RVA range",
+        "covered_names": [
+          "observer_reparations_ui_entry_currentcountry_bind_first_3d7a20"
+        ],
+        "reason": "function entry through first direct call to 0x3d7a20; includes current-country setup"
+      }
+    },
+    {
+      "name": "observer_reparations_ui_289a40_lookup_1",
+      "rva": "0xeb877c",
+      "end_rva_exclusive": "0xeb87c8",
+      "bytes": "e86f123dff488bd3488b08e824fe1dff84c0741f488d95b0090000488b4d80e8a0141eff488bd0488d8d701e0000e8316531ff488b5508498d8ff8140000e881123dff488945804885c07441",
+      "sha256": "72b69a1b95ca896b5353a22f7145296dfeb49d5d10022dbaaa2493a8da84a834",
+      "relocation_sites": [],
+      "source_report": {
+        "path": "D:\\Downloads\\Europa Universalis IV（1.37.4）\\Europa Universalis IV\\eu4.exe",
+        "sha256": "b23fa0e1f698d31b01cdd1c3817a675805d8c6286cb66f9c231e6e2a42544d77",
+        "basis": "ordinary PE bytes at this exact RVA range",
+        "covered_names": [
+          "observer_reparations_ui_289a40_lookup_1"
+        ],
+        "reason": "parameter setup around 0x289a40, country-reference +0x14f8 operand when present, and first nearby compare/conditional filter"
+      }
+    },
+    {
+      "name": "observer_reparations_ui_289a40_lookup_2",
+      "rva": "0xeb87f5",
+      "end_rva_exclusive": "0xeb884d",
+      "bytes": "e8f6113dff488bd0488d8dd01d0000e8d76431ff488b450848898568050000488b1d95504801488d8d68050000e8b9fd1dff4863c8488b8318010000488b0cc84881c1f8140000488bd6e8fc113dff488945804885c07441",
+      "sha256": "de36e02bdb024cab6749592b063dcab1d92b9d9d37296bd7ab17f257d61c4954",
+      "relocation_sites": [],
+      "source_report": {
+        "path": "D:\\Downloads\\Europa Universalis IV（1.37.4）\\Europa Universalis IV\\eu4.exe",
+        "sha256": "b23fa0e1f698d31b01cdd1c3817a675805d8c6286cb66f9c231e6e2a42544d77",
+        "basis": "ordinary PE bytes at this exact RVA range",
+        "covered_names": [
+          "observer_reparations_ui_289a40_lookup_2"
+        ],
+        "reason": "parameter setup around 0x289a40, country-reference +0x14f8 operand when present, and first nearby compare/conditional filter"
+      }
+    },
+    {
+      "name": "observer_reparations_ui_a68d10_row_enddate_1",
+      "rva": "0xebbec7",
+      "end_rva_exclusive": "0xebbf15",
+      "bytes": "e8f4971dff488b03488b4020488985c8050000488d8dc8050000e8fac61dff498d8d101500008bd0e8ccdd20ff488bc8e814cebaff488d9530040000488bc8e8759a40ff4533c0488d95a0280000",
+      "sha256": "060f59f0b9c5b61d13f750563cd1d61cee302645a3291acb21a6ed50e19e501c",
+      "relocation_sites": [],
+      "source_report": {
+        "path": "D:\\Downloads\\Europa Universalis IV（1.37.4）\\Europa Universalis IV\\eu4.exe",
+        "sha256": "b23fa0e1f698d31b01cdd1c3817a675805d8c6286cb66f9c231e6e2a42544d77",
+        "basis": "ordinary PE bytes at this exact RVA range",
+        "covered_names": [
+          "observer_reparations_ui_a68d10_row_enddate_1"
+        ],
+        "reason": "row getter 0xa68d10 through adjacent +0x1510 access and direct 0x2c5980 end-date helper call"
+      }
+    },
+    {
+      "name": "observer_reparations_ui_a68d10_row_enddate_2",
+      "rva": "0xebec33",
+      "end_rva_exclusive": "0xebec81",
+      "bytes": "e8886a1dff488b03488b4020488985e8050000488d8de8050000e88e991dff498d8d101500008bd0e860b020ff488bc8e8a8a0baff488d95f0040000488bc8e8096d40ff4533c0488d9580300000",
+      "sha256": "2c8cbc86b98a3b1c775c58ec6ca0f77ca61c3f0e852f37968c1394261a30b699",
+      "relocation_sites": [],
+      "source_report": {
+        "path": "D:\\Downloads\\Europa Universalis IV（1.37.4）\\Europa Universalis IV\\eu4.exe",
+        "sha256": "b23fa0e1f698d31b01cdd1c3817a675805d8c6286cb66f9c231e6e2a42544d77",
+        "basis": "ordinary PE bytes at this exact RVA range",
+        "covered_names": [
+          "observer_reparations_ui_a68d10_row_enddate_2"
+        ],
+        "reason": "row getter 0xa68d10 through adjacent +0x1510 access and direct 0x2c5980 end-date helper call"
+      }
+    },
+    {
+      "name": "observer_reparations_rva_289a40",
+      "rva": "0x289a40",
+      "end_rva_exclusive": "0x289a76",
+      "bytes": "4c6381a400000048c1ea2049c1e0040fbfc2488b91980000004c03c2493bd0740d3902740c4883c210493bd075f333c0c3488b4208c3",
+      "sha256": "62371d8b9ba1c37f9dd1681feb032220cb6ab904dd04ef93bc4fba5757289dec",
+      "relocation_sites": [],
+      "source_report": {
+        "path": "D:\\Downloads\\Europa Universalis IV（1.37.4）\\Europa Universalis IV\\eu4.exe",
+        "sha256": "b23fa0e1f698d31b01cdd1c3817a675805d8c6286cb66f9c231e6e2a42544d77",
+        "basis": "bounded reachable CFG; no exact pdata row beginning at target",
+        "function_name": "rva_289a40",
+        "pdata_rows": []
+      }
+    },
+    {
+      "name": "observer_reparations_rva_a68d10",
+      "rva": "0xa68d10",
+      "end_rva_exclusive": "0xa68d4b",
+      "bytes": "488b11488b411048c1e82098488b8a980000004c6382a400000049c1e0044c03c1493bc8740d3901740c4883c110493bc875f333c0c3488b4108c3",
+      "sha256": "a8f156ff32ff4c5c29b38152b4ad9b96af0206b4f77761c7fcdd32971594e7df",
+      "relocation_sites": [],
+      "source_report": {
+        "path": "D:\\Downloads\\Europa Universalis IV（1.37.4）\\Europa Universalis IV\\eu4.exe",
+        "sha256": "b23fa0e1f698d31b01cdd1c3817a675805d8c6286cb66f9c231e6e2a42544d77",
+        "basis": "bounded reachable CFG; no exact pdata row beginning at target",
+        "function_name": "rva_a68d10",
+        "pdata_rows": []
+      }
+    },
+    {
+      "name": "observer_reparations_creator_9b6270",
+      "rva": "0x9b6270",
+      "end_rva_exclusive": "0x9b63d3",
+      "bytes": "48895c2410574883ec20488bd9b940000000e8a9cf07014c8b05ca9b9801488bf84889442430c7400865010000c740102d2d2d0033c08947146689471e66c747182d2dc7471a2d000000c74720f8779c02c74724f8779c026689472848894730c74738ffffffff89473c488d05ff7b3201488907488b4318488b5310418b88d01d000048895710488bd7894f20498d88b81b00004889471869051696980138220000410380d01d0000894724e8ffafb2ff84c00f848b000000488b471048c1e820480fbfd0488b0574759801488b8818010000488b471848c1e820984c8b04d1488d14c0498b8010150000488d0cd0488bd7e8d9280b00488b471848c1e820480fbfd0488b0536759801488b8818010000488b471048c1e820984c8b04d1488d14c0498b8010150000488d0cd0488bd7e89b280b00c6472800488b5c24384883c4205fc3488bcfe8b4550a00ba40000000488bcf488b5c24384883c4205fe94d30d800",
+      "sha256": "96a4f161e085432c2827754c4dcbd422930d61bc5d1662b47d392d8c622bdc66",
+      "relocation_sites": [],
+      "source_report": {
+        "path": "work/runtime/information-foreign-economy-contracts-20261031-001/stage90/ordinary-reparations-001/ordinary-reparations-review-001.json",
+        "sha256": "0557ee0fbbcbdc8ea2f808809c385eb159d263c44cb8ea481f5c41aad4ff7c78",
+        "binary_path": "work/runtime/information-foreign-economy-contracts-20261031-001/stage90/ordinary-reparations-001/rva_9b6270.bin",
+        "binary_sha256": "96a4f161e085432c2827754c4dcbd422930d61bc5d1662b47d392d8c622bdc66",
+        "basis": "reused stage90 raw binary; byte-equal to the pinned EXE slice; not re-disassembled"
+      }
+    },
+    {
+      "name": "observer_reparations_registration_a68c40",
+      "rva": "0xa68c40",
+      "end_rva_exclusive": "0xa68d04",
+      "bytes": "48895c24084889742410574883ec20488b5910488bfa488b314c8bc2488bd3488d8e90000000e8d54b82ff4c8bc84c8bc7488bd3488bcee8c41f82ff488bc348c1e82098488d14c0488b46184c8d0cd0488b05c1718d014883b8c87400000075054180494604498b41084c8b05ff4b8d0148c1e820480fbfd0498b8018010000488b14d0c6828428000001498b411048c1e820480fbfd0498b8018010000488b14d0c6828428000001488bd3488b4e10488b5c2430488b7424384883c4205fe96c2692ff",
+      "sha256": "a217329289b8855f4f691eb2ecfde3df9cfa917668cbcda1f0a23180a074001e",
+      "relocation_sites": [],
+      "source_report": {
+        "path": "work/runtime/information-foreign-economy-contracts-20261031-001/stage90/ordinary-reparations-001/ordinary-reparations-review-001.json",
+        "sha256": "0557ee0fbbcbdc8ea2f808809c385eb159d263c44cb8ea481f5c41aad4ff7c78",
+        "binary_path": "work/runtime/information-foreign-economy-contracts-20261031-001/stage90/ordinary-reparations-001/rva_a68c40.bin",
+        "binary_sha256": "a217329289b8855f4f691eb2ecfde3df9cfa917668cbcda1f0a23180a074001e",
+        "basis": "reused stage90 raw binary; byte-equal to the pinned EXE slice; not re-disassembled"
+      }
+    },
+    {
+      "name": "observer_reparations_vector_mutator_28d840",
+      "rva": "0x28d840",
+      "end_rva_exclusive": "0x28d979",
+      "bytes": "48895424105556574883ec2048c1ea2033f64d85c00fbfc2498be8488bf94c6341147561488b510849c1e0044c03c2493bd00f84e3000000390274144883c210493bd075f3488bc64883c4205f5e5dc3488b72084983c0f0493bd0740d418b008902498b4008488942088b411485c00f84a6000000ffc8894114488bc64883c4205f5e5dc3488b4908498bd048c1e2044803d1483bca741139010f84860000004883c110483bca75ef48895c2440418d40018b5f104c89742450440fbf74244c3bc37e3203db3bc30f4fd8b8100000008bcb48f7e148c7c1ffffffff480f40c1488bc8e844597a01448bc3488bd0488bcfe86adfe3ff48634f14488b5c2440488bd148c1e20448035708ffc1894f144489324c8b74245048896a08488bc64883c4205f5e5dc3488b7108488bc6488969084883c4205f5e5dc3",
+      "sha256": "3b009cc27ad7f2fdfc76134ee5daa5774ac3743e00e06a251b73be08b79ef589",
+      "relocation_sites": [],
+      "source_report": {
+        "path": "work/runtime/information-foreign-economy-contracts-20261031-001/stage90/ordinary-reparations-001/ordinary-reparations-review-001.json",
+        "sha256": "0557ee0fbbcbdc8ea2f808809c385eb159d263c44cb8ea481f5c41aad4ff7c78",
+        "binary_path": "work/runtime/information-foreign-economy-contracts-20261031-001/stage90/ordinary-reparations-001/rva_28d840.bin",
+        "binary_sha256": "3b009cc27ad7f2fdfc76134ee5daa5774ac3743e00e06a251b73be08b79ef589",
+        "basis": "reused stage90 raw binary; byte-equal to the pinned EXE slice; not re-disassembled"
+      }
+    },
+    {
+      "name": "subsidies_tooltip_formatter",
+      "rva": "0xf1ac80",
+      "end_rva_exclusive": "0xf1ae45",
+      "bytes": "48895c2410488974241848897c242048894c240841564881ece0010000498bf9488bf1c7442430000000004c8d35de4117ff4c897424204c8d0db24917ffba68000000448d429c488d4c2440e8a385b10090488d05ab8dd2004889442440c74424680100000048837f18107203488b3f48c7c3ffffffff4c8bc3660f1f44000049ffc042803c070075f6488bd7488d4c2470e8f9a317ff488d05429ed20048898424a8000000c78424d000000007000000488b8424180200008b08898c24f8000000488d05a38ed2004889842410010000c784243801000001000000488b94242802000048837a18107205488b12669048ffc3803c1a0075f74c8bc3488d8c2440010000e887a317ff488d0580f0d2004889842478010000c78424a001000001000000488d8424a8010000488b9c2438020000483bc37437488d8c24a8010000e89ba817ff0f10030f118424a80100000f104b100f118c24b801000048c743100000000048c743180f000000c6030041b9040000004c8d442440488d151f3ae200488bcee897855900c74424301f0000004d8bceba68000000448d429c488d4c2440e8bd84b100488bc64c8d9c24e0010000498b5b18498b7320498b7b28498be3415ec3cc",
+      "sha256": "d273f3108f76a45c6721eaf38c8ce54a272352890b3bbb965cb222dbc66e6df5",
+      "relocation_sites": [],
+      "source_report": "work/runtime/information-subsidies-contracts-20261031-001/ordinary-subsidy-tooltip-001/ordinary-subsidy-tooltip-002.json"
+    },
+    {
+      "name": "subsidies_caller_window_1",
+      "rva": "0xf07a0c",
+      "end_rva_exclusive": "0xf07ac8",
+      "bytes": "488b85d8050000488985100100004885c00f84c70100004c8d2dc2c1d300660f1f4400004533c0488d95380b0000488d8d10010000e82a871bff488bc8e8c22519ff488b0848894d58488b85e043000048898570070000488b1d465e4301488d8d70070000e86a0b19ff4863c8488b8318010000488b1cc8488b455848898578070000488d8d78070000e8450b19ff488d8b101500008bd0e817221cff488bc8e8af1cb6ff488bf8488d55cc488bc8e8c01722ff488bcfe868ad95ff",
+      "sha256": "85906d99a28904eb56e9ddea4ed879b4002f6e6cd3eb5e3ce747738001f11227",
+      "relocation_sites": [],
+      "source_report": "work/runtime/information-subsidies-contracts-20261031-001/ordinary-subsidy-caller-windows-001/ordinary-subsidy-caller-windows-001.json"
+    },
+    {
+      "name": "subsidies_caller_window_2",
+      "rva": "0xf07b1e",
+      "end_rva_exclusive": "0xf07b90",
+      "bytes": "488d9530080000488bcfe8d38482ff488bf84533c94533c033d2488d8de0430000e88c1738ff4c89742448488d0dc022d40048894c244048897424384c896c243048897c2428488d0df5cfd30048894c24204c8bc8488d350abfd3004c8bc6488d159c6ce300488d8d703b0000e8f0300100",
+      "sha256": "9bf7269b9fd5b8661ae3b983ae55964723bc26c85ce48325263291158e36dd89",
+      "relocation_sites": [],
+      "source_report": "work/runtime/information-subsidies-contracts-20261031-001/ordinary-subsidy-caller-windows-001/ordinary-subsidy-caller-windows-001.json"
+    },
+    {
+      "name": "subsidies_caller_window_3",
+      "rva": "0xf07d27",
+      "end_rva_exclusive": "0xf07ddd",
+      "bytes": "488b85c0050000488985180100004885c00f84be0100004c8d2da7bed3004533c0488d95400b0000488d8d18010000e815841bff488bc8e8ad2219ff488b0848894d60488b85e043000048898580070000488b1d315b4301488d8d80070000e8550819ff4863c8488b8318010000488b1cc8488b456048898588070000488d8d88070000e8300819ff488d8b101500008bd0e8021f1cff488bc8e89a19b6ff488bf8488d55d0488bc8e8ab1422ff488bcfe853aa95ff",
+      "sha256": "229808fa1b493f0db05ea378c7deeb17e3d0cf47e505bfcfa85657138702f941",
+      "relocation_sites": [],
+      "source_report": "work/runtime/information-subsidies-contracts-20261031-001/ordinary-subsidy-caller-windows-001/ordinary-subsidy-caller-windows-001.json"
+    },
+    {
+      "name": "subsidies_caller_window_4",
+      "rva": "0xf07e36",
+      "end_rva_exclusive": "0xf07ea5",
+      "bytes": "488d9534080000488bcfe8bb8182ff488bf84533c94533c033d2488d4d60e8771438ff4c89742448488d0dab1fd40048894c244048897424384c896c243048897c2428488d0de0ccd30048894c24204c8bc8488d35f5bbd3004c8bc6488d158769e300488d8df03b0000e8db2d0100",
+      "sha256": "44649d52595f67e1742d8df176c4ed152f35b1ed3430751d4f27c19d85d753d7",
+      "relocation_sites": [],
+      "source_report": "work/runtime/information-subsidies-contracts-20261031-001/ordinary-subsidy-caller-windows-001/ordinary-subsidy-caller-windows-001.json"
+    },
+    {
+      "name": "subsidies_pair_getter_block_1",
+      "rva": "0xa69760",
+      "end_rva_exclusive": "0xa69796",
+      "bytes": "488b11488b411048c1e82098488b8a100100004c63821c01000049c1e0044c03c1493bc8740d3901740c4883c110493bc875f333c0c3",
+      "sha256": "2d1415380b6d19a028ba390dbc72c861db5076b03e553a36f8d422eeecb09809",
+      "relocation_sites": [],
+      "source_report": "work/runtime/information-subsidies-contracts-20261031-001/ordinary-subsidy-getters-001/ordinary-subsidy-getters-002.json"
+    },
+    {
+      "name": "subsidies_pair_getter_block_2",
+      "rva": "0xa69796",
+      "end_rva_exclusive": "0xa6979b",
+      "bytes": "488b4108c3",
+      "sha256": "fc46ea8acdf166d47f2230b3d3975fbd0a4a0f5c898b7c2b2ec854359cb94b85",
+      "relocation_sites": [],
+      "source_report": "work/runtime/information-subsidies-contracts-20261031-001/ordinary-subsidy-getters-001/ordinary-subsidy-getters-002.json"
+    },
+    {
+      "name": "subsidies_date_value_block_1",
+      "rva": "0x129280",
+      "end_rva_exclusive": "0x129289",
+      "bytes": "8b41208902488bc2c3",
+      "sha256": "1d95bd2a1f193b9175b86b2449a593f18505f752b05b4b61a1baec1f5476a2c5",
+      "relocation_sites": [],
+      "source_report": "work/runtime/information-subsidies-contracts-20261031-001/ordinary-subsidy-getters-001/ordinary-subsidy-getters-002.json"
+    },
+    {
+      "name": "subsidies_duration_value_block_1",
+      "rva": "0x862830",
+      "end_rva_exclusive": "0x862834",
+      "bytes": "8b4144c3",
+      "sha256": "75315a13a7503cb9a126675518a19ff201faa8c510e8a849d0f971d9c61bbb2b",
+      "relocation_sites": [],
+      "source_report": "work/runtime/information-subsidies-contracts-20261031-001/ordinary-subsidy-getters-001/ordinary-subsidy-getters-002.json"
+    },
+    {
+      "name": "subsidies_amount_value_block_1",
+      "rva": "0x730000",
+      "end_rva_exclusive": "0x730009",
+      "bytes": "8b41408902488bc2c3",
+      "sha256": "fb74ed52aeb95ec43df9f9a421266f4c36bc454048dec8098b4bf5a810445c46",
+      "relocation_sites": [],
+      "source_report": "work/runtime/information-subsidies-contracts-20261031-001/ordinary-subsidy-getters-001/ordinary-subsidy-getters-002.json"
+    },
+    {
+      "name": "subsidies_tooltip_date_composition_block_1",
+      "rva": "0xcf4c0",
+      "end_rva_exclusive": "0xcf4c9",
+      "bytes": "69c2382200000101c3",
+      "sha256": "cd22de52136d9c629d2a3a2fc8a0711debd19d2fe18e4ea28f5e1cae16ae633d",
+      "relocation_sites": [],
+      "source_report": "work/runtime/information-subsidies-contracts-20261031-001/ordinary-subsidy-getters-001/ordinary-subsidy-getters-002.json"
+    },
+    {
+      "name": "subsidies_creator_prefix",
+      "rva": "0x5478b0",
+      "end_rva_exclusive": "0x5479f3",
+      "bytes": "40555356574154415541564157488d6c24884881ec780100000f29b424600100004c8be9807938000f84660e0000b948000000e848b94e01488bd8c740086501000066c740102d2dc740122d0000004533e4c7401600002d2dc7401a2d000000664489601ec74020f8779c02c74024f8779c0266448960284c89603048c7c7ffffffff89783833c04889433c488d05959c730148890344896344418b45284d8d7520498b0e498d7510488b164889531048894b18894320418b4540894340418b4544894344488b05345fdf0148c1e920440fbfc148c1ea20480fbfca488b8018010000488b14c84b8d0cc0488b8210150000488d0cc8488bd3e8621c5200488b15fb5edf01488b431048c1e820440fbfc0488b431848c1e820480fbfc8488b8218010000488b14c84b8d0cc0488b8210150000488d0cc8488bd3e8211c520044886328",
+      "sha256": "71fbf283d1e0d4e60dd4152b100438581deb4ce0e0f0a879d4f9bcacfa463d5d",
+      "relocation_sites": [],
+      "source_report": "work/runtime/information-subsidies-contracts-20261031-001/ordinary-subsidy-creation-001/ordinary-subsidy-creation-001.json"
+    },
+    {
+      "name": "subsidies_pair_registration_complete_pdata",
+      "rva": "0xa69610",
+      "end_rva_exclusive": "0xa69717",
+      "bytes": "48895c24084889742410574883ec20488b5910488bfa488b314c8bc2488bd3488d8e08010000e8054282ff4c8bc84c8bc7488bd3488bcee8f41582ff488bc348c1e82098488d14c0488b4618488d3cd0488b05f1678d014883b8c8740000007504804f4604488b47084c8b0530428d0148c1e820480fbfd0498b8018010000488b14d0c6828428000001488b471048c1e820480fbfd0498b8018010000488b14d0c6828428000001488bd3488b4e10e8ac1c92ff488b4708488b15e1418d01488b5c2430488b74243848c1e820480fbfc8488b8218010000488b0cc8c6818428000001488b471048c1e820480fbfc8488b8218010000488b0cc8c68184280000014883c4205fc3",
+      "sha256": "8161988dd925e7fe550e1bd43e58498e573c9c9013692a14a673a0317c36da98",
+      "relocation_sites": [],
+      "source_report": "work/runtime/information-subsidies-contracts-20261031-001/ordinary-subsidy-creation-001/ordinary-subsidy-creation-001.json"
+    },
+    {
+      "name": "debt.diplomatic_principal_reason_4f5e90",
+      "rva": "0x4f5e90",
+      "end_rva_exclusive": "0x4f65e4",
+      "bytes": "48895c240844884424185556574154415541564157488d6c24d04881ec30010000410fb6f04c8bfa488bd94533f6418bfe4489b5880000004c8b15899fe4014138baa1230000745c4c8b4910488b05cd79e40149c1e920490fbfc9488b8018010000488b04c84180ba661e00000775124138ba6f1e00007409498b8a681e0000eb07498b8a601e0000488b402048c1e82048c1e920663bc1750ab89f860100e983060000488bcbe88453ffff894424304c8d53204c89542478498b12488b0d5d79e40148c1ea20480fbfd2488b8918010000488b14d1488b8a801200004c8b81880000004c8945884c8ba98000000049c7c4ffffffff488d154b07e3014d3be80f84d10300004d8b75004180beb3040000000f84d701000083e814894424304d85ff0f84c70100004084f6755048833d2b07e30110480f43150b07e30133db48895c243848895c244848c74424500f000000885c24384d8bc40f1f800000000049ffc042381c0275f7488d4c2438e80df1b9ff488d44243883cf01eb47498b06498bceff5040488bd8488b4c2478e80d36d9ff48895c2428488d0d7dda740148894c24204c8bc84c8d0546da7401488d1573da7401488d4de0e812bbccff9083cf0233db89bd8800000048837818107203488b0048895c245848895c246848c74424700f0000004d8bc4660f1f44000049ffc042803c000075f6488bd0488d4c2458e879f0b9ff41b10141b8ecffffff488d542458488d4d00e822dfccff90498b5708493b5710743e8b08890a48895a0848895a1848895a200f1040080f1142080f1048180f114a184889581848c740200f000000c64008000fb640288842284983470830eb0c4c8bc0498bcfe84ec5ccff90488d4d08e854f5b9ff9040f6c702741383e7fd89bd88000000488d4de0e83bf5b9ff9040f6c701744683e7fe89bd88000000488b5424504883fa10723248ffc2488b4c2438488bc14881fa0010000072194883c227488b49f8482bc14883c0f84883f81f0f876b040000e8ae3224018b442430488d155b05e301eb0233db418bb68404000085f60f84bf01000003c6894424304d85ff0f84b001000080bd8000000000754948833d4005e30110480f43152005e30148895c243848895c244848c74424500f000000c6442438004d8bc449ffc042803c020075f6488d4c2438e829efb9ff488d44243883cf04eb47498b06498bceff5040488bd8488b4c2478e82934d9ff48895c2428488d0d99d8740148894c24204c8bc84c8d0562d87401488d158fd87401488d4d90e82eb9ccff9083cf0833db89bd8800000048837818107203488b0048895c245848895c246848c74424700f0000004d8bc4669049ffc042803c000075f6488bd0488d4c2458e899eeb9ff41b101448bc6488d542458488d4db0e845ddccff90498b5708493b5710743e8b08890a48895a0848895a1848895a200f1040080f1142080f1048180f114a184889581848c740200f000000c64008000fb640288842284983470830eb0c4c8bc0498bcfe871c3ccff90488d4db8e877f3b9ff9040f6c708741383e7f789bd88000000488d4d90e85ef3b9ff9040f6c704744683e7fb89bd88000000488b5424504883fa10723248ffc2488b4c2438488bc14881fa0010000072194883c227488b49f8482bc14883c0f84883f81f0f8794020000e8d13024014983c5088b4424300fb6b5800000004c8b4588e91ffcffff4c8b542478498b0a488b053a75e40148c1e920480fbfc9488b8018010000488b0cc883b9f80d0000000f8e1b0200004533f6458bce488b89e80d0000488bc14885c9742a0f1f440000488b10458d410144387227450f45c1458bc8488b5010488bc24885d275e2488d150303e301416bd9f68b74243003f34d85ff0f84cd0100004438b580000000754c48833df702e30110480f4315d702e3014c89742438660f6f0522b88c01f30f7f44244844887424384d8bc40f1f400049ffc04638340275f7488d4c2438e8ddecb9ff488d44243883cf10eb6c418bd6895424304885c974240f1f80000000004c8b014c8b4910498bc94169402ce803000003d04d85c975e789542430498bcae8bb31d9ff488d4c243048894c2428488d0d6e50760148894c24204c8bc84c8d05efd57401488d1504917601488d4d90e88b8e0b009083cf2089bd8800000048837818107203488b004c897424584c8974246848c74424700f0000000f1f400049ffc442803c200075f64d8bc4488bd0488d4c2458e826ecb9ff41b101448bc3488d542458488d4db0e8d2daccff90498b5708493b5710743e8b08890a4c8972084c8972184c8972200f1040080f1142080f1048180f114a184c89701848c740200f000000c64008000fb640288842284983470830eb0c4c8bc0498bcfe8fec0ccff90488d4db8e804f1b9ff9040f6c720740d83e7df488d4d90e8f1f0b9ff9040f6c710743f488b5424504883fa10723448ffc2488b4c2438488bc14881fa0010000072154883c227488b49f8482bc14883c0f84883f81f7728e8712e2401eb048b7424308bc6488b9c24700100004881c430010000415f415e415d415c5f5e5dc3e8f5b55401cce8efb55401cce8e9b55401cc",
+      "sha256": "3a4bc590eabcd3965f064d510394782d5ee07515571b2da25c5f327bb6c26bbf",
+      "relocation_sites": [],
+      "source_report": {
+        "path": "work/runtime/information-foreign-debt-20261031-001/stage94/ordinary-diplo-loans-reason-001/ordinary-diplo-loans-reason-001.json",
+        "guard_name": "rva_4f5e90"
+      }
+    },
+    {
+      "name": "debt.current_action_token_getter_4f5960",
+      "rva": "0x4f5960",
+      "end_rva_exclusive": "0x4f5966",
+      "bytes": "b8ce3b0000c3",
+      "sha256": "3de8bedd590026740004e96f2a89fb834d4c3ba8889ab04e0926755935f7c965",
+      "relocation_sites": [],
+      "source_report": {
+        "path": "work/runtime/information-foreign-debt-20261031-001/stage94/class-token-candidate-002/getter-ordinary-003/getter-ordinary-003.json",
+        "guard_name": "six_bytes_through_first_ret"
+      }
+    },
+    {
+      "name": "debt.ai_accept_tooltip_entry_EF2050",
+      "rva": "0xef2050",
+      "end_rva_exclusive": "0xef2afa",
+      "bytes": "48895c240848895424105556574154415541564157488dac2400ffffff4881ec00020000498bd84c8bfa4c8be133ff897c243048893a48897a1048c742180f00000040883a48897a2048897a3048c742380f00000040887a20c742400100000148897a44be0100000089742430498b00498bc8ff90a000000048837818107203488b00488d151eb6e400488bc8e8beb0b60085c0751c498b8c2440010000488b014533c0498bd7ff9090000000e9b6090000488b03488bcbff90a000000048837818107203488b00488d1509b6e400488bc8e879b0b60085c00f859c0000004533c94533c0488d1534b6e400488d4c2458e85a125c00488d4424584c3bf8746c498b57184883fa10723048ffc2498b0f4881fa00100000721c4883c2274c8b41f8492bc8488d41f84883f81f0f8760090000498bc8e89672840049c747180f00000041c607000f10442458410f11070f104c2468410f114f10660f6f057ffaec00f30f7f442468c644245800488d4c2458e89a341affe9ed080000488b03488bcbff90a000000048837818107203488b00488d1550b5e400488bc8e8b0afb60085c00f859b0500004d8b9c2440010000488b15a9b64401498b431048c1e820480fbfc8488b8218010000488b14c8498b432048c1e8200fbfc8488d0cc9488b8210150000488b54c810488b0cc8e84eb339ff488b184c8d2d44cc19ff4885db0f8402020000488b3be8e36f30ff8b4f40488b80d0000000488b3cc8498b842440010000488b482048898d500100004533c94533c033d2488d8d50010000e83e7039ff4c8bf0488d571848837a18107203488b124533c94533c0488d4d98e8ee105c0083ce0c897424304c896c24204c8d0dabd319ffba68000000448d429a488d4dc0e89d0fb40090488d057dd5d500488945c0c745e801000000488d4df0e86d331aff0f1045980f2945f00f104da80f294d0033ff48897da848c745b00f00000040887d98488d05002ad50048894528c745500100000049837e181072034d8b3649c7c0ffffffff0f1f84000000000049ffc043383c0675f7498bd6488d4d58e8bb2d1aff41b9020000004c8d45c0488d159ab2d600488d4c2478e830105c0083ce70897424304d8bcdba68000000448d429a488d4dc0e8580fb400900f104424780f114424380f104d880f114c244848897d8848c745900f000000c6442478000fbaee078974243041b801000000488d15d605d400488d4c2438e8200f1aff488d54243848837c245010480f435424384c8b442448498bcfe8020f1aff0fbaf607488b5424504883fa10723248ffc2488b4c2438488bc14881fa0010000072194883c227488b49f8482bc14883c0f84883f81f0f87be060000e8f16f840083e6ef89742430488d4d98e821321aff488b4310488bd84885c00f8506feffff4d8b9c24400100000f57c0f30f7f44245848897c2468498b5320498b4b104c8d442458e849c8eaff488b4c2458488bd94c8d35ea955301483bd90f82c1020000483b5c24600f83b60200004c8b2b4883c30848833dc7955301007540488d8d50010000e8c98330ff4c3bf0741e488b10488938488b0da7955301488915a09553014885c97405e8d66d30ff488b8d500100004885c97405e8c56d30ff488b057e955301418b4d40488b80d0000000488b3cc8498b842440010000488b482048898d580100004533c94533c033d2488d8d58010000e8a86d39ff4c8bf0488d571848837a18107203488b124533c94533c0488d4d98e8580e5c0081ce0003000089742430498b4510488985580100004533c94533c033d2488d8d58010000e85f6d39ff488bf84c8d2d15c919ff4c896c24204c8d0de9d019ffba68000000448d429b488d4dc0e8db0cb40090488d05e314d500488945c0c745e80100000048837f18107203488b3f49c7c0ffffffff0f1f0049ffc042803c070075f6488bd7488d4df0e83a2b1aff488d057fd2d50048894528c7455001000000488d4d58e86f301aff0f1045980f1145580f104da80f114d6833ff48897da848c745b00f00000040887d98488d050227d50048898590000000c785b80000000100000049837e181072034d8b3649c7c0ffffffff0f1f400049ffc043383c0675f7498bd6488d8dc0000000e8b82a1aff41b9030000004c8d45c0488d152fb1e400488d4c2478e82d0d5c0081ce003c0000897424304d8bcdba68000000448d429b488d4dc0e8520cb400900f104424780f114424380f104d880f114c244848897d8848c745900f000000c6442478000fbaee0e8974243041b801000000488d15d002d400488d4c2438e81a0c1aff488d54243848837c245010480f435424384c8b442448498bcfe8fc0b1aff0fbaf60e488b5424504883fa10723248ffc2488b4c2438488bc14881fa0010000072194883c227488b49f8482bc14883c0f84883f81f0f87be030000e8eb6c84000fbaf60a89742430488d4d98e81a2f1aff488b4c2458e92ffdffff4885c90f845f030000488b542468482bd14883e2f8488bc14881fa001000000f823e0300004883c227488b49f8482bc14883c0f84883f81f0f874e030000e920030000488b03488bcbff90a000000048837818107203488b00488d15909ee400488bc8e8e8a9b60085c00f85f80200000f57c0f30f7f44243848897c24488d5014488d4c2438e8c5c36bff4532f6498b8c2440010000488b01ff9098000000498bb4244001000049bdabaaaaaaaaaaaaaa3d0b2e00000f85350100000f57c0f30f7f44245848897c2468498b442458488b8038010000488b1583b0440148c1e820480fbfc8488b8218010000488d542458488b0cc8e8c65c4cff488b442458488bd8483bd80f8291000000483b5c24600f8386000000488b034883c3088b4820894e40488d9550010000488d0db7f30d01e89aca1eff488bf8488bc8e83fc06bff488b4f10482b0f48c1f904490fafcd4883f928730dba28000000488bcfe8edc26bff488b064533c0488bd7488bceff902001000083f8017d07488b442458eb81488b0641b001488d542438488bceff902001000083f801410f9dc6c7464000000000488b4c24584885c90f848b000000488b442468482bc148c1f803488d14c500000000488bc14881fa0010000072194883c227488b49f8482bc14883c0f84883f81f0f87ba010000e8e16a8400eb4b488b06488bceff9098000000498b9c2440010000488d5424383d4d290000751bc6435401498b8c2440010000488b01ff90b8000000c6435400eb0c488b03488bcbff90b8000000440fb6f04533c94533c0488d4c24784584f67413488d154d51de00e8f8095c00bb01800000eb11488d155251de00e8e5095c00bb01000100895c2430488d542478498bcfe85f251aff488d4c2478e8852c1aff498b9424400100004533c94c8d442438488b5220488d4c2478e8e7635fff0fbaeb11895c24304c8d442478488d158fffd300488d4d98e8ea201aff904c8b401048837818107203488b00488bd0498bcfe8c0081aff90488d4d98e8262c1aff90488d4c2478e81b2c1aff90488b5c24384885db7468488b7c2440483bdf741d660f1f440000488d4b08e8f72b1aff4883c330483bdf75ee488b5c2438488b442448482bc348c1f804490fafc5488d144048c1e204488bc34881fa0010000072154883c227488b5bf8482bc34883c0f84883f81f7726488bcbe868698400498bc7488b9c24400200004881c400020000415f415e415d415c5f5e5dc3e8f1f0b400cce8ebf0b400cce8e5f0b40090e8dff0b40090e8d9f0b40090e8d3f0b400cc",
+      "sha256": "fe928371ee95d04d211cc88368eab66d565a41a8686b0b99b49f4a4495f10638",
+      "relocation_sites": [],
+      "source_report": {
+        "path": "work/runtime/information-foreign-debt-public-20261031-001/ordinary-native-ai-accept-guards-001/ordinary-native-ai-accept-guards-001.raw-002.json",
+        "guard_name": "tooltip_entry_EF2050"
+      }
+    },
+    {
+      "name": "debt.ai_accept_refresh_entry_EF2B00",
+      "rva": "0xef2b00",
+      "end_rva_exclusive": "0xef31c2",
+      "bytes": "48895c2410488974241848897c2420554154415541564157488bec4883ec704c8be94532e4488b8940010000488b01ff90980000004533f63d3b2900000f85fa0300004d8bbd40010000488b155fad4401498b471048c1e820480fbfc8488b8218010000488b1cc8488b9bd81800004885db0f8471010000488d35c957d40090488b3b488b5b10488b07488bcfff90980000003d4d2900000f85020100004c8b5710488b1507ad4401498bc248c1e820480fbfc8488b8218010000488b04c8488b80f0180000488b5720488bca48c1e92048c1e820663bc80f84c20000000f57c0f30f7f45e8448975f8c645fc00488975d04c8975d84c8975e08b474c41b82d2d2d00488d4dd048894c2438c64424300189442428c6442420014c8d4de8498bcae81aab64ff488b75e8488bc64885f67426498b572048c1ea20660f1f440000488b0848c1e920663bca745e488b4810488bc14885c975e8488d05e956d400488945d0448975e4488b4dd84885c97409e8ab6784004c8975d84885f6741b6690488b7e10ba20000000488bcee88f678400488bf74885ff75e7488d35a856d4004885db7444e9d6feffff41b401488d059456d400488945d0448975e4488b4dd84885c97409e8566784004c8975d86690488b5e10ba20000000488bcee83f678400488bf34885db75e70f57c0f30f7f45d04c8975e0498b8d40010000488b5120488b49104c8d45d0e8b3bfeaff488b45d8488b5dd0482bc348c1f80385c075724d8b8540010000488b1582ab4401498b401048c1e820480fbfc8488b8218010000488b14c8498b402048c1e8200fbfc8488d0cc9488b8210150000488b54c810488b0cc8e8a79d39ff84c075254d8d7d40498b0f488b01488d15baa9e400ff90c8000000488b10488bc8ff92f8020000eb434d8d7d40498b0f488b01488d1595a9e400ff90c8000000488b10488bc8ff9200030000498b0f488b01488d1576a9e400ff90c8000000488b10488bc8ff9288000000904885db7444488b45e0482bc348c1f803488d14c500000000488bc34881fa00100000721d4883c227488b5bf8482bc34883c0f84883f81f0f87aa0300004d8d7d40488bcbe8026684004584e40f841a010000498b0f488b01488d15c4a8e400ff5068488b10488bc8ff92700200004532e4498b8d40010000488b01ff9098000000498bb5400100003d0b2e00000f85c10100000f57c0f30f7f45d04c8975e0498b4558488b8038010000488b0d2aaa44014c8b891801000048c1e820480fbfc8488b461048c1e820480fbfc04d8b04c1488d55d0498b0cc9e8ce574cff488b45d0488bd849bcabaaaaaaaaaaaaaa483bd80f820f010000483b5dd80f8305010000488b034883c3088b4820894e40488d5530488d0d4aed0d01e82dc41eff488bf8488bc8e8d2b96bff488b4f10482b0f48c1f904490fafcc4883f928730dba28000000488bcfe880bc6bff488b064533c0488bd7488bceff902001000083f8017d4c488b45d0eb864d8d7d40498b8d40010000488b014533c033d2ff909000000084c00f84c9feffff4d8d7d40498b0f488b01488d1589a7e400ff5068488b10488bc8ff9268020000e9c0feffff488d5530488d0daaec0d01e88dc31eff488bd8488bc8e832b96bff488b4b10482b0b48c1f904490fafcc4883f928730dba28000000488bcbe8e0bb6bff488b064533c0488bd3488bceff902001000083f801410f9dc4eb034532e444897640488b4dd04885c90f84e4000000488b55e0482bd14883e2f8488bc14881fa0010000072194883c227488b49f8482bc14883c0f84883f81f0f8797010000e8fc638400e9aa000000488b06488bceff9098000000498b9d400100003d4d290000756ac6435401488d5530488d0de6eb0d01e8c9c21eff488bf8488bc8e86eb86bff488b4f10482b0f48c1f90449bcabaaaaaaaaaaaaaa490fafcc4883f928730dba28000000488bcfe812bb6bff488b034533c0488bd7488bcbff902001000083f801410f9dc4c6435400eb26488b03488bcbff90d000000084c07416498b8d40010000488b0133d2ff90b8000000440fb6e040b701488d1d8323d4000f1f00498b8d40010000488b11ff92980000003b03740f41ffc64883c3044183fe0c72dfeb034032ff498b8d40010000488b01ff90d000000084c074434084ff743e498b0f488b014c8b80c8000000488d150d95e40041ffd04c8b00488bc84584e4740eba0200000041ff90a8000000eb49ba0100000041ff90a8000000eb3b498b0f488b01488d15d694e400ff90c800000080b8c500000000741f498b0f488b01488d15ba94e400ff90c8000000488b10488bc8ff92f80200004c8d5c2470498b5b38498b7340498b7b48498be3415f415e415d415c5dc3e811eab400cce80beab400cc",
+      "sha256": "5f85f114bda44da5458ebb98319bca9f6012d1e96cdcaf6afac9173163a08076",
+      "relocation_sites": [],
+      "source_report": {
+        "path": "work/runtime/information-foreign-debt-public-20261031-001/ordinary-native-ai-accept-guards-001/ordinary-native-ai-accept-guards-001.raw-002.json",
+        "guard_name": "refresh_entry_EF2B00"
+      }
+    },
+    {
+      "name": "debt.ai_accept_predicate_4EA210",
+      "rva": "0x4ea210",
+      "end_rva_exclusive": "0x4ea2a2",
+      "bytes": "48895c24084889742418574883ec204885d2488bda488bf9400f95c64885d27548488d542438488d0dfb79ae01e8de50bfff488bc8488bd8e883460c00488b431048b9abaaaaaaaaaaaaaa482b0348c1f804480fafc14883f828730dba28000000488bcbe827490c00488b07440fb6c6488bd3488bcfff9020010000488b5c243083f801488b7424400f9dc04883c4205fc3",
+      "sha256": "cd76ccdf767feb86e611fd102171a41f0410f01331de1dcb58b4cf9e8075213f",
+      "relocation_sites": [],
+      "source_report": {
+        "path": "work/runtime/information-foreign-debt-public-20261031-001/ordinary-native-ai-accept-guards-001/ordinary-native-ai-accept-guards-001.raw-002.json",
+        "guard_name": "acceptance_predicate_4EA210"
+      }
+    },
+    {
+      "name": "debt.required_diplomat_constant_true_8F440",
+      "rva": "0x8f440",
+      "end_rva_exclusive": "0x8f443",
+      "bytes": "b001c3",
+      "sha256": "e18aacce29affcdddaa5f641ac1ec12552e0fe9d066e6408941b1792818b8619",
+      "relocation_sites": [],
+      "source_report": {
+        "path": "work/runtime/information-foreign-debt-public-20261031-001/ordinary-native-ai-accept-guards-001/ordinary-native-ai-accept-guards-001.raw-002.json",
+        "guard_name": "required_diplomat_leaf_8F440"
+      }
+    }
+  ],
+  "income_layout": {
+    "schema": "information.foreign_income_memory.v1",
+    "country_income_cache_offset": "0x770",
+    "category_count": 19,
+    "native_total_cache_component_indices": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      12,
+      14,
+      15,
+      16,
+      17,
+      18
+    ],
+    "native_total_cell_output_slots": [
+      0,
+      2,
+      4,
+      6,
+      7,
+      9,
+      10,
+      11,
+      12,
+      13,
+      14,
+      15,
+      16
+    ],
+    "output_slots_and_cache_indices_are_separate_layers": true,
+    "display_category_keys": [
+      {
+        "index": 0,
+        "key": "INCOMETAX"
+      },
+      {
+        "index": 1,
+        "key": "INCOMEPROD"
+      },
+      {
+        "index": 2,
+        "key": "INCOMETRADE"
+      },
+      {
+        "index": 3,
+        "key": "INCOMEGOLD"
+      },
+      {
+        "index": 4,
+        "key": "INCOMETARRIFFS"
+      },
+      {
+        "index": 5,
+        "key": "INCOMEVASSAL"
+      },
+      {
+        "index": 6,
+        "key": "INCOMEHARBORFEES"
+      },
+      {
+        "index": 7,
+        "key": "INCOMESUBS"
+      },
+      {
+        "index": 8,
+        "key": "INCOME_WAR_REPARATION"
+      },
+      {
+        "index": 12,
+        "key": "SPOILS_OF_WAR_ECOVIEW"
+      },
+      {
+        "index": 15,
+        "key": "CONDOTTIERI"
+      },
+      {
+        "index": 16,
+        "key": "KNOWLEDGE_SHARING"
+      },
+      {
+        "index": 17,
+        "key": "INC_BLOCKADES"
+      },
+      {
+        "index": 18,
+        "key": "INC_LOOTING"
+      }
+    ],
+    "unit": "ducats",
+    "scale": 1000,
+    "period": "month",
+    "reference_period": "previous_month",
+    "subsidies_cache_index": 7,
+    "reparations_cache_index": 8,
+    "current_contract_or_outgoing_payment_status_proven": false,
+    "current_ui_rendering_observed": false
+  },
+  "loan_layout": {
+    "schema": "information.foreign_loans_memory.v1",
+    "target_list_head_offset": "0xde8",
+    "maximum_nodes": 64,
+    "node_size": 24,
+    "node_record_pointer_offset": "0x0",
+    "node_next_pointer_offset": "0x10",
+    "lender_fullref_offset": "0x20",
+    "interest_offset": "0x28",
+    "principal_offset": "0x2c",
+    "due_date_offset": "0x30",
+    "observer_lender_fullref_must_match_exactly": true,
+    "principal": {
+      "unit": "ducats",
+      "scale": 1,
+      "signed_width_bits": 32
+    },
+    "interest": {
+      "unit": "percent",
+      "scale": 1000,
+      "signed_width_bits": 32
+    },
+    "due_date": {
+      "unit": "eu4_hour_tick",
+      "calendar_contract": "date-calendar-source-002"
+    },
+    "reported_scope": "loans_from_logical_observer_to_target_only",
+    "total_debt_supported": false,
+    "current_ui_rendering_observed": false
+  },
+  "bankruptcy_risk": {
+    "status": "planned",
+    "reason": "No verified read-only foreign risk formula or visibility route is established.",
+    "public_field_remains_unknown": true
+  },
+  "page_gates": {
+    "country_view_and_observer_nonplayer_role_required": true,
+    "income_page_local_predicate": {
+      "observer_fullref_byte_offset": "0x6",
+      "observer_fullref_byte_value": 7,
+      "or_world_option_index": 23,
+      "option_value": 0,
+      "or_world_option_index_hex": "0x17",
+      "option_byte_offset_from_options_pointer": "0x5c"
+    },
+    "income_page_does_not_inherit_quality_cfc70_or_tls_gate": true,
+    "loans_page_local_income_option_gate_bypass_is_not_global_gate_bypass": true,
+    "foreign_view_and_all_outer_gates_runtime_verified_by_this_profile": false
+  },
+  "semantics": {
+    "capture_schema": "information.foreign_economy_capture.v4",
+    "observer": "FRA logical nonplayer; physical player country may differ.",
+    "all_fields_partial": true,
+    "all_fields_complete": false,
+    "bankruptcy_risk": "planned; retain unknown until a separate read-only formula and permission source is proven.",
+    "loan_amounts": "The legacy observer-lent subset remains independent; target principal is available only through the separate target_debt_principal scope.",
+    "income_and_payments": "prior-month cache projection; not current contracts, outgoing obligations, or a guarantee of UI display.",
+    "observer_reparations": "Private FRA-own-economy relationship for the explicit FRA/target pair only. Does not authorize all target contracts, establish F03 target visibility, or infer a current payment obligation or amount. The legacy reparations receipt remains the previous-month income-comparison cache.",
+    "target_debt_principal": "The public amount is the target loan-list diplomatic principal sum using signed32(principal*1000) and signed32 accumulation; it excludes remaining interest and does not assert action execution or current repayment obligation.",
+    "target_debt_disclosure": "The native AI-accept selector is admitted only after the stock predicate or the exact installed v33 GUI-forwarding subset is dynamically matched; the hooked code is checked as a bounded body/header/global subset, not as a whole loaded DLL. Native executor validity, favors, diplomats, and cooldown remain outside the read gate.",
+    "native_choice_mapping": "Accept only the stock native-true predicate or one of the individually pinned v34, v41 CallAction, and v41 expiry-build GUI-forwarding hooks. Record the actual asset identity and replay every guarded byte and global. Scope remains the guarded native GUI caller.",
+    "debt_projection_routing": "The v7 public entry selects the total-principal projector only by the exact private permission schema: v2 goes to the pinned v2 projector, v3 to the pinned v34 projector; unknown schemas fail closed. The v6 profile and projector remain separate and unchanged."
+  },
+  "limitations": [
+    "This static profile build did not observe a process or read runtime memory.",
+    "It does not call native functions or prove current cache freshness, UI rendering, or an atomic frame snapshot.",
+    "Bankruptcy risk remains planned and unknown; static action/caller evidence is not a forecast formula.",
+    "Income cache entries for subsidies and reparations describe prior-month received values, not proof of active contracts or zero outgoing amounts.",
+    "The loan reader observes only exact observer-lender matches; it does not establish total debt.",
+    "The public target_debt_principal amount uses the native diplomatic principal arithmetic; it excludes remaining interest and payoff quotes.",
+    "Native AI-accept selector visibility does not prove a rendered UI, action execution, or current payment obligation.",
+    "The required-diplomat helper and action exclusion table are bounded static guards; runtime admission still uses a fresh validated selector scope and parent context checks.",
+    "The installed v33 hook is accepted only when its exact callback bytes, PE header subset, game-base global, and saved native predicate pointer match the pinned mapping contract.",
+    "The mapping contract validates a matched loaded-DLL subset and does not verify the whole loaded DLL hash.",
+    "The hook audit establishes installation and bounded control flow, not actual callback execution or UI rendering in the profiled session."
+  ],
+  "observer_reparations": {
+    "private_field": "F03.observer_reparations",
+    "basis": "private_native_fra_own_economy_pair_relation",
+    "scope": "observer_economy_bilateral_reparations",
+    "read_conditions": [
+      "outer_target_country_view_admitted",
+      "logical_FRA_nonplayer_role_verified",
+      "observer_economy_pair_binding_known",
+      "permission_world_date_matches_capture_context_before",
+      "two_pass_private_field_raw_inputs_stable"
+    ],
+    "does_not_establish": [
+      "all_target_country_reparations_contracts",
+      "F03_foreign_target_visibility",
+      "actual_UI_rendering",
+      "current_payment_obligation",
+      "payment_amount_or_percentage"
+    ],
+    "code_guard_review": "work/runtime/information-reparations-capture-20261031-001/ordinary-observer-reparations-001/review-001.json",
+    "preferred_image_base": "0x140000000"
+  },
+  "observer_subsidies": {
+    "private_field": "F03.observer_subsidies",
+    "basis": "private_native_fra_own_fiscal_subsidy_pair",
+    "scope": "observer_fiscal_bilateral_subsidies",
+    "read_conditions": [
+      "outer_target_country_view_admitted",
+      "logical_FRA_nonplayer_role_verified",
+      "both_fiscal_pair_rows_bind_exact_country_owner_and_fullrefs",
+      "permission_world_date_matches_capture_context_before",
+      "same_reader_fresh_permission_rebind",
+      "two_pass_private_field_raw_inputs_stable"
+    ],
+    "does_not_establish": [
+      "all_target_country_subsidy_contracts",
+      "actual_FRA_UI_rendering",
+      "current_payment_obligation",
+      "term_legality",
+      "native_active_interval",
+      "flag_0x28_semantics"
+    ],
+    "country_row_stride": "0x48",
+    "row_owner_country_offset": "0x14f8",
+    "owner_vector_offset": "0x108",
+    "entry_stride": "0x10",
+    "supported_object_vtable_rva": "0x1c815d8",
+    "object_size": "0x48",
+    "monthly_nominal_amount": {
+      "offset": "0x40",
+      "type": "signed_i32",
+      "scale": 1000,
+      "unit": "ducats",
+      "period": "month"
+    },
+    "displayed_end_date": {
+      "start_offset": "0x20",
+      "duration_offset": "0x44",
+      "duration_unit": "years",
+      "algorithm": "signed32_wrap(start + signed32_wrap(years * 8760))"
+    },
+    "ordinary_code_reports": [
+      "work/runtime/information-subsidies-contracts-20261031-001/ordinary-subsidy-tooltip-001/ordinary-subsidy-tooltip-002.json",
+      "work/runtime/information-subsidies-contracts-20261031-001/ordinary-subsidy-caller-windows-001/ordinary-subsidy-caller-windows-001.json",
+      "work/runtime/information-subsidies-contracts-20261031-001/ordinary-subsidy-getters-001/ordinary-subsidy-getters-002.json",
+      "work/runtime/information-subsidies-contracts-20261031-001/ordinary-subsidy-creation-001/ordinary-subsidy-creation-001.json"
+    ],
+    "preferred_image_base": "0x140000000"
+  },
+  "base_profile": {
+    "path": "bridge/information/profiles/foreign-economy-memory-1374-v6.json",
+    "bytes": 104203,
+    "sha256": "3fbb65eadc9301765896bdde35d84e19f9e93e4b28f54a9820b30d5c2f213626"
+  },
+  "target_debt_principal": {
+    "private_field": "F03.target_debt_principal",
+    "basis": "private_native_diplomatic_target_principal",
+    "scope": "native_negotiated_ai_recipient_principal_candidate",
+    "public_projection_basis": "native_debt_independent_scopes",
+    "read_conditions": [
+      "outer_target_country_view_admitted",
+      "logical_FRA_nonplayer_role_verified_by_parent_context",
+      "fresh_country_database_bindings_and_fullrefs_match",
+      "world_date_and_native_action_mapping_rechecked_before_and_after",
+      "native_ai_accept_selector_scope_valid_for_same_target_and_date",
+      "host_controlled_target_and_physical_player_POR_are_excluded",
+      "current_action_token_15310_is_not_in_the_stable_exclusion_table",
+      "target_principal_field_and_raw_trace_are_stable_and_strictly_replayed"
+    ],
+    "native_ai_accept_scope": {
+      "scope": "native_ai_accept_principal_amount",
+      "action_id": "trade_favors_for_gold",
+      "phase": "initiate",
+      "native_selector_is_independent_of_action_execution_validity": true,
+      "native_executor_validity_is_not_a_read_gate": true,
+      "favors_balance_or_amount_is_not_a_read_gate": true,
+      "diplomats_or_cooldown_are_not_read_gates": true,
+      "excluded_token": 15310,
+      "exclusion_table_rva": "0x1c35460",
+      "exclusion_table_bytes": 48,
+      "excluded_token_absent_in_pinned_table": true,
+      "mapping_helper_schema": "information.native_ai_choice_mapping_memory.v2",
+      "mapping_helper_path": "bridge/information/native_ai_choice_mapping_memory_v34.py",
+      "accepted_mapping_modes": [
+        "native_true",
+        "installed_observer_gui_forwarding_v34",
+        "installed_observer_gui_forwarding_v41",
+        "installed_observer_gui_forwarding_v42",
+        "installed_observer_gui_forwarding_v43",
+        "installed_observer_gui_forwarding_v44"
+      ],
+      "hook_asset_path": "bridge/information/profiles/native-ai-choice-hook-v34.json",
+      "hook_asset_sha256": "0c7431ff6aa035804950c142c38b905e91b5b6d672737aa8fc20c4c3a40c6413",
+      "vtable_mapping_cells_are_not_static_guarded": true,
+      "actual_UI_rendering_observed": false,
+      "installed_v34_gui_forwarding_subset": {
+        "dll_sha256": "f1c0a589a9922bae5c395b564b3419748f5d6d789d565d5d78b0f86ab8358138",
+        "dll_file_bytes": 3540986,
+        "preferred_image_base": "0x36ee30000",
+        "body_rva": "0x59690",
+        "body_end_rva_exclusive": "0x59b1f",
+        "body_bytes": 1167,
+        "body_sha256": "766c88fe5209fd49507ace2ec822b555b9c9d8455ca56bb1d638208fe9cda4c5",
+        "game_module_base_global_rva": "0xd3d560",
+        "saved_original_predicate_global_rva": "0x7350b8",
+        "saved_original_predicate_rva": "0x8f440",
+        "special_ai_return_rva": "0xb22a3",
+        "guarded_gui_refresh_rva_range": [
+          "0xef2b00",
+          "0xef31c2"
+        ],
+        "gui_caller_uses_saved_native_predicate": true,
+        "whole_loaded_dll_hash_verified": false,
+        "runtime_callback_execution_observed": false,
+        "proof_scope": "For native GUI callers within the guarded refresh function, the special daily-AI caller check is false; the favor-gold vtable path calls its saved original predicate. This is not a general claim that the hook always returns true."
+      },
+      "additional_hook_assets": [
+        {
+          "path": "bridge/information/profiles/native-ai-choice-hook-v41.json",
+          "sha256": "e509ba76c62ac46fe30d0dadc73cac70a27057f7fe0df014dfcf1ebc91c3df39"
+        },
+        {
+          "path": "bridge/information/profiles/native-ai-choice-hook-v41-expiry.json",
+          "sha256": "482f5ba299c88c553d927bc7d1ef267d5ec1d851b56eb6013d1c52e0b775ec47"
+        },
+        {
+          "path": "bridge/information/profiles/native-ai-choice-hook-v41-peace-return.json",
+          "sha256": "fe9c9b12e81c8756b7d3accca7abde647cf395097303181add89377a8fe8ef32"
+        },
+        {
+          "path": "bridge/information/profiles/native-ai-choice-hook-v41-result-date.json",
+          "sha256": "b43c9fd874e614995cd106b95fa2777e486442870a2d691224ee34ac19fa06ab"
+        },
+        {
+          "path": "bridge/information/profiles/native-ai-choice-hook-v42-independent-line.json",
+          "sha256": "de51d711ca64ea000f722497a4210a18af7c2e0a436cecaa694a05f87ef4db30"
+        },
+        {
+          "path": "bridge/information/profiles/native-ai-choice-hook-v43-flag-inputs.json",
+          "sha256": "25b4a5933ad0d24c6437eea85ff6cf54b68895d2b9ffe44b3f92fdbe4e147576"
+        },
+        {
+          "path": "bridge/information/profiles/native-ai-choice-hook-v44-support-roles.json",
+          "sha256": "8d8e9aae72efd2981ede263a5b92c84bef39df287d65c72fb68be48172623364"
+        },
+        {
+          "path": "bridge/information/profiles/native-ai-choice-hook-v44-router-origin.json",
+          "sha256": "bbc5efe5496b2466b1c0c9dba593ef56ff0e01b441d4c4d96d773f145f0a6ec3",
+          "bytes": 3883,
+          "role": "Pinned v44 router-origin build header/body/global contract, GUI forwarding only"
+        },
+        {
+          "path": "bridge/information/profiles/native-ai-choice-hook-v44-fragment-retry.json",
+          "sha256": "4c7ff88102bb2e5360f6fd08b6473659c37b5f73bedfe01695521d6cd1692227",
+          "bytes": 3898,
+          "role": "Pinned v44 fragment-retry build header/body/global contract, GUI forwarding only"
+        },
+        {
+          "path": "bridge/information/profiles/native-ai-choice-hook-v44-ui-cleanup.json",
+          "sha256": "410aeebc885d40cb05317b6cbafb7a4f8a47d21a368b6eeb4ed2bbc1b897ba9e",
+          "bytes": 3895,
+          "role": "Pinned v44 UI-cleanup build header/body/global contract, GUI forwarding only"
+        }
+      ]
+    },
+    "principal_amount": {
+      "source": "all_principal_words_in_the_bound_target_loan_list",
+      "unit": "ducats",
+      "scale": 1000,
+      "signed_width_bits": 32,
+      "arithmetic": "signed32_wrap_each_principal_times_1000_then_signed32_add",
+      "includes_remaining_interest": false,
+      "overflow_is_preserved_and_reported": true
+    },
+    "code_guard_names": [
+      "debt.diplomatic_principal_reason_4f5e90",
+      "debt.current_action_token_getter_4f5960",
+      "debt.ai_accept_tooltip_entry_EF2050",
+      "debt.ai_accept_refresh_entry_EF2B00",
+      "debt.ai_accept_predicate_4EA210",
+      "debt.required_diplomat_constant_true_8F440"
+    ],
+    "data_guard_names": [
+      "debt.ai_accept_excluded_action_tokens_1c35460"
+    ],
+    "ordinary_code_reports": [
+      "work/runtime/information-foreign-debt-20261031-001/stage94/ordinary-diplo-loans-reason-001/ordinary-diplo-loans-reason-001.json",
+      "work/runtime/information-foreign-debt-20261031-001/stage94/class-token-candidate-002/getter-ordinary-003/getter-ordinary-003.json",
+      "work/runtime/information-foreign-debt-public-20261031-001/ordinary-native-ai-accept-guards-001/ordinary-native-ai-accept-guards-001.raw-002.json",
+      "work/runtime/information-foreign-debt-public-20261031-001/ordinary-ai-accept-predicate-seeds-001/ai-accept-seeds-001.json",
+      "work/runtime/information-foreign-debt-public-20261031-001/stage95/native-ai-accept-hook-audit-001/ordinary-choice-hook-body-001/ordinary-hook-analysis.json",
+      "work/runtime/information-foreign-debt-public-20261031-001/stage95/native-ai-accept-hook-audit-001/ordinary-choice-hook-body-001/ordinary-pe-report.json"
+    ],
+    "does_not_establish": [
+      "remaining_interest_or_take_on_debt_payoff_quote",
+      "action_execution_success_or_native_executor_validity",
+      "actual_UI_rendering",
+      "current_repayment_obligation_or_payment",
+      "bankruptcy_risk",
+      "whole_loaded_v34_DLL_hash_at_runtime",
+      "hook_callback_execution_in_the_audited_session"
+    ],
+    "preferred_image_base": "0x140000000",
+    "native_choice_hook_evidence": [
+      "work/runtime/information-debt-quote-query-20261101-001/foreign-economy-v34-compatibility-plan-002/report.json",
+      "work/runtime/information-debt-quote-query-20261101-001/foreign-economy-v34-compatibility-plan-002/hook-00059690-00059b1f.bin",
+      "work/runtime/information-debt-quote-query-20261101-001/foreign-economy-v34-compatibility-plan-002/hook-00059690-00059b1f.disasm.txt",
+      "work/runtime/diplomacy-observer-20261101-r75-interest-quote-001/build-manifest.json",
+      "work/native/alliance-inbound.inc",
+      "bridge/information/profiles/native-ai-choice-hook-v34.json",
+      "work/runtime/information-expiry-install-prep-20261108-263-001/choice-asset-evidence.json"
+    ]
+  },
+  "data_guards": [
+    {
+      "name": "debt.ai_accept_excluded_action_tokens_1c35460",
+      "rva": "0x1c35460",
+      "end_rva_exclusive": "0x1c35490",
+      "section": ".rdata",
+      "bytes": "28300000292a0000cc3b0000e02d0000da2d00003c29000007330000b933000075330000cb3b0000cd3b000066380000",
+      "sha256": "a04f3645880f469de2959747a3b1c02acaf6d52aa506975e27cde9b7382cc0f9",
+      "relocation_sites": [],
+      "source_report": {
+        "path": "work/runtime/information-foreign-debt-public-20261031-001/ordinary-ai-accept-predicate-seeds-001/ai-accept-seeds-001.json",
+        "guard_name": "excluded_token_table"
+      }
+    }
+  ],
+  "reviewed_dependency_changes": [
+    {
+      "path": "bridge/information/target_debt_principal_memory_v34.py",
+      "from_profile": "foreign-economy-memory-1374-v6.json",
+      "from_bytes": null,
+      "from_sha256": null,
+      "to_bytes": 27566,
+      "to_sha256": "293a8061bab1db8e5060ee894275b347d1b97ffdcbde0716a96345c31ddbb277",
+      "reason": "New v7-only adapter swaps the dynamic mapping dependency to the exact v34 hook; the v6 adapter remains unchanged and accepts only the pinned v33 mapping."
+    },
+    {
+      "path": "bridge/information/native_ai_choice_mapping_memory_v34.py",
+      "from_profile": "foreign-economy-memory-1374-v7-r3.json",
+      "from_bytes": 12563,
+      "from_sha256": "6f1be78beb2c0db55c981e27b3f5ba5f6b3949099bdaadc4784af715d27c613a",
+      "to_bytes": 13420,
+      "to_sha256": "1ef5efd37328c730a3a0ab5c20e5764c0180a04962f3c151ec668b8d56b4c0b6",
+      "reason": "Accept the exact v41 expiry build GUI hook and retain its actual asset identity in strict replay."
+    },
+    {
+      "path": "bridge/information/target_debt_principal_memory_v34.py",
+      "from_profile": "foreign-economy-memory-1374-v7-r3.json",
+      "from_bytes": 28071,
+      "from_sha256": "bfc432c1d8b9eb27ae843e07f512114da75da9d2418fe58185fb8a55ed4777d5",
+      "to_bytes": 28075,
+      "to_sha256": "c70b6507722ce352ba4fc45490253a0df5c6aa4ca57c59e65f1d7891bf03deaf",
+      "reason": "Accept the exact v41 expiry build GUI hook and retain its actual asset identity in strict replay."
+    },
+    {
+      "path": "bridge/information/target_debt_principal_memory_v34.py",
+      "from_profile": "foreign-economy-memory-1374-v7-r7.json",
+      "from_bytes": 28217,
+      "from_sha256": "540333406fcbc16f3091f1d4b91b6c04b1856ca92058987fda45aefb55fed948",
+      "to_bytes": 28262,
+      "to_sha256": "53ee304e4bafc39e1945186a1b63433c4798b4365bb1eaef69139f1aeb390172",
+      "reason": "Accept the exact v43 flag-input build GUI hook and retain its actual asset identity in strict replay."
+    },
+    {
+      "path": "bridge/information/native_ai_choice_mapping_memory_v34.py",
+      "from_profile": "foreign-economy-memory-1374-v7-r7.json",
+      "from_bytes": 17017,
+      "from_sha256": "b7b993063b72a12a6e2029285de2bca169d5050ba2648bef642405e0998891d7",
+      "to_bytes": 17790,
+      "to_sha256": "157d2c1ce3480f613f06c7840be3378ad0645fc8ce053389cf697e3ee47f0f48",
+      "reason": "Accept the exact v43 flag-input build GUI hook and retain its actual asset identity in strict replay."
+    },
+    {
+      "path": "bridge/information/native_ai_choice_mapping_memory_v34.py",
+      "from_profile": "foreign-economy-memory-1374-v7-r8.json",
+      "from_bytes": 17790,
+      "from_sha256": "157d2c1ce3480f613f06c7840be3378ad0645fc8ce053389cf697e3ee47f0f48",
+      "to_bytes": 18565,
+      "to_sha256": "fbb134b32105b62d3432e9bba1f37cfdd927eb2a0fe779165fa610cfcc2b187f",
+      "reason": "Accept the exact v44 support-role build GUI hook and retain its asset identity in strict replay."
+    },
+    {
+      "path": "bridge/information/target_debt_principal_memory_v34.py",
+      "from_profile": "foreign-economy-memory-1374-v7-r8.json",
+      "from_bytes": 28262,
+      "from_sha256": "53ee304e4bafc39e1945186a1b63433c4798b4365bb1eaef69139f1aeb390172",
+      "to_bytes": 28319,
+      "to_sha256": "e7246fd78d7a23f43c326e38ef88d8f910ae0688a59a3c309a387167fa988f5b",
+      "reason": "Accept the exact v44 support-role build GUI hook and retain its asset identity in strict replay."
+    },
+    {
+      "path": "bridge/information/native_ai_choice_mapping_memory_v34.py",
+      "from_profile": "foreign-economy-memory-1374-v7-r9.json",
+      "from_bytes": null,
+      "from_sha256": null,
+      "to_bytes": 19615,
+      "to_sha256": "b7cc8482d30e4ec62ac5fba869a4a87a2c7f18ea164b259fa3d2898fedf60861",
+      "reason": "Accept the exact v44 router-origin build GUI hook while retaining all prior v44 and older assets."
+    },
+    {
+      "path": "bridge/information/target_debt_principal_memory_v34.py",
+      "from_profile": "foreign-economy-memory-1374-v7-r9.json",
+      "from_bytes": null,
+      "from_sha256": null,
+      "to_bytes": 28319,
+      "to_sha256": "e7246fd78d7a23f43c326e38ef88d8f910ae0688a59a3c309a387167fa988f5b",
+      "reason": "Accept the exact v44 router-origin build GUI hook while retaining all prior v44 and older assets."
+    },
+    {
+      "path": "bridge/information/native_ai_choice_mapping_memory_v34.py",
+      "from_profile": "foreign-economy-memory-1374-v7-r10.json",
+      "from_bytes": null,
+      "from_sha256": null,
+      "to_bytes": 23823,
+      "to_sha256": "393aaab93edd23600e3fccfe170ce29341d0567836942a393079c3889ab2db51",
+      "reason": "Accept the exact v44 fragment-retry hook while retaining all prior v44 and older assets."
+    },
+    {
+      "path": "bridge/information/target_debt_principal_memory_v34.py",
+      "from_profile": "foreign-economy-memory-1374-v7-r10.json",
+      "from_bytes": null,
+      "from_sha256": null,
+      "to_bytes": 28319,
+      "to_sha256": "e7246fd78d7a23f43c326e38ef88d8f910ae0688a59a3c309a387167fa988f5b",
+      "reason": "Accept the exact v44 fragment-retry hook while retaining all prior v44 and older assets."
+    },
+    {
+      "path": "bridge/information/native_ai_choice_mapping_memory_v34.py",
+      "from_profile": "foreign-economy-memory-1374-v7-r11.json",
+      "from_bytes": 23823,
+      "from_sha256": "393aaab93edd23600e3fccfe170ce29341d0567836942a393079c3889ab2db51",
+      "to_bytes": 25332,
+      "to_sha256": "8bc4448ef9dab87c4e378f2bdcd87d7c49773c8d238778732c972c3a4e032ad0",
+      "reason": "Pin the exact v44 UI-cleanup GUI-forwarding mapping while preserving earlier asset contracts."
+    },
+    {
+      "path": "bridge/information/native_ai_choice_mapping_memory_v34.py",
+      "from_profile": "foreign-economy-memory-1374-v7-r12.json",
+      "from_bytes": null,
+      "from_sha256": null,
+      "to_bytes": 26391,
+      "to_sha256": "e889d566d5769ba54681c9f737b37c8243ea86e43d55c52881764cdb072c8329",
+      "reason": "Pin the exact v44 unit-removal-retreat GUI-forwarding mapping while retaining earlier v44 assets."
+    }
+  ],
+  "v34_compatibility": {
+    "profile_generation": "explicit_v7_only; v6 remains pinned to v33",
+    "dll_sha256_static_provenance": "f1c0a589a9922bae5c395b564b3419748f5d6d789d565d5d78b0f86ab8358138",
+    "dll_runtime_verified": false,
+    "installed_choice_hook": {
+      "symbol": "_ZN30bridge_alliance_inbound_detailL33inbound_negotiated_pending_choiceEPv",
+      "rva": "0x59690",
+      "size_bytes": 1167,
+      "body_sha256": "766c88fe5209fd49507ace2ec822b555b9c9d8455ca56bb1d638208fe9cda4c5",
+      "game_base_global_rva": "0xd3d560",
+      "favor_gold_original_global_rva": "0x7350b8",
+      "saved_original_expected": "B23 game_base + 0x8f440",
+      "saved_original_body_hex": "b001c3",
+      "vtable_rva": "0x1c80980",
+      "method_offset": "0xd0",
+      "runtime_reader_checks_whole_loaded_dll_hash": false
+    },
+    "why_separate_from_v6": "v6 accepts only pointer delta 0x56850 and the pinned v33 asset; v7 accepts only pointer delta 0x59690 and the separate pinned v34 asset."
+  },
+  "profile_revision": 13
+}

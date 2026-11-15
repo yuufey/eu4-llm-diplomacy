@@ -1,0 +1,255 @@
+{
+  "profile_id": "trade-power-memory-1374",
+  "game_version": "1.37.4",
+  "executable": {
+    "sha256": "b23fa0e1f698d31b01cdd1c3817a675805d8c6286cb66f9c231e6e2a42544d77",
+    "image_base_va": "0x140000000"
+  },
+  "source_index": {
+    "source_index_id": "information-trade-power-source-index-002",
+    "path": "work/runtime/information-trade-power-20261027-001/trade-power-source-index-002.json",
+    "sha256": "06e31ac57f698eeebee294d3f238f1b902976be83aae02ac30118ad754d2f104"
+  },
+  "layout": {
+    "runtime_total_power_offset": "0xc8",
+    "runtime_total_power_width": 4,
+    "runtime_total_power_signed": true,
+    "entry_power_offsets": [
+      "0x44",
+      "0x48",
+      "0x4c",
+      "0x50",
+      "0x54"
+    ],
+    "entry_power_width": 4,
+    "entry_power_signed": true,
+    "source_trade_profile_sha256": "1375800668ed0ddec29d2e5f8efe8e1369d1e4da8b0aa6916b5b970078b137cd",
+    "country_fullref_offset": "0x20",
+    "country_fullref_slot_offset": "0x4",
+    "country_fullref_slot_width": 2,
+    "country_fullref_slot_signed": true,
+    "entry_table_offset": "0x18",
+    "entry_stride": "0xc0",
+    "node_definition_offset": "0xa8",
+    "definition_key_offset": "0x10",
+    "predicate_true_rva": "0x8f440",
+    "predicate_false_rva": "0x8f450",
+    "signed": true,
+    "wrap_bits": 32
+  },
+  "semantics": {
+    "basis": "native_trade_node_power_caches",
+    "unit": "trade_power",
+    "scale": 1000,
+    "period": "current",
+    "country_value_origin": "derived_from_copied_native_caches",
+    "node_value_origin": "derived_from_copied_native_entry_caches",
+    "total_value_origin": "copied_native_cache",
+    "freshness": "partial_cache_observation",
+    "complete": false
+  },
+  "formula": {
+    "input_widths": {
+      "0x44": "signed32",
+      "0x48": "signed32",
+      "0x4c": "signed32",
+      "0x50": "signed32",
+      "0x54": "signed32"
+    },
+    "q64": "trunc0(i64(i32(entry+0x44)) * i64(i32(entry+0x4c)) / 1000)",
+    "q32": "i32(q64)",
+    "positive32": "q32 if q32 > 0 else 0",
+    "cap": "signed_min(i32(entry+0x48), positive32)",
+    "delta": "i32(entry+0x54 - entry+0x50)",
+    "final": "i32(cap + delta)",
+    "order": [
+      "signed64 product/trunc0",
+      "narrow q64 to signed32",
+      "TEST/CMOVG signed max-zero on q32",
+      "signed cap",
+      "32-bit delta",
+      "32-bit final wrap"
+    ],
+    "native_width_boundary": "The TEST/CMOVG sequence reads EDX/R8D, so the branch predicate is signed q32, not the un-narrowed q64.",
+    "forbidden_rewrites": [
+      "q64>0 then narrow",
+      "max(0, product/1000 + delta)",
+      "cap after delta",
+      "unsigned cap",
+      "sum as denominator"
+    ]
+  },
+  "code_guards": [
+    {
+      "name": "country_power_selector_path_1",
+      "kind": "selector_and_entry_selection",
+      "rva": "0x101dd01",
+      "rva_end_exclusive": "0x101dd21",
+      "va": "0x14101dd01",
+      "va_end_exclusive": "0x14101dd21",
+      "hex": "4c8b4760488b4f58488b512048c1ea20480fbfca4c8d0c4949c1e1064d034818",
+      "sha256": "20d0e778db9bc866070158e8a0d511e2e921a5207cab217a6e075d28ec719ade",
+      "address_semantics": "RVA/VA retained separately; end is exclusive"
+    },
+    {
+      "name": "country_power_selector_path_2",
+      "kind": "selector_and_entry_selection",
+      "rva": "0x101ed2b",
+      "rva_end_exclusive": "0x101ed4b",
+      "va": "0x14101ed2b",
+      "va_end_exclusive": "0x14101ed4b",
+      "hex": "488b5760488b4758488b402048c1e820480fbfc04c8d0c4049c1e1064c034a18",
+      "sha256": "7ca04a0d6a87af4d7c9ec41668ac914476d69b17d82d2694f4595c0f491a6cf3",
+      "address_semantics": "RVA/VA retained separately; end is exclusive"
+    },
+    {
+      "name": "country_power_formula_zero_init_path_1",
+      "kind": "formula_zero_init",
+      "rva": "0x101d64b",
+      "rva_end_exclusive": "0x101d64e",
+      "va": "0x14101d64b",
+      "va_end_exclusive": "0x14101d64e",
+      "hex": "4533f6",
+      "sha256": "0385882cef4c3440ab67752cc28e1630e8fd267c66218b142a2ba5468d1da828",
+      "address_semantics": "RVA/VA retained separately; end is exclusive"
+    },
+    {
+      "name": "country_power_formula_zero_init_path_2",
+      "kind": "formula_zero_init",
+      "rva": "0x101e3fa",
+      "rva_end_exclusive": "0x101e3fd",
+      "va": "0x14101e3fa",
+      "va_end_exclusive": "0x14101e3fd",
+      "hex": "4533f6",
+      "sha256": "0385882cef4c3440ab67752cc28e1630e8fd267c66218b142a2ba5468d1da828",
+      "address_semantics": "RVA/VA retained separately; end is exclusive"
+    },
+    {
+      "name": "country_power_formula_path_1",
+      "kind": "complete_signed_formula",
+      "rva": "0x101dd21",
+      "rva_end_exclusive": "0x101dd69",
+      "va": "0x14101dd21",
+      "va_end_exclusive": "0x14101dd69",
+      "hex": "496351444963494c480fafd148b8cff753e3a59bc42048f7ea48c1fa07488bc248c1e83f4803d0458bc685d2440f4fc2418b4154412b415045394148450f4c41484403c044894567",
+      "sha256": "8fec48018bc62c619e7f06d80ab34868aac0ebbb050ad53ab12e4a53bed5ee3b",
+      "address_semantics": "RVA/VA retained separately; end is exclusive"
+    },
+    {
+      "name": "country_power_formula_path_2",
+      "kind": "complete_signed_formula",
+      "rva": "0x101ed4b",
+      "rva_end_exclusive": "0x101ed93",
+      "va": "0x14101ed4b",
+      "va_end_exclusive": "0x14101ed93",
+      "hex": "4963494c49634144480fafc848b8cff753e3a59bc42048f7e948c1fa07488bc248c1e83f4803d0458bc685d2440f4fc2418b4154412b415045394148450f4c41484403c044894577",
+      "sha256": "1648380cdda085c3a561b7e6facf13763523932ce31524c7326e425c25beebeb",
+      "address_semantics": "RVA/VA retained separately; end is exclusive"
+    },
+    {
+      "name": "total_power_copy_path_1",
+      "kind": "single_complete_copy_instruction",
+      "rva": "0x101dcbb",
+      "rva_end_exclusive": "0x101dcc1",
+      "va": "0x14101dcbb",
+      "va_end_exclusive": "0x14101dcc1",
+      "hex": "8b91c8000000",
+      "sha256": "306b061f8a0b04d42fd8a845cd12779c56f026cba90d56ccd5939831493493bc",
+      "address_semantics": "RVA/VA retained separately; end is exclusive"
+    },
+    {
+      "name": "total_power_copy_path_2",
+      "kind": "single_complete_copy_instruction",
+      "rva": "0x101ef61",
+      "rva_end_exclusive": "0x101ef67",
+      "va": "0x14101ef61",
+      "va_end_exclusive": "0x14101ef67",
+      "hex": "8b88c8000000",
+      "sha256": "79915010f7eeb2ffcc4729cc83273bfb135ba03bfe3969f6ea769aca8b72e9ce",
+      "address_semantics": "RVA/VA retained separately; end is exclusive"
+    },
+    {
+      "name": "fixed_point_formatter",
+      "kind": "complete_formatter_function",
+      "rva": "0x101d170",
+      "rva_end_exclusive": "0x101d2be",
+      "va": "0x14101d170",
+      "va_end_exclusive": "0x14101d2be",
+      "hex": "48895c241848896c242048894c2408565741564883ec40488bf98b023d809698007c16894424684533c0488d542468e83c204a00e9ff0000003d40420f007c198944246841b801000000488d542468e81c204a00e9df000000be0200000033d23da08601007c048bf2eb0db9010000003d102700000f4df14889174889571048c747180f00000088170fb64c2420ba2d00000085c00f48ca884c24208be8f7dd85c00f49e8488d5c2420488d4c2421480f48d9b8d34d6210f7ed448bf241c1fe06418bc6c1e81f4403f0488bd3418bcee85b8f6e00803b00740e660f1f44000048ffc3803b0075f885f674214169c6e80300002be88d8de8030000488bd3e82d8f6e00c6032e8bc6c644180100488d44242049c7c0ffffffff0f1f800000000049ffc042803c000075f6488d542420488bcfe8697e07ff90488bc7488b5c2470488b6c24784883c440415e5f5ec3",
+      "sha256": "8d8b7c5d65ffbce9c41e64a6cead3661641c7ea1befb75975eb81d9c9388107b",
+      "address_semantics": "RVA/VA retained separately; end is exclusive"
+    },
+    {
+      "name": "node_definition_string_accessor",
+      "kind": "existing_key_display_string_accessor",
+      "rva": "0xb510f0",
+      "rva_end_exclusive": "0xb510fc",
+      "va": "0x140b510f0",
+      "va_end_exclusive": "0x140b510fc",
+      "hex": "488b81a80000004883c030c3",
+      "sha256": "154d1c22c6da838dfbefcecd776e8932b171d94176bcacf440c36cd6720efe2d",
+      "address_semantics": "RVA/VA retained separately; end is exclusive"
+    },
+    {
+      "name": "definition_predicate_true",
+      "kind": "predicate_leaf",
+      "rva": "0x8f440",
+      "rva_end_exclusive": "0x8f443",
+      "va": "0x14008f440",
+      "va_end_exclusive": "0x14008f443",
+      "hex": "b001c3",
+      "sha256": "e18aacce29affcdddaa5f641ac1ec12552e0fe9d066e6408941b1792818b8619",
+      "address_semantics": "RVA/VA retained separately; end is exclusive"
+    },
+    {
+      "name": "definition_predicate_false",
+      "kind": "predicate_leaf",
+      "rva": "0x8f450",
+      "rva_end_exclusive": "0x8f453",
+      "va": "0x14008f450",
+      "va_end_exclusive": "0x14008f453",
+      "hex": "32c0c3",
+      "sha256": "01cb47d078b4841b8408ec4fe278efa83115c6f6e101972987507d2b2b57dcf0",
+      "address_semantics": "RVA/VA retained separately; end is exclusive"
+    },
+    {
+      "name": "current_power_label",
+      "kind": "compiled_literal",
+      "rva": "0x1d4fb98",
+      "rva_end_exclusive": "0x1d4fba6",
+      "va": "0x141d4fb98",
+      "va_end_exclusive": "0x141d4fba6",
+      "hex": "63757272656e745f706f77657200",
+      "sha256": "03e30ff178052fb18a506df49912fa0e921d1b054e6e20b46cfb8a0763664afc",
+      "address_semantics": "RVA/VA retained separately; end is exclusive"
+    },
+    {
+      "name": "total_power_label",
+      "kind": "compiled_literal",
+      "rva": "0x1d4fbd0",
+      "rva_end_exclusive": "0x1d4fbdc",
+      "va": "0x141d4fbd0",
+      "va_end_exclusive": "0x141d4fbdc",
+      "hex": "746f74616c5f706f77657200",
+      "sha256": "2b01a25f7c981c0c2f7824c4ff9aa177119007c2f4d316a5b81dbc6753168cb9",
+      "address_semantics": "RVA/VA retained separately; end is exclusive"
+    }
+  ],
+  "provenance": {
+    "source_report_addendum": {
+      "path": "work/runtime/information-trade-power-20261027-001/trade-power-source-addendum-002.json",
+      "sha256": "033a8a64488ec4562b86844db1abdc19b319184bc8a64bfce7da86548bb5634e",
+      "bytes": 14902
+    },
+    "reused_trade_profile": {
+      "path": "bridge/information/profiles/trade-income-memory-1374.json",
+      "sha256": "1375800668ed0ddec29d2e5f8efe8e1369d1e4da8b0aa6916b5b970078b137cd",
+      "bytes": 11175
+    },
+    "independent_raw": {
+      "path": "work/runtime/information-trade-state-20261027-001/native-trade-power-inputs-002.json",
+      "sha256": "bce332fe9ea537ed66910e45d1f490c6e33bda085c017728c323669d2c09f608",
+      "bytes": 762822
+    }
+  }
+}

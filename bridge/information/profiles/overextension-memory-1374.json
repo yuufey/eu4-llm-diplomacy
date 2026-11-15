@@ -1,0 +1,102 @@
+{
+  "profile_id": "overextension-memory-1374",
+  "profile_version": 1,
+  "game_version": "1.37.4",
+  "executable": {
+    "sha256": "b23fa0e1f698d31b01cdd1c3817a675805d8c6286cb66f9c231e6e2a42544d77",
+    "image_base": "0x140000000"
+  },
+  "source_index": {
+    "path": "work/runtime/information-current-domestic-20261026-001/overextension-source-contract-001.json",
+    "sha256": "25fd3f566767e877da53f555abc14975fce7719987592055b4c85f39a5793c97"
+  },
+  "layout": {
+    "country_overextension_offset": "0xe48"
+  },
+  "value_semantics": {
+    "width_bytes": 4,
+    "signed": true,
+    "unit": "fraction",
+    "scale": 1000,
+    "ui_display": "raw / 10 percent"
+  },
+  "runtime_observation": false,
+  "notes": [
+    "The reader copies the signed int32 at country+0xe48; it does not recalculate overextension or read a save field.",
+    "The UI formatter multiplies the raw value by 100 and appends %, which is raw/10 percentage points at scale 1000.",
+    "The prior 0x93fca0 reference is retained only as a calculation-source note and is not a runtime/profile guard.",
+    "Two passes are allowed for consistency checks but are not atomic."
+  ],
+  "code_guards": [
+    {
+      "name": "country_getter",
+      "rva": "0x9a3c0",
+      "end_rva_exclusive": "0x9a3cc",
+      "size": 12,
+      "hex": "8b81480e00008902488bc2c3",
+      "sha256": "4571f735cd76c447d4801acda8b111c851c9080c8a8df7a68a70273e917849ea"
+    },
+    {
+      "name": "property_getter",
+      "rva": "0x6e0120",
+      "end_rva_exclusive": "0x6e012d",
+      "size": 13,
+      "hex": "418b80480e00008902488bc2c3",
+      "sha256": "b080b48f1becda6cb31bd0877f9f5061bd98c853e14a3635a763975bf10c8a5c"
+    },
+    {
+      "name": "ui_country_input",
+      "rva": "0xf87dc2",
+      "end_rva_exclusive": "0xf87ddc",
+      "size": 26,
+      "hex": "488b05e75a3b0148c1ea20480fbfca488b80180100004c8b24c8",
+      "sha256": "5125b1dc2c4f1aa6846e448f010d589938447fa6265a612adac8b62dd4b4bd23"
+    },
+    {
+      "name": "ui_overextension_value",
+      "rva": "0xf88a7f",
+      "end_rva_exclusive": "0xf88af2",
+      "size": 115,
+      "hex": "416b8424480e0000648985580100004c896c2450660f6f059591e300f30f7f442460c6442450004533c9458d4101488d9558010000488d4d90e8c3ac7700488d45904d8bc649ffc042803c000075f6488d5590488d4c2450e834c610ff904c8d05a434cc00488d542450488d4de0e81eba10ff",
+      "sha256": "1af8cf062790262b1b242cac3563ac3b5c8c43afecb56223b3859060f9e1242f"
+    },
+    {
+      "name": "ui_widget",
+      "rva": "0xf88b30",
+      "end_rva_exclusive": "0xf88b8c",
+      "size": 92,
+      "hex": "498b8fa0000000488b01488d1507c1db00ff9098000000488bf8488d55e048837df810480f4355e04d8bc60f1f44000049ffc042803c020075f6488d8870010000e89ac510ff4533c0488d9770010000488b8f18010000e834b66600",
+      "sha256": "bd63e7441690ef6377675262aba974b1fc474ef14c66348384e49cf20e6f9483"
+    },
+    {
+      "name": "registration",
+      "rva": "0x6a81a6",
+      "end_rva_exclusive": "0x6a81d9",
+      "size": 51,
+      "hex": "448d4318488d151f0b6001488d8d50060000e853cf9eff488d058c825f0148898570060000488d8570060000488985a8060000",
+      "sha256": "4e617f2b849315d4d9a165a8fcec5b1494cb1e2b85da5af823fabe683d1edc77"
+    },
+    {
+      "name": "percent_suffix",
+      "rva": "0x1c4bf88",
+      "end_rva_exclusive": "0x1c4bf89",
+      "size": 1,
+      "hex": "25",
+      "sha256": "bbf3f11cb5b43e700273a78d12de55e4a7eab741ed2abf13787a4d2dc832b8ec"
+    },
+    {
+      "name": "ui_widget_name",
+      "rva": "0x1d44c48",
+      "end_rva_exclusive": "0x1d44c5e",
+      "size": 22,
+      "hex": "6f76657265785f70726f67726573735f76616c756500",
+      "sha256": "acbdb9d028a7ee3486bd9514a1b530f57b633e4b4f6f7c5c08c08113432fa8f2"
+    }
+  ],
+  "read_constraints": {
+    "non_recalculation": true,
+    "not_save_field": true,
+    "double_pass_not_atomic": true,
+    "description": "Use bounded reads at the selected country pointer and preserve signed int32 semantics; do not infer atomicity, clamping, or save serialization."
+  }
+}

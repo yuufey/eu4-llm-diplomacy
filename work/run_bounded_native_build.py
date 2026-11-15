@@ -23,9 +23,13 @@ def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--experiment", required=True)
     parser.add_argument("--reason-metadata", action="store_true")
+    parser.add_argument("--rival-record-observation", action="store_true")
+    parser.add_argument("--timeout-seconds", type=int, default=120)
     args = parser.parse_args()
     if not re.fullmatch(r"[A-Za-z0-9_-]+", args.experiment):
         parser.error("Invalid experiment name")
+    if not 1 <= args.timeout_seconds <= 1800:
+        parser.error("Timeout must be between 1 and 1800 seconds")
     shell = shutil.which("pwsh") or shutil.which("powershell")
     if shell is None:
         parser.error("PowerShell is required")
@@ -36,9 +40,12 @@ def main() -> int:
                "-Experiment", args.experiment]
     if args.reason_metadata:
         command.append("-ReasonMetadata")
+    if args.rival_record_observation:
+        command.append("-RivalRecordObservation")
     known = {}
     reason = "completed"
     started = time.monotonic()
+    peak_private_bytes = 0
     with (evidence / "build.log").open("xb") as log:
         process = psutil.Popen(command, cwd=ROOT, stdout=log, stderr=log,
                                creationflags=subprocess.CREATE_NO_WINDOW if os.name == "nt" else 0)
@@ -46,12 +53,18 @@ def main() -> int:
         while process.poll() is None:
             try:
                 children = process.children(recursive=True)
+                tree_private_bytes = 0
                 for child in [process, *children]:
                     try:
                         known[child.pid] = child.create_time()
+                        memory = child.memory_info()
+                        tree_private_bytes += getattr(memory, "private", memory.rss)
                     except psutil.NoSuchProcess:
                         continue
-                if time.monotonic() - started > 120:
+                peak_private_bytes = max(peak_private_bytes, tree_private_bytes)
+                if tree_private_bytes > 900_000_000:
+                    reason = "build_memory_limit"
+                if time.monotonic() - started > args.timeout_seconds:
                     reason = "build_timeout"
             except psutil.NoSuchProcess:
                 # The owned PowerShell process can exit between poll() and
@@ -85,6 +98,7 @@ def main() -> int:
     report = {"experiment": args.experiment, "command": command,
               "returncode": returncode, "reason": reason,
               "elapsed_seconds": round(time.monotonic() - started, 3),
+              "peak_tree_private_bytes": peak_private_bytes,
               "build_manifest": str(ROOT / "work/runtime" / args.experiment / "build-manifest.json")}
     (evidence / "report.json").write_text(json.dumps(report, indent=2), encoding="utf-8")
     print(json.dumps({**report, "supervision_evidence": str(evidence)}, ensure_ascii=False))

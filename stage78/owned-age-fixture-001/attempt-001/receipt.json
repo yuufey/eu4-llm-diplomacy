@@ -1,0 +1,27 @@
+{
+  "schema": "owned-person-age-fixture-receipt/1",
+  "status": "failed",
+  "game_process_opened": false,
+  "game_function_called": false,
+  "dll_loaded_into_game": false,
+  "source_pins": {
+    "exe": {
+      "path_from_local_env": "EU4_GAME_ROOT/eu4.exe",
+      "bytes": 38463016,
+      "sha256": "b23fa0e1f698d31b01cdd1c3817a675805d8c6286cb66f9c231e6e2a42544d77"
+    },
+    "ordinary_evidence": {
+      "path": "work/runtime/information-country-person-20261029-001/person-date-helpers-ordinary-001.json",
+      "bytes": 19396,
+      "sha256": "67f3104ffa41063a0c658c45fa0fdc6f023efe88cad639e03b9890c4062fd688"
+    },
+    "person_probe": {
+      "path": "work/runtime/information-country-person-20261029-001/probe_person_native_inputs_001.json",
+      "bytes": 8858429,
+      "sha256": "1356236563002e318670368e0428c7f7f343b32b9f307c0e71a0e523cf1c0c2a"
+    }
+  },
+  "errors": [
+    "TypeError: 'PEImage' object does not support the context manager protocol"
+  ]
+}

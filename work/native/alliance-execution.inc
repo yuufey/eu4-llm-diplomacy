@@ -6,6 +6,16 @@
 // every other command is forwarded to its original executor exactly once.
 
 #include <new>
+#ifdef BRIDGE_RELATION_OBSERVATION
+#include "information-relation-change.h"
+#endif
+#ifdef BRIDGE_WAR_DECLARATION_OBSERVATION
+#include <atomic>
+#include "information-war-declaration.h"
+#endif
+#ifdef BRIDGE_LAND_PROMISE_OBSERVATION
+#include "information-land-promise.h"
+#endif
 #include "alliance-inbound-inspection-event.h"
 
 namespace alliance_execution_detail {
@@ -51,6 +61,12 @@ constexpr uintptr_t kCloneReturnRva=0x15801e2;
 #include "declarewar-execution-state.inc"
 #include "peace-inbound-context.inc"
 #include "peace-effect-state.inc"
+
+struct ExecutionGameDate {
+    uintptr_t game=0;
+    int32_t date_raw=0;
+    bool readable=false;
+};
 
 struct ExecutionBinding {
     bool used=false;
@@ -189,6 +205,7 @@ struct ResponseResult {
     char action_id[28]{};
     char phase[9]{};
     int32_t date_raw=0;
+    int32_t result_game_date_raw=0;
     char outcome[9]{};
     int32_t native_state=0;
     bool alliance_after=false;
@@ -272,7 +289,8 @@ static thread_local ResponseScope execution_response_scope{};
 static void execution_peace_submission(const ExecutionBinding& binding,
     const ProtocolWrapperShape& entry) noexcept;
 static void execution_peace_response(const ExecutionBinding& binding,
-    int32_t state,bool war_after,bool verified,bool pending_removed) noexcept;
+    int32_t state,bool war_after,bool verified,bool pending_removed,
+    const ExecutionGameDate* observed_begin) noexcept;
 static void execution_peace_inbound_unknown(const ResponseRequest& request,
     int32_t state,bool war_after,bool pending_removed) noexcept;
 static bool execution_peace_war_state(const AlliancePayload& payload,bool& active) noexcept;
@@ -295,6 +313,43 @@ static uint64_t execution_next_generation() noexcept {
 
 static Context execution_context() noexcept {
     return Context{observation_creation,GetTickCount64()};
+}
+
+static ExecutionGameDate execution_game_date() noexcept {
+    ExecutionGameDate snapshot{};
+    snapshot.readable=read(base+0x233fe58,snapshot.game)
+        && snapshot.game>=0x10000 && snapshot.game<0x7fffffffe000ULL
+        && read(snapshot.game+0x1dd0,snapshot.date_raw) && snapshot.date_raw>0;
+    return snapshot;
+}
+
+static int32_t execution_result_game_date(const ExecutionGameDate* before) noexcept {
+    if (!before || !before->readable) return 0;
+    const ExecutionGameDate after=execution_game_date();
+    return after.readable && before->game==after.game && before->date_raw==after.date_raw
+        ?after.date_raw:0;
+}
+
+static void execution_result_line(char* message,size_t capacity,int32_t date_raw) noexcept {
+    if (!message || !capacity) return;
+    const char* end=static_cast<const char*>(memchr(message,0,capacity));
+    if (!end) return;
+    const size_t length=static_cast<size_t>(end-message);
+    // Match the Python response reader's 256 KiB line bound, plus LF and NUL.
+    constexpr size_t max_capacity=256u*1024u+2u;
+    const size_t bounded_capacity=capacity<max_capacity?capacity:max_capacity;
+    if (date_raw>0 && length>=2u && length<bounded_capacity
+        && message[length-2u]=='}' && message[length-1u]=='\n') {
+        char* footer=message+length-2u;
+        const size_t remaining=bounded_capacity-(length-2u);
+        const int written=snprintf(footer,remaining,
+            ",\"native_result_game_date_raw\":%d,\"native_result_game_date_verified\":true,"
+            "\"native_result_date_basis\":\"original_executor_same_game_date\"}\n",date_raw);
+        if (written<0 || static_cast<size_t>(written)>=remaining) {
+            footer[0]='}';footer[1]='\n';footer[2]=0;
+        }
+    }
+    line(message);
 }
 
 static bool execution_set_inbound_response_paths(const wchar_t* directory) noexcept {
@@ -430,8 +485,8 @@ static bool execution_target_allowed(const char* recipient,const char* action_id
         || (recipient[0]=='L' && recipient[1]=='I' && recipient[2]=='T'));
 }
 
-static bool execution_is_fra(uint64_t handle) noexcept {
-    return static_cast<uint32_t>(handle&0xffffffu)==0x415246u;
+static bool execution_is_controlled(uint64_t handle) noexcept {
+    return observation_control_country_handle_tag_only(handle);
 }
 
 static unsigned execution_free_binding() noexcept {
@@ -734,9 +789,9 @@ static void execution_queue_submission_failure(const ExecutionRequest& request) 
 
 static void execution_queue_response(const ExecutionBinding& binding,
     int32_t native_state,bool alliance_after,bool verified,
-    bool pending_removed) noexcept {
+    bool pending_removed,const ExecutionGameDate* observed_begin=nullptr) noexcept {
     if (binding.payload.family==ActionFamily::peace) {
-        execution_peace_response(binding,native_state,alliance_after,verified,pending_removed); return;
+        execution_peace_response(binding,native_state,alliance_after,verified,pending_removed,observed_begin); return;
     }
     ResponseResult result{};
     execution_copy_external_id(result.request_id,binding);
@@ -906,6 +961,7 @@ static void execution_queue_response(const ExecutionBinding& binding,
     else if (result.response_verified && result.request_binding_verified
         && native_state==1 && !alliance_after) strcpy(result.outcome,"rejected");
     else strcpy(result.outcome,"unknown");
+    result.result_game_date_raw=execution_result_game_date(observed_begin);
     if (!TryAcquireSRWLockExclusive(&execution_result_lock)) {
         InterlockedIncrement(&execution_result_dropped); return;
     }
@@ -1586,6 +1642,14 @@ static void execution_emit_inspection(const InspectionRequest& request,
     observed.extra60=pending.extra60;
     observed.alliance_before=alliance_after;
     observed.alliance_readable=alliance_readable;
+#ifdef BRIDGE_SUPPORT_ROLE_CONTEXT
+    if (pending.support_independence) {
+        const auto roles=support_role_capture(pending.actor,pending.recipient);
+        observed.support_roles_readable=roles.readable;
+        observed.support_actor_is_subject=roles.actor_is_subject;
+        observed.support_recipient_is_subject=roles.recipient_is_subject;
+    }
+#endif
     if (pending.favor_gold) {
         // QUERY1 context is captured from the live pending endpoints and the
         // native amount helper.  Do not substitute Alliance relation fields:
@@ -1831,6 +1895,7 @@ static void execution_inbound_inspection_tick() noexcept {
             bridge::alliance_inbound_response_wire::context_error_name(context.error));
         return;
     }
+    request.date_raw=date;
     InboundPendingView pending{};
     if (!inbound_pending_lookup(request.native_proposal_id,request.original_actor,pending)
         || (pending.royal_marriage!=(strcmp(request.action_id,"offer_royal_marriage")==0)
@@ -1920,11 +1985,41 @@ static void execution_inbound_tick() noexcept {
     execution_inbound_response_tick();
 }
 
-static void execution_call_original(void* value) noexcept {
+#ifdef BRIDGE_LAND_PROMISE_OBSERVATION
+#include "information-land-promise-observer.inc"
+#endif
+#ifdef BRIDGE_WAR_DECLARATION_OBSERVATION
+#include "information-war-declaration-observer.inc"
+#endif
+#ifdef BRIDGE_RELATION_OBSERVATION
+#include "information-relation-observer.inc"
+#endif
+
+static bool execution_call_original(void* value) noexcept {
     using Original=void (*)(void*);
     Original original=reinterpret_cast<Original>(execution_entry_original
         ?static_cast<void*>(execution_entry_original):bridge_response_original);
-    if (original) original(value);
+    if (!original) return false;
+#ifdef BRIDGE_LAND_PROMISE_OBSERVATION
+    auto land_promise_observation = land_promise_observer::begin(value);
+#endif
+#ifdef BRIDGE_WAR_DECLARATION_OBSERVATION
+    auto observation = war_declaration_observer::begin(value);
+#endif
+#ifdef BRIDGE_RELATION_OBSERVATION
+    auto relation_observation = relation_change_observer::begin(value);
+#endif
+    original(value);
+#ifdef BRIDGE_WAR_DECLARATION_OBSERVATION
+    war_declaration_observer::finish(observation);
+#endif
+#ifdef BRIDGE_LAND_PROMISE_OBSERVATION
+    land_promise_observer::finish(land_promise_observation);
+#endif
+#ifdef BRIDGE_RELATION_OBSERVATION
+    relation_change_observer::finish(relation_observation);
+#endif
+    return true;
 }
 
 static bool execution_consume_target(ExecutionBinding& binding,
@@ -1974,6 +2069,9 @@ static bool execution_entry_is_dissolve(const ProtocolWrapperShape& shape) noexc
 extern "C" int bridge_execution_execute(void* value) {
     bridge_response_observe(value);
     ProtocolWrapperShape entry=protocol_capture(value);
+#ifdef BRIDGE_CALL_TO_ARMS_OBSERVATION
+    bridge_call_to_arms::observe(entry);
+#endif
     AlliancePayload payload{};
     if (!entry.identity || !entry.readable || !execution_payload(entry.payload,payload)) {
         uintptr_t action=0,table=0; uint64_t actor=0,recipient=0;
@@ -1981,8 +2079,8 @@ extern "C" int bridge_execution_execute(void* value) {
             && read(action,table)
             && (table==base+lifecycle_declarewar_vtable_rva || table==base+lifecycle_peace_vtable_rva)
             && read(action+0x10,actor) && read(action+0x20,recipient)
-            && (execution_is_fra(actor)
-                || (table==base+lifecycle_peace_vtable_rva && execution_is_fra(recipient)))) {
+            && (execution_is_controlled(actor)
+                || (table==base+lifecycle_peace_vtable_rva && execution_is_controlled(recipient)))) {
             execution_failure("unknown",table==base+lifecycle_peace_vtable_rva
                 ?"FRA_PEACE_PAYLOAD_UNREADABLE":"FRA_DECLARE_WAR_PAYLOAD_UNREADABLE"); return 0;
         }
@@ -2001,11 +2099,17 @@ extern "C" int bridge_execution_execute(void* value) {
             execution_peace_inbound_unknown(binding.response_request,static_cast<int32_t>(payload.state34),true,false);
             return 0;
         }
+        const ExecutionGameDate result_date_begin=execution_game_date();
         ResponseScope previous=execution_response_scope;
         if (binding.sender)
             execution_response_scope=ResponseScope{true,static_cast<unsigned>(target_slot)};
-        execution_call_original(value);
+        const bool native_returned=execution_call_original(value);
         execution_response_scope=previous;
+        binding.peace_handler_returned=payload.family==ActionFamily::peace && native_returned;
+        if (!native_returned) {
+            execution_mark_invalid(binding);
+            return 0;
+        }
         if (binding.sender) {
             if (!binding.submission_queued) {
                 binding.submission_queued=true;
@@ -2021,7 +2125,7 @@ extern "C" int bridge_execution_execute(void* value) {
                 if ((binding.inbound_response_request?pending_removed:(verified && !war_after)) && !binding.response_queued) {
                     binding.response_queued=true;
                     execution_queue_response(binding,static_cast<int32_t>(payload.state34),
-                        war_after,verified,pending_removed);
+                        war_after,verified,pending_removed,&result_date_begin);
                 }
             } else if (payload.family==ActionFamily::gift) {
                 binding.gift_after_verified=gift_resource_capture(
@@ -2029,7 +2133,7 @@ extern "C" int bridge_execution_execute(void* value) {
                 if (!binding.response_queued) {
                     binding.response_queued=true;
                     execution_queue_response(binding,static_cast<int32_t>(payload.state34),false,
-                        binding.gift_after_verified,false);
+                        binding.gift_after_verified,false,&result_date_begin);
                 }
             } else if (payload.family==ActionFamily::influence) {
                 binding.influence_after_verified=influence_resource_capture(
@@ -2037,7 +2141,7 @@ extern "C" int bridge_execution_execute(void* value) {
                 if (!binding.response_queued) {
                     binding.response_queued=true;
                     execution_queue_response(binding,static_cast<int32_t>(payload.state34),false,
-                        binding.influence_after_verified,false);
+                        binding.influence_after_verified,false,&result_date_begin);
                 }
             } else if (execution_unilateral_family(payload.family)) {
                 bool after=false;
@@ -2056,14 +2160,14 @@ extern "C" int bridge_execution_execute(void* value) {
                 }
                 if (!binding.response_queued) {
                     binding.response_queued=true;
-                    execution_queue_response(binding,static_cast<int32_t>(payload.state34),after,verified,false);
+                    execution_queue_response(binding,static_cast<int32_t>(payload.state34),after,verified,false,&result_date_begin);
                 }
             } else if (binding.phase==Phase::dissolve) {
                 bool after=false;
                 const bool verified=execution_read_after(payload,after);
                 if (!binding.response_queued) {
                     binding.response_queued=true;
-                    execution_queue_response(binding,0,after,verified,false);
+                    execution_queue_response(binding,0,after,verified,false,&result_date_begin);
                 }
             } else if (binding.inbound_response_request) {
                 bool after=false;
@@ -2076,7 +2180,7 @@ extern "C" int bridge_execution_execute(void* value) {
                     binding.response_queued=true;
                     execution_queue_response(binding,
                         static_cast<int32_t>(payload.state34),after,
-                        after_verified,pending_removed);
+                        after_verified,pending_removed,&result_date_begin);
                 }
             }
         } else if (binding.response) {
@@ -2084,7 +2188,7 @@ extern "C" int bridge_execution_execute(void* value) {
             bool verified=execution_read_after(payload,after);
             if (!binding.response_queued) {
                 binding.response_queued=true;
-                execution_queue_response(binding,static_cast<int32_t>(payload.state34),after,verified,false);
+                execution_queue_response(binding,static_cast<int32_t>(payload.state34),after,verified,false,&result_date_begin);
             }
         }
         return 1;
@@ -2093,13 +2197,13 @@ extern "C" int bridge_execution_execute(void* value) {
     // path is integrated, keep controlled-country choices explicit here rather
     // than passing them through the Alliance pending/response interpretation.
     if (payload.family==ActionFamily::peace) {
-        if (payload.state34==0 && execution_is_fra(payload.actor10)) {
+        if (payload.state34==0 && execution_is_controlled(payload.actor10)) {
             execution_failure("unknown","UNAUTHORIZED_FRA_PEACE_OFFER"); return 0;
         }
-        if ((payload.state34==1 || payload.state34==2) && execution_is_fra(payload.recipient20)) {
+        if ((payload.state34==1 || payload.state34==2) && execution_is_controlled(payload.recipient20)) {
             execution_failure("unknown","UNAUTHORIZED_FRA_PEACE_RESPONSE"); return 0;
         }
-        if (payload.state34==0 && execution_is_fra(payload.recipient20)) {
+        if (payload.state34==0 && execution_is_controlled(payload.recipient20)) {
             bridge_inbound_scope_begin(reinterpret_cast<void*>(entry.action),payload.actor10,
                 payload.recipient20,0,payload.variant38);
             if (!bridge_inbound_scope_active()) {
@@ -2113,7 +2217,7 @@ extern "C" int bridge_execution_execute(void* value) {
         execution_call_original(value); return 1;
     }
     if ((payload.family==ActionFamily::gift || payload.family==ActionFamily::influence)
-        && execution_is_fra(payload.actor10)) {
+        && execution_is_controlled(payload.actor10)) {
         execution_failure("unknown",payload.family==ActionFamily::gift
             ?"UNAUTHORIZED_FRA_GIFT":"UNAUTHORIZED_FRA_INFLUENCE");
         return 0;
@@ -2121,7 +2225,7 @@ extern "C" int bridge_execution_execute(void* value) {
     // Diplomat tasks and Guarantee are unilateral. Other actors' native processing
     // is forwarded even when its recipient is FRA; no LLM acceptance exists.
     if (execution_unilateral_family(payload.family)) {
-        if (execution_is_fra(payload.actor10)) {
+        if (execution_is_controlled(payload.actor10)) {
             execution_failure("unknown",payload.family==ActionFamily::declare_war?"UNAUTHORIZED_FRA_DECLARE_WAR":
                 payload.family==ActionFamily::insult?"UNAUTHORIZED_FRA_INSULT":
                 payload.family==ActionFamily::guarantee?"UNAUTHORIZED_FRA_GUARANTEE":
@@ -2134,7 +2238,7 @@ extern "C" int bridge_execution_execute(void* value) {
     }
     // Only the canonical FRA state-0 offer is isolated.  Other countries,
     // other alliance phases, military and economic commands remain native.
-    if (execution_entry_is_offer(entry) && execution_is_fra(payload.actor10)) {
+    if (execution_entry_is_offer(entry) && execution_is_controlled(payload.actor10)) {
         execution_failure("unknown",payload.family==ActionFamily::vassalization
             ?"UNAUTHORIZED_FRA_VASSALIZATION_OFFER":payload.family==ActionFamily::military_access
             ?"UNAUTHORIZED_FRA_MILITARY_ACCESS_REQUEST":payload.family==ActionFamily::support_independence
@@ -2143,7 +2247,7 @@ extern "C" int bridge_execution_execute(void* value) {
             ?"UNAUTHORIZED_FRA_FAVOR_GOLD_OFFER":"UNAUTHORIZED_FRA_OFFER");
         return 0;
     }
-    if (execution_entry_is_dissolve(entry) && execution_is_fra(payload.actor10)) {
+    if (execution_entry_is_dissolve(entry) && execution_is_controlled(payload.actor10)) {
         execution_failure("unknown",payload.family==ActionFamily::vassalization
             ?"UNAUTHORIZED_FRA_VASSALIZATION_CANCEL":payload.family==ActionFamily::military_access
             ?"UNAUTHORIZED_FRA_MILITARY_ACCESS_CANCEL":payload.family==ActionFamily::support_independence
@@ -2152,7 +2256,7 @@ extern "C" int bridge_execution_execute(void* value) {
         return 0;
     }
     if (execution_entry_is_response(entry,payload)
-        && execution_is_fra(payload.recipient20)) {
+        && execution_is_controlled(payload.recipient20)) {
         execution_failure("unknown",payload.family==ActionFamily::vassalization
             ?"UNAUTHORIZED_FRA_VASSALIZATION_RESPONSE":payload.family==ActionFamily::military_access
             ?"UNAUTHORIZED_FRA_MILITARY_ACCESS_RESPONSE":payload.family==ActionFamily::support_independence
@@ -2191,11 +2295,11 @@ static bool execution_preflight(const ExecutionRequest& request,
     action_constructed=false;
     uintptr_t game=0; uint64_t player=0;
     if (!read(base+0x233fe58,game) || !read(game+0x1dd0,date)
-        || !read(game+0x1e60,player)
-        || static_cast<uint32_t>(player&0xffffffu)!=0x524f50u
-        || !alliance_query_country("FRA",actor)
+        || !read(game+0x1e60,player) || !observation_country_handle(player)
+        || !observation_control_country_tag(request.actor,actor)
         || !execution_target_allowed(request.recipient,request.action_id)
-        || !alliance_query_country(request.recipient,recipient) || actor==recipient)
+        || !alliance_query_country(request.recipient,recipient)
+        || !observation_country_handle(recipient) || actor==recipient)
         return false;
     const bool marriage=strcmp(request.action_id,"offer_royal_marriage")==0
         || strcmp(request.action_id,"break_royal_ties")==0;
@@ -3024,7 +3128,7 @@ static void execution_flush() {
                 result.alliance_before?"true":"false",result.alliance_after?"true":"false",war_id,
                 stability_before,stability_after,result.war_identity_verified?"true":"false",result.stability_verified?"true":"false",
                 result.response_verified?"true":"false",result.request_binding_verified?"true":"false");
-            line(message);
+            execution_result_line(message,sizeof(message),result.result_game_date_raw);
             snprintf(message,sizeof(message),
                 "{\"event\":\"native_declare_war_consequence_private\",\"private\":true,\"request_id\":\"%.64s\",\"session_id\":\"%.27s\",\"actor\":\"%.3s\",\"recipient\":\"%.3s\",\"date_raw\":%d,\"native_war_reference\":\"0x%llx\",\"association_source\":\"symmetric_country_opponent_rows\",\"war_after\":%s,\"association_verified\":%s}\n",
                 result.request_id,result.session_id,result.actor,result.recipient,result.date_raw,
@@ -3066,7 +3170,7 @@ static void execution_flush() {
             result.native_state,family,before_key,result.alliance_before?"true":"false",after_key,result.alliance_after?"true":"false",
             result.response_verified?"true":"false",result.request_binding_verified?"true":"false",
             result.pending_removed?"true":"false");
-        line(message);
+        execution_result_line(message,sizeof(message),result.result_game_date_raw);
     }
     LONG dropped=InterlockedExchange(&execution_result_dropped,0);
     if (dropped) {

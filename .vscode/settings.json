@@ -1,0 +1,30 @@
+{
+  "python.analysis.exclude": [
+    "**/node_modules", "**/__pycache__", "**/.git", "**/.venv", "**/venv",
+    "work/runtime/**", "work/backup/**", "work/deps/**", "work/publication/**",
+    "work/tmp/**", "work/tmp-v38-control-223-001/**",
+    "dist/**", "**/build-*/**", "logs/**", "**/.pytest_cache/**"
+  ],
+  "files.watcherExclude": {
+    "**/work/runtime/**": true,
+    "**/work/tmp/**": true,
+    "**/work/tmp-v38-control-223-001/**": true,
+    "**/work/backup/**": true,
+    "**/work/deps/**": true,
+    "**/work/publication/**": true,
+    "**/dist/**": true,
+    "**/build-*/**": true,
+    "**/__pycache__/**": true,
+    "**/.pytest_cache/**": true
+  },
+  "search.exclude": {
+    "work/runtime/**": true,
+    "work/tmp/**": true,
+    "work/tmp-v38-control-223-001/**": true,
+    "work/backup/**": true,
+    "work/deps/**": true,
+    "work/publication/**": true,
+    "dist/**": true,
+    "logs/历史交接/**": true
+  }
+}

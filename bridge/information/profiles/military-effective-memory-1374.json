@@ -1,0 +1,117 @@
+{
+  "profile_id": "military-effective-memory-1374",
+  "profile_version": 1,
+  "game_version": "1.37.4",
+  "executable": {
+    "sha256": "b23fa0e1f698d31b01cdd1c3817a675805d8c6286cb66f9c231e6e2a42544d77",
+    "image_base": "0x140000000"
+  },
+  "source_evidence": [
+    {
+      "path": "work/runtime/information-military-effective-20261027-001/source-contract-001.json",
+      "sha256": "fb04c70e3e8518742d6dc88aa1825969b87f77080bde9fd0068a65f647d94485",
+      "bytes": 7941,
+      "role": "final discipline child source contract"
+    },
+    {
+      "path": "work/runtime/information-military-effective-20261027-001/morale-effective-source-001.json",
+      "sha256": "f9a68ad086c2b6686a8f0e14c0c6fdb1d6cf411dcd7b950f9fdf44a7a520f9b9",
+      "bytes": 89435,
+      "role": "bounded effective-source index; no runtime values imported"
+    },
+    {
+      "path": "work/runtime/information-military-effective-20261027-001/discipline-links-003.json",
+      "sha256": "490cf7c0fc0fcf239289dda677f4d24d0d11a09d75102bbd8d359899764c27e2",
+      "bytes": 60786,
+      "role": "bounded ordinary-PE indexed slot and processor-vtable construction"
+    },
+    {
+      "path": "work/runtime/information-military-quality-20261027-001/morale-discipline-source-002.json",
+      "sha256": "db4bd888912fca012c32bed29fda79e6c45f0d1dfc03b989158d97a6b89baf67",
+      "bytes": 44232,
+      "role": "bounded discipline helper and keyed modifier layout"
+    },
+    {
+      "path": "docs/宗教统一计算路径.md",
+      "sha256": "a296496b0d2b46698cbb3a021dffc4b5627fb8b4652b335b190816e4bf1377fc",
+      "bytes": 6117,
+      "role": "mature dense/sparse modifier-cache layout reference"
+    },
+    {
+      "path": "bridge/information/profiles/religious-unity-memory-1374.json",
+      "sha256": "281c45c5dfee98a366858e212eefc52c26c907d8695b3802538fcd2bde4caef7",
+      "bytes": 7546,
+      "role": "mature bounded modifier-cache profile reference"
+    }
+  ],
+  "layout": {
+    "country_cache_state_offset": "0x28c8",
+    "country_modifier_object_offset": "0x28d0",
+    "modifier_dense_flag_offset": "0x10",
+    "modifier_values_pointer_offset": "0x58",
+    "modifier_sparse_count_offset": "0x64",
+    "modifier_id": "0x77",
+    "modifier_database_global_rva": "0x2358060",
+    "modifier_record_index": "0x77",
+    "modifier_record_stride": "0x60",
+    "modifier_processor_offset": "0x40",
+    "processor_vtable_rva": "0x1cc9400",
+    "processor_method_rva": "0x8f71d0",
+    "global_flags": {
+      "specific_102": "0x233ff0c",
+      "specific_1bb": "0x233ff2c",
+      "specific_1d2_and_1c2": "0x233ff54",
+      "special": "0x233feb6"
+    },
+    "dense_modifier_value_offset": "0x3bc",
+    "processor_dense_offsets": {
+      "0x102": "0x814",
+      "0x1bb": "0xddc",
+      "0x1d2": "0xe94",
+      "0x1c2": "0xe14"
+    },
+    "sparse_entry_stride": 8,
+    "max_sparse_count": 8192,
+    "read_budget_bytes": 98304
+  },
+  "semantics": {
+    "field": "discipline",
+    "basis": "native_country_discipline_calculation",
+    "value_origin": "derived_from_copied_native_inputs",
+    "unit": "ratio",
+    "scale": 1000,
+    "period": "current",
+    "complete": false,
+    "raw_encoding": "signed int32 final effective result; raw_hex preserves four little-endian bytes"
+  },
+  "code_guards": [
+    {
+      "name": "discipline_helper_341850",
+      "rva": "0x341850",
+      "rva_end_exclusive": "0x341904",
+      "hex": "48895c24205556574154415541564157488d6c24d94881ecc0000000498bf8488bf24c8be9c702e8030000488d81c028000048894577488bc8e832bd5f004c8d40084533f645387010740c498b40588b80bc030000eb28496350644885d27e1c498bce498b40588338770f842504000048ffc14883c008483bca7ceb418bc6894567488b0d87670102488b89e02c00004885c97411488b014c8d4d67488d556fff50088b456f01068b06b90a0000003bc10f4cc1",
+      "sha256": "d151f0bd133ee6942ec0a19d77a1697b6f18fadf665dab3d194a9555f596a922"
+    },
+    {
+      "name": "discipline_processor_8f71d0_full",
+      "rva": "0x8f71d0",
+      "rva_end_exclusive": "0x8f7558",
+      "hex": "48895c241048896c241856574154415541574883ec20418b0133f68902498bd8403835158da401488bfa440fb605b48ca40149bd4b598638d6c56d344c8974245074164584c0751141bf1000000041be0c000000e98c00000065488b04255800000041be0c000000458be6488b284138342e750de8d3c11301440fb605658ca401b810000000448bf840383428755940387310740f488b43588b8014080000e99a0000004863436485c07e1e488bd0488bce488b4358813802010000747d48ffc14883c008483bca7cec8bc669c8e8030000b8ad8bdb68f7e9c1fa0b8bc2c1e81f03d00117458be64038356d8ca40174094584c00f84b600000065488b042558000000488b28418bc640383428750de838c11301440fb605ca8ba4014138342f0f858a000000403873107443488b43588b80dc0d0000e9cb0000008b40048d887393180081f90d58390076804863c8498bc54869d1e803000048f7ea48c1fa0a488bc248c1e83f4803d0e974ffffff4863436485c07e1e488bd0488bce488b43588138bb010000747a48ffc14883c008483bca7cec8bc669c8e8030000b8ad8bdb68f7e9c1fa0c8bc2c1e81f03d00117403835cd8ba40174094584c00f84bd00000065488b042558000000488b28418bc640383428750de870c01301440fb605028ba4014138342f0f8591000000403873107443488b43588b80940e0000e9cc0000008b40048d887393180081f90d58390076834863c8498bc54869d1e803000048f7ea48c1fa0b488bc248c1e83f4803d0e977ffffff4863436485c07e25488bd0488bce488b43580f1f80000000008138d2010000747448ffc14883c008483bca7cec8bc669c8e8030000b8ad8bdb68f7e9c1fa0c8bc2c1e81f03d00117403835fe8aa4014c8b74245074094584c00f84a700000065488b042558000000488b284138342c7505e89fbf13014138342f0f8586000000403873107440488b43588bb0140e0000e98e0000008b40048d887393180081f90d58390076894863c8498bc54869d1e803000048f7ea48c1fa0b488bc248c1e83f4803d0eb804863436485c07e1f488bd0488bce488b4358908138c2010000743f48ffc14883c008483bca7cec69cee8030000b8ad8bdb68f7e9c1fa0c8bc2c1e81f03d00117488b5c2458488bc7488b6c24604883c420415f415d415c5f5ec38b70048d8e7393180081f90d58390076bc4863ce498bc54869d1e803000048f7ea48c1fa0b488bc248c1e83f4803d0ebb3",
+      "sha256": "4c04668e3f4239ae56aee1cd23eb8888a9a524505fb3120d76ecbc031d23124b"
+    }
+  ],
+  "read_constraints": {
+    "pointer_min": "0x10000",
+    "pointer_max": "0x7fffffffffff",
+    "manager_slot": "read qword at module_base+0x2358060, then manager+(0x77*0x60)+0x40; never use 0x235ad40 as a process address",
+    "modifier_cache": "country+0x28c8 state 1 is CALCULATING; country+0x28d0 object uses +0x10/+0x58/+0x64",
+    "sparse": "signed entry pairs {id,value}, stride 8, first matching id, max 8192 entries",
+    "processor": "only vtable 0x1cc9400 with +0x8 method 0x8f71d0 and full 904-byte guard may use callback inputs",
+    "failure": "guard mismatch, state calculating, unsupported processor, malformed pointers/counts, budget/read failure or unresolved TLS contribution remains unknown"
+  },
+  "unknown_conditions": [
+    "The manager pointer is runtime data and must be read from module_base+0x2358060 before applying index/stride/offset.",
+    "The recognized processor body is guarded but its TLS slot is not read by this child.",
+    "Cache freshness, main-thread atomicity, and foreign-country visibility are outside this child contract."
+  ]
+}

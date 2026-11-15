@@ -66,10 +66,13 @@ def get_value(name: str, *, required: bool = True, default: str | None = None) -
 
 
 def get_path(name: str, *, required: bool = True, default: str | None = None) -> Path | None:
-    """Return a configured filesystem path."""
+    """Resolve configured paths relative to the repository, independent of cwd."""
 
     value = get_value(name, required=required, default=default)
-    return Path(value).expanduser() if value else None
+    if not value:
+        return None
+    path = Path(os.path.expandvars(value)).expanduser()
+    return path if path.is_absolute() else PROJECT_ROOT / path
 
 
 def game_root() -> Path:

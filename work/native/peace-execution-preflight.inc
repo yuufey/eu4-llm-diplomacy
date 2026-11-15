@@ -105,16 +105,14 @@ static bool execution_peace_prepare(PeacePreparedAction& prepared,
     uintptr_t game=0,actor_country=0,recipient_country=0;
     uint64_t player=0;
     if (!read(base+0x233fe58,game) || !read(game+0x1dd0,prepared.date)
-        || !read(game+0x1e60,player) || (player&0xffffffu)!=0x524f50u
-        || !alliance_query_country(actor_tag,prepared.actor)
+        || !read(game+0x1e60,player) || !observation_country_handle(player)
+        || !observation_control_country_tag(actor_tag,prepared.actor)
         || !alliance_query_country(recipient_tag,prepared.recipient)
         || prepared.actor==prepared.recipient
         || !peace_query_country_pointer(prepared.actor,actor_country)
         || !peace_query_country_pointer(prepared.recipient,recipient_country))
         return fail("NATIVE_PEACE_GAME_OR_COUNTRY_CONTEXT_UNAVAILABLE","game_context");
-    const PeaceWarRegistryEntry* selected=nullptr;
-    for (unsigned i=0;i<peace_war_registry_size;++i)
-        if (!strcmp(peace_war_registry[i].public_id,war_id)) selected=&peace_war_registry[i];
+    const auto selected=peace_query_find_registered_war(war_id);
     PeaceWarReferenceList left{},right{};
     if (!selected || !peace_query_pair_references(actor_country,
             static_cast<unsigned>((prepared.recipient>>32)&0xffffu),left)
@@ -394,6 +392,8 @@ static bool execution_peace_prepare(PeacePreparedAction& prepared,
         && prepared.source.prefix_readable && prepared.source.payload.peace_offer
         && protocol_shape_equal(expected,prepared.source.payload)))
         return fail("NATIVE_PEACE_WRAPPER_PAYLOAD_MISMATCH","wrapper_payload");
+    if (!peace_war_registry_lifetimes.current(*selected))
+        return fail("NATIVE_PEACE_WAR_REFERENCE_MISMATCH","war_context");
     return true;
 }
 
@@ -423,11 +423,10 @@ static bool execution_peace_authority_test(const char* wire,DWORD size) noexcept
     }
     uintptr_t country=0;
     PeaceWarReferenceList pair{};
-    const PeaceWarRegistryEntry* selected_war=nullptr;
+    std::optional<PeaceWarRegistryEntry> selected_war;
     if (peace_query_country_pointer(actor,country)
         && peace_query_pair_references(country,static_cast<unsigned>((recipient>>32)&0xffffu),pair)
-        && pair.count==1) for (unsigned i=0;i<peace_war_registry_size;++i)
-            if (peace_war_registry[i].native_reference==pair.references[0]) selected_war=&peace_war_registry[i];
+        && pair.count==1) selected_war=peace_war_registry_lifetimes.find_reference(pair.references[0]);
     PeaceProvinceRequest province{};
     province.count=1; province.ids[0]=177; std::memcpy(province.beneficiary,"FRA",4);
     PeacePreparedAction prepared{};

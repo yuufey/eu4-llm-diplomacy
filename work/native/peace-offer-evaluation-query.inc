@@ -2,6 +2,7 @@
 // The score remains a signed native integer; no response threshold is assumed.
 static void peace_offer_evaluation_query(const char* id,void* action,bool eligible,
     char (&output)[49152]) noexcept {
+    (void)id; // Used by the optional reason-metadata branch.
     bool called=false,available=false,readable=false,truncated=false;
     bool aggregate_available=false,factors_complete=false,all_items_verified=true;
     int32_t score=0,aggregate=0;

@@ -9,9 +9,8 @@ static bool execution_declarewar_preflight(const ExecutionRequest& request,
     if (failure_reason) *failure_reason=nullptr;
     uintptr_t game=0; uint64_t player=0;
     if (!read(base+0x233fe58,game) || !read(game+0x1dd0,date)
-        || !read(game+0x1e60,player)
-        || static_cast<uint32_t>(player&0xffffffu)!=0x524f50u
-        || !alliance_query_country("FRA",actor)
+        || !read(game+0x1e60,player) || !observation_country_handle(player)
+        || !observation_control_country_tag(request.actor,actor)
         || !alliance_query_country(request.recipient,recipient) || actor==recipient
         || !request.casus_belli[0]) return false;
     static constexpr FactoryActionQueryMethods methods{
@@ -46,8 +45,9 @@ static bool execution_declarewar_preflight(const ExecutionRequest& request,
     DeclareWarCandidateSelection selection{};
     selection.casus_belli=request.casus_belli;
     selection.province_id=request.war_goal_province;
-    if (strcmp(request.war_goal_beneficiary,"FRA")
-        && strcmp(request.war_goal_beneficiary,"---")
+    if (!strcmp(request.war_goal_beneficiary,request.actor))
+        selection.beneficiary_handle=actor;
+    else if (strcmp(request.war_goal_beneficiary,"---")
         && !alliance_query_country(request.war_goal_beneficiary,selection.beneficiary_handle))
         return false;
     const bool no_cb=!strcmp(request.casus_belli,"no_casus_belli");

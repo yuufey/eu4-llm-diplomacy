@@ -20,16 +20,69 @@ static volatile LONG started = 0, inside = 0, frame_count = 0;
 static DWORD frame_thread = 0;
 static bool thread_changed = false;
 static ULONGLONG last_log = 0;
+static SRWLOCK diagnostic_log_lock = SRWLOCK_INIT;
+#ifndef BRIDGE_DIAGNOSTIC_LOG_LIMIT_BYTES
+#define BRIDGE_DIAGNOSTIC_LOG_LIMIT_BYTES (64ULL * 1024ULL * 1024ULL)
+#endif
+static uint64_t diagnostic_log_bytes = 0;
+static bool diagnostic_log_limit_reported = false;
+
+static bool is_budgeted_diagnostic(const char* message) {
+    // Proposal ends are business observations consumed by proposal_expiry.py. Preserve
+    // every matching row, including invalid snapshots needed for gap reporting.
+    static const char lifecycle[] = "{\"event\":\"native_alliance_lifecycle\",";
+    if (strncmp(message, lifecycle, sizeof(lifecycle) - 1) == 0) {
+        return !(strstr(message, "\"kind\":\"destructor_return\"")
+                 && (strstr(message, "\"caller_return_rva\":\"0x2f04b9\"")
+                     || strstr(message, "\"caller_return_rva\":\"0x3609ed\"")
+                     || strstr(message, "\"caller_return_rva\":\"0x36087a\"")
+                     || strstr(message, "\"caller_return_rva\":\"0x360940\"")));
+    }
+    static const char* const prefixes[] = {
+        "{\"event\":\"control_frame\",",
+        "{\"event\":\"native_alliance_field_read_begin\",",
+        "{\"event\":\"native_wrapper_field_read_begin\","
+    };
+    for (const char* prefix : prefixes) {
+        if (strncmp(message, prefix, strlen(prefix)) == 0) return true;
+    }
+    return false;
+}
 static const unsigned char expected[20] = {
     0x4c,0x89,0x44,0x24,0x18,0x55,0x53,0x57,0x48,0x8d,
     0x6c,0x24,0xb0,0x48,0x81,0xec,0x50,0x01,0x00,0x00};
 
 static void line(const char* message) {
-    DWORD written;
+    const DWORD saved_error = GetLastError();
+    AcquireSRWLockExclusive(&diagnostic_log_lock);
     if (log_file != INVALID_HANDLE_VALUE) {
-        WriteFile(log_file, message, static_cast<DWORD>(strlen(message)), &written, nullptr);
-        FlushFileBuffers(log_file);
+        const size_t length = strlen(message);
+        const bool diagnostic = is_budgeted_diagnostic(message);
+        if (diagnostic && length > BRIDGE_DIAGNOSTIC_LOG_LIMIT_BYTES - diagnostic_log_bytes) {
+            if (!diagnostic_log_limit_reported) {
+                char notice[384];
+                const int count = snprintf(notice, sizeof(notice),
+                    "{\"event\":\"diagnostic_log_budget_exhausted\",\"limit_bytes\":%llu,"
+                    "\"diagnostic_capture_complete\":false,\"business_records_retained\":true,"
+                    "\"scope\":\"auxiliary_lifecycle_frame_and_field_reads\"}\n",
+                    static_cast<unsigned long long>(BRIDGE_DIAGNOSTIC_LOG_LIMIT_BYTES));
+                DWORD written = 0;
+                if (count > 0 && count < static_cast<int>(sizeof(notice))
+                    && WriteFile(log_file, notice, static_cast<DWORD>(count), &written, nullptr)
+                    && written == static_cast<DWORD>(count)) {
+                    diagnostic_log_limit_reported = true;
+                    FlushFileBuffers(log_file);
+                }
+            }
+        } else {
+            DWORD written = 0;
+            const BOOL success = WriteFile(log_file, message, static_cast<DWORD>(length), &written, nullptr);
+            if (diagnostic) diagnostic_log_bytes += written;
+            if (success && written == length) FlushFileBuffers(log_file);
+        }
     }
+    ReleaseSRWLockExclusive(&diagnostic_log_lock);
+    SetLastError(saved_error);
 }
 template<typename T> static bool read(uintptr_t address, T& value) {
     SIZE_T size = 0;

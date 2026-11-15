@@ -474,8 +474,37 @@ static void unilateral_query_run(const char* id,const char* action_id,
 #include "insult-query.inc"
 #include "rival-query.inc"
 #include "vassal-query.inc"
+#ifdef BRIDGE_SUPPORT_ROLE_CONTEXT
+#include "support-role-state.h"
+struct SupportRoleReader final {
+    bool resolve(uint64_t reference, uintptr_t& country) noexcept {
+        return insult_query_country(reference,country);
+    }
+    bool read(uintptr_t address,void* output,size_t size) noexcept {
+        SIZE_T copied=0;
+        return size<=8 && ReadProcessMemory(GetCurrentProcess(),reinterpret_cast<void*>(address),
+            output,size,&copied) && copied==size;
+    }
+};
+static bridge::support_role_state::Snapshot support_role_capture(uint64_t actor,uint64_t recipient) noexcept {
+    SupportRoleReader reader;
+    bridge::support_role_state::Snapshot roles{};
+    bridge::support_role_state::capture(reader,actor,recipient,roles);
+    return roles;
+}
+static void support_role_query_fields(uint64_t actor,uint64_t recipient,char* output,size_t capacity) noexcept {
+    const auto roles=support_role_capture(actor,recipient);
+    snprintf(output,capacity,
+        "\"support_roles_readable\":%s,\"support_actor_is_subject\":%s,\"support_recipient_is_subject\":%s,",
+        roles.readable?"true":"false",roles.actor_is_subject?"true":"false",
+        roles.recipient_is_subject?"true":"false");
+}
+#endif
 #include "favor-state.inc"
 #include "gift-influence-state.inc"
+#ifdef BRIDGE_DEBT_QUOTE_QUERY
+#include "debt-quote-query.inc"
+#endif
 #include "declarewar-query.inc"
 #include "peace-context-query.inc"
 #include "peace-offer-evaluation-query.inc"
@@ -495,6 +524,8 @@ static void unilateral_query_run(const char* id,const char* action_id,
 #include "peace-wrapper-rule-query.inc"
 #include "peace-consequences-query.inc"
 #include "peace-empty-offer-query.inc"
+
+#include "territorial-interest-query.inc"
 
 static void alliance_query_tick() {
     if (GetFileAttributesW(alliance_query_path)==INVALID_FILE_ATTRIBUTES || !control_ready()) return;
@@ -542,6 +573,9 @@ static void alliance_query_tick() {
     bool query19=false;
     bool query20=false;
     bool query21=false;
+    bool query22=false;
+    bool query23=false;
+    char interest_provinces[193]{};
     char war_call_csv[64]{},war_promise_csv[64]{},war_co_csv[64]{};
     DeclareWarParticipantSelection war_participants{};
     char peace_term_mask[19]{};
@@ -558,12 +592,31 @@ static void alliance_query_tick() {
     char peace_release_csv[64]{},peace_transfer_csv[64]{};
     PeaceSubjectRequest peace_release_subject{},peace_transfer_subject{};
     bool peace_subject_overlap_invalid=false;
+    if (!parsed && bytes) {
+        consumed=0;
+        parsed=sscanf(wire,"EU4DIP_QUERY23 %llx %64s %31s %3s %3s %d %llu %192s%n",
+            &creation,id,action_id,actor_tag,recipient_tag,&expected_date,&expiry,
+            interest_provinces,&consumed)==8
+            && !strcmp(wire+consumed,"\n") && !strcmp(action_id,"territorial_interests");
+        query23=parsed;
+    }
     char peace_release_nation_country[4]{},peace_release_nation_source[4]{};
     char peace_vassal_country[4]{},peace_union_country[4]{},peace_independence_country[4]{};
     char peace_annex_country[4]{},peace_vassal_beneficiary[4]{},peace_union_beneficiary[4]{},peace_annex_beneficiary[4]{};
     PeaceCountryRequest peace_release_nation{},peace_force_vassal{},peace_personal_union{},peace_grant_independence{};
     PeaceCountryRequestSet peace_country_requests{};
     PeaceAnnexRequest peace_annex{};
+#ifdef BRIDGE_DEBT_QUOTE_QUERY
+    if (!parsed && bytes) {
+        consumed=0;
+        parsed=sscanf(wire,"EU4DIP_QUERY22 %llx %64s %31s %3s %3s %d %llu%n",
+            &creation,id,action_id,actor_tag,recipient_tag,&expected_date,&expiry,&consumed)==7
+            && strcmp(wire+consumed,"\n")==0
+            && !strcmp(action_id,"take_on_debt");
+        query22=parsed;
+        consumed=0;
+    }
+#endif
     if (!parsed && bytes) {
         consumed=0;
         parsed=sscanf(wire,"EU4DIP_QUERY20 %llx %64s %31s %3s %3s %d %llu %d %d%n",
@@ -1095,6 +1148,10 @@ static void alliance_query_tick() {
     }
     if (free_slot==128) { alliance_query_failure(id,"QUERY_ID_CAPACITY_EXHAUSTED"); return; }
     strcpy(alliance_query_ids[free_slot],id); alliance_query_expiries[free_slot]=expiry;
+    if (query23) {
+        territorial_interest_query(id,actor_tag,recipient_tag,interest_provinces,expected_date);
+        return;
+    }
     bool marriage=strcmp(action_id,"offer_royal_marriage")==0 || strcmp(action_id,"break_royal_ties")==0;
     const bool support=strcmp(action_id,"support_independence")==0 || strcmp(action_id,"revoke_support_independence")==0;
     const bool military=strcmp(action_id,"ask_military_access")==0 || strcmp(action_id,"cancel_military_access")==0;
@@ -1245,6 +1302,10 @@ static void alliance_query_tick() {
     }
     const bool gift=!strcmp(action_id,"send_gift");
     const bool influence=!strcmp(action_id,"influence_nation");
+    const bool debt_quote=!strcmp(action_id,"take_on_debt");
+    if (debt_quote!=query22) {
+        alliance_query_failure(id,"QUERY_DEBT_QUOTE_PARAMETERS_INVALID"); return;
+    }
     if ((gift!=query20) || (influence!=query21) || (gift && gift_raw<=0)) {
         alliance_query_failure(id,"QUERY_GIFT_INFLUENCE_PARAMETERS_INVALID"); return;
     }
@@ -1261,7 +1322,7 @@ static void alliance_query_tick() {
     const FactoryActionQueryMethods* unilateral=unilateral_query_family(action_id);
     bool offer=favor_trade || strcmp(action_id,"offer_alliance")==0 || strcmp(action_id,"offer_royal_marriage")==0 || strcmp(action_id,"support_independence")==0 || strcmp(action_id,"ask_military_access")==0 || strcmp(action_id,"offer_vassalization")==0;
     if (!peace && !query18 && !declarewar && !rival && !insult && !marriage
-        && !gift && !influence && !small_negotiated && !unilateral && !offer
+        && !gift && !influence && !debt_quote && !small_negotiated && !unilateral && !offer
         && strcmp(action_id,"dissolve_alliance")!=0) {
         alliance_query_failure(id,"QUERY_ACTION_UNSUPPORTED"); return;
     }
@@ -1273,6 +1334,12 @@ static void alliance_query_tick() {
     if (!alliance_query_country(actor_tag,actor) || !alliance_query_country(recipient_tag,recipient) || actor==recipient) {
         alliance_query_failure(id,"QUERY_COUNTRY_RESOLUTION_UNAVAILABLE"); return;
     }
+#ifdef BRIDGE_DEBT_QUOTE_QUERY
+    if (debt_quote) {
+        debt_quote_query_run(id,actor_tag,recipient_tag,actor,recipient,date);
+        return;
+    }
+#endif
     if (gift || influence) {
         gift_influence_query_run(id,action_id,actor_tag,recipient_tag,actor,recipient,
             date,gift,gift?gift_ducats:0);
@@ -1555,21 +1622,32 @@ static void alliance_query_tick() {
         favor_trust?0x129500:small_negotiated?0x129450:0x4ed5e0))(action,1);
     else reinterpret_cast<Destructor>(base+0x129450)(action,0);
     observation_active_query=nullptr;
-    char support_fields[768]{};
+    char support_fields[4096]{};
     if (favor_trade) strcpy(support_fields,"\"family\":\"favor_trade\",");
     if (support) snprintf(support_fields,sizeof(support_fields),
         "\"family\":\"support_independence\",\"support_independence_active\":%s,\"support_independence_state_verified\":true,",
         support_active?"true":"false");
+#ifdef BRIDGE_SUPPORT_ROLE_CONTEXT
+    if (support) {
+        const size_t used=strlen(support_fields);
+        support_role_query_fields(actor,recipient,support_fields+used,sizeof(support_fields)-used);
+    }
+#endif
     if (military) snprintf(support_fields,sizeof(support_fields),
         "\"family\":\"military_access\",\"military_access_active\":%s,\"military_access_state_verified\":true,",
         military_active?"true":"false");
-    if (vassal) snprintf(support_fields,sizeof(support_fields),
-        "\"family\":\"vassalization\",\"vassal_state_verified\":true,\"vassal_active\":%s,\"actor_is_overlord\":%s,\"actor_is_subject\":%s,\"subject_type\":%s,\"prestige_raw\":%d,\"cancel_prestige_delta_raw\":%d,\"cancel_prestige_effect_allowed\":%s,\"prestige_scale\":1000,\"cancel_prestige_cost_verified\":true,",
-        vassal_state.active?"true":"false",vassal_state.actor_is_overlord?"true":"false",
-        vassal_state.actor_is_subject?"true":"false",vassal_state.subject_type_json,
-        vassal_state.prestige_raw,vassal_state.cancel_prestige_delta_raw,
-        vassal_state.cancel_prestige_effect_allowed?"true":"false");
-    char message[4096];
+    if (vassal) {
+        char actor_subject[1792]{},recipient_subject[1792]{};
+        vassal_query_subject_state(actor,actor_subject,sizeof(actor_subject));
+        vassal_query_subject_state(recipient,recipient_subject,sizeof(recipient_subject));
+        snprintf(support_fields,sizeof(support_fields),
+            "\"family\":\"vassalization\",\"vassal_state_verified\":true,\"vassal_active\":%s,\"actor_is_overlord\":%s,\"actor_is_subject\":%s,\"subject_type\":%s,\"prestige_raw\":%d,\"cancel_prestige_delta_raw\":%d,\"cancel_prestige_effect_allowed\":%s,\"prestige_scale\":1000,\"cancel_prestige_cost_verified\":true,\"actor_subject_state\":%s,\"recipient_subject_state\":%s,",
+            vassal_state.active?"true":"false",vassal_state.actor_is_overlord?"true":"false",
+            vassal_state.actor_is_subject?"true":"false",vassal_state.subject_type_json,
+            vassal_state.prestige_raw,vassal_state.cancel_prestige_delta_raw,
+            vassal_state.cancel_prestige_effect_allowed?"true":"false",actor_subject,recipient_subject);
+    }
+    char message[12288];
     snprintf(message,sizeof(message),"{\"event\":\"native_alliance_inspection\",\"session_id\":\"%lu-%llx\",\"query_id\":\"%s\",\"action_id\":\"%s\",%s\"actor\":\"%.3s\",\"recipient\":\"%.3s\",\"phase\":\"initiate\",\"date_raw\":%d,\"ui_selection_checked\":true,\"native_visibility\":%s,\"ui_enabled_gate_checked\":true,\"common_action_gate\":%s,\"display_predicate\":%s,\"initiation_gate\":%s,\"tooltip_gate\":%s,\"validity_called\":true,\"native_validity\":%s,\"native_diagnostic_hex\":\"%s\",\"diagnostic_readable\":%s,\"diagnostic_truncated\":%s,\"diplomat_context_readable\":true,\"diplomat_required\":%s,\"available_diplomat_count\":%u,\"diplomat_assignment_verified\":false,\"score_applicable\":%s,\"score_available\":%s,\"acceptance_predicate_available\":%s,\"native_would_accept\":%s,\"native_total_raw\":%d,\"acceptance_threshold_raw\":1,\"reason_container_readable\":%s,\"reason_count\":%u,\"reason_items_decoded\":false,\"full_rules_complete\":true,\"reasons_complete\":false,\"submitted\":false%s,\"frame_thread\":%lu}\n",
         static_cast<unsigned long>(GetCurrentProcessId()),static_cast<unsigned long long>(observation_creation),
         id,action_id,support_fields,actor_tag,recipient_tag,date,native_visibility?"true":"false",common_gate?"true":"false",

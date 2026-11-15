@@ -30,7 +30,6 @@ constexpr uintptr_t kRivalRemoveRva=0x2aca90;
 constexpr uint32_t kRivalSetSelector=0x2fae;
 constexpr uint32_t kRivalReplaceSelector=0x3005;
 constexpr uint32_t kRivalRemoveSelector=0x2faf;
-constexpr uint32_t kFranceTag=0x415246u;
 constexpr uint32_t kPortugalTag=0x524f50u;
 
 // These are the complete native prologues recorded in
@@ -121,14 +120,14 @@ static void rival_copy_reason(char (&destination)[64],const char* source) noexce
     destination[length]=0;
 }
 
-static bool rival_actor_is_france(uint64_t handle) noexcept {
-    return static_cast<uint32_t>(handle&0xffffffu)==kFranceTag;
+static bool rival_actor_is_controlled(uint64_t handle) noexcept {
+    return observation_control_country_handle_tag_only(handle);
 }
 
 static const char* rival_reason_for(bool actor_readable,bool shape,
-    bool actor_france,bool original_available) noexcept {
+    bool actor_controlled,bool original_available) noexcept {
     if (!actor_readable) return "ACTOR_UNREADABLE_FORWARD";
-    if (actor_france) return "FRA_SUBMISSION_UNAUTHORIZED";
+    if (actor_controlled) return "FRA_SUBMISSION_UNAUTHORIZED";
     if (!shape) return "SHAPE_MISMATCH_FORWARD";
     if (!original_available) return "ORIGINAL_UNAVAILABLE";
     return "FORWARD_NON_FRA";
@@ -184,22 +183,40 @@ static void rival_authority_entry(void* object,RivalEntryKind kind,
         && observation_country_handle(actor) && observation_country_handle(target)
         && (kind!=RivalEntryKind::replace || (old_readable
             && observation_country_handle(old_rival)));
-    const bool actor_france=actor_readable && rival_actor_is_france(actor);
-    const int binding=actor_france && shape && canonical && original
+    const bool actor_controlled=actor_readable && rival_actor_is_controlled(actor);
+    const int binding=actor_controlled && shape && canonical && original
         ?rival_execution_begin(object,static_cast<unsigned>(kind)):-1;
-    const bool allowed=!actor_france || binding>=0;
+    const bool allowed=!actor_controlled || binding>=0;
     const char* reason_text=binding>=0?"FRA_REQUEST_BOUND_NATIVE_RULES_VERIFIED":
-        rival_reason_for(actor_readable,shape,actor_france,original!=nullptr);
+        rival_reason_for(actor_readable,shape,actor_controlled,original!=nullptr);
     rival_record(kind,selector,actor,target,old_rival,shape,canonical,allowed,
         reason_text,sourcecaller);
-    if (actor_france && binding<0) {
+    if (actor_controlled && binding<0) {
         InterlockedIncrement(&rival_blocked_calls);
         return;
     }
     if (original) {
+#ifdef BRIDGE_RIVAL_OBSERVATION
+#ifdef BRIDGE_RIVAL_RECORD_OBSERVATION
+        auto observation = rival_change_observer::begin(
+            static_cast<unsigned>(kind), actor, target, old_rival, shape && canonical,
+            &rival_record_observer::command_snapshot);
+        rival_record_observer::CommandScope record_scope(observation);
+#else
+        auto observation = rival_change_observer::begin(
+            static_cast<unsigned>(kind), actor, target, old_rival, shape && canonical);
+#endif
+#endif
         // The matching trampoline contains the complete original prologue and
-        // the return jump.  Forward exactly once for every non-FRA actor.
+        // the return jump.  Forward exactly once for every uncontrolled actor.
         original(object);
+#ifdef BRIDGE_RIVAL_OBSERVATION
+#ifdef BRIDGE_RIVAL_RECORD_OBSERVATION
+        rival_change_observer::finish(observation,&rival_record_observer::command_snapshot);
+#else
+        rival_change_observer::finish(observation);
+#endif
+#endif
         if (binding>=0) rival_execution_finish(static_cast<unsigned>(binding));
     }
 }

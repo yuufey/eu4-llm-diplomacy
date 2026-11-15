@@ -52,6 +52,21 @@ static void test_valid() {
     parsed=wire::parse_response_request(valid_wire(),std::strlen(valid_wire()),response);
     check(parsed.ok() && std::strcmp(response.request_id,"q_01")==0,
         "valid response");
+
+    const char dynamic_wire[]=
+        "v1|q_dynamic|6248-1dd5bcf4df44308|1000000100|56459880|offer_alliance|K00|E00|accept|53\n";
+    wire::InspectionRequest dynamic_inspection{};
+    parsed=wire::parse_inspection_request(dynamic_wire,sizeof(dynamic_wire)-1,
+        dynamic_inspection);
+    check(parsed.ok()
+        && std::strcmp(dynamic_inspection.original_actor,"K00")==0
+        && std::strcmp(dynamic_inspection.decision_country,"E00")==0,
+        "dynamic_numeric_actor_and_decision_country");
+    wire::ResponseRequest dynamic_response{};
+    parsed=wire::parse_response_request(dynamic_wire,sizeof(dynamic_wire)-1,
+        dynamic_response);
+    check(parsed.ok() && std::strcmp(dynamic_response.decision_country,"E00")==0,
+        "dynamic_response_preserves_decision_country");
 }
 
 static void test_cross_action_context() {
@@ -200,7 +215,7 @@ static void test_negative() {
     const char* cases[]={
         "v1|bad id|6248-1dd5bcf4df44308|1000000100|56459880|offer_alliance|SAV|FRA|accept|1\n",
         "v1|q|6248-1dd5bcf4df44308|1000000100|56459880|offer_alliance|sav|FRA|accept|1\n",
-        "v1|q|6248-1dd5bcf4df44308|1000000100|56459880|offer_alliance|SAV|POR|accept|1\n",
+        "v1|q|6248-1dd5bcf4df44308|1000000100|56459880|offer_alliance|SAV|SAV|accept|1\n",
         "v1|q|6248-1dd5bcf4df44308|1000000100|56459880|offer_alliance|SAV|FRA|maybe|1\n",
         "v1|q|6248-1dd5bcf4df44308|1000000100|56459880|offer_alliance|SAV|FRA|accept|0\n",
         "v1|q|6248-1dd5bcf4df44308|1000000100|56459880|support_independenc|SAV|FRA|accept|1\n",
@@ -240,7 +255,19 @@ static void test_context() {
     check(result.error==wire::ContextError::expiry_window_exceeded,"context window");
     request.expires_filetime=now+100;
     result=wire::validate_context(request,"6248-1dd5bcf4df44308",now,56459881);
-    check(result.error==wire::ContextError::date_mismatch,"context date");
+    check(result.ok(),"inspection accepts advancing game clock");
+    result=wire::validate_context(request,"6248-1dd5bcf4df44308",now,56459879);
+    check(result.error==wire::ContextError::date_mismatch,"inspection rejects earlier game clock");
+    result=wire::validate_context(request,"6248-aaaaaaaaaaaaaaaa",now,56459881);
+    check(result.error==wire::ContextError::session_mismatch,"advancing inspection retains session binding");
+    request.expires_filetime=now;
+    result=wire::validate_context(request,"6248-1dd5bcf4df44308",now,56459881);
+    check(result.error==wire::ContextError::expired,"advancing inspection retains expiry");
+    wire::ResponseRequest response{};
+    check(wire::parse_response_request(valid_wire(),std::strlen(valid_wire()),response).ok(),
+        "response clock setup");
+    result=wire::validate_context(response,"6248-1dd5bcf4df44308",now,56459881);
+    check(result.error==wire::ContextError::date_mismatch,"response requires selected execution date");
 }
 
 int main() {

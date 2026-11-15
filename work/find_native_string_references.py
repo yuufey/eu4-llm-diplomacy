@@ -109,6 +109,8 @@ def parse_pe(path: Path) -> dict:
             raise ScanError("expected PE32+ optional header")
         image_base = struct.unpack_from("<Q", optional, 24)[0]
         directory_count = struct.unpack_from("<I", optional, 108)[0]
+        if directory_count > 5 and optional_size < 160:
+            raise ScanError("data directories exceed the optional header")
         if directory_count < 4:
             raise ScanError("PE has no exception data directory")
         exception_rva, exception_size = struct.unpack_from("<II", optional, 112 + 3 * 8)
@@ -160,6 +162,16 @@ def parse_pe(path: Path) -> dict:
         "image_base": image_base,
         "pe_offset": pe_offset,
         "machine": machine,
+        "image_size": struct.unpack_from("<I", optional, 56)[0],
+        "optional_header_size": optional_size,
+        "symbol_table": {
+            "file_offset": struct.unpack_from("<I", coff, 12)[0],
+            "count": struct.unpack_from("<I", coff, 16)[0],
+        },
+        "relocation_directory": {
+            "rva": struct.unpack_from("<I", optional, 152)[0] if directory_count > 5 else 0,
+            "size": struct.unpack_from("<I", optional, 156)[0] if directory_count > 5 else 0,
+        },
         "sections": sections,
         "exception_directory": {
             "rva": exception_rva,
@@ -169,6 +181,53 @@ def parse_pe(path: Path) -> dict:
         },
         "runtime_functions": functions,
     }
+
+
+def read_coff_symbols(path: Path, pe: dict, *, names=(), prefixes=()) -> dict[str, int]:
+    """Read selected COFF symbols with bounded tables and streamed symbol rows."""
+    offset = pe["symbol_table"]["file_offset"]
+    count = pe["symbol_table"]["count"]
+    string_offset = offset + count * 18
+    if not 0 < count <= 1_000_000 or offset <= 0 or string_offset + 4 > pe["file_size"]:
+        raise ScanError("invalid COFF symbol table")
+    result = {}
+    with path.open("rb") as stream:
+        string_size = struct.unpack("<I", _read_at(stream, pe["file_size"], string_offset, 4))[0]
+        if not 4 <= string_size <= 32 * CHUNK_SIZE or string_offset + string_size > pe["file_size"]:
+            raise ScanError("invalid COFF string table")
+        strings = b"".join(chunk for _, chunk in _iter_file_chunks(path, string_offset, string_size))
+        stream.seek(offset)
+        index = 0
+        while index < count:
+            raw = stream.read(18)
+            if len(raw) != 18 or index + raw[17] >= count:
+                raise ScanError("invalid COFF symbol row")
+            name_raw = raw[:8]
+            if name_raw[:4] == b"\0" * 4:
+                name_offset = struct.unpack_from("<I", name_raw, 4)[0]
+                end = strings.find(b"\0", name_offset)
+                if not 4 <= name_offset < len(strings) or end < name_offset:
+                    raise ScanError("invalid COFF symbol name")
+                name_raw = strings[name_offset:end]
+            else:
+                name_raw = name_raw.split(b"\0", 1)[0]
+            name = name_raw.decode("utf-8", errors="replace")
+            value, section_number = struct.unpack_from("<Ih", raw, 8)
+            if name in names or name.startswith(tuple(prefixes)):
+                if not 0 < section_number <= len(pe["sections"]):
+                    raise ScanError(f"selected COFF symbol is not image-backed: {name}")
+                section = pe["sections"][section_number - 1]
+                if value >= max(section["virtual_size"], section["raw_size"]):
+                    raise ScanError(f"selected COFF symbol exceeds section: {name}")
+                rva = section["virtual_address"] + value
+                if name in result and result[name] != rva:
+                    raise ScanError(f"ambiguous COFF symbol: {name}")
+                result[name] = rva
+                if len(result) > 128:
+                    raise ScanError("selected COFF symbol count exceeds bounds")
+            index += 1 + raw[17]
+            stream.seek(raw[17] * 18, 1)
+    return result
 
 
 def _iter_file_chunks(path: Path, start: int, size: int) -> Iterator[tuple[int, bytes]]:

@@ -28,7 +28,7 @@ ml64 /nologo /c /Fo"..\runtime\native1375-v6\frame.obj" research-frame-v6-1375.a
 if errorlevel 1 (popd & exit /b 1)
 link /nologo /DLL /DYNAMICBASE /NXCOMPAT /OUT:"..\runtime\native1375-v6\eu4_pair_lab_1375.dll" "..\runtime\native1375-v6\research-lab-1375.obj" "..\runtime\native1375-v6\pair-probe-v6-1375.obj" "..\runtime\native1375-v6\pair-preview-v6-1375.obj" "..\runtime\native1375-v6\pair-command-v6-1375.obj" "..\runtime\native1375-v6\pair-engine-1375.obj" "..\runtime\native1375-v6\test-controls-1375.obj" "..\runtime\native1375-v6\frame.obj" kernel32.lib user32.lib advapi32.lib
 if errorlevel 1 (popd & exit /b 1)
-python -B record_lab_build.py
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File "%~dp0import-local-env.ps1" -PythonScript "%~dp0record_lab_build.py"
 if errorlevel 1 (popd & exit /b 1)
 popd
 endlocal

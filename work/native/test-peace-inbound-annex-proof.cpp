@@ -2,6 +2,7 @@
 #include <cstdio>
 #include <cstring>
 #include <initializer_list>
+#include <optional>
 #include <type_traits>
 #include <utility>
 
@@ -73,8 +74,8 @@ static bool peace_capture_offer_snapshot(const void* native_offer,
 static bool peace_query_reference_sets_equal(const PeaceWarReferenceList&,
     const PeaceWarReferenceList&) noexcept { return false; }
 
-static const PeaceWarRegistryEntry* peace_query_register_war(
-    std::uintptr_t) noexcept { return nullptr; }
+static std::optional<PeaceWarRegistryEntry> peace_query_register_war(
+    std::uintptr_t) noexcept { return std::nullopt; }
 
 [[maybe_unused]] static void line(const char*) noexcept {}
 

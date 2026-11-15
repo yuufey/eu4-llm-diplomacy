@@ -654,11 +654,11 @@ inline ParseResult parse_request(const char* bytes,std::size_t length,
     output.grant_independence=grant_independence;
     output.full_annexation=full_annexation;
 
-    if (!detail::equals(fields[4],"FRA")
+    if (!detail::valid_canonical_tag(fields[4])
         || !detail::copy_field(output.actor,sizeof(output.actor),fields[4]))
         return ParseResult{ParseError::invalid_actor,4};
     if (!detail::valid_canonical_tag(fields[5])
-        || detail::equals(fields[5],"FRA")
+        || detail::equals(fields[5],output.actor)
         || !detail::copy_field(output.recipient,sizeof(output.recipient),fields[5]))
         return ParseResult{ParseError::invalid_recipient,5};
     if (!detail::parse_signed_int32(fields[6],output.date_raw))

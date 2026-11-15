@@ -1,0 +1,142 @@
+{
+  "profile_id": "mission-task-memory-1374",
+  "profile_version": 1,
+  "evidence_kind": "ordinary_static_analysis_plus_bounded_runtime_RPM",
+  "source_evidence_kind": "ordinary_static_file_bytes_with_REA_source_not_REA_Evidence",
+  "game_version": "1.37.4",
+  "executable": {
+    "sha256": "b23fa0e1f698d31b01cdd1c3817a675805d8c6286cb66f9c231e6e2a42544d77",
+    "image_base": "0x140000000"
+  },
+  "task_vector": {
+    "root_vtable_rva": "0x1cc2048",
+    "task_vtable_rva": "0x1cc2008",
+    "root_parser_rva": "0x8d7430",
+    "task_parser_rva": "0x8d5070",
+    "parser_entry_offset": "0x20",
+    "pointer_offset": "0x128",
+    "capacity_offset": "0x130",
+    "count_offset": "0x134",
+    "header_bytes": 16,
+    "task_object_definition_name_offset": "0x10",
+    "root_vtable_expected_entry_rvas": [
+      "0x8d7320",
+      "0xd2f280",
+      "0x955a0",
+      "0x17067e0",
+      "0x8d7430",
+      "0x955a0"
+    ],
+    "task_vtable_expected_entry_rvas": [
+      "0x8d4b20",
+      "0xd2f280",
+      "0x955a0",
+      "0x17067e0",
+      "0x8d5070",
+      "0x955a0"
+    ],
+    "root_vtable_file_guard": {
+      "name": "root_vtable_table",
+      "rva": "0x1cc2048",
+      "size": 48,
+      "bytes": "20738d400100000080f2d24001000000a055094001000000e06770410100000030748d4001000000a055094001000000",
+      "sha256": "7fbf616b705348dde563cfeb7d91b8a623f0a640201b762fc6474855786d95bf"
+    },
+    "task_vtable_file_guard": {
+      "name": "task_vtable_table",
+      "rva": "0x1cc2008",
+      "size": 48,
+      "bytes": "204b8d400100000080f2d24001000000a055094001000000e06770410100000070508d4001000000a055094001000000",
+      "sha256": "6d6514670c22482284396d00ed5e1b2cf546aebad13c01003aa14b766f970b2f"
+    }
+  },
+  "string32": {
+    "length_offset": "0x10",
+    "capacity_offset": "0x18",
+    "inline_capacity_limit": 16,
+    "max_ascii_length": 256,
+    "max_capacity": 4096
+  },
+  "limits": {
+    "max_total_rpm": 524288,
+    "max_single_rpm": 65536,
+    "max_tasks_per_root": 4096,
+    "max_total_tasks": 4096,
+    "max_ascii_length": 256,
+    "max_string_capacity": 4096
+  },
+  "code_guards": [
+    {
+      "name": "root_parser",
+      "rva": "0x8d7430",
+      "size": 64,
+      "bytes": "48895c240855565741544155415641574883ec50488bf2488be94533e44489a424a00000004181f8e93700007f58744a4181f8c32b000074354181f8b82c0000",
+      "sha256": "f679bb25a6f937872a6897284a2d469b69f5f17e83268157ee20178f6f4c2752"
+    },
+    {
+      "name": "task_parser",
+      "rva": "0x8d5070",
+      "size": 64,
+      "bytes": "48895c240848896c2410488974241848897c242041564881ec80080000488bfa488be94181f89f3600000f8fd40000000f84bc0000004183e84c0f8498000000",
+      "sha256": "71c3a0365156e72d5a2599db691c44511a2d602d4f62c4bb30349c49c184fd3e"
+    }
+  ],
+  "source_evidence": {
+    "task_contract": {
+      "path": "work/runtime/information-loaded-tasks-20261024-001/task-contract.json",
+      "sha256": "99819da4578fa3535bb3b2e5c3810e7b29e31a2c34d5a5816be82e6401c279c6",
+      "schema": "information.loaded_tasks.static_contract.v1"
+    },
+    "loaded_root_parser_evidence": {
+      "path": "work/runtime/information-branches-20261024-001/rea-loaded-root-parser-001/evidence.json",
+      "sha256": "3791ee12a4a01d04745ecd1eb71fa43f43923c7d92671db5920bb005e275bce5",
+      "evidence_id": "ev_a1e99d7ae4552bc25a825fa26cc0b9dc269149403bf5fa46cdd2eadb5a888068",
+      "procedure": "0x1408d7430",
+      "body": {
+        "available": true,
+        "provenance": "ghidra-function-body-address-set",
+        "ranges": [
+          {
+            "start": "0x1408d7430",
+            "end": "0x1408d779f"
+          }
+        ],
+        "total_bytes": 880,
+        "span_bytes": 880,
+        "non_contiguous": false,
+        "contains_entry": true
+      }
+    },
+    "task_definition_parser_evidence": {
+      "path": "work/runtime/information-branches-20261024-001/rea-task-definition-parser-001/evidence.json",
+      "sha256": "0e689ba0332e15bfe9f6fefc0145283447698a0593995430f0cc8e4868c3c141",
+      "evidence_id": "ev_341053995c4ded11c4e48fd6dcf5e7f3c4f00e1e39e4d803a34d5c06edb97a0d",
+      "procedure": "0x1408d5070",
+      "body": {
+        "available": true,
+        "provenance": "ghidra-function-body-address-set",
+        "ranges": [
+          {
+            "start": "0x1408d5070",
+            "end": "0x1408d564a"
+          }
+        ],
+        "total_bytes": 1499,
+        "span_bytes": 1499,
+        "non_contiguous": false,
+        "contains_entry": true
+      }
+    },
+    "root_definition_header_runtime_report": {
+      "path": "work/runtime/information-branches-20261024-001/root-definition-header-001.json",
+      "sha256": "08ea70ad5b5344713bb4e72b64917ca558ef22f4aaa4a3a6d45782342244a81c",
+      "schema": "root-definition-header-001.json"
+    }
+  },
+  "runtime_guards": {
+    "vtable_entries_are_relocated": true,
+    "runtime_rule": "Read module_base+vtable_rva and compare each qword to module_base+expected_entry_rva; do not compare relocated runtime bytes to disk bytes.",
+    "root_parser_plus_20_must_equal": "module_base+0x8d7430",
+    "task_parser_plus_20_must_equal": "module_base+0x8d5070"
+  }
+}

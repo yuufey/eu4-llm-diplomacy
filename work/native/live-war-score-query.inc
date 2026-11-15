@@ -90,18 +90,15 @@ static bool live_war_score_capture_goal_presence(uintptr_t native_war,
     return true;
 }
 
-static const PeaceWarRegistryEntry* live_war_score_find_registry(
+static std::optional<PeaceWarRegistryEntry> live_war_score_find_registry(
     const char* war_id) noexcept {
-    if (!war_id || !war_id[0]) return nullptr;
+    if (!war_id || !war_id[0]) return std::nullopt;
     std::size_t length=0;
     while (length<=bridge::live_war_score_query::kMaxWarIdLength
         && war_id[length]) ++length;
     if (length==0 || length>bridge::live_war_score_query::kMaxWarIdLength)
-        return nullptr;
-    for (unsigned index=0;index<peace_war_registry_size;++index)
-        if (std::strcmp(peace_war_registry[index].public_id,war_id)==0)
-            return &peace_war_registry[index];
-    return nullptr;
+        return std::nullopt;
+    return peace_query_find_registered_war(war_id);
 }
 
 static bool live_war_score_reference_contains(
@@ -127,8 +124,10 @@ static bool live_war_score_bind_context(const char* war_id,
         }
         return false;
     };
-    const PeaceWarRegistryEntry* entry=live_war_score_find_registry(war_id);
+    const auto entry=live_war_score_find_registry(war_id);
     if (!entry) return fail("WAR_ID_NOT_FOUND");
+    const uintptr_t reference=entry->native_reference;
+    if (!reference) return fail("WAR_ID_NOT_FOUND");
     if (!actor || !recipient || actor==recipient
         || (perspective!=actor && perspective!=recipient))
         return fail("WAR_HANDLE_INVALID");
@@ -143,12 +142,12 @@ static bool live_war_score_bind_context(const char* war_id,
         || !peace_query_pair_references(recipient_country,actor_slot,recipient_refs)
         || !peace_query_reference_sets_equal(actor_refs,recipient_refs))
         return fail("WAR_CONTEXT_STALE");
-    if (!live_war_score_reference_contains(actor_refs,entry->native_reference))
+    if (!live_war_score_reference_contains(actor_refs,reference))
         return fail("WAR_ID_NOT_BOUND_TO_PAIR");
 
     PeaceWarSideMembers side_a{},side_b{};
-    if (!peace_war_capture_vector(entry->native_reference,0x48,0x50,0x58,side_a)
-        || !peace_war_capture_vector(entry->native_reference,0x78,0x80,0x88,side_b))
+    if (!peace_war_capture_vector(reference,0x48,0x50,0x58,side_a)
+        || !peace_war_capture_vector(reference,0x78,0x80,0x88,side_b))
         return fail("WAR_PARTICIPANTS_UNREADABLE");
     const bool actor_a=peace_war_side_contains(side_a,actor);
     const bool actor_b=peace_war_side_contains(side_b,actor);
@@ -163,7 +162,8 @@ static bool live_war_score_bind_context(const char* war_id,
     if (!opposite.complete || opposite.count==0)
         return fail("WAR_OPPOSITE_SIDE_EMPTY");
 
-    output.native_war=entry->native_reference;
+    if (!peace_war_registry_lifetimes.current(*entry)) return fail("WAR_CONTEXT_STALE");
+    output.native_war=reference;
     output.actor=actor;
     output.recipient=recipient;
     output.perspective=perspective;
@@ -195,6 +195,11 @@ static bool live_war_score_capture_native(const Request& request,
     output.context=context;
     if (!context.complete) {
         bridge::live_war_score_query::set_error(output,"WAR_CONTEXT_INCOMPLETE");
+        return false;
+    }
+    const auto entry=live_war_score_find_registry(request.war_id);
+    if (!entry || entry->native_reference!=context.native_war) {
+        bridge::live_war_score_query::set_error(output,"WAR_CONTEXT_STALE");
         return false;
     }
     if (!bridge::live_war_score_query::valid_mode(request.mode)) {
@@ -254,7 +259,8 @@ static bool live_war_score_capture_native(const Request& request,
     // were captured and d932d0 was actually called with a classified goal
     // presence.  An inapplicable goal is a valid query outcome, while its
     // own goal_complete flag deliberately remains false.
-    output.complete=output.context.complete && output.total_complete
+    output.complete=peace_war_registry_lifetimes.current(*entry)
+        && output.context.complete && output.total_complete
         && output.goal_called && output.goal_return_verified
         && output.goal_presence_readable;
     output.verified=output.complete

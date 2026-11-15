@@ -1,0 +1,52 @@
+{
+  "profile_id": "reparations-commitments-memory-1374",
+  "profile_version": 1,
+  "game_version": "1.37.4",
+  "executable": {
+    "sha256": "b23fa0e1f698d31b01cdd1c3817a675805d8c6286cb66f9c231e6e2a42544d77"
+  },
+  "code_guards": [
+    {
+      "name": "reparations_expiry",
+      "rva": "0xa702e0",
+      "end_rva_exclusive": "0xa702f4",
+      "bytes": "488b0571fb8c018b90d01d00003951240f9ec0c3",
+      "sha256": "d22fd5681503fbe114107881de6f2da177fc35e82cd96edf3fdfeb975fb16726"
+    },
+    {
+      "name": "reparations_reactivate",
+      "rva": "0xa70390",
+      "end_rva_exclusive": "0xa70425",
+      "bytes": "40534883ec20488b4110488bd94c8b511848c1e8204c0fbfc0488b0500d58c0149c1ea20488b9018010000410fbfc24e8b0cc2488d14c0498b8110150000488d0cd0488bd3e86688ffff488b43184c8b4b1048c1e820480fbfd0488b05bfd48c0149c1e920488b8818010000410fbfc14c8b04d1488d14c0498b8010150000488d0cd0488bd3e82588ffffc64328004883c4205bc3",
+      "sha256": "7cc80b3403690756427a47fad1d241c8dacfa93229e7fdbc074a405bf02e1d0d"
+    },
+    {
+      "name": "reparations_cancel",
+      "rva": "0xa70430",
+      "end_rva_exclusive": "0xa704d9",
+      "bytes": "40534883ec20488bd9488b0d18fa8c014881c1b81b0000488bd3e85111a7ff488b43104c8b531848c1e8204c0fbfc0488b054ad48c0149c1ea20488b9018010000410fbfc24e8b0cc2488d14c0498b8110150000488d0cd033d2e8b187ffff488b43184c8b4b1048c1e820480fbfd0488b050ad48c0149c1e920488b8818010000410fbfc14c8b04d1488d14c0498b8010150000488d0cd033d2e87187ffffc64328014883c4205bc3",
+      "sha256": "2e6bd201333e33e87edea6a0de86e7f9fad902d78b09d69953830d79dae1ee6e"
+    },
+    {
+      "name": "reparations_factor_binding",
+      "rva": "0x49a4a3",
+      "end_rva_exclusive": "0x49a4be",
+      "bytes": "4c8d059e3bea01488d157ff87c01488d8c2498fb0000e8d2c80001",
+      "sha256": "5e1e2bf63c693aeeca302afa3ef6b654799518300820a4a60670f0d2a667b51b"
+    },
+    {
+      "name": "reparations_factor_name",
+      "rva": "0x1c69d30",
+      "end_rva_exclusive": "0x1c69d47",
+      "bytes": "5741525f52455041524154494f4e535f464143544f5200",
+      "sha256": "6849ab8bb408f5e37de785da17e3351828273b6fe3897e32a7e572556758819c"
+    },
+    {
+      "name": "reparations_factor_scale",
+      "rva": "0x359d37",
+      "end_rva_exclusive": "0x359d6c",
+      "bytes": "4863150a43fe01488b5c24084863c848b8cff753e3a59bc420480fafd148f7ea48c1fa07488bc248c1e83f4803d0498bc3418913c3",
+      "sha256": "c403001a44e73bf821f10c482d0ef56b4f4acc26cc771acf1a4098ed6bd6aac3"
+    }
+  ]
+}

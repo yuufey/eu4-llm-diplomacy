@@ -2,6 +2,11 @@ __pycache__/
 *.pyc
 work/backup/
 work/runtime/
+work/tmp/
+work/tmp-*/
+work/.pytest-*/
+work/documentation-reorganization-20261107-001/
+work/tmp-v38-control-223-001/
 .env
 local.env
 config.local.ps1
@@ -23,3 +28,9 @@ work/publication/
 *.claim
 *.dll
 *.exe
+*.sqlite3
+*.sqlite3-*
+tools/dotnet/**/bin/
+tools/dotnet/**/obj/
+/logs/2026-11-11冻结副本去重/
+/logs/2026-11-11临时夹具清理结果.json

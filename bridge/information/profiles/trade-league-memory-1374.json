@@ -1,0 +1,127 @@
+{
+  "profile_id": "trade-league-memory-1374",
+  "profile_version": 1,
+  "source_evidence_kind": "ordinary_bounded_static_source_plus_read_only_rpm_contract",
+  "game_version": "1.37.4",
+  "executable": {
+    "sha256": "b23fa0e1f698d31b01cdd1c3817a675805d8c6286cb66f9c231e6e2a42544d77",
+    "image_base": "0x140000000"
+  },
+  "globals": {
+    "database_global_rva": "0x233d8b0",
+    "game_global_rva": "0x233fe58",
+    "game_date_offset": "0x1dd0"
+  },
+  "country": {
+    "supported_actor": "FRA",
+    "trade_league_offset": "0x1948",
+    "fullref_offset": "0x20",
+    "table_offset": "0x118",
+    "count_offset": "0x124",
+    "max_entries": 4096
+  },
+  "trade_league": {
+    "object_prefix_size": "0x40",
+    "vtable_method_slot": "0x40",
+    "vector_begin_offset": "0x20",
+    "vector_end_offset": "0x28",
+    "vector_stride": 8,
+    "null_vtable_rva": "0x1c48508",
+    "active_vtable_rva": "0x1ce8948",
+    "null_predicate_rva": "0x8f450",
+    "active_predicate_rva": "0x8f440",
+    "null_vtable_slot_rva": "0x1c48548",
+    "active_vtable_slot_rva": "0x1ce8988",
+    "null_fullref_raw_hex": "2d2d2d0000000000"
+  },
+  "semantics": {
+    "basis": "native_country_trade_league_membership",
+    "unit": "relation_state",
+    "scale": 1,
+    "period": "current",
+    "value_origin": "copied_native_country_trade_league_object_vector",
+    "partial": true,
+    "complete": false,
+    "predicate_origin": "copied_native_trade_league_predicate",
+    "role_semantics": "group_membership_without_grantor_recipient"
+  },
+  "limits": {
+    "max_total_rpm": 524288,
+    "max_single_rpm": 65536,
+    "max_country_entries": 4096,
+    "max_vector_count": 4096
+  },
+  "code_guards": [
+    {
+      "name": "predicate_al_0",
+      "kind": "bytes",
+      "rva": "0x8f450",
+      "end_rva_exclusive": "0x8f453",
+      "hex": "32c0c3",
+      "sha256": "01cb47d078b4841b8408ec4fe278efa83115c6f6e101972987507d2b2b57dcf0"
+    },
+    {
+      "name": "predicate_al_1",
+      "kind": "bytes",
+      "rva": "0x8f440",
+      "end_rva_exclusive": "0x8f443",
+      "hex": "b001c3",
+      "sha256": "e18aacce29affcdddaa5f641ac1ec12552e0fe9d066e6408941b1792818b8619"
+    },
+    {
+      "name": "null_vtable_predicate_slot",
+      "kind": "pointer_slot",
+      "rva": "0x1c48548",
+      "end_rva_exclusive": "0x1c48550",
+      "target_rva": "0x8f450",
+      "hex": "50f4084001000000",
+      "sha256": "b915ebcf0a9a3cbe6464c64bd553d09def727c15ddf10307c85222f6b5a01e3f"
+    },
+    {
+      "name": "active_vtable_predicate_slot",
+      "kind": "pointer_slot",
+      "rva": "0x1ce8988",
+      "end_rva_exclusive": "0x1ce8990",
+      "target_rva": "0x8f440",
+      "hex": "40f4084001000000",
+      "sha256": "efa38791a13d762aa71f0a6ea557c1f05d1c5bf47e1383a3fd968e2364ee5b30"
+    }
+  ],
+  "source_evidence": [
+    {
+      "path": "work/runtime/information-trade-league-current-20261027-001/trade-league-current-source-003.json",
+      "sha256": "bae81cf427d26b7c2ae5e182e7ef864f14bf57ba691276db66013acb10b39cf6",
+      "bytes": 8669,
+      "role": "corrected two-stage source index and parent/source-001 pin"
+    },
+    {
+      "path": "work/runtime/information-relation-remaining-20261027-001/relation-remaining-contract-005.json",
+      "sha256": "12d58a680bf26ad4c4abcdb3195349fcc7b81b54d694eed0d384539c3199cc79",
+      "bytes": 7619,
+      "role": "combined relation-remaining contract pin for the trade-league child"
+    },
+    {
+      "path": "work/runtime/information-relation-remaining-20261027-001/code-source004.json",
+      "sha256": "70255ff13cfc77449afaecc857db18d72b5e7a095884c46e39a92cc6a437627e",
+      "bytes": 2292,
+      "role": "static vtable slots and AL predicate leaves"
+    },
+    {
+      "path": "work/runtime/information-relation-remaining-20261027-001/expected-trade-league-current-001.json",
+      "sha256": "4dbfc6453a3f66b589c342e136b651cfd6919f58eb1dff851bb69b545b82f61c",
+      "bytes": 13500,
+      "role": "independent offline raw004 replay reference"
+    },
+    {
+      "path": "work/runtime/information-relation-remaining-20261027-001/trade-league-current-inputs-004.json",
+      "sha256": "710c72eea915e268d46cd0b4028fa7e6bd8830e949a56b43351350220d5e3a77",
+      "bytes": 3895446,
+      "role": "observed raw004 two-pass input pin; not imported as public values"
+    }
+  ],
+  "unknown_conditions": [
+    "Member first element is retained as league_leader metadata; role and expiry are not inferred.",
+    "A bad, duplicate, stale or unmapped vector fullref yields unknown; it is never converted to an empty known list.",
+    "No native virtual method is invoked."
+  ]
+}

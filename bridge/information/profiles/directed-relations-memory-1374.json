@@ -1,0 +1,167 @@
+{
+  "profile_id": "directed-relations-memory-1374",
+  "profile_version": 1,
+  "source_evidence_kind": "ordinary_bounded_static_source_plus_accepted_read_only_relation_contract",
+  "game_version": "1.37.4",
+  "executable": {
+    "sha256": "b23fa0e1f698d31b01cdd1c3817a675805d8c6286cb66f9c231e6e2a42544d77",
+    "image_base": "0x140000000"
+  },
+  "globals": {
+    "database_rva": "0x233d8b0",
+    "game_rva": "0x233fe58",
+    "game_date_offset": "0x1dd0"
+  },
+  "country": {
+    "table_offset": "0x118",
+    "count_offset": "0x124",
+    "fullref_offset": "0x20",
+    "max_entries": 4096,
+    "supported_actor": "FRA"
+  },
+  "relation": {
+    "table_offset": "0x1510",
+    "row_stride": "0x48",
+    "row_owner_offset": "0x0",
+    "row_recipient_fullref_offset": "0x10",
+    "element_stride": "0x10"
+  },
+  "families": {
+    "guarantee": {
+      "vector_begin_offset": "0x1a0",
+      "vector_count_offset": "0x1ac",
+      "predicate_rva": "0xa69e00",
+      "record_pointer_offset": "0x8",
+      "record_fullref_offset": "0x18",
+      "first_match": true,
+      "direction_map": {
+        "forward": "granted",
+        "reverse": "received"
+      }
+    },
+    "military_access": {
+      "vector_begin_offset": "0xb0",
+      "vector_count_offset": "0xbc",
+      "predicate_rva": "0xa68e60",
+      "direction_map": {
+        "forward": "received",
+        "reverse": "granted"
+      }
+    }
+  },
+  "semantics": {
+    "basis": "native_current_directed_relation_predicate",
+    "value_origin": "derived_from_copied_relation_rows_and_owner_vectors",
+    "unit": "relation_state",
+    "scale": 1,
+    "period": "current",
+    "partial": true,
+    "complete": false,
+    "expiry_semantics": "unknown_native_expiry_unread",
+    "native_call": false,
+    "owner_equals_country": false,
+    "known_null_country_fullref_hex": "2d2d2d0000000000"
+  },
+  "limits": {
+    "max_total_rpm": 524288,
+    "network_max_total_rpm": 2097152,
+    "max_single_rpm": 65536,
+    "max_country_entries": 4096,
+    "max_vector_count": 4096,
+    "max_requested_families": 2,
+    "network_max_candidates": 4096
+  },
+  "code_guards": [
+    {
+      "name": "military_access_predicate",
+      "kind": "bytes",
+      "rva": "0xa68e60",
+      "end_rva_exclusive": "0xa68e9c",
+      "hex": "488b01488b511048c1ea20488b88b00000004c6380bc00000049c1e0044c03c10fbfc2493bc87410390174094883c110493bc875f3493bc80f95c0c3",
+      "sha256": "5b4145d240db23fe24061c279cc950b4c61fa69f5bf383d8eb13f7fc88589d5c"
+    },
+    {
+      "name": "guarantee_predicate",
+      "kind": "bytes",
+      "rva": "0xa69e00",
+      "end_rva_exclusive": "0xa69e5a",
+      "hex": "488b114c8b491049c1e920410fbfc1488b8aa00100004c6382ac01000049c1e0044c03c1493bc874140f1f80000000003901740c4883c110493bc875f332c0c3488b41084885c074f4488b401848c1e82066413bc175e6b001c3",
+      "sha256": "5bc1052de5f84e077ae3b1bfb500e90d9ded68fc625504dc772c607274dd6227"
+    },
+    {
+      "name": "military_access_validity_slot",
+      "kind": "pointer_slot",
+      "rva": "0x1c7fbf0",
+      "end_rva_exclusive": "0x1c7fbf8",
+      "hex": "3055524001000000",
+      "sha256": "361711eb4a4677f748690a6ef8ee59eee56bfe297bd93bc6d75edf6ef1cf33ef",
+      "target_rva": "0x525530"
+    },
+    {
+      "name": "military_access_token",
+      "kind": "bytes",
+      "rva": "0x525cc0",
+      "end_rva_exclusive": "0x525cc6",
+      "hex": "b843290000c3",
+      "sha256": "432dab487f32139a5c5aeab7f8e750360c14b02732a12abf88d62823772e530f"
+    },
+    {
+      "name": "guarantee_validity_slot",
+      "kind": "pointer_slot",
+      "rva": "0x1c7fed0",
+      "end_rva_exclusive": "0x1c7fed8",
+      "hex": "001b524001000000",
+      "sha256": "7c3c699e853ca079a584c0e737ece4628567ac7f67dd37603ba9f041c67e80a9",
+      "target_rva": "0x521b00"
+    },
+    {
+      "name": "guarantee_token",
+      "kind": "bytes",
+      "rva": "0x5220e0",
+      "end_rva_exclusive": "0x5220e6",
+      "hex": "b841290000c3",
+      "sha256": "a2701f674fd0e00d9db3aab948420a49f85d95698ae4dc9239bca21b30a683ba"
+    }
+  ],
+  "source_evidence": [
+    {
+      "path": "work/runtime/information-relation-network-remaining-20261027-001/relation-network-contract-003.json",
+      "sha256": "26ce4537760fdf97bb5be7c660797e564f8bfc7a1205ad80ff04884e9ef6786c",
+      "bytes": 15234,
+      "role": "closed current 1.37.4 directed family layout and role-independent predicate contract"
+    },
+    {
+      "path": "work/runtime/information-relation-network-remaining-20261027-001/source-002.json",
+      "sha256": "259767cc399fcd79145182aee7c9afc1bf3c83c5544859adab7c53582cb4bbc3",
+      "bytes": 15045,
+      "role": "current binary SHA audit and bounded guarantee predicate evidence"
+    }
+  ],
+  "accepted_rea": {
+    "military_access_predicate": {
+      "path": "work/runtime/military-access-integration-20261015-001/rea-a68e60/evidence.json",
+      "evidence_id": "ev_0dd1460e4ae8b6b19678e5a7ef9f40aef6e2cd68ad253487bf5157f8f871e7a2",
+      "subject_sha256": "b23fa0e1f698d31b01cdd1c3817a675805d8c6286cb66f9c231e6e2a42544d77"
+    },
+    "military_access_validity": {
+      "path": "work/runtime/military-access-identification-20261015-001/rea-525530/evidence.json",
+      "evidence_id": "ev_9a7be37875ce61993957e90d8ab94a749ee81fd30a0abec9e649d721e57d9146",
+      "subject_sha256": "b23fa0e1f698d31b01cdd1c3817a675805d8c6286cb66f9c231e6e2a42544d77"
+    },
+    "guarantee_predicate": {
+      "path": "work/runtime/guarantee-support-identification-20261015-001/guarantee-integration-20261015-001/rea-a69e00/evidence.json",
+      "evidence_id": "ev_b602b9bcefcd85043989b7e8da1e08e8e79f2c446c710a6f0510e0b18b63ee48",
+      "subject_sha256": "b23fa0e1f698d31b01cdd1c3817a675805d8c6286cb66f9c231e6e2a42544d77"
+    },
+    "guarantee_validity": {
+      "path": "work/runtime/guarantee-support-identification-20261015-001/guarantee-integration-20261015-001/rea-521b00/evidence.json",
+      "evidence_id": "ev_afc1824d3e7a825710b504941ae5053c5a591218f9053c54b14c6762d597ef6c",
+      "subject_sha256": "b23fa0e1f698d31b01cdd1c3817a675805d8c6286cb66f9c231e6e2a42544d77"
+    }
+  },
+  "unknown_conditions": [
+    "runtime country scan and positive active samples remain pending",
+    "native expiry dates and other relation record bytes are unread",
+    "military access is the explicit relation cache predicate, not effective army traversal permission"
+  ]
+}

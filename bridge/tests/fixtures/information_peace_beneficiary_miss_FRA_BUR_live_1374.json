@@ -1,0 +1,374 @@
+{
+  "evidence_kind": "actual_public_inspection_subset",
+  "source": {
+    "path": "work/runtime/information-peace-plan-projection-20261115-001/peace-selected-native-live-001.json",
+    "bytes": 42016,
+    "sha256": "d4612527b20784b705df1944ccf1f30b382b076a6792efd5d6d62ef75276814e"
+  },
+  "game_date_raw": 56696424,
+  "inspection": {
+    "action_id": "cede_province",
+    "actor": "FRA",
+    "recipient": "BUR",
+    "phase": "initiate",
+    "session": {
+      "status": "ready",
+      "state_id": "0d04356501e5b8b792495bc5a938f9621a63801191cb7e9e3dcbd5beb08872f3",
+      "date_raw": 56696424,
+      "reasons": [],
+      "complete": true
+    },
+    "parameters": {
+      "requested": {
+        "peace_context": {
+          "war_id": "war_b39bfc70a19596eb_00000001",
+          "direction": "demand",
+          "terms": [
+            {
+              "action_id": "cede_province",
+              "province_ids": [
+                88
+              ],
+              "beneficiary": "ORL"
+            }
+          ]
+        }
+      },
+      "actual": null,
+      "candidates": {
+        "candidates_available": true,
+        "candidates_complete": true,
+        "candidates_truncated": null,
+        "candidate_count": 23,
+        "matching_candidate_count": 0,
+        "selection_requested": true,
+        "parameters_matched": false,
+        "reason_code": "NATIVE_PEACE_PROVINCE_CANDIDATE_ABSENT",
+        "candidates": [
+          {
+            "province_id": 88,
+            "beneficiary": "FRA",
+            "selected": false,
+            "name": "阿图瓦",
+            "name_readable": true,
+            "name_truncated": false,
+            "native_selectability_checked": false,
+            "native_selectable": null
+          },
+          {
+            "province_id": 91,
+            "beneficiary": "FRA",
+            "selected": false,
+            "name": "埃诺",
+            "name_readable": true,
+            "name_truncated": false,
+            "native_selectability_checked": false,
+            "native_selectable": null
+          },
+          {
+            "province_id": 94,
+            "beneficiary": "FRA",
+            "selected": false,
+            "name": "卢森堡",
+            "name_readable": true,
+            "name_truncated": false,
+            "native_selectability_checked": false,
+            "native_selectable": null
+          },
+          {
+            "province_id": 192,
+            "beneficiary": "FRA",
+            "selected": false,
+            "name": "第戎",
+            "name_readable": true,
+            "name_truncated": false,
+            "native_selectability_checked": false,
+            "native_selectable": null
+          },
+          {
+            "province_id": 193,
+            "beneficiary": "FRA",
+            "selected": false,
+            "name": "弗朗什孔泰",
+            "name_readable": true,
+            "name_truncated": false,
+            "native_selectability_checked": false,
+            "native_selectable": null
+          },
+          {
+            "province_id": 1743,
+            "beneficiary": "FRA",
+            "selected": false,
+            "name": "康布雷",
+            "name_readable": true,
+            "name_truncated": false,
+            "native_selectability_checked": false,
+            "native_selectable": null
+          },
+          {
+            "province_id": 1866,
+            "beneficiary": "FRA",
+            "selected": false,
+            "name": "那慕尔",
+            "name_readable": true,
+            "name_truncated": false,
+            "native_selectability_checked": false,
+            "native_selectable": null
+          },
+          {
+            "province_id": 1877,
+            "beneficiary": "FRA",
+            "selected": false,
+            "name": "沙罗勒",
+            "name_readable": true,
+            "name_truncated": false,
+            "native_selectability_checked": false,
+            "native_selectable": null
+          },
+          {
+            "province_id": 4392,
+            "beneficiary": "FRA",
+            "selected": false,
+            "name": "欧塞鲁瓦",
+            "name_readable": true,
+            "name_truncated": false,
+            "native_selectability_checked": false,
+            "native_selectable": null
+          },
+          {
+            "province_id": 4764,
+            "beneficiary": "FRA",
+            "selected": false,
+            "name": "萨兰",
+            "name_readable": true,
+            "name_truncated": false,
+            "native_selectability_checked": false,
+            "native_selectable": null
+          },
+          {
+            "province_id": 89,
+            "beneficiary": "FRA",
+            "selected": false,
+            "name": "皮卡第",
+            "name_readable": true,
+            "name_truncated": false,
+            "native_selectability_checked": false,
+            "native_selectable": null
+          },
+          {
+            "province_id": 181,
+            "beneficiary": "FRA",
+            "selected": false,
+            "name": "雷特尔",
+            "name_readable": true,
+            "name_truncated": false,
+            "native_selectability_checked": false,
+            "native_selectable": null
+          },
+          {
+            "province_id": 191,
+            "beneficiary": "FRA",
+            "selected": false,
+            "name": "讷韦尔",
+            "name_readable": true,
+            "name_truncated": false,
+            "native_selectability_checked": false,
+            "native_selectable": null
+          },
+          {
+            "province_id": 92,
+            "beneficiary": "FRA",
+            "selected": false,
+            "name": "布拉班特",
+            "name_readable": true,
+            "name_truncated": false,
+            "native_selectability_checked": false,
+            "native_selectable": null
+          },
+          {
+            "province_id": 95,
+            "beneficiary": "FRA",
+            "selected": false,
+            "name": "布雷达",
+            "name_readable": true,
+            "name_truncated": false,
+            "native_selectability_checked": false,
+            "native_selectable": null
+          },
+          {
+            "province_id": 1744,
+            "beneficiary": "FRA",
+            "selected": false,
+            "name": "安特卫普",
+            "name_readable": true,
+            "name_truncated": false,
+            "native_selectability_checked": false,
+            "native_selectable": null
+          },
+          {
+            "province_id": 4770,
+            "beneficiary": "FRA",
+            "selected": false,
+            "name": "斯海尔托亨博斯",
+            "name_readable": true,
+            "name_truncated": false,
+            "native_selectability_checked": false,
+            "native_selectable": null
+          },
+          {
+            "province_id": 90,
+            "beneficiary": "FRA",
+            "selected": false,
+            "name": "布吕赫",
+            "name_readable": true,
+            "name_truncated": false,
+            "native_selectability_checked": false,
+            "native_selectable": null
+          },
+          {
+            "province_id": 1865,
+            "beneficiary": "FRA",
+            "selected": false,
+            "name": "根特",
+            "name_readable": true,
+            "name_truncated": false,
+            "native_selectability_checked": false,
+            "native_selectable": null
+          },
+          {
+            "province_id": 4769,
+            "beneficiary": "FRA",
+            "selected": false,
+            "name": "雷泽尔",
+            "name_readable": true,
+            "name_truncated": false,
+            "native_selectability_checked": false,
+            "native_selectable": null
+          },
+          {
+            "province_id": 96,
+            "beneficiary": "FRA",
+            "selected": false,
+            "name": "泽兰",
+            "name_readable": true,
+            "name_truncated": false,
+            "native_selectability_checked": false,
+            "native_selectable": null
+          },
+          {
+            "province_id": 97,
+            "beneficiary": "FRA",
+            "selected": false,
+            "name": "阿姆斯特丹",
+            "name_readable": true,
+            "name_truncated": false,
+            "native_selectability_checked": false,
+            "native_selectable": null
+          },
+          {
+            "province_id": 4383,
+            "beneficiary": "FRA",
+            "selected": false,
+            "name": "海牙",
+            "name_readable": true,
+            "name_truncated": false,
+            "native_selectability_checked": false,
+            "native_selectable": null
+          }
+        ]
+      },
+      "complete": false
+    },
+    "legality": {
+      "status": "unknown",
+      "reasons": [
+        {
+          "code": "NATIVE_PEACE_EXECUTION_RULES_INCOMPLETE",
+          "text": "原生议和条款检查尚未覆盖完整执行规则，不能提交。",
+          "source": "native_rule",
+          "complete": false
+        }
+      ],
+      "complete": false
+    },
+    "peace_context": {
+      "war_id": "war_b39bfc70a19596eb_00000001",
+      "direction": "demand",
+      "terms": [
+        {
+          "action_id": "cede_province",
+          "province_ids": [
+            88
+          ],
+          "beneficiary": "ORL"
+        }
+      ],
+      "complete": false,
+      "war_context": {
+        "war_id": "war_b39bfc70a19596eb_00000001",
+        "war_score": {
+          "status": "available",
+          "mode": "whole_war",
+          "perspective": "actor",
+          "total": {
+            "raw": -2,
+            "value": -2,
+            "unit": "war_score_point",
+            "scale": 1,
+            "scale_verified": true
+          },
+          "max_score": {
+            "raw": 100,
+            "value": 100,
+            "unit": "war_score_point",
+            "scale": 1,
+            "scale_verified": true
+          },
+          "overview_goal_cap": {
+            "raw": 25000,
+            "value": 25.0,
+            "unit": "war_score_point",
+            "scale": 1000,
+            "scale_verified": true
+          },
+          "goal": {
+            "available": true,
+            "presence_verified": true,
+            "present": true,
+            "inapplicable": false,
+            "presence": "configured",
+            "cumulative_raw": 6800,
+            "cumulative_unit": "war_goal_score_raw",
+            "cumulative_scale": 1000,
+            "cumulative": {
+              "raw": 6800,
+              "value": 6.8,
+              "unit": "war_score_point",
+              "scale": 1000,
+              "scale_verified": true
+            },
+            "complete": true
+          },
+          "tooltip": {
+            "text": "§Y圣通日§!被佛兰德 @FLA封锁：§R-0.10§!\n§Y科唐坦§!被勃艮第 @BUR封锁：§R-0.10§!\n§Y下普瓦图§!被佛兰德 @FLA封锁：§R-0.10§!\n§Y科§!被荷兰 @HOL封锁：§R-0.12§!\n§Y卡昂§!被荷兰 @HOL封锁：§R-1.20§!\n§Y内穆尔§!被勃艮第 @BUR占领：§R-0.50§!\n§Y兰斯§!被勃艮第 @BUR占领：§R-0.60§!\n",
+            "text_decoded": true,
+            "text_truncated": false,
+            "complete": true
+          },
+          "scale_verified": true,
+          "complete": true,
+          "verified": true,
+          "error": null,
+          "source": "war_score_query"
+        }
+      }
+    },
+    "peace_consequences": {
+      "requested_terms_applied": false,
+      "complete": false
+    },
+    "native_provinces": {
+      "reason_code": "NATIVE_PEACE_PROVINCE_CANDIDATE_ABSENT"
+    }
+  }
+}

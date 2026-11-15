@@ -1,0 +1,44 @@
+{
+  "schema": "information.military_resources.binding_review.v1",
+  "stage": "69stage",
+  "review_id": "binding-review-001",
+  "status": "offline_reviewed",
+  "review_date": "2026-10-28",
+  "profile": {
+    "id": "military-resources-memory-1374",
+    "sha256": "2090439eae1029f47c3051833b0b2f2f66b65cf1991022a36227057724db0f26",
+    "added_guard": {
+      "name": "sailor_scale_divisor",
+      "rva": "0x1dc18d0",
+      "rva_end_exclusive": "0x1dc18d4",
+      "hex": "00007a44",
+      "sha256": "07883481b5c147464597d44401db095d88c2a6b049fbbcd7b278de98a5ceeb71"
+    }
+  },
+  "validation_changes": [
+    "Per-pass RPM logs now require unique labels, successful status, valid bounded addresses, exact byte lengths, and matching SHA-256.",
+    "Static source pins and runtime code-guard records are checked against the pinned profile and RPM trace bytes.",
+    "Game/date/country/sailor/cache-state values and country database/table/count/match rows are bound to trace bytes; country matches are rebuilt including slot high-16-bit validation.",
+    "Dense modifier IDs bind to individual RPM rows; sparse first-match and absent-zero values are rebuilt from complete entry traces.",
+    "Processor manager/global/slot pointers bind to trace bytes, and force_limits is recomputed from signed 32-bit inputs and processor slots before comparison with the public field.",
+    "A cache state of 1 preserves the known sailors result while requiring both force subfields to remain unknown.",
+    "Capture RPM byte and call totals are checked against the two pass read logs."
+  ],
+  "counterexamples": [
+    "Self-consistent simultaneous sailors value/raw/hex/display tampering is rejected.",
+    "Self-consistent force count/raw/hex tampering is rejected.",
+    "Dense modifier raw-ID versus trace and sparse duplicate-ID first-match contradictions are rejected.",
+    "A non-null processor slot cannot be relabelled as null."
+  ],
+  "offline_test": {
+    "command": "python -m pytest -q bridge/tests/test_information_military_resources_memory.py",
+    "result": "14 passed in 0.60s",
+    "exit_code": 0
+  },
+  "limits": [
+    "This is synthetic/offline validation only; no target process, game, MCP, or new RPM capture was used.",
+    "No freeze, repository-wide test run, or live validation was performed.",
+    "Failed/incomplete RPM traces remain fail-closed at record validation; this review does not establish that arbitrary force-read errors preserve sailors availability.",
+    "Force-limit semantics remain partial and do not execute dynamic processors or establish game cache freshness."
+  ]
+}

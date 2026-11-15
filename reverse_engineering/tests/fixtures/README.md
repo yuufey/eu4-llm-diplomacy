@@ -1,0 +1,1 @@
+`cached-native-xrefs-186.json` is the exact 4,206-byte retained public-CLI Evidence from batch 186 (`ev_2e5f66ed3630bddc649ce909be8c43ddef5d9e0cffdec38dfcf724e55b10e62f`). It exercises the actual direct-list `raw_result` contract without a local runtime archive, game process, or REA engine. Its historical paths are metadata, never opened by the test.

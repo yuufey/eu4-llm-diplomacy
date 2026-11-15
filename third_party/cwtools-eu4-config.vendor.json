@@ -1,0 +1,13 @@
+{
+  "schema": "cwtools-eu4-config.vendored-scope-rules.v1",
+  "repository_url": "https://github.com/cwtools/cwtools-eu4-config.git",
+  "commit": "a85622d368bbb7afca938ed70fdd5eda44aec769",
+  "license": "MIT",
+  "license_file": "LICENSE",
+  "consumed_files": {
+    "scopes.cwt": {
+      "bytes": 876,
+      "sha256": "be3bfe226fd202c0268f4aacdfbb10548de38e4632ea5f59e50a9bf231739f5d"
+    }
+  }
+}

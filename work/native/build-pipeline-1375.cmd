@@ -21,7 +21,7 @@ ml64 /nologo /c /Fo"..\runtime\native1375-v5\frame.obj" research-frame-1375.asm
 if errorlevel 1 (popd & exit /b 1)
 link /nologo /DLL /DYNAMICBASE /NXCOMPAT /OUT:"..\runtime\native1375-v5\eu4_pair_pipeline_1375.dll" "..\runtime\native1375-v5\research-pipeline-1375.obj" "..\runtime\native1375-v5\pair-probe-1375.obj" "..\runtime\native1375-v5\pair-preview-1375.obj" "..\runtime\native1375-v5\frame.obj" "..\runtime\native1375-v5\pair-command-1375.obj" "..\runtime\native1375-v5\pair-submit-experiment-1375.obj" kernel32.lib user32.lib
 if errorlevel 1 (popd & exit /b 1)
-python -B record_pipeline_build.py
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File "%~dp0import-local-env.ps1" -PythonScript "%~dp0record_pipeline_build.py"
 if errorlevel 1 (popd & exit /b 1)
 popd
 endlocal

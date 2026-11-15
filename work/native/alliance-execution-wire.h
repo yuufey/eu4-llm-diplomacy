@@ -99,8 +99,8 @@ struct ExecutionRequest {
     // This keeps the fixed wire record allocation-free while accommodating
     // every currently supported action identifier.
     char action_id[28]{};
-    char actor[4]{};      // "FRA" + NUL
-    char recipient[4]{};  // three uppercase ASCII letters + NUL
+    char actor[4]{};      // three uppercase ASCII letters/digits + NUL
+    char recipient[4]{};  // three uppercase ASCII letters/digits + NUL
     char phase[9]{};      // "initiate" + NUL
     std::uint32_t session_pid=0;
     std::uint64_t session_creation_filetime=0;
@@ -290,7 +290,8 @@ inline bool valid_request_id(Field field) noexcept {
 inline bool valid_recipient(Field field) noexcept {
     if (field.size!=3) return false;
     for (std::size_t index=0;index<3;++index)
-        if (field.data[index]<'A' || field.data[index]>'Z') return false;
+        if (!((field.data[index]>='A' && field.data[index]<='Z')
+            || (field.data[index]>='0' && field.data[index]<='9'))) return false;
     return true;
 }
 
@@ -448,7 +449,7 @@ inline ParseResult parse_request(const char* bytes,std::size_t length,
     // those records cannot smuggle an existing action into the larger layout.
     if (declare_war!=(v3 || v4))
         return ParseResult{ParseError::invalid_action,5};
-    if (!detail::equals(fields[6],"FRA")
+    if (!detail::valid_recipient(fields[6])
         || !detail::copy_field(output.actor,sizeof(output.actor),fields[6]))
         return ParseResult{ParseError::invalid_actor,6};
     if (!detail::valid_recipient(fields[7])
@@ -485,7 +486,8 @@ inline ParseResult parse_request(const char* bytes,std::size_t length,
             && output.war_goal_province!=-1)
             return ParseResult{ParseError::invalid_war_goal_province,10};
         if (detail::equals(fields[9],"no_casus_belli")
-            && !detail::equals(fields[11],"FRA")
+            && (fields[11].size!=fields[6].size
+                || std::memcmp(fields[11].data,fields[6].data,fields[6].size)!=0)
             && !detail::equals(fields[11],"---"))
             return ParseResult{ParseError::invalid_war_goal_beneficiary,11};
     }

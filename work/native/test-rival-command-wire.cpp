@@ -84,13 +84,18 @@ static void test_wire_boundaries() {
     crlf.insert(crlf.size()-1,1,'\r');
     expect_error(crlf,ParseError::crlf_rejected,"crlf");
 
-    expect_error(wire_for("rival__","1abc","1500","42","set_rival",
-        "POR","BUR"),ParseError::invalid_actor,"actor_must_be_fra");
+    ExecutionRequest dynamic_actor{};
+    const std::string dynamic_wire=wire_for("rival_dynamic","1abc","1500",
+        "42","set_rival","K00","E00");
+    check(parse_request(dynamic_wire.data(),dynamic_wire.size(),dynamic_actor).ok()
+        && std::strcmp(dynamic_actor.actor,"K00")==0
+        && std::strcmp(dynamic_actor.recipient,"E00")==0,
+        "dynamic_numeric_actor_and_recipient");
     expect_error(wire_for("rival__","1abc","1500","42","set_rival",
         "FRA","fra"),ParseError::invalid_recipient,"recipient_uppercase");
     expect_error(wire_for("rival__","1abc","1500","42","set_rival",
         "FRA","FRA"),ParseError::invalid_recipient,
-        "recipient_cannot_be_fra");
+        "recipient_cannot_equal_actor");
     expect_error(wire_for("rival__","0","1500"),
         ParseError::invalid_session_hex,"zero_session_rejected");
     expect_error(wire_for("rival__","1agc","1500"),

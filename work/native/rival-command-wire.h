@@ -234,8 +234,9 @@ inline bool valid_request_id(Field field) noexcept {
 inline bool valid_recipient(Field field) noexcept {
     if (!field.data || field.size!=3) return false;
     for (std::size_t index=0;index<3;++index)
-        if (field.data[index]<'A' || field.data[index]>'Z') return false;
-    return !(field.data[0]=='F' && field.data[1]=='R' && field.data[2]=='A');
+        if (!((field.data[index]>='A' && field.data[index]<='Z')
+            || (field.data[index]>='0' && field.data[index]<='9'))) return false;
+    return true;
 }
 
 } // namespace detail
@@ -305,10 +306,12 @@ inline ParseResult parse_request(const char* bytes,std::size_t length,
     }
     if (!detail::copy_field(output.action_id,sizeof(output.action_id),fields[5]))
         return ParseResult{ParseError::invalid_action,5};
-    if (!detail::equals(fields[6],"FRA")
+    if (!detail::valid_recipient(fields[6])
         || !detail::copy_field(output.actor,sizeof(output.actor),fields[6]))
         return ParseResult{ParseError::invalid_actor,6};
     if (!detail::valid_recipient(fields[7])
+        || (fields[6].size==fields[7].size
+            && std::memcmp(fields[6].data,fields[7].data,fields[6].size)==0)
         || !detail::copy_field(output.recipient,sizeof(output.recipient),fields[7]))
         return ParseResult{ParseError::invalid_recipient,7};
     return ParseResult{ParseError::ok,0};

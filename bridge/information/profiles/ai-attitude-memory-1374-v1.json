@@ -1,0 +1,38 @@
+{
+  "profile_id": "ai-attitude-memory-1374",
+  "profile_version": 1,
+  "executable_sha256": "b23fa0e1f698d31b01cdd1c3817a675805d8c6286cb66f9c231e6e2a42544d77",
+  "relation_table_offset": 5392,
+  "relation_row_stride": 72,
+  "recipient_fullref_offset": 16,
+  "attitude_pointer_offset": 40,
+  "definition_name_offset": 8,
+  "max_name_bytes": 128,
+  "code_guards": [
+    {
+      "name": "relation_save_writer_entry",
+      "rva": "0xa66770",
+      "end_rva_exclusive": "0xa6679d",
+      "bytes": "4c8bdc555357498dabb8feffff4881ec30020000488b4110488bfa4c8b0148c1e820498973104d8973184c8bf1",
+      "sha256": "06d54da1bc80b4fa2716a0264bebed36df0fdea19da61906c837c735ac94b6ee"
+    },
+    {
+      "name": "attitude_save_case",
+      "rva": "0xa66b07",
+      "end_rva_exclusive": "0xa66b4a",
+      "bytes": "498b4e284885c9743a488b01ff500884c07430498b5e28ba262c0000488bcf4883c308e88126ca0048837b18107203488b1b4533c94533c0488bd3488bcfe87611ca00",
+      "sha256": "f49eca607c6f9ff4589853b4e53a0da0751e967d363763d2431a8c32ba40d2e3"
+    },
+    {
+      "name": "attitude_save_token",
+      "rva": "0x21233d0",
+      "end_rva_exclusive": "0x21233dd",
+      "bytes": "262c0000617474697475646500",
+      "sha256": "4b80ae9ac2c79e4b0a31fd33c97633fb5945b22ee872d67ca9bf81075545b475"
+    }
+  ],
+  "source_evidence": {
+    "path": "work/runtime/information-ai-attitude-20261112-001/native-source.json",
+    "sha256": "c52dfcc72a9a18f5963bfcaef9ccf854c9fba07810dfc11f45b38137825308ce"
+  }
+}

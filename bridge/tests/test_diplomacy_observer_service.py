@@ -214,9 +214,16 @@ class ObserverHTTPTests(unittest.TestCase):
         self.assertEqual(self.observer.calls, [])
 
     def test_unauthenticated_write_methods_are_refused_without_observation(self):
-        for method in ("POST", "PUT", "PATCH", "DELETE"):
-            with self.subTest(method=method):
-                self.assert_json(self.call(method, PREFIX + "known-request", headers=[self.headers()[0]], body=b"ignored"), 403)
+        for attempt in range(8):
+            for method in ("POST", "PUT", "PATCH", "DELETE"):
+                with self.subTest(attempt=attempt, method=method):
+                    value = self.assert_json(
+                        self.call(method, PREFIX + "known-request",
+                                  headers=[self.headers()[0]], body=b"opaque-not-json"),
+                        403,
+                    )
+                    self.assertEqual(value["error"], "read_only_observer")
+                    self.assertEqual(value["requests_published"], 0)
         self.assertEqual(self.observer.calls, [])
 
     def test_write_origin_and_malformed_host_are_refused_without_observation(self):

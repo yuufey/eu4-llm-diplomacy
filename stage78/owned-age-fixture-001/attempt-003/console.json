@@ -1,0 +1,14 @@
+{
+  "schema": "owned-age-fixture-attempt-console/1",
+  "command": "python -B stage78/owned-age-fixture-001/prepare_and_run.py --run-owned-only",
+  "exit_code": 0,
+  "status": "passed",
+  "case_count": 533,
+  "cases_passed": 533,
+  "cases_failed": 0,
+  "owned_fixture_pid": 46444,
+  "virtual_free_return": true,
+  "game_process_opened": false,
+  "game_function_called": false,
+  "dll_loaded_into_game": false
+}

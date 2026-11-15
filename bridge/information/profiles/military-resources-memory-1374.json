@@ -1,0 +1,197 @@
+{
+  "profile_id": "military-resources-memory-1374",
+  "schema": "information.military_resources_memory.v1",
+  "game_version": "1.37.4",
+  "executable": {
+    "sha256": "b23fa0e1f698d31b01cdd1c3817a675805d8c6286cb66f9c231e6e2a42544d77",
+    "preferred_image_base": "0x140000000"
+  },
+  "scope": {
+    "country": "FRA",
+    "read_only": true,
+    "no_native_game_calls": true,
+    "no_target_memory_writes": true,
+    "no_mcp_or_ui": true
+  },
+  "layout": {
+    "database_global_rva": "0x233d8b0",
+    "database_table_offset": "0x118",
+    "database_table_count_offset": "0x124",
+    "database_max_slots": 4095,
+    "game_global_rva": "0x233fe58",
+    "game_date_offset": "0x1dd0",
+    "country_fullref_offset": "0x20",
+    "sailors_offset": "0xdc0",
+    "force_cache_state_offset": "0x28c8",
+    "force_modifier_offset": "0x28d0",
+    "modifier_dense_flag_offset": "0x10",
+    "modifier_values_pointer_offset": "0x58",
+    "modifier_sparse_count_offset": "0x64",
+    "modifier_sparse_stride": 8,
+    "processor_manager_rva": "0x2358060",
+    "processor_stride": "0x60",
+    "processor_offset": "0x40",
+    "pointer_min": "0x10000",
+    "pointer_max": "0x800000000000"
+  },
+  "limits": {
+    "max_total_rpm": 1048576,
+    "max_single_rpm": 65536,
+    "max_country_slots": 4096,
+    "max_sparse_entries": 4096
+  },
+  "semantics": {
+    "sailors_field": "sailors",
+    "sailors_unit": "sailors",
+    "sailors_scale": 1000,
+    "sailors_raw_offset": "0xdc0",
+    "sailors_raw_signed": true,
+    "sailors_nonnegative_guard": "0x34de10",
+    "force_limits_field": "force_limits",
+    "force_scale": 1000,
+    "force_sailors_period": "current",
+    "force_modifier_storage": "inline",
+    "force_partial_because": "processor callbacks and full GUI semantics are not executed"
+  },
+  "modifier_ids": {
+    "land_base": 54,
+    "naval_base": 55,
+    "land_factor": 56,
+    "naval_factor": 57
+  },
+  "processor": {
+    "manager_global_rva": "0x2358060",
+    "stride": "0x60",
+    "processor_offset": "0x40",
+    "supported_mode": "null_only",
+    "nonnull_reason": "DYNAMIC_FORCE_LIMIT_PROCESSOR_UNSUPPORTED"
+  },
+  "arithmetic": {
+    "input_width": "signed32",
+    "factor": "i32(1000 + effective_percentage_raw)",
+    "product": "signed64(effective_base_raw) * signed64(factor)",
+    "rescaled": "truncate_toward_zero(product / 1000)",
+    "rounded": "truncate_toward_zero(rescaled / 1000) * 1000",
+    "result": "max(1000, rounded)",
+    "unit": {
+      "land": "regiments",
+      "naval": "ships"
+    }
+  },
+  "source_evidence": [
+    {
+      "path": "work/runtime/information-country-force-resources-20261027-001/sailors-source-001/sailor-serializer-analysis-001.json",
+      "sha256": "9359f7235b66085483eb1e0cff8944ad1efb6998e8f7c571f72dcc747e0d79d8",
+      "bytes": 12947,
+      "role": "ordinary static sailor field/scale evidence"
+    },
+    {
+      "path": "work/runtime/information-country-force-resources-20261027-001/sailors-source-001/sailor-literal-candidates-001.json",
+      "sha256": "e7f2807b00d922370e1c046c92806951f242f40fbec87b5bb10d9fafffc7ce58",
+      "bytes": 6941,
+      "role": "bounded raw literal/LEA candidate output"
+    },
+    {
+      "path": "work/runtime/information-country-force-resources-20261027-001/sailors-source-001/sailors-source-001.json",
+      "sha256": "9099f694d5fa8f056833ff267f4bd1d92b88e8b3c755d2608cabd3bb4085b58e",
+      "bytes": 12455,
+      "role": "previous bounded sailor audit retained"
+    },
+    {
+      "path": "work/runtime/information-country-force-resources-20261027-001/force-limit-native-source-audit-001.json",
+      "sha256": "88bf48af9f9fcc1902b2baf71def5237b0a9bb4d25ef3af1cc225cf283cba7cf",
+      "bytes": 9374,
+      "role": "land/naval helper and numeric formula qualification"
+    }
+  ],
+  "code_guards": [
+    {
+      "name": "sailor_formatter_dc0_load",
+      "rva": "0xf58b44",
+      "rva_end_exclusive": "0xf58b4b",
+      "hex": "418b85c00d0000",
+      "sha256": "3fc0d322cb67e09803ba78960258682989184f003704a8979c71cd9d2b3e729e",
+      "aslr_invariant": true
+    },
+    {
+      "name": "sailor_formatter_literal_xref",
+      "rva": "0xf58b6b",
+      "rva_end_exclusive": "0xf58b72",
+      "hex": "488d15ae38d000",
+      "sha256": "a735446eaa8d11cc58c1748cb1273321dd1739a47fd60fc4dedfed7aa7a84608",
+      "aslr_invariant": true
+    },
+    {
+      "name": "sailor_scale_conversion",
+      "rva": "0xae8ac8",
+      "rva_end_exclusive": "0xae8ae8",
+      "hex": "660f6e0a0f5bc9f30f5e0df98d2d0166410f6ec00f5bc0f30f59c1f30f2cf04c",
+      "sha256": "7d0344b40d2b939ab74f83ec75f06c958ec74f349567a865569dd8272d8cdede",
+      "aslr_invariant": true
+    },
+    {
+      "name": "sailor_scale_divisor",
+      "rva": "0x1dc18d0",
+      "rva_end_exclusive": "0x1dc18d4",
+      "hex": "00007a44",
+      "sha256": "07883481b5c147464597d44401db095d88c2a6b049fbbcd7b278de98a5ceeb71",
+      "aslr_invariant": true
+    },
+    {
+      "name": "sailor_nonnegative_setter",
+      "rva": "0x34de10",
+      "rva_end_exclusive": "0x34de30",
+      "hex": "48895c24184889742420574883ec30488bf2488bf9e8566d1801f64038017447",
+      "sha256": "c415bfab1a157b07264a29f716807aaa5d80493eb2cc6c85841b1c5c3a7659dd",
+      "aslr_invariant": true
+    },
+    {
+      "name": "land_force_limit_helper",
+      "rva": "0x347b90",
+      "rva_end_exclusive": "0x347dbc",
+      "hex": "48895c241848894c240855565741564157488bec4883ec70498bf1498bd8488bfa4533f644893245387010740c498b40588b80b4010000eb2f496350644885d27e23498bce498b40580f1f80000000008338360f84a900000048ffc14883c008483bca7ceb418bc6894530488b0d5e040102488b89801400004885c97411488b014c8d4d30488d5538ff50088b4538010741bfe80300004885f67454c645e8014c8975f0448875f8c745d0360000004c897dd4c645dc014c8975e04c8d45d0488d55b0488bcbe8850e5a0090488d55b048837dc810480f4355b04c8b45c0488bcee87ab6d4ff90488d4db0e8e0d9d4ff807b10007414488b43588b80c4010000eb368b4004e95effffff486353644885d27e22498bce488b4358660f1f4400008338380f84fb00000048ffc14883c008483bca7ceb418bc6894530488b0d8e030102488b89401500004885c97414488b014c8d4d304c8bc3488d5538ff50088b453805e80300004863174863c8480fafd148b8cff753e3a59bc42048f7ea48c1fa07488bc248c1e83f4803d089174885f6745ac645e8014c8975f0c645f800c745d03800000048c745d4e8030000c645dc014c8975e04c8d45d0488d55b0488bcbe88a0d5a0090488d55b048837dc810480f4355b04c8b45c0488bcee87fb5d4ff90488d4db0e8e5d8d4ff8b17b8d34d6210f7eac1fa068bc2c1e81f03d069c2e8030000413bc7410f4cc78907488bc7488b9c24b00000004883c470415f415e5f5e5dc38b4004e90cffffff",
+      "sha256": "cd053fa64a7fbb55c41e26db7b7c1736fa8163e1a3cd6fd4872750f4d7980554",
+      "aslr_invariant": true
+    },
+    {
+      "name": "naval_force_limit_helper",
+      "rva": "0x347e00",
+      "rva_end_exclusive": "0x34802c",
+      "hex": "48895c241848894c240855565741564157488bec4883ec70498bf1498bd8488bfa4533f644893245387010740c498b40588b80bc010000eb2f496350644885d27e23498bce498b40580f1f80000000008338370f84a900000048ffc14883c008483bca7ceb418bc6894530488b0dee010102488b89e01400004885c97411488b014c8d4d30488d5538ff50088b4538010741bfe80300004885f67454c645e8014c8975f0448875f8c745d0370000004c897dd4c645dc014c8975e04c8d45d0488d55b0488bcbe8150c5a0090488d55b048837dc810480f4355b04c8b45c0488bcee80ab4d4ff90488d4db0e870d7d4ff807b10007414488b43588b80cc010000eb368b4004e95effffff486353644885d27e22498bce488b4358660f1f4400008338390f84fb00000048ffc14883c008483bca7ceb418bc6894530488b0d1e010102488b89a01500004885c97414488b014c8d4d304c8bc3488d5538ff50088b453805e80300004863174863c8480fafd148b8cff753e3a59bc42048f7ea48c1fa07488bc248c1e83f4803d089174885f6745ac645e8014c8975f0c645f800c745d03900000048c745d4e8030000c645dc014c8975e04c8d45d0488d55b0488bcbe81a0b5a0090488d55b048837dc810480f4355b04c8b45c0488bcee80fb3d4ff90488d4db0e875d6d4ff8b17b8d34d6210f7eac1fa068bc2c1e81f03d069c2e8030000413bc7410f4cc78907488bc7488b9c24b00000004883c470415f415e5f5e5dc38b4004e90cffffff",
+      "sha256": "28f6e4e5d404b06299d24fa261d22ff05419d6988eb7e8070cf3249f7d62b1c7",
+      "aslr_invariant": true
+    },
+    {
+      "name": "land_modifier_cache_access",
+      "rva": "0x347bd0",
+      "rva_end_exclusive": "0x347bf0",
+      "hex": "7e23498bce498b40580f1f80000000008338360f84a900000048ffc14883c008",
+      "sha256": "aa0497bcdc46e946e24304c9d04a8341205f8ef79d56edf0df8007ce5b157be4",
+      "aslr_invariant": true
+    },
+    {
+      "name": "naval_modifier_cache_access",
+      "rva": "0x347e40",
+      "rva_end_exclusive": "0x347e60",
+      "hex": "7e23498bce498b40580f1f80000000008338370f84a900000048ffc14883c008",
+      "sha256": "af8375223dc183bf6a7e1db8069b623e5148cd64583c093b25495f280a3d1ad0",
+      "aslr_invariant": true
+    },
+    {
+      "name": "land_force_limit_math_tail",
+      "rva": "0x347d7d",
+      "rva_end_exclusive": "0x347db4",
+      "hex": "b8d34d6210f7eac1fa068bc2c1e81f03d069c2e8030000413bc7410f4cc78907488bc7488b9c24b00000004883c470415f415e5f5e5dc3",
+      "sha256": "334505f6cf24bff54d66e85c48cadc6c23ca61e406a913a73ab62710b930e999",
+      "aslr_invariant": true
+    },
+    {
+      "name": "naval_force_limit_math_tail",
+      "rva": "0x347fed",
+      "rva_end_exclusive": "0x348024",
+      "hex": "b8d34d6210f7eac1fa068bc2c1e81f03d069c2e8030000413bc7410f4cc78907488bc7488b9c24b00000004883c470415f415e5f5e5dc3",
+      "sha256": "334505f6cf24bff54d66e85c48cadc6c23ca61e406a913a73ab62710b930e999",
+      "aslr_invariant": true
+    }
+  ]
+}

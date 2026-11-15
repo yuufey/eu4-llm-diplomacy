@@ -57,7 +57,7 @@ __all__ = [
     "MEN_SUBMISSION_CAPABILITY", "NATIVE_ACCEPT", "NATIVE_REJECT",
     "RESOURCE_SCALE", "TRUST_ACTION_ID", "TRUST_QUERY_CAPABILITY",
     "TRUST_RESPONSE_CAPABILITY", "TRUST_SUBMISSION_CAPABILITY",
-    "project_query", "project_result", "validate_query", "validate_result",
+    "conditional_settlement", "project_query", "project_result", "validate_query", "validate_result",
 ]
 
 
@@ -164,39 +164,45 @@ def _valid_result_shape(value: object, native_state: object) -> bool:
     return True
 
 
+def conditional_settlement(before: object, amount: object, kind: str,
+                           native_state: int) -> dict[str, Any] | None:
+    """Calculate the state expected under one specified settlement branch."""
+    if (not isinstance(kind, str) or kind not in KINDS or not _valid_state(before, kind)
+            or before["complete"] is not True or not _is_nonnegative_int32(amount)
+            or type(native_state) is not int or native_state not in (NATIVE_ACCEPT, NATIVE_REJECT)):
+        return None
+    assert isinstance(before, dict) and isinstance(amount, int)
+    after = dict(before)
+    cost = before["cost_raw"]
+    if native_state == NATIVE_REJECT:
+        return after
+    if before["favors_raw"] < cost:
+        return None
+    favors_after = _checked_sub(before["favors_raw"], cost)
+    if favors_after is None:
+        return None
+    after["favors_raw"] = favors_after
+    if kind == "trust":
+        if before["recipient_trust_raw"] >= 100:
+            return None
+        after["recipient_trust_raw"] = min(100, before["recipient_trust_raw"] + amount)
+        return after
+    if before["recipient_manpower_raw"] < amount:
+        return None
+    expected_actor = _checked_add(before["actor_manpower_raw"], amount)
+    expected_recipient = _checked_sub(before["recipient_manpower_raw"], amount)
+    if expected_actor is None or expected_recipient is None:
+        return None
+    after.update(actor_manpower_raw=expected_actor, recipient_manpower_raw=expected_recipient)
+    return after
+
+
 def _validate_settlement(value: dict[str, Any], native_state: int) -> bool:
     if not (value["complete"] and value["verified"]
             and value["before"]["complete"] and value["after"]["complete"]):
         return True
-    before = value["before"]
-    after = value["after"]
-    amount = value["amount_raw"]
-    cost = before["cost_raw"]
-    if after["cost_raw"] != cost:
-        return False
-    if native_state == NATIVE_REJECT:
-        # A rejected request cannot consume either the resource or the owed
-        # favors.  amount_raw may still be a preview amount.
-        return all(after[key] == before[key] for key in before)
-    if amount < 0:
-        return False
-    if before["favors_raw"] < cost:
-        return False
-    favors_after = _checked_sub(before["favors_raw"], cost)
-    if favors_after is None or after["favors_raw"] != favors_after:
-        return False
-    if value["kind"] == "trust":
-        if before["recipient_trust_raw"] >= 100:
-            return False
-        expected_trust = min(100, before["recipient_trust_raw"] + amount)
-        return after["recipient_trust_raw"] == expected_trust
-    if before["recipient_manpower_raw"] < amount:
-        return False
-    expected_actor = _checked_add(before["actor_manpower_raw"], amount)
-    expected_recipient = _checked_sub(before["recipient_manpower_raw"], amount)
-    return (expected_actor is not None and expected_recipient is not None
-            and after["actor_manpower_raw"] == expected_actor
-            and after["recipient_manpower_raw"] == expected_recipient)
+    expected = conditional_settlement(value["before"], value["amount_raw"], value["kind"], native_state)
+    return expected is not None and value["after"] == expected
 
 
 def validate_result(value: object, native_state: object) -> bool:

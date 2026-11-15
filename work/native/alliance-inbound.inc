@@ -2,10 +2,10 @@
 //
 // This include is intentionally narrower than the generic executor hook.  The
 // executor supplies a TLS scope only for a canonical state-0 Offer whose full
-// recipient handle is FRA and whose actor is another canonical country.  The
+// recipient handle belongs to the trusted controlled-country set.  The
 // patched callsite at 0x4e81b8 then either tail-jumps to the original
 // 0x2cd5a0 predicate, returns directly to 0x4e8235 for first delivery, or
-// returns false at 0x4e81bd for an exact, already-bound FRA pending action.
+// returns false at 0x4e81bd for an exact, already-bound controlled-country pending action.
 // The latter skips native AI choice but retains native validity and cleanup.
 // No native method is called by this observer.
 
@@ -192,6 +192,7 @@ struct InboundAiHoldEvent {
     bool favor_men=false;
     bool peace_offer=false;
     uintptr_t caller_return_rva=0;
+    char decision_country[4]{};
 };
 
 static thread_local InboundScope inbound_scope{};
@@ -249,8 +250,8 @@ static bool inbound_read_country(uint64_t handle,uintptr_t& country) noexcept {
     return actual==handle;
 }
 
-static bool inbound_is_fra(uint64_t handle,uintptr_t& country) noexcept {
-    return static_cast<uint32_t>(handle&0xffffffu)==0x415246u
+static bool inbound_is_controlled(uint64_t handle,uintptr_t& country) noexcept {
+    return observation_control_country_handle_tag_only(handle)
         && inbound_read_country(handle,country);
 }
 
@@ -336,7 +337,7 @@ static bool inbound_pending_queue_valid_locked(InboundPendingRecord& record,
     LifecycleActionShape& current) noexcept {
     uintptr_t country=0;
     if (!record.active || !record.country || !record.node || !record.clone
-        || !inbound_is_fra(record.recipient,country) || country!=record.country)
+        || !inbound_is_controlled(record.recipient,country) || country!=record.country)
         return false;
     uintptr_t head=0,tail=0;
     uint32_t count=0;
@@ -571,7 +572,7 @@ static bool inbound_read_queue(uintptr_t country,InboundScope& scope,
         || shape.recipient20!=scope.recipient || shape.mirror18!=scope.actor) return true;
     event.payload_readable=true;
     event.decision_country_verified=scope.country!=0
-        && inbound_is_fra(shape.recipient20,scope.country);
+        && inbound_is_controlled(shape.recipient20,scope.country);
     event.source_verified=scope.call_redirected && event.decision_country_verified;
     inbound_tag(event.actor,shape.actor10);
     inbound_tag(event.mirror,shape.mirror18);
@@ -674,7 +675,7 @@ static bool inbound_pending_is_active(uint64_t proposal_id,uint64_t generation,
         // payload, destructor tombstone or failed read is not that proof.
         uintptr_t country=0,head=0,tail=0;
         uint32_t count=0;
-        if (!inbound_is_fra(record.recipient,country) || country!=record.country
+        if (!inbound_is_controlled(record.recipient,country) || country!=record.country
             || !read(country+0x18d8,head) || !read(country+0x18e0,tail)
             || !read(country+0x18e8,count)) {
             ReleaseSRWLockExclusive(&inbound_pending_lock);
@@ -746,7 +747,7 @@ extern "C" void bridge_inbound_scope_begin(void* action,uint64_t actor,
         && shape.recipient20==recipient && shape.state34==state
         && shape.variant38==variant && variant==1 && state==0 && shape.extra60==0
         && actor!=recipient && inbound_read_country(actor,actor_country)
-        && inbound_is_fra(recipient,country);
+        && inbound_is_controlled(recipient,country);
     if (exact) {
         next.active=true;
         next.country=country;
@@ -817,6 +818,7 @@ static bool inbound_hold_known_pending(const LifecycleActionShape& shape,
                     record.favor_trust,record.favor_men,
                     record.peace_offer,
                     caller_return_rva};
+                inbound_tag(event.decision_country,record.recipient);
                 if (TryAcquireSRWLockExclusive(&inbound_lock)) {
                     if (inbound_hold_size<kQueueCapacity) {
                         inbound_hold_events[(inbound_hold_head+inbound_hold_size)%kQueueCapacity]=event;
@@ -846,7 +848,7 @@ static unsigned char inbound_negotiated_pending_choice(void* action) noexcept {
             && !shape.declare_war
             && (shape.peace_offer ? shape.peace.valid() : shape.peace.empty())
             && shape.extra60==0 && shape.variant38==1 && shape.state34==0
-            && inbound_is_fra(shape.recipient20,country)
+            && inbound_is_controlled(shape.recipient20,country)
             && inbound_hold_known_pending(shape,country,0,0xb22a3)) return 0;
     }
     uintptr_t vtable=0;
@@ -878,7 +880,7 @@ extern "C" unsigned char bridge_inbound_predicate_classify(
         || command_vtable!=base+lifecycle_generic_wrapper_vtable_rva
         || !read(command+0x50,command_action) || command_action!=action) return 0;
     uintptr_t country=0;
-    if (!inbound_is_fra(shape.recipient20,country)
+    if (!inbound_is_controlled(shape.recipient20,country)
         || country!=recipient_country) return 0;
     // This command path is separate from the daily pending loop above.
     if (inbound_hold_known_pending(shape,country,command,kPredicateReturnRva)) return 2;
@@ -920,7 +922,10 @@ extern "C" void bridge_inbound_observe_pending() noexcept {
     event.extra60=inbound_scope.extra60;
     event.source_verified=inbound_scope.call_redirected;
     event.decision_country_verified=inbound_scope.country!=0
-        && inbound_is_fra(inbound_scope.recipient,inbound_scope.country);
+        && inbound_is_controlled(inbound_scope.recipient,inbound_scope.country);
+    inbound_tag(event.actor,inbound_scope.actor);
+    inbound_tag(event.mirror,inbound_scope.actor);
+    inbound_tag(event.recipient,inbound_scope.recipient);
     if (!inbound_scope.before_readable) {
         inbound_queue(event); return;
     }
@@ -976,7 +981,7 @@ static bool inbound_test_native_send(bool marriage,bool support=false,
     if (!alliance_query_country(source_tag,source)
         || !alliance_query_country("FRA",recipient)
         || !inbound_read_country(source,source_country)
-        || !inbound_is_fra(recipient,recipient_country)
+        || !inbound_is_controlled(recipient,recipient_country)
         || source==recipient) {
         inbound_test_failure("COUNTRY_IDENTITY_UNAVAILABLE"); return false;
     }
@@ -1199,12 +1204,13 @@ static void inbound_flush() noexcept {
         ReleaseSRWLockExclusive(&inbound_lock);
         char message[760];
         snprintf(message,sizeof(message),
-            "{\"event\":\"native_diplomacy_inbound_ai_choice_held\",\"session_id\":\"%lu-%llx\",\"proposal_id\":%llu,\"generation\":%llu,\"action_id\":\"%s\",\"decision_country\":\"FRA\",\"date_raw\":%d,\"token3c\":%u,\"hold_count\":%u,\"command\":\"0x%llx\",\"action\":\"0x%llx\",\"thread\":%lu,\"caller_return_rva\":\"0x%llx\",\"native_queue_verified\":true,\"native_ai_choice_skipped\":true}\n",
+            "{\"event\":\"native_diplomacy_inbound_ai_choice_held\",\"session_id\":\"%lu-%llx\",\"proposal_id\":%llu,\"generation\":%llu,\"action_id\":\"%s\",\"decision_country\":\"%.3s\",\"date_raw\":%d,\"token3c\":%u,\"hold_count\":%u,\"command\":\"0x%llx\",\"action\":\"0x%llx\",\"thread\":%lu,\"caller_return_rva\":\"0x%llx\",\"native_queue_verified\":true,\"native_ai_choice_skipped\":true}\n",
             static_cast<unsigned long>(GetCurrentProcessId()),
             static_cast<unsigned long long>(observation_creation),
             static_cast<unsigned long long>(event.proposal_id),
             static_cast<unsigned long long>(event.generation),
             event.peace_offer?"peace_offer":event.favor_gold?"trade_favors_for_gold":event.favor_trust?"trade_favors_for_trust":event.favor_men?"trade_favors_for_men":event.vassalization?"offer_vassalization":event.military_access?"ask_military_access":event.support_independence?"support_independence":event.royal_marriage?"offer_royal_marriage":"offer_alliance",
+            event.decision_country,
             event.date,static_cast<unsigned>(event.token3c),
             static_cast<unsigned>(event.hold_count),
             static_cast<unsigned long long>(event.command),
@@ -1233,7 +1239,7 @@ static void inbound_flush() noexcept {
         else memcpy(peace_json,"null",5);
         char message[1500];
         snprintf(message,sizeof(message),
-            "{\"event\":\"native_alliance_inbound_offer\",\"session_id\":\"%lu-%llx\",\"proposal_id\":%llu,\"action_id\":\"%s\",\"family\":\"%s\",\"peace\":%s,\"extra60\":%u,\"phase\":\"initiate\",\"actor\":\"%.3s\",\"mirror\":\"%.3s\",\"recipient\":\"%.3s\",\"date28\":%d,\"date2c\":%d,\"envoy30\":%d,\"state34\":%d,\"variant38\":%u,\"proposal3c\":%d,\"token3c\":%u,\"created2c\":%d,\"queue_before_count\":%u,\"queue_after_count\":%u,\"queue_readable\":%s,\"list_integrity\":%s,\"new_entry\":%s,\"payload_readable\":%s,\"decision_country\":\"FRA\",\"decision_country_verified\":%s,\"pending_source\":\"native_executor_pending_block\",\"source_verified\":%s,\"call_redirected\":%s,\"business_result\":\"pending_observed\"}\n",
+            "{\"event\":\"native_alliance_inbound_offer\",\"session_id\":\"%lu-%llx\",\"proposal_id\":%llu,\"action_id\":\"%s\",\"family\":\"%s\",\"peace\":%s,\"extra60\":%u,\"phase\":\"initiate\",\"actor\":\"%.3s\",\"mirror\":\"%.3s\",\"recipient\":\"%.3s\",\"date28\":%d,\"date2c\":%d,\"envoy30\":%d,\"state34\":%d,\"variant38\":%u,\"proposal3c\":%d,\"token3c\":%u,\"created2c\":%d,\"queue_before_count\":%u,\"queue_after_count\":%u,\"queue_readable\":%s,\"list_integrity\":%s,\"new_entry\":%s,\"payload_readable\":%s,\"decision_country\":\"%.3s\",\"decision_country_verified\":%s,\"pending_source\":\"native_executor_pending_block\",\"source_verified\":%s,\"call_redirected\":%s,\"business_result\":\"pending_observed\"}\n",
             static_cast<unsigned long>(GetCurrentProcessId()),
             static_cast<unsigned long long>(observation_creation),
             static_cast<unsigned long long>(event.proposal_id),
@@ -1243,7 +1249,7 @@ static void inbound_flush() noexcept {
             static_cast<unsigned>(event.variant38),event.proposal3c,
             static_cast<unsigned>(event.token3c),event.created2c,event.queue_before,event.queue_after,
             event.queue_readable?"true":"false",event.list_integrity?"true":"false",
-            event.new_entry?"true":"false",event.payload_readable?"true":"false",
+            event.new_entry?"true":"false",event.payload_readable?"true":"false",event.recipient,
             event.decision_country_verified?"true":"false",event.source_verified?"true":"false",
             event.source_verified?"true":"false");
         line(message);

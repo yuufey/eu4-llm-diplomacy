@@ -1,0 +1,1224 @@
+{
+  "schema": "information_relation_state_live_fixture.v1",
+  "status": "recorded_real_native_inspections",
+  "identity": {
+    "observer": "FRA",
+    "game_version": "1.37.4",
+    "game_sha256": "b23fa0e1f698d31b01cdd1c3817a675805d8c6286cb66f9c231e6e2a42544d77",
+    "source_report": "work/runtime/information-relations-20261027-001/relation-source-001.json",
+    "source_report_sha256": "eaf496ee79ac467e1b18f4b350e33c443dde6f3c7526155ca82c25c0ba45407d"
+  },
+  "provenance": {
+    "mode": "recorded",
+    "business_actions_submitted": false,
+    "date_advance": false,
+    "save_or_reload": false,
+    "note": "Self-contained copies of the seven relation-source pointers plus the archived rival semantic projection; no mirror relation values constructed."
+  },
+  "captures": {
+    "vassalization_ORL": {
+      "name": "vassalization_ORL",
+      "source": {
+        "path": "work/runtime/diplomacy-query-20261016-r35-vassal-a/vassalization-queries-08b4e54e917040af8bddeaa95f6513f1/report.json",
+        "json_pointer": "/queries/ORL/offer_vassalization",
+        "sha256": "62a12b05f5d98dd05b23cc2c38a251e0eb2dcb4843a3ce013cac9b2a3103c1c1"
+      },
+      "query": {
+        "action_id": "offer_vassalization",
+        "actor": "FRA",
+        "recipient": "ORL",
+        "phase": "initiate",
+        "parameters": {}
+      },
+      "inspection": {
+        "acceptance": {
+          "applicability": "applicable",
+          "complete": false,
+          "details_available": false,
+          "items": [],
+          "items_truncated": false,
+          "native_total": null,
+          "predicted_response": "unknown",
+          "prediction_available": false,
+          "reason_count": 0,
+          "scale_verified": false,
+          "unit": "unknown"
+        },
+        "action_id": "offer_vassalization",
+        "actor": "FRA",
+        "actor_is_overlord": true,
+        "actor_is_subject": false,
+        "authorization": {
+          "complete": true,
+          "reasons": [
+            {
+              "code": "EXECUTION_ADAPTER_UNIMPLEMENTED",
+              "complete": true,
+              "source": "bridge_policy",
+              "text": "本会话只安装观察模块，尚未建立该动作的授权执行路径。"
+            }
+          ],
+          "status": "unavailable"
+        },
+        "contract_version": 1,
+        "costs": {
+          "complete": false,
+          "items": [],
+          "status": "unknown"
+        },
+        "decision_country": null,
+        "decision_country_verified": false,
+        "family": "vassalization",
+        "interface_support": {
+          "complete": false,
+          "execute": "unimplemented",
+          "query": "partial_native_rules"
+        },
+        "legality": {
+          "complete": true,
+          "reasons": [
+            {
+              "code": "NATIVE_COMMON_ACTION_GATE_FALSE",
+              "complete": false,
+              "source": "native_rule",
+              "text": "原生通用动作条件检查返回false，尚未恢复具体失败条件。"
+            },
+            {
+              "code": "NATIVE_VALIDITY_FALSE",
+              "complete": false,
+              "source": "native_rule",
+              "text": "提议附庸的原生合法性检查返回false。"
+            },
+            {
+              "code": "NATIVE_INITIATION_GATE_FALSE",
+              "complete": false,
+              "source": "native_rule",
+              "text": "原生发起时序或待处理请求检查返回false。"
+            },
+            {
+              "code": "NATIVE_ACTION_NOT_VISIBLE",
+              "complete": true,
+              "source": "native_rule",
+              "text": "原生外交列表在当前双方关系中不选择此动作变体。"
+            }
+          ],
+          "status": "unavailable"
+        },
+        "native_diagnostic": {
+          "complete": false,
+          "source": "native_rule",
+          "text": "§R- 是属国§!\n§R- 想要附庸他国你必须 1) 和该国结盟 2) 拥有至少+190的关系 3) 目标国家必须处于和平状态。§!\n",
+          "text_decoded": true,
+          "text_encoding_verified": false,
+          "truncated": false
+        },
+        "native_identifier": "vassalization",
+        "native_rule_components": {
+          "common_action_gate": false,
+          "complete": true,
+          "executor_validity": false,
+          "full_rules_complete": true,
+          "initiation_gate": false,
+          "native_visibility": false,
+          "specific_validity_query_called": true,
+          "tooltip_gate": false,
+          "ui_action_selection": false,
+          "ui_enabled_gate_checked": true,
+          "ui_enabled_gate_verified": true,
+          "ui_selection_checked": true
+        },
+        "parameters": {
+          "actual": null,
+          "candidates": null,
+          "complete": false,
+          "requested": {}
+        },
+        "phase": "initiate",
+        "recipient": "ORL",
+        "relationship_state": {
+          "complete": true,
+          "vassal_active": true
+        },
+        "requested_decision_country": "FRA",
+        "resources": {
+          "diplomats": {
+            "allocation_verified": false,
+            "availability_verified": true,
+            "available_count": 2,
+            "complete": false,
+            "native_requirement": true,
+            "source": "native_rule"
+          }
+        },
+        "session": {
+          "complete": true,
+          "date_raw": 56500920,
+          "reasons": [],
+          "state_id": "f21a68e907327e40a3918593fc0f3d324debdad3c2798f60d74542bac2054594",
+          "status": "ready"
+        },
+        "subject_type": "appanage",
+        "vassal_active": true,
+        "vassal_state_verified": true,
+        "visibility": {
+          "complete": true,
+          "status": "hidden"
+        }
+      }
+    },
+    "guarantee_SAV": {
+      "name": "guarantee_SAV",
+      "source": {
+        "path": "work/runtime/diplomacy-query-20261015-r30-guarantee-a/guarantee-queries-7cacb0e7cd4349218a6e6815a0dd8292/report.json",
+        "json_pointer": "/queries/SAV/proclaim_guarantee",
+        "sha256": "c36657e462aeb6c05ada67d391b43d5d5ec10b4219b7476ec5abc11622decc08"
+      },
+      "query": {
+        "action_id": "proclaim_guarantee",
+        "actor": "FRA",
+        "recipient": "SAV",
+        "phase": "initiate",
+        "parameters": {}
+      },
+      "inspection": {
+        "acceptance": {
+          "applicability": "not_applicable",
+          "complete": true,
+          "details_available": false,
+          "items": [],
+          "native_total": null,
+          "predicted_response": "not_applicable",
+          "prediction_available": false,
+          "scale_verified": false,
+          "unit": null
+        },
+        "action_id": "proclaim_guarantee",
+        "actor": "FRA",
+        "authorization": {
+          "complete": true,
+          "reasons": [
+            {
+              "code": "NATIVE_GUARANTEE_SUBMISSION_CAPABILITY_ACKNOWLEDGED",
+              "complete": true,
+              "source": "installation_capability",
+              "text": "安装确认允许桥接提交法国对目标国家的独立保证操作。"
+            }
+          ],
+          "status": "available"
+        },
+        "contract_version": 1,
+        "costs": {
+          "complete": false,
+          "items": [],
+          "status": "unknown"
+        },
+        "decision_country": null,
+        "decision_country_verified": false,
+        "interface_support": {
+          "complete": false,
+          "execute": "native_guarantee_submission",
+          "query": "partial_native_rules"
+        },
+        "legality": {
+          "complete": true,
+          "reasons": [
+            {
+              "code": "NATIVE_INITIATION_RULES_TRUE",
+              "complete": true,
+              "source": "native_rule",
+              "text": "原生外交列表选择、按钮发起条件及执行有效性检查均通过。"
+            }
+          ],
+          "status": "available"
+        },
+        "native_diagnostic": {
+          "complete": false,
+          "source": "native_rule",
+          "text": "为了保障他们的独立，我们将会响应召集参与抵抗任何来犯的国家",
+          "text_decoded": true,
+          "text_encoding_verified": false,
+          "truncated": false
+        },
+        "native_identifier": "guaranteeaction",
+        "native_rule_components": {
+          "common_action_gate": true,
+          "complete": true,
+          "executor_validity": true,
+          "full_rules_complete": true,
+          "initiation_gate": true,
+          "native_visibility": true,
+          "specific_validity_query_called": true,
+          "tooltip_gate": true,
+          "ui_action_selection": true,
+          "ui_enabled_gate_checked": true,
+          "ui_enabled_gate_verified": true,
+          "ui_selection_checked": true
+        },
+        "parameters": {
+          "actual": null,
+          "candidates": null,
+          "complete": false,
+          "requested": {}
+        },
+        "phase": "initiate",
+        "recipient": "SAV",
+        "relationship_state": {
+          "complete": true,
+          "guarantee_active": false
+        },
+        "requested_decision_country": "FRA",
+        "resources": {
+          "diplomats": {
+            "allocation_verified": false,
+            "availability_verified": true,
+            "available_count": 1,
+            "complete": false,
+            "native_requirement": true,
+            "source": "native_rule"
+          }
+        },
+        "session": {
+          "complete": true,
+          "date_raw": 56460840,
+          "reasons": [],
+          "state_id": "e79b092eac1d071691cd5929315ff694cbddc92b5f37ced451541a8627bac8dc",
+          "status": "ready"
+        },
+        "visibility": {
+          "complete": true,
+          "status": "visible"
+        }
+      }
+    },
+    "support_independence_SWE": {
+      "name": "support_independence_SWE",
+      "source": {
+        "path": "work/runtime/diplomacy-query-20261015-r31-support-a/support-independence-queries-9bf1deccef644b96a056d65c8c6c257a/report.json",
+        "json_pointer": "/queries/SWE/support_independence",
+        "sha256": "1992b4a809b4c9b2202d995e08476e6d0f2b2791c96e87ac8452c996322e7a86"
+      },
+      "query": {
+        "action_id": "support_independence",
+        "actor": "FRA",
+        "recipient": "SWE",
+        "phase": "initiate",
+        "parameters": {}
+      },
+      "inspection": {
+        "acceptance": {
+          "actual_response_verified": false,
+          "applicability": "applicable",
+          "complete": false,
+          "details_available": true,
+          "items": [
+            {
+              "complete": false,
+              "identifier_verified": true,
+              "identity_source": "native_localization_key",
+              "name": "瑞典对法兰西的好感度：",
+              "native_identifier": "DIPLO_OPINION",
+              "native_value": 5,
+              "native_value_verified": true,
+              "source": "native_rule",
+              "text_complete": false,
+              "text_decoded": true,
+              "text_encoding_verified": false,
+              "truncated": false,
+              "unit": "unknown",
+              "unit_verified": false,
+              "value_normalized": false,
+              "value_representation": "signed_int32"
+            },
+            {
+              "complete": false,
+              "identifier_verified": true,
+              "identity_source": "native_localization_key",
+              "name": "法兰西的外交声誉：",
+              "native_identifier": "DIPLO_DIPLOMATIC_REP",
+              "native_value": 8,
+              "native_value_verified": true,
+              "source": "native_rule",
+              "text_complete": false,
+              "text_decoded": true,
+              "text_encoding_verified": false,
+              "truncated": false,
+              "unit": "unknown",
+              "unit_verified": false,
+              "value_normalized": false,
+              "value_representation": "signed_int32"
+            },
+            {
+              "complete": false,
+              "identifier_verified": false,
+              "identity_source": null,
+              "name": "法兰西陆军实力：",
+              "native_identifier": null,
+              "native_value": 20,
+              "native_value_verified": true,
+              "source": "native_rule",
+              "text_complete": false,
+              "text_decoded": true,
+              "text_encoding_verified": false,
+              "truncated": false,
+              "unit": "unknown",
+              "unit_verified": false,
+              "value_normalized": false,
+              "value_representation": "signed_int32"
+            },
+            {
+              "complete": false,
+              "identifier_verified": false,
+              "identity_source": null,
+              "name": "法兰西海军实力：",
+              "native_identifier": null,
+              "native_value": -1,
+              "native_value_verified": true,
+              "source": "native_rule",
+              "text_complete": false,
+              "text_decoded": true,
+              "text_encoding_verified": false,
+              "truncated": false,
+              "unit": "unknown",
+              "unit_verified": false,
+              "value_normalized": false,
+              "value_representation": "signed_int32"
+            },
+            {
+              "complete": false,
+              "identifier_verified": false,
+              "identity_source": null,
+              "name": "对法兰西的态度是中立：",
+              "native_identifier": null,
+              "native_value": -10,
+              "native_value_verified": true,
+              "source": "native_rule",
+              "text_complete": false,
+              "text_decoded": true,
+              "text_encoding_verified": false,
+              "truncated": false,
+              "unit": "unknown",
+              "unit_verified": false,
+              "value_normalized": false,
+              "value_representation": "signed_int32"
+            },
+            {
+              "complete": false,
+              "identifier_verified": false,
+              "identity_source": null,
+              "name": "对丹麦的态度是叛离：",
+              "native_identifier": null,
+              "native_value": 50,
+              "native_value_verified": true,
+              "source": "native_rule",
+              "text_complete": false,
+              "text_decoded": true,
+              "text_encoding_verified": false,
+              "truncated": false,
+              "unit": "unknown",
+              "unit_verified": false,
+              "value_normalized": false,
+              "value_representation": "signed_int32"
+            },
+            {
+              "complete": false,
+              "identifier_verified": false,
+              "identity_source": null,
+              "name": "边界距离：",
+              "native_identifier": null,
+              "native_value": -23,
+              "native_value_verified": true,
+              "source": "native_rule",
+              "text_complete": false,
+              "text_decoded": true,
+              "text_encoding_verified": false,
+              "truncated": false,
+              "unit": "unknown",
+              "unit_verified": false,
+              "value_normalized": false,
+              "value_representation": "signed_int32"
+            }
+          ],
+          "items_truncated": false,
+          "native_threshold": 1,
+          "native_total": 49,
+          "native_would_accept": true,
+          "predicted_response": "accept",
+          "prediction_available": true,
+          "prediction_basis": "native_current_acceptance_check",
+          "reason_count": 7,
+          "scale_verified": false,
+          "unit": "unknown"
+        },
+        "action_id": "support_independence",
+        "actor": "FRA",
+        "authorization": {
+          "complete": true,
+          "reasons": [
+            {
+              "code": "NATIVE_SUPPORT_INDEPENDENCE_SUBMISSION_CAPABILITY_ACKNOWLEDGED",
+              "complete": true,
+              "source": "installation_capability",
+              "text": "安装确认允许桥接提交法国对目标国家的支持独立操作。"
+            }
+          ],
+          "status": "available"
+        },
+        "contract_version": 1,
+        "costs": {
+          "complete": false,
+          "items": [],
+          "status": "unknown"
+        },
+        "decision_country": null,
+        "decision_country_verified": false,
+        "interface_support": {
+          "complete": false,
+          "execute": "native_support_independence_submission",
+          "query": "partial_native_rules"
+        },
+        "legality": {
+          "complete": true,
+          "reasons": [
+            {
+              "code": "NATIVE_INITIATION_RULES_TRUE",
+              "complete": true,
+              "source": "native_rule",
+              "text": "原生外交列表选择、按钮发起条件及执行有效性检查均通过。"
+            }
+          ],
+          "status": "available"
+        },
+        "native_diagnostic": {
+          "complete": false,
+          "source": "native_rule",
+          "text": "如果一个国家接受我们的支持，我们将在他们宣布独立时提供帮助。",
+          "text_decoded": true,
+          "text_encoding_verified": false,
+          "truncated": false
+        },
+        "native_identifier": "support_independence_action",
+        "native_rule_components": {
+          "acceptance_gate": true,
+          "common_action_gate": true,
+          "complete": true,
+          "executor_validity": true,
+          "full_rules_complete": true,
+          "initiation_gate": true,
+          "native_visibility": true,
+          "specific_validity_query_called": true,
+          "tooltip_gate": true,
+          "ui_action_selection": true,
+          "ui_enabled_gate_checked": true,
+          "ui_enabled_gate_verified": true,
+          "ui_selection_checked": true
+        },
+        "parameters": {
+          "actual": null,
+          "candidates": null,
+          "complete": false,
+          "requested": {}
+        },
+        "phase": "initiate",
+        "recipient": "SWE",
+        "relationship_state": {
+          "complete": true,
+          "support_independence_active": false
+        },
+        "requested_decision_country": "FRA",
+        "resources": {
+          "diplomats": {
+            "allocation_verified": false,
+            "availability_verified": true,
+            "available_count": 1,
+            "complete": false,
+            "native_requirement": true,
+            "source": "native_rule"
+          }
+        },
+        "session": {
+          "complete": true,
+          "date_raw": 56461920,
+          "reasons": [],
+          "state_id": "fbc48cd2f445de1263c4c9e15c09d82ab5ba3fac7c58de4c053ae2c59e5e3798",
+          "status": "ready"
+        },
+        "visibility": {
+          "complete": true,
+          "status": "visible"
+        }
+      }
+    },
+    "military_access_ARA": {
+      "name": "military_access_ARA",
+      "source": {
+        "path": "work/runtime/diplomacy-query-20261015-r32-military-access-a/military-access-queries-7a97bc04b2ee4d5f89fc5cbac7ef3fab/report.json",
+        "json_pointer": "/queries/ARA/ask_military_access",
+        "sha256": "5a40dca4cf3b19ea42d559e4693968fca605bf44dab71db6f0948885826d5afe"
+      },
+      "query": {
+        "action_id": "ask_military_access",
+        "actor": "FRA",
+        "recipient": "ARA",
+        "phase": "initiate",
+        "parameters": {}
+      },
+      "inspection": {
+        "acceptance": {
+          "actual_response_verified": false,
+          "applicability": "applicable",
+          "complete": false,
+          "details_available": true,
+          "items": [
+            {
+              "complete": false,
+              "identifier_verified": false,
+              "identity_source": null,
+              "name": "阿拉贡对法兰西的好感度：",
+              "native_identifier": null,
+              "native_value": -15,
+              "native_value_verified": true,
+              "source": "native_rule",
+              "text_complete": false,
+              "text_decoded": true,
+              "text_encoding_verified": false,
+              "truncated": false,
+              "unit": "unknown",
+              "unit_verified": false,
+              "value_normalized": false,
+              "value_representation": "signed_int32"
+            },
+            {
+              "complete": false,
+              "identifier_verified": false,
+              "identity_source": null,
+              "name": "法兰西陆军实力：",
+              "native_identifier": null,
+              "native_value": 10,
+              "native_value_verified": true,
+              "source": "native_rule",
+              "text_complete": false,
+              "text_decoded": true,
+              "text_encoding_verified": false,
+              "truncated": false,
+              "unit": "unknown",
+              "unit_verified": false,
+              "value_normalized": false,
+              "value_representation": "signed_int32"
+            },
+            {
+              "complete": false,
+              "identifier_verified": false,
+              "identity_source": null,
+              "name": "法兰西的外交声誉：",
+              "native_identifier": null,
+              "native_value": 3,
+              "native_value_verified": true,
+              "source": "native_rule",
+              "text_complete": false,
+              "text_decoded": true,
+              "text_encoding_verified": false,
+              "truncated": false,
+              "unit": "unknown",
+              "unit_verified": false,
+              "value_normalized": false,
+              "value_representation": "signed_int32"
+            }
+          ],
+          "items_truncated": false,
+          "native_threshold": 1,
+          "native_total": -2,
+          "native_would_accept": false,
+          "predicted_response": "reject",
+          "prediction_available": true,
+          "prediction_basis": "native_current_acceptance_check",
+          "reason_count": 3,
+          "scale_verified": false,
+          "unit": "unknown"
+        },
+        "action_id": "ask_military_access",
+        "actor": "FRA",
+        "authorization": {
+          "complete": true,
+          "reasons": [
+            {
+              "code": "NATIVE_MILITARY_ACCESS_SUBMISSION_CAPABILITY_ACKNOWLEDGED",
+              "complete": true,
+              "source": "installation_capability",
+              "text": "安装确认允许桥接提交法国发起的军事通行权操作。"
+            }
+          ],
+          "status": "available"
+        },
+        "contract_version": 1,
+        "costs": {
+          "complete": false,
+          "items": [],
+          "status": "unknown"
+        },
+        "decision_country": null,
+        "decision_country_verified": false,
+        "interface_support": {
+          "complete": false,
+          "execute": "native_military_access_submission",
+          "query": "partial_native_rules"
+        },
+        "legality": {
+          "complete": true,
+          "reasons": [
+            {
+              "code": "NATIVE_INITIATION_RULES_TRUE",
+              "complete": true,
+              "source": "native_rule",
+              "text": "原生外交列表选择、按钮发起条件及执行有效性检查均通过。"
+            }
+          ],
+          "status": "available"
+        },
+        "native_diagnostic": {
+          "complete": false,
+          "source": "native_rule",
+          "text": "要求他们领土的通行权。",
+          "text_decoded": true,
+          "text_encoding_verified": false,
+          "truncated": false
+        },
+        "native_identifier": "military_access",
+        "native_rule_components": {
+          "acceptance_gate": false,
+          "common_action_gate": true,
+          "complete": true,
+          "executor_validity": true,
+          "full_rules_complete": true,
+          "initiation_gate": true,
+          "native_visibility": true,
+          "specific_validity_query_called": true,
+          "tooltip_gate": true,
+          "ui_action_selection": true,
+          "ui_enabled_gate_checked": true,
+          "ui_enabled_gate_verified": true,
+          "ui_selection_checked": true
+        },
+        "parameters": {
+          "actual": null,
+          "candidates": null,
+          "complete": false,
+          "requested": {}
+        },
+        "phase": "initiate",
+        "recipient": "ARA",
+        "relationship_state": {
+          "complete": true,
+          "military_access_active": false
+        },
+        "requested_decision_country": "FRA",
+        "resources": {
+          "diplomats": {
+            "allocation_verified": false,
+            "availability_verified": true,
+            "available_count": 1,
+            "complete": false,
+            "native_requirement": true,
+            "source": "native_rule"
+          }
+        },
+        "session": {
+          "complete": true,
+          "date_raw": 56463768,
+          "reasons": [],
+          "state_id": "84e48d1d3b9dd1b2d65c8dcade868e108ac6de7f74495259fd0b017fbaa71a95",
+          "status": "ready"
+        },
+        "visibility": {
+          "complete": true,
+          "status": "visible"
+        }
+      }
+    },
+    "royal_marriage_LAN": {
+      "name": "royal_marriage_LAN",
+      "source": {
+        "path": "work/runtime/diplomacy-query-20261015-r25-royal-d/royal-marriage-queries-7011638465244738b2c9582292e54651/report.json",
+        "json_pointer": "/queries/offer_royal_marriage:LAN",
+        "sha256": "cbafbda606efaafbcecee29afb2604a0892029ccb98000810bcf999bb432f965"
+      },
+      "query": {
+        "action_id": "offer_royal_marriage",
+        "actor": "FRA",
+        "recipient": "LAN",
+        "phase": "initiate",
+        "parameters": {}
+      },
+      "inspection": {
+        "acceptance": {
+          "actual_response_verified": false,
+          "applicability": "applicable",
+          "complete": false,
+          "details_available": true,
+          "items": [
+            {
+              "complete": false,
+              "identifier_verified": true,
+              "identity_source": "native_localization_key",
+              "name": "佛罗伦萨对法兰西的好感度：",
+              "native_identifier": "DIPLO_OPINION",
+              "native_value": 2,
+              "native_value_verified": true,
+              "source": "native_rule",
+              "text_complete": false,
+              "text_decoded": true,
+              "text_encoding_verified": false,
+              "truncated": false,
+              "unit": "unknown",
+              "unit_verified": false,
+              "value_normalized": false,
+              "value_representation": "signed_int32"
+            },
+            {
+              "complete": false,
+              "identifier_verified": true,
+              "identity_source": "native_localization_key",
+              "name": "对法兰西的态度是友好：",
+              "native_identifier": "DIPLO_ATTITUDE",
+              "native_value": 40,
+              "native_value_verified": true,
+              "source": "native_rule",
+              "text_complete": false,
+              "text_decoded": true,
+              "text_encoding_verified": false,
+              "truncated": false,
+              "unit": "unknown",
+              "unit_verified": false,
+              "value_normalized": false,
+              "value_representation": "signed_int32"
+            },
+            {
+              "complete": false,
+              "identifier_verified": true,
+              "identity_source": "native_localization_key",
+              "name": "两个国家都是天主教：",
+              "native_identifier": "DIPLO_SAME_RELIGION",
+              "native_value": 5,
+              "native_value_verified": true,
+              "source": "native_rule",
+              "text_complete": false,
+              "text_decoded": true,
+              "text_encoding_verified": false,
+              "truncated": false,
+              "unit": "unknown",
+              "unit_verified": false,
+              "value_normalized": false,
+              "value_representation": "signed_int32"
+            },
+            {
+              "complete": false,
+              "identifier_verified": true,
+              "identity_source": "native_localization_key",
+              "name": "法兰西的外交声誉：",
+              "native_identifier": "DIPLO_DIPLOMATIC_REP",
+              "native_value": 8,
+              "native_value_verified": true,
+              "source": "native_rule",
+              "text_complete": false,
+              "text_decoded": true,
+              "text_encoding_verified": false,
+              "truncated": false,
+              "unit": "unknown",
+              "unit_verified": false,
+              "value_normalized": false,
+              "value_representation": "signed_int32"
+            },
+            {
+              "complete": false,
+              "identifier_verified": true,
+              "identity_source": "native_localization_key",
+              "name": "边界距离：",
+              "native_identifier": "DIPLO_BORDER_DISTANCE",
+              "native_value": -8,
+              "native_value_verified": true,
+              "source": "native_rule",
+              "text_complete": false,
+              "text_decoded": true,
+              "text_encoding_verified": false,
+              "truncated": false,
+              "unit": "unknown",
+              "unit_verified": false,
+              "value_normalized": false,
+              "value_representation": "signed_int32"
+            }
+          ],
+          "items_truncated": false,
+          "native_threshold": 1,
+          "native_total": 47,
+          "native_would_accept": true,
+          "predicted_response": "accept",
+          "prediction_available": true,
+          "prediction_basis": "native_current_acceptance_check",
+          "reason_count": 5,
+          "scale_verified": false,
+          "unit": "unknown"
+        },
+        "action_id": "offer_royal_marriage",
+        "actor": "FRA",
+        "authorization": {
+          "complete": true,
+          "reasons": [
+            {
+              "code": "EXECUTION_ADAPTER_UNIMPLEMENTED",
+              "complete": true,
+              "source": "bridge_policy",
+              "text": "本会话只安装观察模块，尚未建立该动作的授权执行路径。"
+            }
+          ],
+          "status": "unavailable"
+        },
+        "contract_version": 1,
+        "costs": {
+          "complete": false,
+          "items": [],
+          "status": "unknown"
+        },
+        "decision_country": null,
+        "decision_country_verified": false,
+        "interface_support": {
+          "complete": false,
+          "execute": "unimplemented",
+          "query": "partial_native_rules"
+        },
+        "legality": {
+          "complete": true,
+          "reasons": [
+            {
+              "code": "NATIVE_INITIATION_RULES_TRUE",
+              "complete": true,
+              "source": "native_rule",
+              "text": "原生外交列表选择、按钮发起条件及执行有效性检查均通过。"
+            }
+          ],
+          "status": "available"
+        },
+        "native_diagnostic": {
+          "complete": false,
+          "source": "native_rule",
+          "text": "「王室联姻」代表两国王室之间婚姻上的结合，这将极大地增进双边关系。如果你对一个与你王室联姻的国家宣战，你将遭受巨大的负面影响。\n",
+          "text_decoded": true,
+          "text_encoding_verified": false,
+          "truncated": false
+        },
+        "native_identifier": "royal_marriage",
+        "native_rule_components": {
+          "acceptance_gate": true,
+          "common_action_gate": true,
+          "complete": true,
+          "executor_validity": true,
+          "full_rules_complete": true,
+          "initiation_gate": true,
+          "native_visibility": true,
+          "specific_validity_query_called": true,
+          "tooltip_gate": true,
+          "ui_action_selection": true,
+          "ui_enabled_gate_checked": true,
+          "ui_enabled_gate_verified": true,
+          "ui_selection_checked": true
+        },
+        "parameters": {
+          "actual": null,
+          "candidates": null,
+          "complete": false,
+          "requested": {}
+        },
+        "phase": "initiate",
+        "recipient": "LAN",
+        "requested_decision_country": "FRA",
+        "resources": {
+          "diplomats": {
+            "allocation_verified": false,
+            "availability_verified": true,
+            "available_count": 1,
+            "complete": false,
+            "native_requirement": true,
+            "source": "native_rule"
+          }
+        },
+        "session": {
+          "complete": true,
+          "date_raw": 56459880,
+          "reasons": [],
+          "state_id": "15f1750b4c382c702c69e872a6687a31a01bcd1da1af9efdf13c88c4f411b659",
+          "status": "ready"
+        },
+        "visibility": {
+          "complete": true,
+          "status": "visible"
+        }
+      }
+    },
+    "rival_BUR": {
+      "name": "rival_BUR",
+      "source": {
+        "path": "bridge/tests/fixtures/rival_r34b_real_native_inspections.json",
+        "json_pointer": "/events/0/event",
+        "sha256": "2b0833d71e52df80b698928fee08638e7efef08f8ddd69d19bcec04ed724c1e7"
+      },
+      "query": {
+        "action_id": "set_rival",
+        "actor": "FRA",
+        "recipient": "BUR",
+        "phase": "initiate",
+        "parameters": {}
+      },
+      "raw_event": {
+        "event": "native_rival_inspection",
+        "rules_schema": 2,
+        "session_id": "17152-1dd5cc7d790cfab",
+        "query_id": "inspect_9d6b19a6727a4672bb28fafd15d678be",
+        "action_id": "set_rival",
+        "family": "rival",
+        "actor": "FRA",
+        "recipient": "BUR",
+        "phase": "initiate",
+        "date_raw": 56465136,
+        "native_command_validity_called": true,
+        "native_command_validity": false,
+        "rival_state_verified": true,
+        "rival_active": true,
+        "rival_since_date_raw": 56457072,
+        "rival_count": 3,
+        "max_rivals": 3,
+        "diplomatic_power_raw": 162,
+        "at_war": true,
+        "native_diagnostic_hex": "",
+        "diagnostic_readable": true,
+        "diagnostic_truncated": false,
+        "candidate_eligibility_available": true,
+        "candidate_eligible": true,
+        "target_exists": true,
+        "ui_war_allowed": false,
+        "full_rules_complete": false,
+        "submitted": false,
+        "frame_thread": 44452
+      },
+      "inspection": {
+        "event": "native_rival_inspection",
+        "action_id": "set_rival",
+        "actor": "FRA",
+        "recipient": "BUR",
+        "phase": "initiate",
+        "date_raw": 56465136,
+        "ui_selection_checked": null,
+        "native_visibility": null,
+        "ui_enabled_gate_checked": null,
+        "common_action_gate": null,
+        "display_predicate": null,
+        "initiation_gate": null,
+        "tooltip_gate": null,
+        "validity_called": true,
+        "native_validity": false,
+        "diagnostic_readable": true,
+        "diagnostic_truncated": false,
+        "native_diagnostic_text": null,
+        "native_diagnostic_text_decoded": false,
+        "diplomat_context_readable": null,
+        "diplomat_required": null,
+        "available_diplomat_count": null,
+        "acceptance_predicate_available": null,
+        "native_would_accept": null,
+        "score_applicable": null,
+        "score_available": null,
+        "native_total_raw": null,
+        "acceptance_threshold_raw": null,
+        "reason_container_readable": null,
+        "reason_count": null,
+        "reason_items": [],
+        "reason_items_truncated": false,
+        "reason_items_decoded": false,
+        "full_rules_complete": false,
+        "submitted": false,
+        "family": "rival",
+        "rules_schema": 2,
+        "native_command_validity_called": true,
+        "native_command_validity": false,
+        "rival_state_verified": true,
+        "rival_active": true,
+        "rival_since_date_raw": 56457072,
+        "rival_count": 3,
+        "max_rivals": 3,
+        "diplomatic_power_raw": 162,
+        "at_war": true,
+        "candidate_eligibility_available": true,
+        "candidate_eligible": true,
+        "target_exists": true,
+        "ui_war_allowed": false,
+        "cost_query_called": null,
+        "diplomatic_power_cost_raw": null,
+        "native_action_available": null,
+        "native_rule_components": {
+          "rules_schema": 2,
+          "specific_validity_query_called": true,
+          "executor_validity": false,
+          "rival_state_verified": true,
+          "candidate_eligibility_available": true,
+          "candidate_eligible": true,
+          "target_exists": true,
+          "ui_war_allowed": false,
+          "full_rules_complete": false,
+          "native_action_available": null,
+          "complete": false
+        },
+        "relationship_state": {
+          "rival_active": true,
+          "rival_since_date_raw": 56457072,
+          "complete": true
+        },
+        "resources": {
+          "rivals": {
+            "current_count": 3,
+            "max_count": 3,
+            "source": "native_rule",
+            "complete": true
+          },
+          "diplomatic_power": {
+            "native_value_raw": 162,
+            "source": "native_rule",
+            "complete": false
+          }
+        }
+      }
+    },
+    "rival_HAB": {
+      "name": "rival_HAB",
+      "source": {
+        "path": "bridge/tests/fixtures/rival_r34b_real_native_inspections.json",
+        "json_pointer": "/events/4/event",
+        "sha256": "2b0833d71e52df80b698928fee08638e7efef08f8ddd69d19bcec04ed724c1e7"
+      },
+      "query": {
+        "action_id": "set_rival",
+        "actor": "FRA",
+        "recipient": "HAB",
+        "phase": "initiate",
+        "parameters": {}
+      },
+      "raw_event": {
+        "event": "native_rival_inspection",
+        "rules_schema": 2,
+        "session_id": "17152-1dd5cc7d790cfab",
+        "query_id": "inspect_8a5399fc39ca4772bb744311dea9a4cf",
+        "action_id": "set_rival",
+        "family": "rival",
+        "actor": "FRA",
+        "recipient": "HAB",
+        "phase": "initiate",
+        "date_raw": 56465136,
+        "native_command_validity_called": true,
+        "native_command_validity": false,
+        "rival_state_verified": true,
+        "rival_active": false,
+        "rival_since_date_raw": -1,
+        "rival_count": 3,
+        "max_rivals": 3,
+        "diplomatic_power_raw": 162,
+        "at_war": true,
+        "native_diagnostic_hex": "",
+        "diagnostic_readable": true,
+        "diagnostic_truncated": false,
+        "candidate_eligibility_available": true,
+        "candidate_eligible": true,
+        "target_exists": true,
+        "ui_war_allowed": false,
+        "full_rules_complete": false,
+        "submitted": false,
+        "frame_thread": 44452
+      },
+      "inspection": {
+        "event": "native_rival_inspection",
+        "action_id": "set_rival",
+        "actor": "FRA",
+        "recipient": "HAB",
+        "phase": "initiate",
+        "date_raw": 56465136,
+        "ui_selection_checked": null,
+        "native_visibility": null,
+        "ui_enabled_gate_checked": null,
+        "common_action_gate": null,
+        "display_predicate": null,
+        "initiation_gate": null,
+        "tooltip_gate": null,
+        "validity_called": true,
+        "native_validity": false,
+        "diagnostic_readable": true,
+        "diagnostic_truncated": false,
+        "native_diagnostic_text": null,
+        "native_diagnostic_text_decoded": false,
+        "diplomat_context_readable": null,
+        "diplomat_required": null,
+        "available_diplomat_count": null,
+        "acceptance_predicate_available": null,
+        "native_would_accept": null,
+        "score_applicable": null,
+        "score_available": null,
+        "native_total_raw": null,
+        "acceptance_threshold_raw": null,
+        "reason_container_readable": null,
+        "reason_count": null,
+        "reason_items": [],
+        "reason_items_truncated": false,
+        "reason_items_decoded": false,
+        "full_rules_complete": false,
+        "submitted": false,
+        "family": "rival",
+        "rules_schema": 2,
+        "native_command_validity_called": true,
+        "native_command_validity": false,
+        "rival_state_verified": true,
+        "rival_active": false,
+        "rival_since_date_raw": -1,
+        "rival_count": 3,
+        "max_rivals": 3,
+        "diplomatic_power_raw": 162,
+        "at_war": true,
+        "candidate_eligibility_available": true,
+        "candidate_eligible": true,
+        "target_exists": true,
+        "ui_war_allowed": false,
+        "cost_query_called": null,
+        "diplomatic_power_cost_raw": null,
+        "native_action_available": null,
+        "native_rule_components": {
+          "rules_schema": 2,
+          "specific_validity_query_called": true,
+          "executor_validity": false,
+          "rival_state_verified": true,
+          "candidate_eligibility_available": true,
+          "candidate_eligible": true,
+          "target_exists": true,
+          "ui_war_allowed": false,
+          "full_rules_complete": false,
+          "native_action_available": null,
+          "complete": false
+        },
+        "relationship_state": {
+          "rival_active": false,
+          "rival_since_date_raw": -1,
+          "complete": true
+        },
+        "resources": {
+          "rivals": {
+            "current_count": 3,
+            "max_count": 3,
+            "source": "native_rule",
+            "complete": true
+          },
+          "diplomatic_power": {
+            "native_value_raw": 162,
+            "source": "native_rule",
+            "complete": false
+          }
+        }
+      }
+    }
+  },
+  "negative_evidence": {
+    "royal_marriage_LAN": "legality/acceptance only; no relationship_state, not a current relation",
+    "alliance_queue": "archived in relation-source-001 but intentionally not copied because it is a pending queue item, not a country_pair relation"
+  }
+}

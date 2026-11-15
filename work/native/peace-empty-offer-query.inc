@@ -161,9 +161,7 @@ static void peace_empty_offer_query_run(const char* id,const char* actor_tag,
         || !country_terms.valid() || !annex.valid() || !message.text) {
         alliance_query_failure(id,"QUERY_PEACE_QUERY_BUFFER_UNAVAILABLE"); return;
     }
-    const PeaceWarRegistryEntry* selected=nullptr;
-    for (unsigned i=0;i<peace_war_registry_size;++i)
-        if (!strcmp(peace_war_registry[i].public_id,war_id)) selected=&peace_war_registry[i];
+    const auto selected=peace_query_find_registered_war(war_id);
     if (!selected) { alliance_query_failure(id,"QUERY_PEACE_WAR_ID_UNKNOWN"); return; }
     uintptr_t actor_country=0,recipient_country=0;
     PeaceWarReferenceList left{},right{};
@@ -455,7 +453,8 @@ static void peace_empty_offer_query_run(const char* id,const char* actor_tag,
             || (peace_province_query_read_selection(action+0x48,provinces,PeaceProvinceSelectionRole::action_copy)
                 && provinces.selection_copy_verified));
     const bool unchanged=fields_unchanged && action_identity_unchanged
-        && offer_identity_unchanged;
+        && offer_identity_unchanged && peace_war_registry_lifetimes.current(*selected)
+        && selected->native_reference==war_context.native_war_context;
     using StringDtor=void (*)(void*);
     reinterpret_cast<StringDtor>(base+0x95660)(&diagnostic);
     reinterpret_cast<StringDtor>(base+0x95660)(&common_text);

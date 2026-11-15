@@ -1,0 +1,30 @@
+{
+  "name": "逐场宏观战报",
+  "detail": "brief",
+  "queries": [
+    {
+      "topic": "B01",
+      "object": {"type": "battle"},
+      "fields": ["event_id", "battle_type", "name", "location", "end_date", "sides", "war_id", "winner"],
+      "parameters": {}
+    },
+    {
+      "topic": "B02",
+      "object": {"type": "battle"},
+      "fields": ["initial_forces", "losses", "remaining_forces"],
+      "parameters": {}
+    },
+    {
+      "topic": "B03",
+      "object": {"type": "battle"},
+      "fields": ["war_score", "prestige", "army_tradition", "naval_tradition", "war_exhaustion", "ships_captured", "annihilation", "retreat"],
+      "parameters": {}
+    },
+    {
+      "topic": "B04",
+      "object": {"type": "battle"},
+      "fields": ["raw_text", "record_order", "completeness", "gaps"],
+      "parameters": {}
+    }
+  ]
+}

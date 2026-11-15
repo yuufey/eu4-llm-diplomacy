@@ -685,7 +685,7 @@ class DiplomacyToolsTests(unittest.TestCase):
             self.assertFalse(list(directory.glob("*.pending")))
             self.assertEqual(
                 "NATIVE_SUBMISSION_WIRE_INVALID",
-                session.submit_offer_alliance("wire_bad_recipient", "FRA", "E2G", "initiate", 42)["reason_code"],
+                session.submit_offer_alliance("wire_bad_recipient", "FRA", "E!G", "initiate", 42)["reason_code"],
             )
             self.assertEqual(
                 "NATIVE_SUBMISSION_DATE_INVALID",
@@ -1392,6 +1392,7 @@ class NativeReasonMetadataTests(unittest.TestCase):
 
     def test_metadata_ack_requires_literal_top_level_true(self):
         session = object.__new__(ObserverSession)
+        session.record = {}
         for value in (None, False, "true", 1):
             with self.subTest(value=value), patch.object(session, "_installation_ack", return_value={
                     "capabilities": ["native_alliance_reason_metadata"],

@@ -1,0 +1,188 @@
+{
+  "name": "法国诺曼底任务、贸易方向与对英宣战情境",
+  "detail": "brief",
+  "queries": [
+    {
+      "topic": "M01",
+      "object": {
+        "type": "country",
+        "country": "FRA"
+      },
+      "fields": [
+        "name"
+      ],
+      "parameters": {
+        "root_id": "french_missions_1",
+        "task_id": "fra_liberate_norm"
+      }
+    },
+    {
+      "topic": "M02",
+      "object": {
+        "type": "country",
+        "country": "FRA"
+      },
+      "fields": [
+        "prerequisites",
+        "completion_status",
+        "currently_completable",
+        "condition_progress"
+      ],
+      "parameters": {
+        "root_id": "french_missions_1",
+        "task_id": "fra_liberate_norm"
+      }
+    },
+    {
+      "topic": "M03",
+      "object": {
+        "type": "country",
+        "country": "FRA"
+      },
+      "fields": [
+        "regions",
+        "ownership"
+      ],
+      "parameters": {
+        "root_id": "french_missions_1",
+        "task_id": "fra_liberate_norm"
+      }
+    },
+    {
+      "topic": "M04",
+      "object": {
+        "type": "country",
+        "country": "FRA"
+      },
+      "fields": [
+        "claims"
+      ],
+      "parameters": {
+        "root_id": "french_missions_1",
+        "task_id": "fra_liberate_norm"
+      }
+    },
+    {
+      "topic": "T01",
+      "object": {
+        "type": "trade_node",
+        "node_id": "champagne"
+      },
+      "fields": [
+        "name",
+        "upstream",
+        "downstream"
+      ],
+      "parameters": {}
+    },
+    {
+      "topic": "T03",
+      "object": {
+        "type": "trade_node",
+        "node_id": "champagne"
+      },
+      "fields": [
+        "total_value",
+        "incoming_value",
+        "outgoing_value"
+      ],
+      "parameters": {}
+    },
+    {
+      "topic": "T04",
+      "object": {
+        "type": "trade_node",
+        "node_id": "champagne"
+      },
+      "fields": [
+        "shares"
+      ],
+      "parameters": {}
+    },
+    {
+      "topic": "T01",
+      "object": {
+        "type": "trade_node",
+        "node_id": "english_channel"
+      },
+      "fields": [
+        "name",
+        "upstream",
+        "downstream"
+      ],
+      "parameters": {}
+    },
+    {
+      "topic": "T03",
+      "object": {
+        "type": "trade_node",
+        "node_id": "english_channel"
+      },
+      "fields": [
+        "total_value",
+        "incoming_value",
+        "outgoing_value"
+      ],
+      "parameters": {}
+    },
+    {
+      "topic": "T04",
+      "object": {
+        "type": "trade_node",
+        "node_id": "english_channel"
+      },
+      "fields": [
+        "shares"
+      ],
+      "parameters": {}
+    },
+    {
+      "topic": "D01",
+      "object": {
+        "type": "country_pair",
+        "actor": "FRA",
+        "recipient": "ENG"
+      },
+      "fields": [
+        "casus_belli",
+        "war_goal"
+      ],
+      "parameters": {
+        "action_id": "declare_war",
+        "selection": {
+          "casus_belli": "no_casus_belli",
+          "war_goal": {
+            "province_id": -1,
+            "beneficiary": "FRA"
+          },
+          "call_allies": []
+        }
+      }
+    },
+    {
+      "topic": "D02",
+      "object": {
+        "type": "country_pair",
+        "actor": "FRA",
+        "recipient": "ENG"
+      },
+      "fields": [
+        "legality_status",
+        "legality_reasons",
+        "stability_cost",
+        "war_exhaustion_cost"
+      ],
+      "parameters": {
+        "action_id": "declare_war",
+        "selection": {
+          "casus_belli": "no_casus_belli",
+          "war_goal": {
+            "province_id": -1,
+            "beneficiary": "FRA"
+          },
+          "call_allies": []
+        }
+      }
+    }
+  ]
+}

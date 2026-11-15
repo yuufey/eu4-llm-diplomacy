@@ -1,0 +1,64 @@
+{
+  "game_sha256": "b23fa0e1f698d31b01cdd1c3817a675805d8c6286cb66f9c231e6e2a42544d77",
+  "native": {
+    "event": "native_land_promise_established",
+    "session_id": "27116-1dd74f4bad958e8",
+    "sequence": 1,
+    "date_raw": 56697264,
+    "promisor_ref": "0x100007a00415246",
+    "beneficiary_ref": "0x10000d200564153",
+    "observer_ref": "0x100007a00415246",
+    "war_id": "war_9f4ab1bee2639c0b_00000001",
+    "source": "call_action_return_new_promised_participant",
+    "wire": 1
+  },
+  "event": {
+    "actor": "FRA",
+    "collected_game_date": 56697264,
+    "complete": true,
+    "event_id": "land-promise:2470abc514e0ab39a9a45e39e7d2f1fc",
+    "event_type": "land_promise_established",
+    "game_date": 56697264,
+    "objects": [
+      {
+        "type": "war",
+        "war_id": "war_9f4ab1bee2639c0b_00000001"
+      },
+      {
+        "country": "FRA",
+        "type": "country"
+      },
+      {
+        "country": "SAV",
+        "type": "country"
+      },
+      {
+        "actor": "FRA",
+        "recipient": "SAV",
+        "type": "country_pair"
+      }
+    ],
+    "observer": "FRA",
+    "payload": {
+      "action_id": "call_to_arms",
+      "beneficiary": "SAV",
+      "promisor": "FRA",
+      "scope": "FRA_member_in_observed_promise_war",
+      "war_id": "war_9f4ab1bee2639c0b_00000001"
+    },
+    "recipient": "SAV",
+    "sequence": 5,
+    "session_id": "27116-1dd74f4bad958e8",
+    "source": {
+      "complete": true,
+      "date_semantics": "native_promise_command_return_game_date",
+      "mode": "live",
+      "name": "ObserverSession.read_native_land_promise_events",
+      "native_sequence": 1,
+      "scope": "FRA_member_in_observed_promise_war",
+      "session_id": "27116-1dd74f4bad958e8"
+    }
+  },
+  "source_receipt": "work\\runtime\\information-land-resume-live-20261115-001\\execution-001\\native-events-slice.jsonl",
+  "source_sha256": "2ce50c68229fadeccac3e95a56e9e5c9b49eb20a1a0827234a114f0a2a54202d"
+}

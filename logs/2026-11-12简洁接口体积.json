@@ -1,0 +1,14 @@
+{
+  "macro": {
+    "before_bytes": 34334,
+    "after_bytes": 2926
+  },
+  "scenario": {
+    "before_bytes": 68932,
+    "after_bytes": 4462
+  },
+  "discovery": {
+    "before_bytes": 215188,
+    "after_bytes": 12432
+  }
+}

@@ -1,0 +1,39 @@
+{
+  "evidence_kind": "actual_runtime_native_relation_record_return",
+  "source": "work\\runtime\\diplomacy-observer-20261113-p1-script-v61-002\\control-probe.jsonl",
+  "game_sha256": "b23fa0e1f698d31b01cdd1c3817a675805d8c6286cb66f9c231e6e2a42544d77",
+  "dll_sha256": "5a165ed11e91fb9e64159f63954d40af68a19f26ccf0a20358f5bba231a711bd",
+  "offset": 8199805,
+  "line_bytes": 607,
+  "line_sha256": "88f2c6ac085252fbaf75217b93cf63715e5d59b2e8d04e0c151109330c94e518",
+  "event": {
+    "event": "native_relation_changed",
+    "schema_version": 5,
+    "session_id": "36348-1dd734cfdbdd17d",
+    "sequence": 8,
+    "country": "FRA",
+    "actor": "FRA",
+    "recipient": "SAV",
+    "actor_fullref": "0x100007a00415246",
+    "recipient_fullref": "0x10000d200564153",
+    "date_raw": 56692752,
+    "relation_kind": "alliance",
+    "command_state": null,
+    "command_mode": null,
+    "before": {
+      "active": false,
+      "guarantee": null,
+      "support_roles": null,
+      "subject": null
+    },
+    "after": {
+      "active": true,
+      "guarantee": null,
+      "support_roles": null,
+      "subject": null
+    },
+    "observation_path": "alliance_record_enable",
+    "source": "relation_command_or_six_family_record_return_actual_pair_state",
+    "complete": true
+  }
+}

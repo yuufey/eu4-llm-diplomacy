@@ -1,0 +1,393 @@
+{
+  "schema": "owned-person-age-fixture-receipt/1",
+  "status": "passed",
+  "game_process_opened": false,
+  "game_function_called": false,
+  "dll_loaded_into_game": false,
+  "source_pins": {
+    "exe": {
+      "path_from_local_env": "EU4_GAME_ROOT/eu4.exe",
+      "bytes": 38463016,
+      "sha256": "b23fa0e1f698d31b01cdd1c3817a675805d8c6286cb66f9c231e6e2a42544d77"
+    },
+    "ordinary_evidence": {
+      "path": "work/runtime/information-country-person-20261029-001/person-date-helpers-ordinary-001.json",
+      "bytes": 19396,
+      "sha256": "67f3104ffa41063a0c658c45fa0fdc6f023efe88cad639e03b9890c4062fd688"
+    },
+    "person_probe": {
+      "path": "work/runtime/information-country-person-20261029-001/probe_person_native_inputs_001.json",
+      "bytes": 8858429,
+      "sha256": "1356236563002e318670368e0428c7f7f343b32b9f307c0e71a0e523cf1c0c2a"
+    }
+  },
+  "errors": [],
+  "binary_extract": {
+    "pe": {
+      "sha256": "b23fa0e1f698d31b01cdd1c3817a675805d8c6286cb66f9c231e6e2a42544d77",
+      "bytes": 38463016,
+      "machine": "0x8664",
+      "image_base": "0x140000000",
+      "size_of_image": "0x25e0000",
+      "exception_directory_rva": "0x02465000",
+      "exception_directory_bytes": 959052,
+      "pdata_section": {
+        "rva": "0x02465000",
+        "virtual_size": 959052,
+        "raw_pointer": "0x02333000",
+        "raw_size": 959488
+      },
+      "month_table_section": ".rdata"
+    },
+    "pdata_matches": {
+      "0x00a4e140": {
+        "begin_rva": "0x00a4e140",
+        "end_rva_exclusive": "0x00a4e210",
+        "unwind_rva": "0x01dc9cdc",
+        "entry_hex": "40e1a40010e2a400dc9cdc01"
+      },
+      "0x000cfe10": {
+        "begin_rva": "0x000cfe10",
+        "end_rva_exclusive": "0x000cfe77",
+        "unwind_rva": "0x01dc9e10",
+        "entry_hex": "10fe0c0077fe0c00109edc01"
+      },
+      "0x014c8020": {
+        "begin_rva": "0x014c8020",
+        "end_rva_exclusive": "0x014c813f",
+        "unwind_rva": "0x01dca66c",
+        "entry_hex": "20804c013f814c016ca6dc01"
+      },
+      "0xcfd70": null
+    },
+    "cfd70_bounded_without_pdata": {
+      "rva": "0x000cfd70",
+      "end_rva_exclusive": "0x000cfe10",
+      "span_bytes": 160,
+      "ret_rva": "0x000cfe03",
+      "tail": "0x000cfe04..0x000cfe0f are int3 padding"
+    },
+    "segments": {
+      "a4e140": {
+        "rva": "0x00a4e140",
+        "bytes": 208,
+        "sha256": "e09b438f9960d8275491fc8afe6de66b15b46261cb0cd5b06ff12b2e70212037",
+        "path": "code/a4e140.bin"
+      },
+      "cfd70-to-cfe10": {
+        "rva": "0x000cfd70",
+        "bytes": 160,
+        "sha256": "a4383bb0d302622d9e73ed9bf14b90e4485a4f0214986fbd03cd3b0bbc043f34",
+        "path": "code/cfd70-to-cfe10.bin"
+      },
+      "cfe10": {
+        "rva": "0x000cfe10",
+        "bytes": 103,
+        "sha256": "a18cb41d981855a86eb2470663c6df6cfb8c5198a965b7eb057bfbce2fb6484a",
+        "path": "code/cfe10.bin"
+      },
+      "14c8020": {
+        "rva": "0x014c8020",
+        "bytes": 287,
+        "sha256": "b097e6bae8c8da68ee666d7fe50b5c8f91b40d36c5f52520127e6d79870602fc",
+        "path": "code/14c8020.bin"
+      },
+      "month_table": {
+        "rva": "0x01c3a5c8",
+        "bytes": 48,
+        "sha256": "8d37c81b9a47c1b878313f8a5fa9a3f69ed9eb4dfcb83e949037e3fa5b4f9eb3",
+        "path": "code/month-table.bin",
+        "i32": [
+          31,
+          28,
+          31,
+          30,
+          31,
+          30,
+          31,
+          31,
+          30,
+          31,
+          30,
+          31
+        ]
+      }
+    },
+    "bounded_disassembly": {
+      "a4e140": {
+        "argv": [
+          "C:\\Strawberry\\c\\bin\\objdump.exe",
+          "-d",
+          "--start-address=0x140a4e140",
+          "--stop-address=0x140a4e210",
+          "D:\\Downloads\\Europa Universalis IV（1.37.4）\\Europa Universalis IV\\eu4.exe"
+        ],
+        "returncode": 0,
+        "instruction_rows": 63,
+        "direct_call_targets_va": [
+          "0x1400cfd70",
+          "0x1400cfd70",
+          "0x1400cfe10",
+          "0x1400cfe10",
+          "0x1414c8020",
+          "0x1414c8020"
+        ],
+        "direct_branch_targets_va": [
+          "0x140a4e1af",
+          "0x140a4e1a5",
+          "0x140a4e1ca",
+          "0x140a4e1c0",
+          "0x140a4e1e6",
+          "0x140a4e1e8",
+          "0x140a4e1e8"
+        ],
+        "rip_relative_targets_va": [
+          "0x14233fe58",
+          "0x141c3a5c8"
+        ]
+      },
+      "cfd70-to-cfe10": {
+        "argv": [
+          "C:\\Strawberry\\c\\bin\\objdump.exe",
+          "-d",
+          "--start-address=0x1400cfd70",
+          "--stop-address=0x1400cfe10",
+          "D:\\Downloads\\Europa Universalis IV（1.37.4）\\Europa Universalis IV\\eu4.exe"
+        ],
+        "returncode": 0,
+        "instruction_rows": 62,
+        "direct_call_targets_va": [],
+        "direct_branch_targets_va": [
+          "0x1400cfda7",
+          "0x1400cfda7",
+          "0x1400cfda9",
+          "0x1400cfde8",
+          "0x1400cfdeb"
+        ],
+        "rip_relative_targets_va": []
+      },
+      "cfe10": {
+        "argv": [
+          "C:\\Strawberry\\c\\bin\\objdump.exe",
+          "-d",
+          "--start-address=0x1400cfe10",
+          "--stop-address=0x1400cfe77",
+          "D:\\Downloads\\Europa Universalis IV（1.37.4）\\Europa Universalis IV\\eu4.exe"
+        ],
+        "returncode": 0,
+        "instruction_rows": 31,
+        "direct_call_targets_va": [
+          "0x1400cfd70"
+        ],
+        "direct_branch_targets_va": [
+          "0x1400cfe4b",
+          "0x1400cfe4b",
+          "0x1400cfe4e"
+        ],
+        "rip_relative_targets_va": []
+      },
+      "14c8020": {
+        "argv": [
+          "C:\\Strawberry\\c\\bin\\objdump.exe",
+          "-d",
+          "--start-address=0x1414c8020",
+          "--stop-address=0x1414c813f",
+          "D:\\Downloads\\Europa Universalis IV（1.37.4）\\Europa Universalis IV\\eu4.exe"
+        ],
+        "returncode": 0,
+        "instruction_rows": 85,
+        "direct_call_targets_va": [
+          "0x1400cfe10",
+          "0x1400cfe10"
+        ],
+        "direct_branch_targets_va": [
+          "0x1414c805a",
+          "0x1414c8050",
+          "0x1414c80d4",
+          "0x1414c80d4",
+          "0x1414c807f",
+          "0x1414c8090",
+          "0x1414c8120",
+          "0x1414c8117",
+          "0x1414c8100",
+          "0x1414c811b"
+        ],
+        "rip_relative_targets_va": [
+          "0x141c3a5c8"
+        ]
+      }
+    },
+    "dependency_validation": "passed; all direct calls target copied helper spans; RIP-relative reads target the owned world pointer cell or owned month table; all direct branches remain within each copied span"
+  },
+  "independent_oracle": {
+    "base_raw": 43800000,
+    "base_hours_expression": "5000*365*24",
+    "year_hours": 8760,
+    "month_days": [
+      31,
+      28,
+      31,
+      30,
+      31,
+      30,
+      31,
+      31,
+      30,
+      31,
+      30,
+      31
+    ],
+    "random_seed": "0xA4E140",
+    "random_cases": 512,
+    "total_cases": 533,
+    "actual_probe_cases": 4,
+    "probe_inputs": [
+      {
+        "label": "actual_probe_FRA_ruler",
+        "country": "FRA",
+        "role": "ruler",
+        "source_read_label": "person.ruler.header80",
+        "header_bytes": 128,
+        "birth_offset": "0x70",
+        "birth_raw": 56269872,
+        "date_source_label": "foreign_tech.date",
+        "current_raw": 56564448,
+        "double_reads_equal": true
+      },
+      {
+        "label": "actual_probe_FRA_heir",
+        "country": "FRA",
+        "role": "heir",
+        "source_read_label": "person.heir.header80",
+        "header_bytes": 128,
+        "birth_offset": "0x70",
+        "birth_raw": 56485224,
+        "date_source_label": "foreign_tech.date",
+        "current_raw": 56564448,
+        "double_reads_equal": true
+      },
+      {
+        "label": "actual_probe_ENG_ruler",
+        "country": "ENG",
+        "role": "ruler",
+        "source_read_label": "person.ruler.header80",
+        "header_bytes": 128,
+        "birth_offset": "0x70",
+        "birth_raw": 56213256,
+        "date_source_label": "foreign_tech.date",
+        "current_raw": 56564448,
+        "double_reads_equal": true
+      },
+      {
+        "label": "actual_probe_ENG_heir",
+        "country": "ENG",
+        "role": "heir",
+        "source_read_label": "person.heir.header80",
+        "header_bytes": 128,
+        "birth_offset": "0x70",
+        "birth_raw": 56324016,
+        "date_source_label": "foreign_tech.date",
+        "current_raw": 56564448,
+        "double_reads_equal": true
+      }
+    ]
+  },
+  "production_projection": {
+    "path": "bridge/information/person_age_memory.py",
+    "bytes": 2377,
+    "sha256_before": "3678e2da980eff792d2ba04ad029a93ab96f2cd15aa6f1f6d6ccaa5d564dc8b9",
+    "mismatches": [],
+    "sha256_after": "3678e2da980eff792d2ba04ad029a93ab96f2cd15aa6f1f6d6ccaa5d564dc8b9",
+    "source_stable": true
+  },
+  "compile": {
+    "argv": [
+      "C:\\Strawberry\\c\\bin\\g++.exe",
+      "-std=c++17",
+      "-O2",
+      "-Wall",
+      "-Wextra",
+      "-Werror",
+      "-static",
+      "-static-libgcc",
+      "-static-libstdc++",
+      "-IC:\\Users\\wangyufei\\Documents\\ChatGPT\\欧陆风云4\\stage78\\owned-age-fixture-001",
+      "C:\\Users\\wangyufei\\Documents\\ChatGPT\\欧陆风云4\\stage78\\owned-age-fixture-001\\owned_age_fixture.cpp",
+      "-o",
+      "C:\\Users\\wangyufei\\Documents\\ChatGPT\\欧陆风云4\\stage78\\owned-age-fixture-001\\build\\owned_age_fixture.exe"
+    ],
+    "returncode": 0,
+    "stdout_path": "compile.stdout.txt",
+    "stderr_path": "compile.stderr.txt",
+    "compiler_version_path": "compiler-version.stdout.txt"
+  },
+  "owned_fixture_binary": {
+    "path": "build/owned_age_fixture.exe",
+    "bytes": 2637209,
+    "sha256": "9e096b79c30c59382103088734a3ff83f5e559b828bbd50c8bc68a94d7a3b29b"
+  },
+  "run": {
+    "argv": [
+      "C:\\Users\\wangyufei\\Documents\\ChatGPT\\欧陆风云4\\stage78\\owned-age-fixture-001\\build\\owned_age_fixture.exe"
+    ],
+    "returncode": 0,
+    "stdout_path": "run.stdout.jsonl",
+    "stderr_path": "run.stderr.txt",
+    "setup": {
+      "kind": "setup",
+      "ok": true,
+      "owned_fixture_pid": 46444,
+      "game_process_opened": false,
+      "game_function_called": false,
+      "reservation_base": "0x1ec18360000",
+      "reserve_bytes": 36966400,
+      "committed_bytes": 24576,
+      "committed_pages": 6,
+      "global_cell_rva": "0x0233fe58",
+      "world_buffer_rva": "0x0233e000",
+      "world_date_rva": "0x0233fdd0",
+      "getter_rva": "0x00a4e140"
+    },
+    "summary": {
+      "kind": "summary",
+      "cases": 533,
+      "passed": 533,
+      "failed": 0,
+      "all_pairs_reported": true
+    },
+    "cleanup": {
+      "kind": "cleanup",
+      "virtual_free_called": true,
+      "virtual_free_return": true,
+      "owned_region_released": true
+    },
+    "case_rows": 533,
+    "reported_pairs": 533,
+    "missing_labels": [],
+    "mismatches": [],
+    "three_way_rows": 533,
+    "three_way_mismatches": [],
+    "stderr_bytes": 0
+  },
+  "source_pins_after": {
+    "exe": {
+      "path_from_local_env": "EU4_GAME_ROOT/eu4.exe",
+      "bytes": 38463016,
+      "sha256": "b23fa0e1f698d31b01cdd1c3817a675805d8c6286cb66f9c231e6e2a42544d77"
+    },
+    "ordinary_evidence": {
+      "path": "work/runtime/information-country-person-20261029-001/person-date-helpers-ordinary-001.json",
+      "bytes": 19396,
+      "sha256": "67f3104ffa41063a0c658c45fa0fdc6f023efe88cad639e03b9890c4062fd688"
+    },
+    "person_probe": {
+      "path": "work/runtime/information-country-person-20261029-001/probe_person_native_inputs_001.json",
+      "bytes": 8858429,
+      "sha256": "1356236563002e318670368e0428c7f7f343b32b9f307c0e71a0e523cf1c0c2a"
+    }
+  },
+  "input_source_pins_stable": true,
+  "case_count": 533,
+  "passed_count": 533,
+  "failed_count": 0
+}

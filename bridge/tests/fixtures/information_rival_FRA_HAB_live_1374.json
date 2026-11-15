@@ -1,0 +1,44 @@
+{
+  "evidence_kind": "observed_runtime",
+  "scenario": "normal_set_rival_after_operator_script_white_peace",
+  "source_log": "work\\runtime\\diplomacy-observer-20261113-p1-script-v61-002\\control-probe.jsonl",
+  "source_line": {
+    "offset": 6071809,
+    "bytes": 587,
+    "sha256": "c3b93e285da32cfac4ea47e649a063aec3ea7e3c7349104d77d140a472dff8d6",
+    "event": {
+      "event": "native_rival_changed",
+      "schema_version": 1,
+      "session_id": "36348-1dd734cfdbdd17d",
+      "sequence": 1,
+      "country": "FRA",
+      "actor": "FRA",
+      "target": "HAB",
+      "old_rival": "---",
+      "actor_fullref": "0x100007a00415246",
+      "target_fullref": "0x100009100424148",
+      "old_rival_fullref": "0x0",
+      "operation": "set",
+      "date_raw": 56692752,
+      "before": {
+        "count": 2,
+        "target_active": false,
+        "target_since_date_raw": -1,
+        "old_active": false,
+        "old_since_date_raw": -1
+      },
+      "after": {
+        "count": 3,
+        "target_active": true,
+        "target_since_date_raw": 56692752,
+        "old_active": false,
+        "old_since_date_raw": -1
+      },
+      "source": "rival_command_normal_return",
+      "complete": true
+    }
+  },
+  "game_sha256": "b23fa0e1f698d31b01cdd1c3817a675805d8c6286cb66f9c231e6e2a42544d77",
+  "dll_sha256": "5a165ed11e91fb9e64159f63954d40af68a19f26ccf0a20358f5bba231a711bd",
+  "installation_ack_fixture": "information_country_modifier_FRA_papal_removed_live_1374.json"
+}

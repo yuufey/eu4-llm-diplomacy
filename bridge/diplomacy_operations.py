@@ -131,13 +131,17 @@ def query(api, request):
 
 def response(native):
     """Keep generated decisions, pending delivery and application in one DTO."""
-    from eu4harness.v32_diplomacy_outcome_20261024 import generated_decisions
     summary = native.get("observation_summary", {})
+    decisions = []
+    for factory in summary.get("factories", []):
+        decision = factory.get("decision")
+        if isinstance(decision, dict):
+            decisions.append({"slot_index": factory.get("slot_index"), **decision})
     return {"schema": "EU4DIPLOMACYRESPONSE/1",
             "request_id": native.get("request_id"), "request": native.get("request"),
             "status": native.get("status"), "identity": native.get("identity"),
             "sequence": native.get("sequence"),
-            "generated_decisions": generated_decisions(summary),
+            "generated_decisions": decisions,
             "acceptance": summary.get("acceptance"),
             "effect_completion": summary.get("effect_completion"),
             "stages": [{key: factory.get(key) for key in (

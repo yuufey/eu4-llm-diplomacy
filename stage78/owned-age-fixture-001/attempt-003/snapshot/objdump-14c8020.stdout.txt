@@ -1,0 +1,92 @@
+
+D:\Downloads\Europa Universalis IV（1.37.4）\Europa Universalis IV\eu4.exe:     file format pei-x86-64
+
+
+Disassembly of section .text:
+
+00000001414c8020 <.text+0x14c7020>:
+   1414c8020:	48 89 5c 24 08       	mov    %rbx,0x8(%rsp)
+   1414c8025:	48 89 6c 24 10       	mov    %rbp,0x10(%rsp)
+   1414c802a:	48 89 74 24 18       	mov    %rsi,0x18(%rsp)
+   1414c802f:	57                   	push   %rdi
+   1414c8030:	48 83 ec 20          	sub    $0x20,%rsp
+   1414c8034:	33 ff                	xor    %edi,%edi
+   1414c8036:	48 8b e9             	mov    %rcx,%rbp
+   1414c8039:	8b df                	mov    %edi,%ebx
+   1414c803b:	e8 d0 7d c0 fe       	call   0x1400cfe10
+   1414c8040:	83 e8 1f             	sub    $0x1f,%eax
+   1414c8043:	4c 8d 15 7e 25 77 00 	lea    0x77257e(%rip),%r10        # 0x141c3a5c8
+   1414c804a:	78 0e                	js     0x1414c805a
+   1414c804c:	49 8b d2             	mov    %r10,%rdx
+   1414c804f:	90                   	nop
+   1414c8050:	ff c3                	inc    %ebx
+   1414c8052:	48 8d 52 04          	lea    0x4(%rdx),%rdx
+   1414c8056:	2b 02                	sub    (%rdx),%eax
+   1414c8058:	79 f6                	jns    0x1414c8050
+   1414c805a:	8b f7                	mov    %edi,%esi
+   1414c805c:	44 8b c7             	mov    %edi,%r8d
+   1414c805f:	85 db                	test   %ebx,%ebx
+   1414c8061:	7e 71                	jle    0x1414c80d4
+   1414c8063:	83 fb 08             	cmp    $0x8,%ebx
+   1414c8066:	72 6c                	jb     0x1414c80d4
+   1414c8068:	8b cb                	mov    %ebx,%ecx
+   1414c806a:	0f 57 d2             	xorps  %xmm2,%xmm2
+   1414c806d:	0f 57 c9             	xorps  %xmm1,%xmm1
+   1414c8070:	81 e1 07 00 00 80    	and    $0x80000007,%ecx
+   1414c8076:	7d 07                	jge    0x1414c807f
+   1414c8078:	ff c9                	dec    %ecx
+   1414c807a:	83 c9 f8             	or     $0xfffffff8,%ecx
+   1414c807d:	ff c1                	inc    %ecx
+   1414c807f:	8b c3                	mov    %ebx,%eax
+   1414c8081:	2b c1                	sub    %ecx,%eax
+   1414c8083:	48 63 c8             	movslq %eax,%rcx
+   1414c8086:	48 8b c7             	mov    %rdi,%rax
+   1414c8089:	0f 1f 80 00 00 00 00 	nopl   0x0(%rax)
+   1414c8090:	f3 41 0f 6f 04 82    	movdqu (%r10,%rax,4),%xmm0
+   1414c8096:	41 83 c0 08          	add    $0x8,%r8d
+   1414c809a:	66 0f fe d0          	paddd  %xmm0,%xmm2
+   1414c809e:	f3 41 0f 6f 44 82 10 	movdqu 0x10(%r10,%rax,4),%xmm0
+   1414c80a5:	48 83 c0 08          	add    $0x8,%rax
+   1414c80a9:	66 0f fe c8          	paddd  %xmm0,%xmm1
+   1414c80ad:	48 3b c1             	cmp    %rcx,%rax
+   1414c80b0:	7c de                	jl     0x1414c8090
+   1414c80b2:	66 0f fe ca          	paddd  %xmm2,%xmm1
+   1414c80b6:	66 0f 6f c1          	movdqa %xmm1,%xmm0
+   1414c80ba:	66 0f 73 d8 08       	psrldq $0x8,%xmm0
+   1414c80bf:	66 0f fe c8          	paddd  %xmm0,%xmm1
+   1414c80c3:	66 0f 6f c1          	movdqa %xmm1,%xmm0
+   1414c80c7:	66 0f 73 d8 04       	psrldq $0x4,%xmm0
+   1414c80cc:	66 0f fe c8          	paddd  %xmm0,%xmm1
+   1414c80d0:	66 0f 7e ce          	movd   %xmm1,%esi
+   1414c80d4:	49 63 c0             	movslq %r8d,%rax
+   1414c80d7:	8b d7                	mov    %edi,%edx
+   1414c80d9:	4c 63 c3             	movslq %ebx,%r8
+   1414c80dc:	49 3b c0             	cmp    %r8,%rax
+   1414c80df:	7d 3f                	jge    0x1414c8120
+   1414c80e1:	49 8b c8             	mov    %r8,%rcx
+   1414c80e4:	48 2b c8             	sub    %rax,%rcx
+   1414c80e7:	48 83 f9 02          	cmp    $0x2,%rcx
+   1414c80eb:	7c 2a                	jl     0x1414c8117
+   1414c80ed:	4d 8d 48 ff          	lea    -0x1(%r8),%r9
+   1414c80f1:	0f 1f 40 00          	nopl   0x0(%rax)
+   1414c80f5:	66 66 66 0f 1f 84 00 	data16 data16 nopw 0x0(%rax,%rax,1)
+   1414c80fc:	00 00 00 00 
+   1414c8100:	41 03 3c 82          	add    (%r10,%rax,4),%edi
+   1414c8104:	41 03 54 82 04       	add    0x4(%r10,%rax,4),%edx
+   1414c8109:	48 83 c0 02          	add    $0x2,%rax
+   1414c810d:	49 3b c1             	cmp    %r9,%rax
+   1414c8110:	7c ee                	jl     0x1414c8100
+   1414c8112:	49 3b c0             	cmp    %r8,%rax
+   1414c8115:	7d 04                	jge    0x1414c811b
+   1414c8117:	41 03 34 82          	add    (%r10,%rax,4),%esi
+   1414c811b:	8d 04 3a             	lea    (%rdx,%rdi,1),%eax
+   1414c811e:	03 f0                	add    %eax,%esi
+   1414c8120:	48 8b cd             	mov    %rbp,%rcx
+   1414c8123:	e8 e8 7c c0 fe       	call   0x1400cfe10
+   1414c8128:	48 8b 5c 24 30       	mov    0x30(%rsp),%rbx
+   1414c812d:	2b c6                	sub    %esi,%eax
+   1414c812f:	48 8b 74 24 40       	mov    0x40(%rsp),%rsi
+   1414c8134:	48 8b 6c 24 38       	mov    0x38(%rsp),%rbp
+   1414c8139:	48 83 c4 20          	add    $0x20,%rsp
+   1414c813d:	5f                   	pop    %rdi
+   1414c813e:	c3                   	ret

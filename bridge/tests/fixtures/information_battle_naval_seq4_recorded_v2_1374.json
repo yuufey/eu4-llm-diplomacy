@@ -1,0 +1,42 @@
+{
+  "schema": "EU4-BATTLE-RECORDED-FIXTURE/1",
+  "mode": "recorded",
+  "provenance": {
+    "capture_stage": "work\\runtime\\information-battle-continuous-20261026-001",
+    "source_database": "work\\runtime\\information-battle-continuous-20261026-001\\auto-raw.sqlite3",
+    "source_database_sha256": "bd5062136c38a1cbc722d670e873fd1779540d56ec4e74820be5f9d4cdb2fbdb",
+    "source_database_read_only": true,
+    "source_group_id": 4,
+    "source_received_order": 4,
+    "source_attempt_sequence": "4",
+    "source_reports": {
+      "live_result": "work\\runtime\\information-battle-continuous-20261026-001\\live-result-001.json",
+      "live_result_sha256": "12905fc259e62a2ad4bc9e8c189ca7302fb23aec890c47581cba9d0c38b2bf0a",
+      "development_summary": "work\\runtime\\information-battle-continuous-20261026-001\\development-summary-001.json",
+      "development_summary_sha256": "9f8e34cf25c71906d30683b544cd6e02b25dd37cbd1fc5d3a27f3d2152d4f9b5"
+    },
+    "session_id": "15612-1dd64921da9212c",
+    "game_version": "1.37.4",
+    "game_sha256": "b23fa0e1f698d31b01cdd1c3817a675805d8c6286cb66f9c231e6e2a42544d77",
+    "payload_sha256": "9c32a3a06f48f583709fa608152bb82f595b3b7c5c674b005b506c409e2d0022",
+    "installation": "f921c23a9c9ecced",
+    "generation": "01dd64921da9212c",
+    "message_id": "4",
+    "physical_player": "POR",
+    "captured_observation_not_complete_battle": true,
+    "source_mode": "sealed_recorded_stream",
+    "live_authority": false,
+    "business_complete": false
+  },
+  "payload_hex": "49424f570200d700000049424f5701000400000000000000f48800000140f45e0300f8a70000f8a70000510500000c00000010d46711694f10776d12e15353414b00fc020001000000000000000000000000000000000300000000000000000000000000000000000000000000004a4d42006a03000100000000000000000000000000000000000000000800000006000000000000000000000016000000122556108960101a591236772012b375104e621214538201000090010000640000009cffffff0000000000000000640000000e00000003000000000000000000000000010102000000b802000000c30102504f5200bd0000010101010000004a4d42006a03000100000000000000000000000000000000000000000000000001010100000053414b00fc020001000000000000000000000000000000000000000000000000010300000050534100fb0200014d4c4300f601000153414b00fc0200010400000041544a00be0100014b454400d40200014a4d42006a0300014b454c006c030001010100",
+  "recorded_observer_ref": "010002fc004b4153",
+  "recorded_observer_tag": "SAK",
+  "captured_date": 56554560,
+  "context_date": 56555208,
+  "expected_mapping": [
+    1,
+    0
+  ],
+  "expected_winner_result_side_index": 1,
+  "expected_observer_outcome": "defeat"
+}

@@ -1,0 +1,42 @@
+{
+  "event": {
+    "event": "native_call_to_arms_observed",
+    "session_id": "45348-1dd73797f875787",
+    "observation_id": 1,
+    "action_id": "call_to_arms",
+    "actor": "SAV",
+    "recipient": "FRA",
+    "date_raw": 56692776,
+    "native_date28": 56692776,
+    "native_date2c": 56692776,
+    "native_token3c": 0,
+    "versus": "---",
+    "versus_verified": true,
+    "call_type_raw": 1,
+    "flags_raw": [
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1
+    ],
+    "specific_enemies": [],
+    "specific_enemies_count": 0,
+    "specific_enemies_verified": true,
+    "capture_stage": "before_native_executor",
+    "recipient_verified": true,
+    "ai_response_held": false
+  },
+  "source_log": "work/runtime/diplomacy-observer-20261113-inbound-clock-v61-001/control-probe.jsonl",
+  "source_offset": 870327,
+  "source_end_offset": 870830,
+  "source_line_sha256": "4d86294564484179fc9b78eb0ff3b2c5000463d91542a92ea8637fc254e3f963",
+  "evidence_kind": "preserved_live_native_call_to_arms",
+  "game_sha256": "b23fa0e1f698d31b01cdd1c3817a675805d8c6286cb66f9c231e6e2a42544d77",
+  "dll_sha256": "9bda79afaa5d0fe489e6c3a7a69b76ed73f516d7353c621d76dff9630a284481",
+  "physical_player": "POR",
+  "observer": "FRA",
+  "expected_versus": null
+}

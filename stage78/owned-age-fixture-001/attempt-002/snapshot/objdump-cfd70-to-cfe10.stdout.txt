@@ -1,0 +1,69 @@
+
+D:\Downloads\Europa Universalis IV（1.37.4）\Europa Universalis IV\eu4.exe:     file format pei-x86-64
+
+
+Disassembly of section .text:
+
+00000001400cfd70 <.text+0xced70>:
+   1400cfd70:	44 8b 01             	mov    (%rcx),%r8d
+   1400cfd73:	41 b9 01 00 00 00    	mov    $0x1,%r9d
+   1400cfd79:	41 81 e8 c0 55 9c 02 	sub    $0x29c55c0,%r8d
+   1400cfd80:	79 25                	jns    0x1400cfda7
+   1400cfd82:	41 8b c8             	mov    %r8d,%ecx
+   1400cfd85:	b8 ab aa aa 2a       	mov    $0x2aaaaaab,%eax
+   1400cfd8a:	f7 d9                	neg    %ecx
+   1400cfd8c:	f7 e9                	imul   %ecx
+   1400cfd8e:	c1 fa 02             	sar    $0x2,%edx
+   1400cfd91:	8b c2                	mov    %edx,%eax
+   1400cfd93:	c1 e8 1f             	shr    $0x1f,%eax
+   1400cfd96:	03 d0                	add    %eax,%edx
+   1400cfd98:	8d 04 52             	lea    (%rdx,%rdx,2),%eax
+   1400cfd9b:	c1 e0 03             	shl    $0x3,%eax
+   1400cfd9e:	3b c8                	cmp    %eax,%ecx
+   1400cfda0:	74 05                	je     0x1400cfda7
+   1400cfda2:	41 8b c9             	mov    %r9d,%ecx
+   1400cfda5:	eb 02                	jmp    0x1400cfda9
+   1400cfda7:	33 c9                	xor    %ecx,%ecx
+   1400cfda9:	b8 ab aa aa 2a       	mov    $0x2aaaaaab,%eax
+   1400cfdae:	41 f7 e8             	imul   %r8d
+   1400cfdb1:	44 8b c2             	mov    %edx,%r8d
+   1400cfdb4:	41 c1 f8 02          	sar    $0x2,%r8d
+   1400cfdb8:	41 8b c0             	mov    %r8d,%eax
+   1400cfdbb:	c1 e8 1f             	shr    $0x1f,%eax
+   1400cfdbe:	44 03 c0             	add    %eax,%r8d
+   1400cfdc1:	44 2b c1             	sub    %ecx,%r8d
+   1400cfdc4:	79 22                	jns    0x1400cfde8
+   1400cfdc6:	41 8b c8             	mov    %r8d,%ecx
+   1400cfdc9:	b8 b1 f9 8c b3       	mov    $0xb38cf9b1,%eax
+   1400cfdce:	f7 d9                	neg    %ecx
+   1400cfdd0:	f7 e9                	imul   %ecx
+   1400cfdd2:	03 d1                	add    %ecx,%edx
+   1400cfdd4:	c1 fa 08             	sar    $0x8,%edx
+   1400cfdd7:	8b c2                	mov    %edx,%eax
+   1400cfdd9:	c1 e8 1f             	shr    $0x1f,%eax
+   1400cfddc:	03 d0                	add    %eax,%edx
+   1400cfdde:	69 c2 6d 01 00 00    	imul   $0x16d,%edx,%eax
+   1400cfde4:	3b c8                	cmp    %eax,%ecx
+   1400cfde6:	75 03                	jne    0x1400cfdeb
+   1400cfde8:	45 33 c9             	xor    %r9d,%r9d
+   1400cfdeb:	b8 b1 f9 8c b3       	mov    $0xb38cf9b1,%eax
+   1400cfdf0:	41 f7 e8             	imul   %r8d
+   1400cfdf3:	41 03 d0             	add    %r8d,%edx
+   1400cfdf6:	c1 fa 08             	sar    $0x8,%edx
+   1400cfdf9:	8b c2                	mov    %edx,%eax
+   1400cfdfb:	c1 e8 1f             	shr    $0x1f,%eax
+   1400cfdfe:	03 c2                	add    %edx,%eax
+   1400cfe00:	41 2b c1             	sub    %r9d,%eax
+   1400cfe03:	c3                   	ret
+   1400cfe04:	cc                   	int3
+   1400cfe05:	cc                   	int3
+   1400cfe06:	cc                   	int3
+   1400cfe07:	cc                   	int3
+   1400cfe08:	cc                   	int3
+   1400cfe09:	cc                   	int3
+   1400cfe0a:	cc                   	int3
+   1400cfe0b:	cc                   	int3
+   1400cfe0c:	cc                   	int3
+   1400cfe0d:	cc                   	int3
+   1400cfe0e:	cc                   	int3
+   1400cfe0f:	cc                   	int3

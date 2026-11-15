@@ -1,0 +1,982 @@
+{
+  "provenance": {
+    "mode": "recorded",
+    "original_mode": "live",
+    "source": "work/runtime/information-country-relations-20261024-001/native-public-001/report.json",
+    "source_sha256": "a013c3bcdda5c6d1ed480667718138180ace4e0703986c301cb258a997af1686",
+    "session_id": "37376-1dd639fff00a820",
+    "observer": "FRA",
+    "game_version": "1.37.4",
+    "game_date": 56553384,
+    "game_sha256": "b23fa0e1f698d31b01cdd1c3817a675805d8c6286cb66f9c231e6e2a42544d77",
+    "dll_sha256": "d80ef39d66d263788c0af4df0892b4ff781e5e3b3f9aea7ebe33759327e457db",
+    "read_only_native_query": true,
+    "pure_RPM": false,
+    "native_query_functions_invoked": true,
+    "business_actions_submitted": false,
+    "date_advance": false,
+    "save_or_reload": false,
+    "dll_installation": false,
+    "installation_identity": {
+      "installation_sha256": "29bb274f8165d960c10c16ed4fb669c096fd2784b76704bd0876ac3fe4cd3a8c",
+      "source_report": "work/runtime/information-country-relations-20261024-001/native-public-001/report.json",
+      "full_installation_object_embedded": false
+    },
+    "scope": "Recorded historical native read-only country-relation query; native query predicates were invoked, no business submission or game mutation occurred.",
+    "projection": {
+      "kind": "self_contained_country_relation_capture",
+      "includes": [
+        "report shell and source contracts",
+        "PAP and ORL public/native capture objects",
+        "before/after control and health metadata",
+        "source path and SHA-256 for each embedded source JSON"
+      ],
+      "omits": [
+        "full installation.json object; its recorded identity SHA is retained",
+        "unrelated game/runtime artifacts"
+      ]
+    },
+    "source_files": {
+      "report.json": {
+        "path": "work/runtime/information-country-relations-20261024-001/native-public-001/report.json",
+        "sha256": "a013c3bcdda5c6d1ed480667718138180ace4e0703986c301cb258a997af1686",
+        "bytes": 15008
+      },
+      "PAP-public.json": {
+        "path": "work/runtime/information-country-relations-20261024-001/native-public-001/PAP-public.json",
+        "sha256": "714f7e4fa185b2955517b91263220b87be6feb9b36480e1cbade981bd0b2ffa8",
+        "bytes": 3840
+      },
+      "PAP-native.json": {
+        "path": "work/runtime/information-country-relations-20261024-001/native-public-001/PAP-native.json",
+        "sha256": "2d010b9ac309ae67b7d84dea00f2870dcb60760f57d6e5f9de2a21abaf84743a",
+        "bytes": 1801
+      },
+      "ORL-public.json": {
+        "path": "work/runtime/information-country-relations-20261024-001/native-public-001/ORL-public.json",
+        "sha256": "3857762a161071a05513fba72f630cb359524e0e9c511f0e4c19adab111f4273",
+        "bytes": 4078
+      },
+      "ORL-native.json": {
+        "path": "work/runtime/information-country-relations-20261024-001/native-public-001/ORL-native.json",
+        "sha256": "bcb7e649c595a2aa48abb0513abd73cfbf9cedb385e8158320920b2527e26a56",
+        "bytes": 1838
+      },
+      "before-control.json": {
+        "path": "work/runtime/information-country-relations-20261024-001/native-public-001/before-control.json",
+        "sha256": "801302511bb9797bc5081ba209b61d2fad1d5a0f18947fbd1a8fba1fb7bb5e2c",
+        "bytes": 450
+      },
+      "after-control.json": {
+        "path": "work/runtime/information-country-relations-20261024-001/native-public-001/after-control.json",
+        "sha256": "801302511bb9797bc5081ba209b61d2fad1d5a0f18947fbd1a8fba1fb7bb5e2c",
+        "bytes": 450
+      },
+      "before-health.json": {
+        "path": "work/runtime/information-country-relations-20261024-001/native-public-001/before-health.json",
+        "sha256": "5a42352c38c6d3c7c94998e6a4835a7488ce9f8b2bcda0a3a69c8d38e57d3f87",
+        "bytes": 174
+      },
+      "after-health.json": {
+        "path": "work/runtime/information-country-relations-20261024-001/native-public-001/after-health.json",
+        "sha256": "c7658d6b0dfc3811c5ab421390039f21ec773c3f93f15dbc6cc49e56c1be37f2",
+        "bytes": 174
+      }
+    }
+  },
+  "original_context": {
+    "status": "ready",
+    "mode": "live",
+    "observer": "FRA",
+    "game_version": "1.37.4",
+    "session_id": "37376-1dd639fff00a820",
+    "game_date": 56553384,
+    "game_sha256": "b23fa0e1f698d31b01cdd1c3817a675805d8c6286cb66f9c231e6e2a42544d77",
+    "dll_sha256": "d80ef39d66d263788c0af4df0892b4ff781e5e3b3f9aea7ebe33759327e457db",
+    "installation_sha256": "29bb274f8165d960c10c16ed4fb669c096fd2784b76704bd0876ac3fe4cd3a8c",
+    "read_only": true
+  },
+  "report": {
+    "status": "passed",
+    "read_only_native_query": true,
+    "pure_RPM": false,
+    "native_query_functions_invoked": true,
+    "business_actions_submitted": false,
+    "date_advance": false,
+    "save_or_reload": false,
+    "dll_installation": false,
+    "session_id": "37376-1dd639fff00a820",
+    "game_sha256": "b23fa0e1f698d31b01cdd1c3817a675805d8c6286cb66f9c231e6e2a42544d77",
+    "dll_sha256": "d80ef39d66d263788c0af4df0892b4ff781e5e3b3f9aea7ebe33759327e457db",
+    "installation_sha256": "29bb274f8165d960c10c16ed4fb669c096fd2784b76704bd0876ac3fe4cd3a8c",
+    "captures": {
+      "PAP": {
+        "public": {
+          "contract_version": 1,
+          "action_id": "offer_vassalization",
+          "native_identifier": "vassalization",
+          "actor": "FRA",
+          "recipient": "PAP",
+          "phase": "initiate",
+          "decision_country": null,
+          "decision_country_verified": false,
+          "requested_decision_country": "FRA",
+          "interface_support": {
+            "query": "partial_native_rules",
+            "execute": "native_vassalization_submission",
+            "complete": false
+          },
+          "session": {
+            "status": "ready",
+            "state_id": "e7d35efcbb6ec3491c368a67ce533b2d02915b87be55226476d6a4dcfbf92330",
+            "date_raw": 56553384,
+            "reasons": [],
+            "complete": true
+          },
+          "visibility": {
+            "status": "visible",
+            "complete": true
+          },
+          "legality": {
+            "status": "unavailable",
+            "reasons": [
+              {
+                "code": "NATIVE_COMMON_ACTION_GATE_FALSE",
+                "text": "原生通用动作条件检查返回false，尚未恢复具体失败条件。",
+                "source": "native_rule",
+                "complete": false
+              },
+              {
+                "code": "NATIVE_VALIDITY_FALSE",
+                "text": "提议附庸的原生合法性检查返回false。",
+                "source": "native_rule",
+                "complete": false
+              },
+              {
+                "code": "NATIVE_INITIATION_GATE_FALSE",
+                "text": "原生发起时序或待处理请求检查返回false。",
+                "source": "native_rule",
+                "complete": false
+              }
+            ],
+            "complete": true
+          },
+          "authorization": {
+            "status": "available",
+            "complete": true,
+            "reasons": [
+              {
+                "code": "NATIVE_VASSALIZATION_SUBMISSION_CAPABILITY_ACKNOWLEDGED",
+                "text": "安装确认允许桥接提交法国发起的附庸关系操作；本次目标是否合法由原生查询单独决定。",
+                "source": "installation_capability",
+                "complete": true
+              }
+            ]
+          },
+          "parameters": {
+            "requested": {},
+            "actual": null,
+            "candidates": null,
+            "complete": false
+          },
+          "costs": {
+            "status": "unknown",
+            "items": [],
+            "complete": false
+          },
+          "acceptance": {
+            "applicability": "applicable",
+            "prediction_available": false,
+            "native_total": null,
+            "unit": "unknown",
+            "scale_verified": false,
+            "predicted_response": "unknown",
+            "details_available": false,
+            "items": [],
+            "complete": false,
+            "reason_count": 0,
+            "items_truncated": false
+          },
+          "relationship_state": {
+            "vassal_active": false,
+            "complete": true
+          },
+          "resources": {
+            "diplomats": {
+              "native_requirement": true,
+              "available_count": 1,
+              "availability_verified": true,
+              "allocation_verified": false,
+              "source": "native_rule",
+              "complete": false
+            }
+          },
+          "native_diagnostic": {
+            "text": "§R- 想要附庸他国你必须 1) 和该国结盟 2) 拥有至少+190的关系 3) 目标国家必须处于和平状态。§!\n",
+            "source": "native_rule",
+            "complete": false,
+            "text_decoded": true,
+            "text_encoding_verified": false,
+            "truncated": false
+          },
+          "native_rule_components": {
+            "ui_action_selection": true,
+            "ui_enabled_gate_verified": true,
+            "common_action_gate": false,
+            "initiation_gate": false,
+            "specific_validity_query_called": true,
+            "executor_validity": false,
+            "complete": true,
+            "ui_selection_checked": true,
+            "native_visibility": true,
+            "ui_enabled_gate_checked": true,
+            "tooltip_gate": false,
+            "full_rules_complete": true
+          },
+          "family": "vassalization",
+          "vassal_active": false,
+          "vassal_state_verified": true,
+          "actor_is_overlord": false,
+          "actor_is_subject": false,
+          "subject_type": null,
+          "prestige_raw": -11643,
+          "cancel_prestige_delta_raw": -25000,
+          "cancel_prestige_effect_allowed": true,
+          "prestige_scale": 1000,
+          "cancel_prestige_cost_verified": true
+        },
+        "native": {
+          "event": "native_alliance_inspection",
+          "session_id": "37376-1dd639fff00a820",
+          "query_id": "inspect_fde8184db7c2499ab9c6500f8e62521d",
+          "action_id": "offer_vassalization",
+          "family": "vassalization",
+          "vassal_state_verified": true,
+          "vassal_active": false,
+          "actor_is_overlord": false,
+          "actor_is_subject": false,
+          "subject_type": null,
+          "prestige_raw": -11643,
+          "cancel_prestige_delta_raw": -25000,
+          "cancel_prestige_effect_allowed": true,
+          "prestige_scale": 1000,
+          "cancel_prestige_cost_verified": true,
+          "actor": "FRA",
+          "recipient": "PAP",
+          "phase": "initiate",
+          "date_raw": 56553384,
+          "ui_selection_checked": true,
+          "native_visibility": true,
+          "ui_enabled_gate_checked": true,
+          "common_action_gate": false,
+          "display_predicate": false,
+          "initiation_gate": false,
+          "tooltip_gate": false,
+          "validity_called": true,
+          "native_validity": false,
+          "native_diagnostic_hex": "a7522da010f36010818910449610b85e10d64e10fd5610604f12c55611899820312920108c5410e58b10fd5612d37510df762032292010e56210096710f3811211532b31393010847610735110fb7c2033292010ee7610076810fd5612b65212c556118998100459108e4e108c5410735e10b672100160100230a7210a",
+          "diagnostic_readable": true,
+          "diagnostic_truncated": false,
+          "diplomat_context_readable": true,
+          "diplomat_required": true,
+          "available_diplomat_count": 1,
+          "diplomat_assignment_verified": false,
+          "score_applicable": true,
+          "score_available": false,
+          "acceptance_predicate_available": false,
+          "native_would_accept": false,
+          "native_total_raw": 0,
+          "acceptance_threshold_raw": 1,
+          "reason_container_readable": false,
+          "reason_count": 0,
+          "reason_items_decoded": false,
+          "full_rules_complete": true,
+          "reasons_complete": false,
+          "submitted": false,
+          "frame_thread": 26536
+        },
+        "log_offset": 4296138,
+        "log_end": 4297868
+      },
+      "ORL": {
+        "public": {
+          "contract_version": 1,
+          "action_id": "offer_vassalization",
+          "native_identifier": "vassalization",
+          "actor": "FRA",
+          "recipient": "ORL",
+          "phase": "initiate",
+          "decision_country": null,
+          "decision_country_verified": false,
+          "requested_decision_country": "FRA",
+          "interface_support": {
+            "query": "partial_native_rules",
+            "execute": "native_vassalization_submission",
+            "complete": false
+          },
+          "session": {
+            "status": "ready",
+            "state_id": "3fae69d1e2b978d7468841ada69fef5966c5115b2b96e55dab502ef262e19bdb",
+            "date_raw": 56553384,
+            "reasons": [],
+            "complete": true
+          },
+          "visibility": {
+            "status": "hidden",
+            "complete": true
+          },
+          "legality": {
+            "status": "unavailable",
+            "reasons": [
+              {
+                "code": "NATIVE_COMMON_ACTION_GATE_FALSE",
+                "text": "原生通用动作条件检查返回false，尚未恢复具体失败条件。",
+                "source": "native_rule",
+                "complete": false
+              },
+              {
+                "code": "NATIVE_VALIDITY_FALSE",
+                "text": "提议附庸的原生合法性检查返回false。",
+                "source": "native_rule",
+                "complete": false
+              },
+              {
+                "code": "NATIVE_INITIATION_GATE_FALSE",
+                "text": "原生发起时序或待处理请求检查返回false。",
+                "source": "native_rule",
+                "complete": false
+              },
+              {
+                "code": "NATIVE_ACTION_NOT_VISIBLE",
+                "text": "原生外交列表在当前双方关系中不选择此动作变体。",
+                "source": "native_rule",
+                "complete": true
+              }
+            ],
+            "complete": true
+          },
+          "authorization": {
+            "status": "available",
+            "complete": true,
+            "reasons": [
+              {
+                "code": "NATIVE_VASSALIZATION_SUBMISSION_CAPABILITY_ACKNOWLEDGED",
+                "text": "安装确认允许桥接提交法国发起的附庸关系操作；本次目标是否合法由原生查询单独决定。",
+                "source": "installation_capability",
+                "complete": true
+              }
+            ]
+          },
+          "parameters": {
+            "requested": {},
+            "actual": null,
+            "candidates": null,
+            "complete": false
+          },
+          "costs": {
+            "status": "unknown",
+            "items": [],
+            "complete": false
+          },
+          "acceptance": {
+            "applicability": "applicable",
+            "prediction_available": false,
+            "native_total": null,
+            "unit": "unknown",
+            "scale_verified": false,
+            "predicted_response": "unknown",
+            "details_available": false,
+            "items": [],
+            "complete": false,
+            "reason_count": 0,
+            "items_truncated": false
+          },
+          "relationship_state": {
+            "vassal_active": true,
+            "complete": true
+          },
+          "resources": {
+            "diplomats": {
+              "native_requirement": true,
+              "available_count": 1,
+              "availability_verified": true,
+              "allocation_verified": false,
+              "source": "native_rule",
+              "complete": false
+            }
+          },
+          "native_diagnostic": {
+            "text": "§R- 是属国§!\n§R- 想要附庸他国你必须 1) 和该国结盟 2) 拥有至少+190的关系 3) 目标国家必须处于和平状态。§!\n",
+            "source": "native_rule",
+            "complete": false,
+            "text_decoded": true,
+            "text_encoding_verified": false,
+            "truncated": false
+          },
+          "native_rule_components": {
+            "ui_action_selection": false,
+            "ui_enabled_gate_verified": true,
+            "common_action_gate": false,
+            "initiation_gate": false,
+            "specific_validity_query_called": true,
+            "executor_validity": false,
+            "complete": true,
+            "ui_selection_checked": true,
+            "native_visibility": false,
+            "ui_enabled_gate_checked": true,
+            "tooltip_gate": false,
+            "full_rules_complete": true
+          },
+          "family": "vassalization",
+          "vassal_active": true,
+          "vassal_state_verified": true,
+          "actor_is_overlord": true,
+          "actor_is_subject": false,
+          "subject_type": "appanage",
+          "prestige_raw": -11643,
+          "cancel_prestige_delta_raw": -25000,
+          "cancel_prestige_effect_allowed": true,
+          "prestige_scale": 1000,
+          "cancel_prestige_cost_verified": true
+        },
+        "native": {
+          "event": "native_alliance_inspection",
+          "session_id": "37376-1dd639fff00a820",
+          "query_id": "inspect_27b0f942d5cf4ff38d5ec21f710f7049",
+          "action_id": "offer_vassalization",
+          "family": "vassalization",
+          "vassal_state_verified": true,
+          "vassal_active": true,
+          "actor_is_overlord": true,
+          "actor_is_subject": false,
+          "subject_type": "appanage",
+          "prestige_raw": -11643,
+          "cancel_prestige_delta_raw": -25000,
+          "cancel_prestige_effect_allowed": true,
+          "prestige_scale": 1000,
+          "cancel_prestige_cost_verified": true,
+          "actor": "FRA",
+          "recipient": "ORL",
+          "phase": "initiate",
+          "date_raw": 56553384,
+          "ui_selection_checked": true,
+          "native_visibility": false,
+          "ui_enabled_gate_checked": true,
+          "common_action_gate": false,
+          "display_predicate": false,
+          "initiation_gate": false,
+          "tooltip_gate": false,
+          "validity_called": true,
+          "native_validity": false,
+          "native_diagnostic_hex": "a7522d20113d66125e5310fd56a7210aa7522da010f36010818910449610b85e10d64e10fd5610604f12c55611899820312920108c5410e58b10fd5612d37510df762032292010e56210096710f3811211532b31393010847610735110fb7c2033292010ee7610076810fd5612b65212c556118998100459108e4e108c5410735e10b672100160100230a7210a",
+          "diagnostic_readable": true,
+          "diagnostic_truncated": false,
+          "diplomat_context_readable": true,
+          "diplomat_required": true,
+          "available_diplomat_count": 1,
+          "diplomat_assignment_verified": false,
+          "score_applicable": true,
+          "score_available": false,
+          "acceptance_predicate_available": false,
+          "native_would_accept": false,
+          "native_total_raw": 0,
+          "acceptance_threshold_raw": 1,
+          "reason_container_readable": false,
+          "reason_count": 0,
+          "reason_items_decoded": false,
+          "full_rules_complete": true,
+          "reasons_complete": false,
+          "submitted": false,
+          "frame_thread": 26536
+        },
+        "log_offset": 4297868,
+        "log_end": 4299463
+      }
+    },
+    "source_sha256": "2079790deafbeb43a1fcc9eeca0e5bb6adba0eb6f0d77fc8fbfdeb8093a7e8f6",
+    "source_contracts": {
+      "work/native/vassal-query.inc": "b5d9962463376bf9fdb81b46e4d2d5b673c24bf4157ea030cf860dd29ca6cf5d",
+      "work/native/alliance-query.inc": "ed245857d184a0221eca60c0e7b238d4179f4fc3e17f78a4ce2d7137b94458d4",
+      "bridge/diplomacy.py": "b0a9f423d4fab617a98f4fa864652e95e67e623674977414a49846b8cfb2e23e"
+    }
+  },
+  "captures": {
+    "PAP": {
+      "public": {
+        "contract_version": 1,
+        "action_id": "offer_vassalization",
+        "native_identifier": "vassalization",
+        "actor": "FRA",
+        "recipient": "PAP",
+        "phase": "initiate",
+        "decision_country": null,
+        "decision_country_verified": false,
+        "requested_decision_country": "FRA",
+        "interface_support": {
+          "query": "partial_native_rules",
+          "execute": "native_vassalization_submission",
+          "complete": false
+        },
+        "session": {
+          "status": "ready",
+          "state_id": "e7d35efcbb6ec3491c368a67ce533b2d02915b87be55226476d6a4dcfbf92330",
+          "date_raw": 56553384,
+          "reasons": [],
+          "complete": true
+        },
+        "visibility": {
+          "status": "visible",
+          "complete": true
+        },
+        "legality": {
+          "status": "unavailable",
+          "reasons": [
+            {
+              "code": "NATIVE_COMMON_ACTION_GATE_FALSE",
+              "text": "原生通用动作条件检查返回false，尚未恢复具体失败条件。",
+              "source": "native_rule",
+              "complete": false
+            },
+            {
+              "code": "NATIVE_VALIDITY_FALSE",
+              "text": "提议附庸的原生合法性检查返回false。",
+              "source": "native_rule",
+              "complete": false
+            },
+            {
+              "code": "NATIVE_INITIATION_GATE_FALSE",
+              "text": "原生发起时序或待处理请求检查返回false。",
+              "source": "native_rule",
+              "complete": false
+            }
+          ],
+          "complete": true
+        },
+        "authorization": {
+          "status": "available",
+          "complete": true,
+          "reasons": [
+            {
+              "code": "NATIVE_VASSALIZATION_SUBMISSION_CAPABILITY_ACKNOWLEDGED",
+              "text": "安装确认允许桥接提交法国发起的附庸关系操作；本次目标是否合法由原生查询单独决定。",
+              "source": "installation_capability",
+              "complete": true
+            }
+          ]
+        },
+        "parameters": {
+          "requested": {},
+          "actual": null,
+          "candidates": null,
+          "complete": false
+        },
+        "costs": {
+          "status": "unknown",
+          "items": [],
+          "complete": false
+        },
+        "acceptance": {
+          "applicability": "applicable",
+          "prediction_available": false,
+          "native_total": null,
+          "unit": "unknown",
+          "scale_verified": false,
+          "predicted_response": "unknown",
+          "details_available": false,
+          "items": [],
+          "complete": false,
+          "reason_count": 0,
+          "items_truncated": false
+        },
+        "relationship_state": {
+          "vassal_active": false,
+          "complete": true
+        },
+        "resources": {
+          "diplomats": {
+            "native_requirement": true,
+            "available_count": 1,
+            "availability_verified": true,
+            "allocation_verified": false,
+            "source": "native_rule",
+            "complete": false
+          }
+        },
+        "native_diagnostic": {
+          "text": "§R- 想要附庸他国你必须 1) 和该国结盟 2) 拥有至少+190的关系 3) 目标国家必须处于和平状态。§!\n",
+          "source": "native_rule",
+          "complete": false,
+          "text_decoded": true,
+          "text_encoding_verified": false,
+          "truncated": false
+        },
+        "native_rule_components": {
+          "ui_action_selection": true,
+          "ui_enabled_gate_verified": true,
+          "common_action_gate": false,
+          "initiation_gate": false,
+          "specific_validity_query_called": true,
+          "executor_validity": false,
+          "complete": true,
+          "ui_selection_checked": true,
+          "native_visibility": true,
+          "ui_enabled_gate_checked": true,
+          "tooltip_gate": false,
+          "full_rules_complete": true
+        },
+        "family": "vassalization",
+        "vassal_active": false,
+        "vassal_state_verified": true,
+        "actor_is_overlord": false,
+        "actor_is_subject": false,
+        "subject_type": null,
+        "prestige_raw": -11643,
+        "cancel_prestige_delta_raw": -25000,
+        "cancel_prestige_effect_allowed": true,
+        "prestige_scale": 1000,
+        "cancel_prestige_cost_verified": true
+      },
+      "native": {
+        "event": "native_alliance_inspection",
+        "session_id": "37376-1dd639fff00a820",
+        "query_id": "inspect_fde8184db7c2499ab9c6500f8e62521d",
+        "action_id": "offer_vassalization",
+        "family": "vassalization",
+        "vassal_state_verified": true,
+        "vassal_active": false,
+        "actor_is_overlord": false,
+        "actor_is_subject": false,
+        "subject_type": null,
+        "prestige_raw": -11643,
+        "cancel_prestige_delta_raw": -25000,
+        "cancel_prestige_effect_allowed": true,
+        "prestige_scale": 1000,
+        "cancel_prestige_cost_verified": true,
+        "actor": "FRA",
+        "recipient": "PAP",
+        "phase": "initiate",
+        "date_raw": 56553384,
+        "ui_selection_checked": true,
+        "native_visibility": true,
+        "ui_enabled_gate_checked": true,
+        "common_action_gate": false,
+        "display_predicate": false,
+        "initiation_gate": false,
+        "tooltip_gate": false,
+        "validity_called": true,
+        "native_validity": false,
+        "native_diagnostic_hex": "a7522da010f36010818910449610b85e10d64e10fd5610604f12c55611899820312920108c5410e58b10fd5612d37510df762032292010e56210096710f3811211532b31393010847610735110fb7c2033292010ee7610076810fd5612b65212c556118998100459108e4e108c5410735e10b672100160100230a7210a",
+        "diagnostic_readable": true,
+        "diagnostic_truncated": false,
+        "diplomat_context_readable": true,
+        "diplomat_required": true,
+        "available_diplomat_count": 1,
+        "diplomat_assignment_verified": false,
+        "score_applicable": true,
+        "score_available": false,
+        "acceptance_predicate_available": false,
+        "native_would_accept": false,
+        "native_total_raw": 0,
+        "acceptance_threshold_raw": 1,
+        "reason_container_readable": false,
+        "reason_count": 0,
+        "reason_items_decoded": false,
+        "full_rules_complete": true,
+        "reasons_complete": false,
+        "submitted": false,
+        "frame_thread": 26536
+      },
+      "sources": {
+        "public": {
+          "path": "work/runtime/information-country-relations-20261024-001/native-public-001/PAP-public.json",
+          "sha256": "714f7e4fa185b2955517b91263220b87be6feb9b36480e1cbade981bd0b2ffa8",
+          "bytes": 3840
+        },
+        "native": {
+          "path": "work/runtime/information-country-relations-20261024-001/native-public-001/PAP-native.json",
+          "sha256": "2d010b9ac309ae67b7d84dea00f2870dcb60760f57d6e5f9de2a21abaf84743a",
+          "bytes": 1801
+        }
+      }
+    },
+    "ORL": {
+      "public": {
+        "contract_version": 1,
+        "action_id": "offer_vassalization",
+        "native_identifier": "vassalization",
+        "actor": "FRA",
+        "recipient": "ORL",
+        "phase": "initiate",
+        "decision_country": null,
+        "decision_country_verified": false,
+        "requested_decision_country": "FRA",
+        "interface_support": {
+          "query": "partial_native_rules",
+          "execute": "native_vassalization_submission",
+          "complete": false
+        },
+        "session": {
+          "status": "ready",
+          "state_id": "3fae69d1e2b978d7468841ada69fef5966c5115b2b96e55dab502ef262e19bdb",
+          "date_raw": 56553384,
+          "reasons": [],
+          "complete": true
+        },
+        "visibility": {
+          "status": "hidden",
+          "complete": true
+        },
+        "legality": {
+          "status": "unavailable",
+          "reasons": [
+            {
+              "code": "NATIVE_COMMON_ACTION_GATE_FALSE",
+              "text": "原生通用动作条件检查返回false，尚未恢复具体失败条件。",
+              "source": "native_rule",
+              "complete": false
+            },
+            {
+              "code": "NATIVE_VALIDITY_FALSE",
+              "text": "提议附庸的原生合法性检查返回false。",
+              "source": "native_rule",
+              "complete": false
+            },
+            {
+              "code": "NATIVE_INITIATION_GATE_FALSE",
+              "text": "原生发起时序或待处理请求检查返回false。",
+              "source": "native_rule",
+              "complete": false
+            },
+            {
+              "code": "NATIVE_ACTION_NOT_VISIBLE",
+              "text": "原生外交列表在当前双方关系中不选择此动作变体。",
+              "source": "native_rule",
+              "complete": true
+            }
+          ],
+          "complete": true
+        },
+        "authorization": {
+          "status": "available",
+          "complete": true,
+          "reasons": [
+            {
+              "code": "NATIVE_VASSALIZATION_SUBMISSION_CAPABILITY_ACKNOWLEDGED",
+              "text": "安装确认允许桥接提交法国发起的附庸关系操作；本次目标是否合法由原生查询单独决定。",
+              "source": "installation_capability",
+              "complete": true
+            }
+          ]
+        },
+        "parameters": {
+          "requested": {},
+          "actual": null,
+          "candidates": null,
+          "complete": false
+        },
+        "costs": {
+          "status": "unknown",
+          "items": [],
+          "complete": false
+        },
+        "acceptance": {
+          "applicability": "applicable",
+          "prediction_available": false,
+          "native_total": null,
+          "unit": "unknown",
+          "scale_verified": false,
+          "predicted_response": "unknown",
+          "details_available": false,
+          "items": [],
+          "complete": false,
+          "reason_count": 0,
+          "items_truncated": false
+        },
+        "relationship_state": {
+          "vassal_active": true,
+          "complete": true
+        },
+        "resources": {
+          "diplomats": {
+            "native_requirement": true,
+            "available_count": 1,
+            "availability_verified": true,
+            "allocation_verified": false,
+            "source": "native_rule",
+            "complete": false
+          }
+        },
+        "native_diagnostic": {
+          "text": "§R- 是属国§!\n§R- 想要附庸他国你必须 1) 和该国结盟 2) 拥有至少+190的关系 3) 目标国家必须处于和平状态。§!\n",
+          "source": "native_rule",
+          "complete": false,
+          "text_decoded": true,
+          "text_encoding_verified": false,
+          "truncated": false
+        },
+        "native_rule_components": {
+          "ui_action_selection": false,
+          "ui_enabled_gate_verified": true,
+          "common_action_gate": false,
+          "initiation_gate": false,
+          "specific_validity_query_called": true,
+          "executor_validity": false,
+          "complete": true,
+          "ui_selection_checked": true,
+          "native_visibility": false,
+          "ui_enabled_gate_checked": true,
+          "tooltip_gate": false,
+          "full_rules_complete": true
+        },
+        "family": "vassalization",
+        "vassal_active": true,
+        "vassal_state_verified": true,
+        "actor_is_overlord": true,
+        "actor_is_subject": false,
+        "subject_type": "appanage",
+        "prestige_raw": -11643,
+        "cancel_prestige_delta_raw": -25000,
+        "cancel_prestige_effect_allowed": true,
+        "prestige_scale": 1000,
+        "cancel_prestige_cost_verified": true
+      },
+      "native": {
+        "event": "native_alliance_inspection",
+        "session_id": "37376-1dd639fff00a820",
+        "query_id": "inspect_27b0f942d5cf4ff38d5ec21f710f7049",
+        "action_id": "offer_vassalization",
+        "family": "vassalization",
+        "vassal_state_verified": true,
+        "vassal_active": true,
+        "actor_is_overlord": true,
+        "actor_is_subject": false,
+        "subject_type": "appanage",
+        "prestige_raw": -11643,
+        "cancel_prestige_delta_raw": -25000,
+        "cancel_prestige_effect_allowed": true,
+        "prestige_scale": 1000,
+        "cancel_prestige_cost_verified": true,
+        "actor": "FRA",
+        "recipient": "ORL",
+        "phase": "initiate",
+        "date_raw": 56553384,
+        "ui_selection_checked": true,
+        "native_visibility": false,
+        "ui_enabled_gate_checked": true,
+        "common_action_gate": false,
+        "display_predicate": false,
+        "initiation_gate": false,
+        "tooltip_gate": false,
+        "validity_called": true,
+        "native_validity": false,
+        "native_diagnostic_hex": "a7522d20113d66125e5310fd56a7210aa7522da010f36010818910449610b85e10d64e10fd5610604f12c55611899820312920108c5410e58b10fd5612d37510df762032292010e56210096710f3811211532b31393010847610735110fb7c2033292010ee7610076810fd5612b65212c556118998100459108e4e108c5410735e10b672100160100230a7210a",
+        "diagnostic_readable": true,
+        "diagnostic_truncated": false,
+        "diplomat_context_readable": true,
+        "diplomat_required": true,
+        "available_diplomat_count": 1,
+        "diplomat_assignment_verified": false,
+        "score_applicable": true,
+        "score_available": false,
+        "acceptance_predicate_available": false,
+        "native_would_accept": false,
+        "native_total_raw": 0,
+        "acceptance_threshold_raw": 1,
+        "reason_container_readable": false,
+        "reason_count": 0,
+        "reason_items_decoded": false,
+        "full_rules_complete": true,
+        "reasons_complete": false,
+        "submitted": false,
+        "frame_thread": 26536
+      },
+      "sources": {
+        "public": {
+          "path": "work/runtime/information-country-relations-20261024-001/native-public-001/ORL-public.json",
+          "sha256": "3857762a161071a05513fba72f630cb359524e0e9c511f0e4c19adab111f4273",
+          "bytes": 4078
+        },
+        "native": {
+          "path": "work/runtime/information-country-relations-20261024-001/native-public-001/ORL-native.json",
+          "sha256": "bcb7e649c595a2aa48abb0513abd73cfbf9cedb385e8158320920b2527e26a56",
+          "bytes": 1838
+        }
+      }
+    }
+  },
+  "control": {
+    "before": {
+      "pid": 37376,
+      "read_only": true,
+      "player_slot": 189,
+      "date_raw": 56553384,
+      "speed": 0,
+      "server": "0x22843222ce0",
+      "server_vtable_rva": "0x1cb8460",
+      "pause_getter_rva": "0x802500",
+      "pause_getter_bytes": "488b8118040000c3cccccccccccccccc0fb68188050000c3cccccccccccccccc",
+      "autosave_rva": "0x826b30",
+      "pause_object": "0x22897222da0",
+      "paused_flag": 1,
+      "pause_vector_begin": "0x0",
+      "pause_vector_end": "0x0"
+    },
+    "after": {
+      "pid": 37376,
+      "read_only": true,
+      "player_slot": 189,
+      "date_raw": 56553384,
+      "speed": 0,
+      "server": "0x22843222ce0",
+      "server_vtable_rva": "0x1cb8460",
+      "pause_getter_rva": "0x802500",
+      "pause_getter_bytes": "488b8118040000c3cccccccccccccccc0fb68188050000c3cccccccccccccccc",
+      "autosave_rva": "0x826b30",
+      "pause_object": "0x22897222da0",
+      "paused_flag": 1,
+      "pause_vector_begin": "0x0",
+      "pause_vector_end": "0x0"
+    },
+    "before_health": {
+      "status": "ready",
+      "state_id": "e7d35efcbb6ec3491c368a67ce533b2d02915b87be55226476d6a4dcfbf92330",
+      "date_raw": 56553384,
+      "reasons": [],
+      "complete": true
+    },
+    "after_health": {
+      "status": "ready",
+      "state_id": "3fae69d1e2b978d7468841ada69fef5966c5115b2b96e55dab502ef262e19bdb",
+      "date_raw": 56553384,
+      "reasons": [],
+      "complete": true
+    },
+    "sources": {
+      "before-control.json": {
+        "path": "work/runtime/information-country-relations-20261024-001/native-public-001/before-control.json",
+        "sha256": "801302511bb9797bc5081ba209b61d2fad1d5a0f18947fbd1a8fba1fb7bb5e2c",
+        "bytes": 450
+      },
+      "after-control.json": {
+        "path": "work/runtime/information-country-relations-20261024-001/native-public-001/after-control.json",
+        "sha256": "801302511bb9797bc5081ba209b61d2fad1d5a0f18947fbd1a8fba1fb7bb5e2c",
+        "bytes": 450
+      },
+      "before-health.json": {
+        "path": "work/runtime/information-country-relations-20261024-001/native-public-001/before-health.json",
+        "sha256": "5a42352c38c6d3c7c94998e6a4835a7488ce9f8b2bcda0a3a69c8d38e57d3f87",
+        "bytes": 174
+      },
+      "after-health.json": {
+        "path": "work/runtime/information-country-relations-20261024-001/native-public-001/after-health.json",
+        "sha256": "c7658d6b0dfc3811c5ab421390039f21ec773c3f93f15dbc6cc49e56c1be37f2",
+        "bytes": 174
+      }
+    }
+  },
+  "source_contracts": {
+    "work/native/vassal-query.inc": "b5d9962463376bf9fdb81b46e4d2d5b673c24bf4157ea030cf860dd29ca6cf5d",
+    "work/native/alliance-query.inc": "ed245857d184a0221eca60c0e7b238d4179f4fc3e17f78a4ce2d7137b94458d4",
+    "bridge/diplomacy.py": "b0a9f423d4fab617a98f4fa864652e95e67e623674977414a49846b8cfb2e23e"
+  }
+}

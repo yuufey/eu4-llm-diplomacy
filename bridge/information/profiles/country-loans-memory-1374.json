@@ -1,0 +1,151 @@
+{
+  "profile_id": "country-loans-memory-1374",
+  "profile_version": 1,
+  "game_version": "1.37.4",
+  "executable": {
+    "sha256": "b23fa0e1f698d31b01cdd1c3817a675805d8c6286cb66f9c231e6e2a42544d77",
+    "image_base": "0x140000000"
+  },
+  "source_evidence": [
+    {
+      "path": "work/runtime/information-loans-20261027-001/loans-source-001.json",
+      "sha256": "309e4e26895a5e74d6c2733b4e333f09aebdbdadd710d6ce90bb9f1d27463091",
+      "bytes": 18855,
+      "role": "batch-52 bounded country loan container and current record fields"
+    }
+  ],
+  "layout": {
+    "field_key": "loans",
+    "country_loans_offset": "0xde8",
+    "node_payload_offset": "0x0",
+    "node_next_offset": "0x10",
+    "loan_record_vtable_offset": "0x0",
+    "vtable_guard_entry_offset": "0x0",
+    "lender_fullref_offset": "0x20",
+    "interest_offset": "0x28",
+    "principal_offset": "0x2c",
+    "due_offset": "0x30",
+    "max_nodes": 64,
+    "read_budget_bytes": 16384,
+    "pointer_min": "0x10000",
+    "pointer_max": "0x7fffffffffff",
+    "image_rva_end": "0x25df8b4",
+    "vtable_rva_begin": "0x1b66000",
+    "vtable_rva_end": "0x1fafa00",
+    "code_rva_begin": "0x1000",
+    "code_rva_end": "0x1b65e00"
+  },
+  "static_property": {
+    "field_key": "loans",
+    "token_rva": "0x2082020",
+    "token_id": "0x28ad",
+    "country_writer_rva": "0x2df620",
+    "iterator_payload_helper_rva": "0x9a010",
+    "iterator_next_helper_rva": "0xc00c0",
+    "nested_serializer_rva": "0x707920",
+    "current_record_fields": {
+      "lender_fullref": "0x20",
+      "interest_raw": "0x28",
+      "principal_raw": "0x2c",
+      "due_raw": "0x30"
+    },
+    "image_sections": {
+      "text_rva_begin": "0x1000",
+      "text_rva_end": "0x1b65e00",
+      "rdata_rva_begin": "0x1b66000",
+      "rdata_rva_end": "0x1fafa00",
+      "image_rva_end": "0x25df8b4"
+    }
+  },
+  "semantics": {
+    "field": "loans",
+    "basis": "native_country_loan_records",
+    "value_origin": "copied_native_country_loan_records",
+    "unit": "loan_records",
+    "scale": 1,
+    "period": "current",
+    "complete": false,
+    "partial": true,
+    "principal_unit": "ducats",
+    "principal_scale": 1,
+    "interest_unit": "percent",
+    "interest_scale": 1000,
+    "due_unit": "engine_date_raw",
+    "due_scale": 1,
+    "lender_mapping": "raw_fullref_only_unresolved"
+  },
+  "code_guards": [
+    {
+      "name": "country_writer_container",
+      "rva": "0x2df631",
+      "rva_end_exclusive": "0x2df638",
+      "hex": "498b87e80d0000",
+      "sha256": "db4065efb98fd06fb4130586d8d34e1544a9d3d286753ca2c267e2cf7c89ac8a",
+      "aslr_invariant": true
+    },
+    {
+      "name": "country_writer_payload",
+      "rva": "0x2df650",
+      "rva_end_exclusive": "0x2df653",
+      "hex": "4c8b00",
+      "sha256": "75849b438f19958126b1f481317ca6c2e0efe2bb1e3313ba7cda5a9d4b2b1c85",
+      "aslr_invariant": true
+    },
+    {
+      "name": "loan_row_principal",
+      "rva": "0xeb158e",
+      "rva_end_exclusive": "0xeb1592",
+      "hex": "448b7a2c",
+      "sha256": "8701f7380b41c36aeb8c4df04ebfffadb4d66d015b010d844479aade52e08051",
+      "aslr_invariant": true
+    },
+    {
+      "name": "loan_row_interest",
+      "rva": "0xeb1592",
+      "rva_end_exclusive": "0xeb1595",
+      "hex": "8b7a28",
+      "sha256": "041862d9bdb80b23cf9543f0eb036f2613f9642535e38155e344ccbcc523d11c",
+      "aslr_invariant": true
+    },
+    {
+      "name": "loan_row_due",
+      "rva": "0xeb1595",
+      "rva_end_exclusive": "0xeb1598",
+      "hex": "8b4230",
+      "sha256": "d280676678c7b8c4202541693919b94706282f3fedde31e7b6b22cbddab0f419",
+      "aslr_invariant": true
+    },
+    {
+      "name": "loan_fullref_shift",
+      "rva": "0x2892ef",
+      "rva_end_exclusive": "0x2892f3",
+      "hex": "48c1e820",
+      "sha256": "08e1273ed1adf39948ab91c6467fb260dc4366189842a24365503a33ca406365",
+      "aslr_invariant": true
+    },
+    {
+      "name": "loan_iterator_next",
+      "rva": "0xc00c3",
+      "rva_end_exclusive": "0xc00c7",
+      "hex": "488b5010",
+      "sha256": "7179f8e455a2f9ee75c2ae5d72477da53723a0cceb6995b98fe52d35eea889a3",
+      "aslr_invariant": true
+    }
+  ],
+  "read_constraints": {
+    "guard_order": "all RVA-relative guards match before country+0xde8 traversal",
+    "node_shape": "current_node payload at +0x0 and next at +0x10; null terminates",
+    "vtable": "record vtable must lie in this build's .rdata RVA range and its first method must lie in the .text RVA range; exact loan RTTI/type identity remains unresolved",
+    "pre_reservation": "every read reserves its full size before invoking reader.read; failed reads consume the reservation",
+    "max_nodes": 64,
+    "failure": "profile/source mismatch, code mismatch, invalid pointer, vtable failure, cycle, limit, short read, or budget failure remains unknown"
+  },
+  "unknown_conditions": [
+    "Nested loan serialization at RVA 0x707920 is not decoded by this bounded child.",
+    "The +0x30 scalar is retained as signed raw engine date; epoch and duration semantics are unresolved.",
+    "The lender fullref is retained without guessing bank/foreign-country meaning or display name.",
+    "Amount-with-interest helper and cache refresh timing are outside this child; principal +0x2c is the closed whole-ducat field.",
+    "The parent owns process identity, country identity, two-pass comparison, lifecycle, and cleanup/retraction.",
+    "The structural vtable guard binds pointers to this executable image and .text/.rdata ranges; it does not prove a unique loan RTTI/type."
+  ]
+}

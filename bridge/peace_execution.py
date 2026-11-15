@@ -375,8 +375,6 @@ def normalize_peace_execution_parameters(
 
     if not isinstance(action_id, str) or action_id not in _SUPPORTED_ACTIONS:
         _fail("PEACE_EXECUTION_ACTION_INVALID")
-    if actor != "FRA":
-        _fail("PEACE_EXECUTION_ACTOR_INVALID")
     if (not isinstance(actor, str)
             or _COUNTRY_TAG_RE.fullmatch(actor) is None):
         _fail("PEACE_EXECUTION_ACTOR_INVALID")

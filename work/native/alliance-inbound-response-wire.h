@@ -231,7 +231,8 @@ inline bool valid_identifier(Field field) noexcept {
 inline bool valid_country(Field field) noexcept {
     if (!field.data || field.size!=3) return false;
     for (std::size_t index=0;index<3;++index)
-        if (field.data[index]<'A' || field.data[index]>'Z') return false;
+        if (!((field.data[index]>='A' && field.data[index]<='Z')
+            || (field.data[index]>='0' && field.data[index]<='9'))) return false;
     return true;
 }
 
@@ -316,7 +317,10 @@ inline ParseResult parse_fields(const char* bytes,std::size_t length,
     if (!copy_field(output.action,sizeof(output.action),fields[5])) return ParseResult{ParseError::invalid_action,5};
     if (!valid_country(fields[6]) || !copy_field(output.actor,sizeof(output.actor),fields[6]))
         return ParseResult{ParseError::invalid_actor,6};
-    if (!equals(fields[7],"FRA") || !copy_field(output.country,sizeof(output.country),fields[7]))
+    if (!valid_country(fields[7])
+        || (fields[6].size==fields[7].size
+            && std::memcmp(fields[6].data,fields[7].data,fields[6].size)==0)
+        || !copy_field(output.country,sizeof(output.country),fields[7]))
         return ParseResult{ParseError::invalid_decision_country,7};
     if ((!equals(fields[8],"accept") && !equals(fields[8],"reject"))
         || !copy_field(output.decision,sizeof(output.decision),fields[8]))
@@ -388,7 +392,10 @@ inline ParseResult parse_response_request(const char* bytes,std::size_t length,
 inline ContextResult validate_context(const InspectionRequest& request,
     const char* expected_session_id,std::uint64_t current_filetime,
     std::int32_t current_date) noexcept {
-    return detail::validate_context_impl(request,expected_session_id,current_filetime,current_date);
+    auto result=detail::validate_context_impl(request,expected_session_id,current_filetime,current_date);
+    if (result.error==ContextError::date_mismatch && current_date>=request.date_raw)
+        result.error=ContextError::ok;
+    return result;
 }
 
 inline ContextResult validate_context(const ResponseRequest& request,

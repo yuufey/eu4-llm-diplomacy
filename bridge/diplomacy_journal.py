@@ -157,6 +157,10 @@ class RequestConflictError(JournalError):
     """The request id is already registered with another payload."""
 
 
+class RequestPermissionError(JournalError):
+    """A request id is already associated with another caller or country."""
+
+
 class ContextMismatchError(JournalError):
     """An operation attempted to cross experiment or session boundaries."""
 
@@ -217,6 +221,21 @@ def _sha256(data: bytes) -> str:
 
 def _payload_fingerprint(payload_json: str) -> str:
     return _sha256(payload_json.encode("utf-8"))
+
+
+def _request_decision_country(payload: Any) -> str | None:
+    """Infer the country that owns a diplomatic request decision, if known."""
+
+    if not isinstance(payload, Mapping):
+        return None
+    phase = payload.get("phase")
+    if phase in ("initiate", "withdraw"):
+        country = payload.get("actor")
+    elif phase in ("accept", "reject"):
+        country = payload.get("recipient")
+    else:
+        return None
+    return country if isinstance(country, str) and country else None
 
 
 def _validate_text(value: Any, label: str) -> str:
@@ -336,6 +355,8 @@ class RequestRecord:
     last_evidence_type: str | None
     last_evidence_layer: str | None
     last_evidence_sha256: str | None
+    principal: str | None = None
+    decision_country: str | None = None
 
     @property
     def payload_fingerprint(self) -> str:
@@ -374,6 +395,8 @@ class RequestRecord:
             "last_evidence_type": self.last_evidence_type,
             "last_evidence_layer": self.last_evidence_layer,
             "last_evidence_sha256": self.last_evidence_sha256,
+            "principal": self.principal,
+            "decision_country": self.decision_country,
         }
 
 
@@ -497,6 +520,8 @@ class DurableJournal:
                 claimed_at TEXT,
                 submitted_at TEXT,
                 native_receipt_json TEXT,
+                principal TEXT,
+                decision_country TEXT,
                 PRIMARY KEY (experiment_id, session_id, request_id)
             )
             """
@@ -572,12 +597,14 @@ class DurableJournal:
                     experiment_id, session_id, request_id, payload_json,
                     payload_sha256, status, result_json, created_at,
                     updated_at, submission_id, submission_token, claimed_at,
-                    submitted_at, native_receipt_json
+                    submitted_at, native_receipt_json, principal,
+                    decision_country
                 )
                 SELECT experiment_id, session_id, request_id, payload_json,
                        payload_sha256, status, result_json, created_at,
                        updated_at, submission_id, submission_token, claimed_at,
-                       submitted_at, native_receipt_json
+                       submitted_at, native_receipt_json, principal,
+                       decision_country
                   FROM diplomacy_requests
                 """
             )
@@ -649,6 +676,8 @@ class DurableJournal:
                     claimed_at TEXT,
                     submitted_at TEXT,
                     native_receipt_json TEXT,
+                    principal TEXT,
+                    decision_country TEXT,
                     PRIMARY KEY (experiment_id, session_id, request_id)
                 );
 
@@ -687,6 +716,8 @@ class DurableJournal:
             for name, definition in (
                 ("claimed_at", "TEXT"),
                 ("native_receipt_json", "TEXT"),
+                ("principal", "TEXT"),
+                ("decision_country", "TEXT"),
             ):
                 if name not in columns:
                     self._connection.execute(
@@ -814,6 +845,8 @@ class DurableJournal:
             last_evidence_type=row["last_evidence_type"],
             last_evidence_layer=row["last_evidence_layer"],
             last_evidence_sha256=row["last_evidence_sha256"],
+            principal=row["principal"],
+            decision_country=row["decision_country"],
         )
 
     def _require_row(
@@ -838,6 +871,8 @@ class DurableJournal:
         *,
         experiment_id: str | None = None,
         session_id: str | None = None,
+        principal: str | None = None,
+        decision_country: str | None = None,
     ) -> RequestRecord:
         """Register a request, or return the existing identical registration.
 
@@ -846,6 +881,10 @@ class DurableJournal:
         ``RequestConflictError``.
         """
 
+        if principal is not None:
+            principal = _validate_text(principal, "principal")
+        if decision_country is not None:
+            decision_country = _validate_text(decision_country, "decision_country")
         experiment, session = self._context(experiment_id, session_id)
         request = _validate_text(request_id, "request_id")
         payload_json = _canonical_json(payload)
@@ -860,6 +899,38 @@ class DurableJournal:
                 (experiment, session, request),
             ).fetchone()
             if existing is not None:
+                # Check explicit ownership before comparing payload details so
+                # a caller cannot probe another principal's request by varying
+                # its payload.  NULL metadata marks a legacy/unclaimed record;
+                # it is deliberately never assigned to the first new caller.
+                for field, supplied in (
+                    ("principal", principal),
+                    ("decision_country", decision_country),
+                ):
+                    recorded = existing[field]
+                    if recorded is not None and supplied is not None and recorded != supplied:
+                        raise RequestPermissionError(
+                            f"request {request!r} is already bound to a different {field}"
+                        )
+
+                # Old records predate the explicit country binding.  For the
+                # action phases the request payload itself establishes which
+                # country made or receives the decision.  A metadata-aware
+                # caller must provide that country and match it; this validates
+                # access without claiming or rewriting the legacy row.
+                if (existing["decision_country"] is None
+                        and (principal is not None or decision_country is not None)):
+                    try:
+                        old_payload = json.loads(str(existing["payload_json"]))
+                    except (TypeError, ValueError):
+                        old_payload = None
+                    payload_country = _request_decision_country(old_payload)
+                    if (decision_country is None or payload_country is None
+                            or payload_country != decision_country):
+                        raise RequestPermissionError(
+                            f"request {request!r} has no verifiable legacy binding to "
+                            f"decision country {decision_country!r}"
+                        )
                 if existing["payload_sha256"] != fingerprint:
                     raise RequestConflictError(
                         f"request {request!r} already has payload fingerprint "
@@ -887,10 +958,14 @@ class DurableJournal:
                 """
                 INSERT INTO diplomacy_requests (
                     experiment_id, session_id, request_id, payload_json,
-                    payload_sha256, status, result_json, created_at, updated_at
-                ) VALUES (?, ?, ?, ?, ?, 'received', NULL, ?, ?)
+                    payload_sha256, status, result_json, created_at, updated_at,
+                    principal, decision_country
+                ) VALUES (?, ?, ?, ?, ?, 'received', NULL, ?, ?, ?, ?)
                 """,
-                (experiment, session, request, payload_json, fingerprint, now, now),
+                (
+                    experiment, session, request, payload_json, fingerprint,
+                    now, now, principal, decision_country,
+                ),
             )
             return self._record(self._require_row(connection, experiment, session, request))
 
@@ -1842,10 +1917,12 @@ class DurableJournal:
             payload_parameters.get("war_goal")
             if isinstance(payload_parameters, Mapping) else None
         )
-        if (payload_action != "declare_war" or payload_actor != "FRA"
+        if (payload_action != "declare_war"
+                or not isinstance(payload_actor, str)
+                or not re.fullmatch(r"[A-Z0-9]{3}", payload_actor)
                 or not isinstance(payload_recipient, str)
-                or not re.fullmatch(r"[A-Z]{3}", payload_recipient)
-                or payload_recipient == "FRA"
+                or not re.fullmatch(r"[A-Z0-9]{3}", payload_recipient)
+                or payload_recipient == payload_actor
                 or payload_phase != "initiate"
                 or not isinstance(payload_parameters, Mapping)
                 or not isinstance(payload_war_goal, Mapping)):
@@ -1865,7 +1942,7 @@ class DurableJournal:
         if (result.get("request_id") != request
                 or native_receipt.get("request_id") != request
                 or not same("action_id", "declare_war")
-                or not same("actor", "FRA")
+                or not same("actor", payload_actor)
                 or not same("recipient", payload_recipient)
                 or not same("phase", "initiate")
                 or result.get("casus_belli") != payload_parameters.get("casus_belli")
@@ -2301,6 +2378,7 @@ __all__ = [
     "SubmissionClaimRequired",
     "SubmissionBusyError",
     "RequestConflictError",
+    "RequestPermissionError",
     "RequestRecord",
     "UnknownRequestError",
     "VALID_STATUSES",

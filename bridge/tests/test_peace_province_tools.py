@@ -495,7 +495,7 @@ class PeaceProvinceToolsTests(unittest.TestCase):
             assert_no_private_keys(projected)
 
     @staticmethod
-    def _r41e_installation(root: Path, *, evaluation_ack: bool) -> Path:
+    def _r41e_installation(root: Path, *, evaluation_ack: bool, submission_ack: bool = False) -> Path:
         session_id = "r41e-province-session"
         installation = root / "installation.json"
         installation.write_text(json.dumps({
@@ -514,15 +514,18 @@ class PeaceProvinceToolsTests(unittest.TestCase):
         }
         if evaluation_ack:
             installed["native_peace_offer_evaluation_query"] = True
+        if submission_ack:
+            installed["native_peace_submission"] = True
         (root / "control-probe.jsonl").write_text(
             json.dumps(installed) + "\n", encoding="utf-8")
         return installation
 
-    def _run_r41e_public_query(self, event: dict, *, evaluation_ack: bool) -> dict:
+    def _run_r41e_public_query(self, event: dict, *, evaluation_ack: bool,
+                              submission_ack: bool = False) -> dict:
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)
             installation = self._r41e_installation(
-                root, evaluation_ack=evaluation_ack)
+                root, evaluation_ack=evaluation_ack, submission_ack=submission_ack)
             session = ObserverSession(installation, root / "eu4.exe")
             request = root / "diplomacy-query.request"
             log = root / "control-probe.jsonl"
@@ -569,7 +572,7 @@ class PeaceProvinceToolsTests(unittest.TestCase):
                     "action_id": "cede_province",
                     "province_ids": list(native["requested_province_ids"]),
                     "beneficiary": native["requested_beneficiary"],
-                }]}}
+                }] if native["requested_province_ids"] else []}}
             journal = DurableJournal(":memory:", "r41e-province",
                                      session.session_id)
             try:
@@ -585,6 +588,16 @@ class PeaceProvinceToolsTests(unittest.TestCase):
             self.assertFalse(thread.is_alive())
             self.assertEqual([], errors)
             return result
+
+    def test_province_candidate_discovery_survives_submission_ack(self):
+        with REAL_R41E.open(encoding="utf-8") as stream:
+            fixture = json.load(stream)
+        event = next(row["event"] for row in fixture["events"]
+                     if not row["event"]["native_provinces"]["requested_province_ids"])
+        result = self._run_r41e_public_query(event, evaluation_ack=True, submission_ack=True)
+        self.assertEqual("native_peace_province_offer_inspection", result["interface_support"]["query"])
+        self.assertIsInstance(result["parameters"]["candidates"], list)
+        self.assertGreater(len(result["parameters"]["candidates"]), 0)
 
     def test_r41e_real_inspections_keep_persistent_selection_and_evaluation(self):
         with REAL_R41E.open(encoding="utf-8") as stream:

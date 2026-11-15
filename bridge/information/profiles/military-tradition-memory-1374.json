@@ -1,0 +1,112 @@
+{
+  "profile_id": "military-tradition-memory-1374",
+  "profile_version": 1,
+  "game_version": "1.37.4",
+  "executable": {
+    "sha256": "b23fa0e1f698d31b01cdd1c3817a675805d8c6286cb66f9c231e6e2a42544d77",
+    "image_base": "0x140000000"
+  },
+  "source_evidence": [
+    {
+      "path": "work/runtime/information-military-quality-20261027-001/tradition-source-002.json",
+      "sha256": "fac0aa3393c5e23d1866a584f3ae9041da441d81667339ad60bab643f811776a",
+      "bytes": 11697,
+      "role": "direct country getter, key registration and static property/vtable evidence"
+    },
+    {
+      "path": "work/runtime/information-military-quality-20261027-001/tradition-source-004.json",
+      "sha256": "df63aa6650d1d39e94f165ebd3b9f938cad1784eb0971a4360e30ab97446e1d1",
+      "bytes": 14767,
+      "role": "bounded UI selector and explicit decimal scale formatter evidence"
+    },
+    {
+      "path": "work/runtime/information-military-quality-20261027-001/tradition-source-005.json",
+      "sha256": "f0bb93551e05ea8b75929613431e301a7c6d0d193ee47476575399619c8a480a",
+      "bytes": 6683,
+      "role": "bounded serializer raw-width and no-hidden-scale evidence"
+    }
+  ],
+  "layout": {
+    "field_key": "army_tradition",
+    "country_army_tradition_offset": "0xe40",
+    "value_width": 4,
+    "value_signed": true,
+    "read_budget_bytes": 4096
+  },
+  "static_property": {
+    "field_key": "army_tradition",
+    "key": "army_tradition",
+    "property_object_rva": "0x1ca0240",
+    "vtable_slot_offset": "0x10",
+    "getter_rva": "0x6e01b0",
+    "country_offset": "0xe40",
+    "formatter_wrapper_rva": "0x4109c0",
+    "formatter_selector": "0x56",
+    "formatter_scale": 1000,
+    "runtime_vtable_pointer_guarded": false
+  },
+  "semantics": {
+    "field": "army_tradition",
+    "basis": "native_country_army_tradition_cache",
+    "value_origin": "copied_native_country_army_tradition_cache",
+    "unit": "army_tradition",
+    "scale": 1000,
+    "period": "current",
+    "complete": true,
+    "raw_encoding": "signed little-endian int32 copied from country+0xe40; raw_hex preserves four bytes"
+  },
+  "code_guards": [
+    {
+      "name": "army_tradition_key_registration",
+      "rva": "0x6a80ba",
+      "rva_end_exclusive": "0x6a80f0",
+      "hex": "488d15b70b6001488d8d30050000e843d09eff488d056c815f0148898550050000488d85500500004889858805000048899d90050000",
+      "sha256": "378657f8fbdca4ce5d2290fbb03e7639760427a0038282938b47c7f8463844d5",
+      "aslr_invariant": true
+    },
+    {
+      "name": "army_tradition_getter",
+      "rva": "0x6e01b0",
+      "rva_end_exclusive": "0x6e01bd",
+      "hex": "418b80400e00008902488bc2c3",
+      "sha256": "a7e58a591fbbb66be368ce70f1522d768d853e98f8f5a6109078e1260e984ecb",
+      "aslr_invariant": true
+    },
+    {
+      "name": "formatter_selector_e40",
+      "rva": "0x41048c",
+      "rva_end_exclusive": "0x4104a7",
+      "hex": "b9400e0000ba440e000083fe560f45ca48631419486300480fafd0",
+      "sha256": "f329dd63a34a232e1565dc428012401e4a4a14610f9b71192ebadf8aec020b99",
+      "aslr_invariant": true
+    },
+    {
+      "name": "formatter_wrapper",
+      "rva": "0x4109c0",
+      "rva_end_exclusive": "0x4109e6",
+      "hex": "40534883ec3041b9580000004c89442420488bda458d41fee843faffff488bc34883c4305bc3",
+      "sha256": "c6f4cb3ea416969923ba5e29247c1c3a08fb1f683f024512bc6da4b6810f3ce2",
+      "aslr_invariant": true
+    },
+    {
+      "name": "formatter_scale_1000",
+      "rva": "0x4106d8",
+      "rva_end_exclusive": "0x4106ea",
+      "hex": "4169c6e80300002bf08d8ee8030000488bd3",
+      "sha256": "a0cbe2c03ff5963abfa6ce130305b8c938dcf224907ce1071fb8621fa441700e",
+      "aslr_invariant": true
+    }
+  ],
+  "read_constraints": {
+    "pointer_min": "0x10000",
+    "pointer_max": "0x7fffffffffff",
+    "cache": "one bounded signed little-endian DWORD at country+0xe40",
+    "guard_order": "all RVA-relative code guards must match before the country cache read",
+    "runtime_vtable": "static property/vtable RVA is provenance only; no ASLR materialized vtable pointer is compared",
+    "failure": "profile/source mismatch, guard mismatch, invalid pointer, short read, or budget failure remains unknown"
+  },
+  "unknown_conditions": [
+    "This child copies the current country cache and does not claim UI freshness beyond the pinned static formatter evidence.",
+    "The parent owns FRA identity, process lifetime, double-pass comparison, and cleanup/retraction."
+  ]
+}

@@ -1,0 +1,1310 @@
+{
+  "provenance": {
+    "mode": "recorded",
+    "original_mode": "live",
+    "original_report_sha256": "e10b38412d10dff67033fdfe03479f0e3c6a33256da27d32d79dfdde970b1334",
+    "scope": "FRA mission fields only; other countries and table census omitted"
+  },
+  "original_context": {
+    "mode": "live",
+    "status": "ready",
+    "observer": "FRA",
+    "session_id": "37376-1dd639fff00a820",
+    "game_date": 56553384,
+    "game_version": "1.37.4",
+    "game_sha256": "b23fa0e1f698d31b01cdd1c3817a675805d8c6286cb66f9c231e6e2a42544d77"
+  },
+  "native_capture": {
+    "probe": "information-missions-runtime",
+    "probe_version": 1,
+    "probe_script_sha256": "6294cb227f92151f4927a7596a0d2b5bd6f776f793e341f7493c9be5b0e352c3",
+    "read_only": true,
+    "evidence_kind": "pure_runtime_observation_not_static_evidence",
+    "target_build": {
+      "version": "1.37.4",
+      "expected_exe_sha256": "b23fa0e1f698d31b01cdd1c3817a675805d8c6286cb66f9c231e6e2a42544d77",
+      "database_rva": "0x233d8b0",
+      "game_rva": "0x233fe58",
+      "expected_mission_vtable_rva": "0x1c573c8",
+      "expected_mission_thunk_rva": "0xd2f280",
+      "expected_mission_body_rva": "0x445570"
+    },
+    "static_contract_guard": {
+      "status": "observed",
+      "evidence_kind": "ordinary_file_analysis_not_REA_Evidence",
+      "files": [
+        "C:\\Users\\wangyufei\\Documents\\ChatGPT\\欧陆风云4\\work\\runtime\\information-missions-20261024-001\\mission-serialization.json",
+        "C:\\Users\\wangyufei\\Documents\\ChatGPT\\欧陆风云4\\work\\runtime\\information-missions-20261024-001\\mission-writer-boundary.json",
+        "C:\\Users\\wangyufei\\Documents\\ChatGPT\\欧陆风云4\\work\\runtime\\information-missions-20261024-001\\live-writer-thunk.json"
+      ],
+      "file_sha256": {
+        "C:\\Users\\wangyufei\\Documents\\ChatGPT\\欧陆风云4\\work\\runtime\\information-missions-20261024-001\\mission-serialization.json": "77cb041351bbf1d0624e10aa93db6f0ae5a5f0ca77b85cf4f98a7c8e0e0088c0",
+        "C:\\Users\\wangyufei\\Documents\\ChatGPT\\欧陆风云4\\work\\runtime\\information-missions-20261024-001\\mission-writer-boundary.json": "2a05a5d385b61b589247034423387b4632c99170741a8160d436ee8421fc7f82",
+        "C:\\Users\\wangyufei\\Documents\\ChatGPT\\欧陆风云4\\work\\runtime\\information-missions-20261024-001\\live-writer-thunk.json": "83e0736cb1fa175a98334f43c14d5a85c86dacffe132417b2f41c4462f5b4047"
+      },
+      "checks": {
+        "game_sha256": true,
+        "evidence_kind": true,
+        "country_missions_embedded_lea": true,
+        "country_missions_wrapper": true,
+        "slot_array_plus_18": true,
+        "slot_count_plus_24": true,
+        "root_array_plus_8": true,
+        "root_count_plus_14": true,
+        "definition_name_plus_10": true,
+        "writer_thunk_prefix": true,
+        "writer_thunk_open_call": true,
+        "writer_thunk_indirect_plus_10": true,
+        "writer_thunk_close_jump": true
+      },
+      "unknown_conditions": [],
+      "raw_instruction_records": {
+        "0x2e10fe": {
+          "rva": "0x2e10fe",
+          "bytes": "4d8d87d8990000",
+          "mnemonic": "lea",
+          "operands": "r8,[r15+0x99d8]"
+        },
+        "0x1707948": {
+          "rva": "0x1707948",
+          "bytes": "48ff6008",
+          "mnemonic": "rex.W",
+          "operands": "jmp QWORD PTR [rax+0x8]"
+        },
+        "0x44557e": {
+          "rva": "0x44557e",
+          "bytes": "4c8b7118",
+          "mnemonic": "mov",
+          "operands": "r14,QWORD PTR [rcx+0x18]"
+        },
+        "0x445585": {
+          "rva": "0x445585",
+          "bytes": "48634124",
+          "mnemonic": "movsxd",
+          "operands": "rax,DWORD PTR [rcx+0x24]"
+        },
+        "0x445675": {
+          "rva": "0x445675",
+          "bytes": "498b5e08",
+          "mnemonic": "mov",
+          "operands": "rbx,QWORD PTR [r14+0x8]"
+        },
+        "0x445679": {
+          "rva": "0x445679",
+          "bytes": "49634614",
+          "mnemonic": "movsxd",
+          "operands": "rax,DWORD PTR [r14+0x14]"
+        },
+        "0x445693": {
+          "rva": "0x445693",
+          "bytes": "4883c210",
+          "mnemonic": "add",
+          "operands": "rdx,0x10"
+        },
+        "0xd2f280": {
+          "rva": "0xd2f280",
+          "bytes": "48895c2408",
+          "mnemonic": "mov",
+          "operands": "QWORD PTR [rsp+0x8],rbx"
+        },
+        "0xd2f293": {
+          "rva": "0xd2f293",
+          "bytes": "e8e8939d00",
+          "mnemonic": "call",
+          "operands": "0x141708680"
+        },
+        "0xd2f2a1": {
+          "rva": "0xd2f2a1",
+          "bytes": "ff5010",
+          "mnemonic": "call",
+          "operands": "QWORD PTR [rax+0x10]"
+        },
+        "0xd2f2b1": {
+          "rva": "0xd2f2b1",
+          "bytes": "e95a949d00",
+          "mnemonic": "jmp",
+          "operands": "0x141708710"
+        }
+      }
+    },
+    "request": {
+      "installation": "work\\runtime\\diplomacy-observer-20261024-information-a\\installation.json",
+      "country": "FRA",
+      "include_completed": true
+    },
+    "access": {
+      "open_process_mask": "QUERY_INFORMATION|VM_READ",
+      "open_process_mask_hex": "0x410",
+      "rpm_total_limit": 524288,
+      "rpm_single_read_limit": 65536,
+      "rpm_bytes_requested": 11164,
+      "rpm_calls": 618,
+      "slots_limit": 64,
+      "roots_per_slot_limit": 128,
+      "completed_nodes_limit": 4096,
+      "ascii_root_length_limit": 256,
+      "native_game_calls": false,
+      "target_memory_writes": false,
+      "dll_injection": false,
+      "private_heap_scan": false,
+      "ui_control": false,
+      "date_advance": false,
+      "save_or_reload": false
+    },
+    "identity": {
+      "installation_path": "work\\runtime\\diplomacy-observer-20261024-information-a\\installation.json",
+      "installation_pid": 37376,
+      "installation_creation_filetime": 134373102720165920,
+      "installation_session_id": "37376-1dd639fff00a820",
+      "process_path": "D:\\Downloads\\Europa Universalis IV（1.37.4）\\Europa Universalis IV\\eu4.exe",
+      "process_path_sha256": "b23fa0e1f698d31b01cdd1c3817a675805d8c6286cb66f9c231e6e2a42544d77",
+      "process_path_sha256_matches_expected": true,
+      "process_creation_filetime": 134373102720165920,
+      "process_creation_utc": "2026-10-24T10:11:12.016592+00:00",
+      "process_creation_matches_installation": true,
+      "module_path": "D:\\Downloads\\Europa Universalis IV（1.37.4）\\Europa Universalis IV\\eu4.exe",
+      "module_path_matches_process": true,
+      "binding_verified": true
+    },
+    "doublepass": {
+      "performed": true,
+      "consistent": true,
+      "mismatches": []
+    },
+    "status": "observed",
+    "before": {
+      "game_date": {
+        "address": {
+          "va": "0x22800cdf240",
+          "rva": null,
+          "rva_identity": "runtime_va_or_heap"
+        },
+        "field_offset": "0x1dd0",
+        "raw_hex": "a8ef5e03",
+        "raw": 56553384
+      },
+      "mission_contract": {
+        "object": {
+          "va": "0x22807042148",
+          "rva": null,
+          "rva_identity": "runtime_va_or_heap"
+        },
+        "vtable": {
+          "address": {
+            "va": "0x22807042148",
+            "rva": null,
+            "rva_identity": "runtime_va_or_heap"
+          },
+          "raw_hex": "c873a5f9f67f0000",
+          "value": {
+            "va": "0x7ff6f9a573c8",
+            "rva": "0x1c573c8",
+            "rva_identity": "module_relative_candidate"
+          },
+          "observed_rva": "0x1c573c8"
+        },
+        "vtable_plus_8": {
+          "address": {
+            "va": "0x7ff6f9a573d0",
+            "rva": "0x1c573d0",
+            "rva_identity": "module_relative_candidate"
+          },
+          "field_offset": "0x8",
+          "raw_hex": "80f2b2f8f67f0000",
+          "value": {
+            "va": "0x7ff6f8b2f280",
+            "rva": "0xd2f280",
+            "rva_identity": "module_relative_candidate"
+          },
+          "observed_rva": "0xd2f280"
+        },
+        "vtable_plus_10": {
+          "address": {
+            "va": "0x7ff6f9a573d8",
+            "rva": "0x1c573d8",
+            "rva_identity": "module_relative_candidate"
+          },
+          "field_offset": "0x10",
+          "raw_hex": "705524f8f67f0000",
+          "value": {
+            "va": "0x7ff6f8245570",
+            "rva": "0x445570",
+            "rva_identity": "module_relative_candidate"
+          },
+          "observed_rva": "0x445570"
+        },
+        "expected_chain": {
+          "vtable_rva": "0x1c573c8",
+          "vtable_plus_8_rva": "0xd2f280",
+          "vtable_plus_10_rva": "0x445570"
+        },
+        "chain_matches": {
+          "vtable_rva": true,
+          "vtable_plus_8_rva": true,
+          "vtable_plus_10_rva": true
+        },
+        "status": "observed",
+        "raw_recorded_before_stop": true
+      },
+      "missions": {
+        "status": "observed",
+        "mission_object": {
+          "va": "0x22807042148",
+          "rva": null,
+          "rva_identity": "runtime_va_or_heap"
+        },
+        "slot_array": {
+          "va": "0x22844d280c0",
+          "rva": null,
+          "rva_identity": "runtime_va_or_heap"
+        },
+        "slot_count": 5,
+        "slot_header_hex": "c873a5f9f67f00006501000000000000606ca5f9f67f0000c080d244280200000800000005000000",
+        "slots": [
+          {
+            "slot_index": 0,
+            "address": {
+              "va": "0x22844d280c0",
+              "rva": null,
+              "rva_identity": "runtime_va_or_heap"
+            },
+            "raw_hex": "4883a3f9f67f0000e0b7ad61280200000300000003000000",
+            "stride": 24,
+            "root_array": {
+              "va": "0x22861adb7e0",
+              "rva": null,
+              "rva_identity": "runtime_va_or_heap"
+            },
+            "root_array_field_offset": "0x8",
+            "root_count": 3,
+            "root_count_field_offset": "0x14",
+            "root_array_raw_hex": "50d05e2e2802000050e55e2e2802000070c85e2e28020000",
+            "roots": [
+              {
+                "slot_index": 0,
+                "root_index": 0,
+                "pointer_raw_hex": "50d05e2e28020000",
+                "definition": {
+                  "va": "0x2282e5ed050",
+                  "rva": null,
+                  "rva_identity": "runtime_va_or_heap"
+                },
+                "definition_name": {
+                  "status": "observed",
+                  "complete": true,
+                  "address": {
+                    "va": "0x2282e5ed060",
+                    "rva": null,
+                    "rva_identity": "runtime_va_or_heap"
+                  },
+                  "header_hex": "401ec53728020000000000000000000011000000000000001f00000000000000",
+                  "length": 17,
+                  "length_offset": "0x10",
+                  "capacity": 31,
+                  "capacity_offset": "0x18",
+                  "storage": "heap",
+                  "heap_pointer": {
+                    "va": "0x22837c51e40",
+                    "rva": null,
+                    "rva_identity": "runtime_va_or_heap"
+                  },
+                  "payload_hex": "6672656e63685f6d697373696f6e735f3100",
+                  "nul_terminator_observed": true,
+                  "text": "french_missions_1",
+                  "unknown_reason": null,
+                  "read_label": "slot[0].root[0]"
+                },
+                "status": "observed",
+                "definition_name_address": {
+                  "va": "0x2282e5ed060",
+                  "rva": null,
+                  "rva_identity": "runtime_va_or_heap"
+                },
+                "definition_name_field_offset": "0x10"
+              },
+              {
+                "slot_index": 0,
+                "root_index": 1,
+                "pointer_raw_hex": "50e55e2e28020000",
+                "definition": {
+                  "va": "0x2282e5ee550",
+                  "rva": null,
+                  "rva_identity": "runtime_va_or_heap"
+                },
+                "definition_name": {
+                  "status": "observed",
+                  "complete": true,
+                  "address": {
+                    "va": "0x2282e5ee560",
+                    "rva": null,
+                    "rva_identity": "runtime_va_or_heap"
+                  },
+                  "header_hex": "202cc5372802000000000000000000001b000000000000001f00000000000000",
+                  "length": 27,
+                  "length_offset": "0x10",
+                  "capacity": 31,
+                  "capacity_offset": "0x18",
+                  "storage": "heap",
+                  "heap_pointer": {
+                    "va": "0x22837c52c20",
+                    "rva": null,
+                    "rva_identity": "runtime_va_or_heap"
+                  },
+                  "payload_hex": "6672656e63685f6d697373696f6e735f315f626c616e6b5f68726500",
+                  "nul_terminator_observed": true,
+                  "text": "french_missions_1_blank_hre",
+                  "unknown_reason": null,
+                  "read_label": "slot[0].root[1]"
+                },
+                "status": "observed",
+                "definition_name_address": {
+                  "va": "0x2282e5ee560",
+                  "rva": null,
+                  "rva_identity": "runtime_va_or_heap"
+                },
+                "definition_name_field_offset": "0x10"
+              },
+              {
+                "slot_index": 0,
+                "root_index": 2,
+                "pointer_raw_hex": "70c85e2e28020000",
+                "definition": {
+                  "va": "0x2282e5ec870",
+                  "rva": null,
+                  "rva_identity": "runtime_va_or_heap"
+                },
+                "definition_name": {
+                  "status": "observed",
+                  "complete": true,
+                  "address": {
+                    "va": "0x2282e5ec880",
+                    "rva": null,
+                    "rva_identity": "runtime_va_or_heap"
+                  },
+                  "header_hex": "f0db7b3728020000000000000000000020000000000000002f00000000000000",
+                  "length": 32,
+                  "length_offset": "0x10",
+                  "capacity": 47,
+                  "capacity_offset": "0x18",
+                  "storage": "heap",
+                  "heap_pointer": {
+                    "va": "0x228377bdbf0",
+                    "rva": null,
+                    "rva_identity": "runtime_va_or_heap"
+                  },
+                  "payload_hex": "6672656e63685f6d697373696f6e735f315f436f6e74696e756174696f6e5f6100",
+                  "nul_terminator_observed": true,
+                  "text": "french_missions_1_Continuation_a",
+                  "unknown_reason": null,
+                  "read_label": "slot[0].root[2]"
+                },
+                "status": "observed",
+                "definition_name_address": {
+                  "va": "0x2282e5ec880",
+                  "rva": null,
+                  "rva_identity": "runtime_va_or_heap"
+                },
+                "definition_name_field_offset": "0x10"
+              }
+            ],
+            "status": "observed"
+          },
+          {
+            "slot_index": 1,
+            "address": {
+              "va": "0x22844d280d8",
+              "rva": null,
+              "rva_identity": "runtime_va_or_heap"
+            },
+            "raw_hex": "4883a3f9f67f000020b8ad61280200000300000003000000",
+            "stride": 24,
+            "root_array": {
+              "va": "0x22861adb820",
+              "rva": null,
+              "rva_identity": "runtime_va_or_heap"
+            },
+            "root_array_field_offset": "0x8",
+            "root_count": 3,
+            "root_count_field_offset": "0x14",
+            "root_array_raw_hex": "c0051d372802000090111d3728020000101c1d3728020000",
+            "roots": [
+              {
+                "slot_index": 1,
+                "root_index": 0,
+                "pointer_raw_hex": "c0051d3728020000",
+                "definition": {
+                  "va": "0x228371d05c0",
+                  "rva": null,
+                  "rva_identity": "runtime_va_or_heap"
+                },
+                "definition_name": {
+                  "status": "observed",
+                  "complete": true,
+                  "address": {
+                    "va": "0x228371d05d0",
+                    "rva": null,
+                    "rva_identity": "runtime_va_or_heap"
+                  },
+                  "header_hex": "103cc53728020000000000000000000011000000000000001f00000000000000",
+                  "length": 17,
+                  "length_offset": "0x10",
+                  "capacity": 31,
+                  "capacity_offset": "0x18",
+                  "storage": "heap",
+                  "heap_pointer": {
+                    "va": "0x22837c53c10",
+                    "rva": null,
+                    "rva_identity": "runtime_va_or_heap"
+                  },
+                  "payload_hex": "6672656e63685f6d697373696f6e735f3200",
+                  "nul_terminator_observed": true,
+                  "text": "french_missions_2",
+                  "unknown_reason": null,
+                  "read_label": "slot[1].root[0]"
+                },
+                "status": "observed",
+                "definition_name_address": {
+                  "va": "0x228371d05d0",
+                  "rva": null,
+                  "rva_identity": "runtime_va_or_heap"
+                },
+                "definition_name_field_offset": "0x10"
+              },
+              {
+                "slot_index": 1,
+                "root_index": 1,
+                "pointer_raw_hex": "90111d3728020000",
+                "definition": {
+                  "va": "0x228371d1190",
+                  "rva": null,
+                  "rva_identity": "runtime_va_or_heap"
+                },
+                "definition_name": {
+                  "status": "observed",
+                  "complete": true,
+                  "address": {
+                    "va": "0x228371d11a0",
+                    "rva": null,
+                    "rva_identity": "runtime_va_or_heap"
+                  },
+                  "header_hex": "e03ec5372802000000000000000000001b000000000000001f00000000000000",
+                  "length": 27,
+                  "length_offset": "0x10",
+                  "capacity": 31,
+                  "capacity_offset": "0x18",
+                  "storage": "heap",
+                  "heap_pointer": {
+                    "va": "0x22837c53ee0",
+                    "rva": null,
+                    "rva_identity": "runtime_va_or_heap"
+                  },
+                  "payload_hex": "6672656e63685f6d697373696f6e735f325f626c616e6b5f68726500",
+                  "nul_terminator_observed": true,
+                  "text": "french_missions_2_blank_hre",
+                  "unknown_reason": null,
+                  "read_label": "slot[1].root[1]"
+                },
+                "status": "observed",
+                "definition_name_address": {
+                  "va": "0x228371d11a0",
+                  "rva": null,
+                  "rva_identity": "runtime_va_or_heap"
+                },
+                "definition_name_field_offset": "0x10"
+              },
+              {
+                "slot_index": 1,
+                "root_index": 2,
+                "pointer_raw_hex": "101c1d3728020000",
+                "definition": {
+                  "va": "0x228371d1c10",
+                  "rva": null,
+                  "rva_identity": "runtime_va_or_heap"
+                },
+                "definition_name": {
+                  "status": "observed",
+                  "complete": true,
+                  "address": {
+                    "va": "0x228371d1c20",
+                    "rva": null,
+                    "rva_identity": "runtime_va_or_heap"
+                  },
+                  "header_hex": "70e27b3728020000000000000000000020000000000000002f00000000000000",
+                  "length": 32,
+                  "length_offset": "0x10",
+                  "capacity": 47,
+                  "capacity_offset": "0x18",
+                  "storage": "heap",
+                  "heap_pointer": {
+                    "va": "0x228377be270",
+                    "rva": null,
+                    "rva_identity": "runtime_va_or_heap"
+                  },
+                  "payload_hex": "6672656e63685f6d697373696f6e735f325f436f6e74696e756174696f6e5f6200",
+                  "nul_terminator_observed": true,
+                  "text": "french_missions_2_Continuation_b",
+                  "unknown_reason": null,
+                  "read_label": "slot[1].root[2]"
+                },
+                "status": "observed",
+                "definition_name_address": {
+                  "va": "0x228371d1c20",
+                  "rva": null,
+                  "rva_identity": "runtime_va_or_heap"
+                },
+                "definition_name_field_offset": "0x10"
+              }
+            ],
+            "status": "observed"
+          },
+          {
+            "slot_index": 2,
+            "address": {
+              "va": "0x22844d280f0",
+              "rva": null,
+              "rva_identity": "runtime_va_or_heap"
+            },
+            "raw_hex": "4883a3f9f67f000020162044280200000400000004000000",
+            "stride": 24,
+            "root_array": {
+              "va": "0x22844201620",
+              "rva": null,
+              "rva_identity": "runtime_va_or_heap"
+            },
+            "root_array_field_offset": "0x8",
+            "root_count": 4,
+            "root_count_field_offset": "0x14",
+            "root_array_raw_hex": "80151d3728020000e0121d3728020000d0161d372802000020181d3728020000",
+            "roots": [
+              {
+                "slot_index": 2,
+                "root_index": 0,
+                "pointer_raw_hex": "80151d3728020000",
+                "definition": {
+                  "va": "0x228371d1580",
+                  "rva": null,
+                  "rva_identity": "runtime_va_or_heap"
+                },
+                "definition_name": {
+                  "status": "observed",
+                  "complete": true,
+                  "address": {
+                    "va": "0x228371d1590",
+                    "rva": null,
+                    "rva_identity": "runtime_va_or_heap"
+                  },
+                  "header_hex": "3064c53728020000000000000000000011000000000000001f00000000000000",
+                  "length": 17,
+                  "length_offset": "0x10",
+                  "capacity": 31,
+                  "capacity_offset": "0x18",
+                  "storage": "heap",
+                  "heap_pointer": {
+                    "va": "0x22837c56430",
+                    "rva": null,
+                    "rva_identity": "runtime_va_or_heap"
+                  },
+                  "payload_hex": "6672656e63685f6d697373696f6e735f3300",
+                  "nul_terminator_observed": true,
+                  "text": "french_missions_3",
+                  "unknown_reason": null,
+                  "read_label": "slot[2].root[0]"
+                },
+                "status": "observed",
+                "definition_name_address": {
+                  "va": "0x228371d1590",
+                  "rva": null,
+                  "rva_identity": "runtime_va_or_heap"
+                },
+                "definition_name_field_offset": "0x10"
+              },
+              {
+                "slot_index": 2,
+                "root_index": 1,
+                "pointer_raw_hex": "e0121d3728020000",
+                "definition": {
+                  "va": "0x228371d12e0",
+                  "rva": null,
+                  "rva_identity": "runtime_va_or_heap"
+                },
+                "definition_name": {
+                  "status": "observed",
+                  "complete": true,
+                  "address": {
+                    "va": "0x228371d12f0",
+                    "rva": null,
+                    "rva_identity": "runtime_va_or_heap"
+                  },
+                  "header_hex": "1066c5372802000000000000000000001b000000000000001f00000000000000",
+                  "length": 27,
+                  "length_offset": "0x10",
+                  "capacity": 31,
+                  "capacity_offset": "0x18",
+                  "storage": "heap",
+                  "heap_pointer": {
+                    "va": "0x22837c56610",
+                    "rva": null,
+                    "rva_identity": "runtime_va_or_heap"
+                  },
+                  "payload_hex": "6672656e63685f6d697373696f6e735f335f626c616e6b5f68726500",
+                  "nul_terminator_observed": true,
+                  "text": "french_missions_3_blank_hre",
+                  "unknown_reason": null,
+                  "read_label": "slot[2].root[1]"
+                },
+                "status": "observed",
+                "definition_name_address": {
+                  "va": "0x228371d12f0",
+                  "rva": null,
+                  "rva_identity": "runtime_va_or_heap"
+                },
+                "definition_name_field_offset": "0x10"
+              },
+              {
+                "slot_index": 2,
+                "root_index": 2,
+                "pointer_raw_hex": "d0161d3728020000",
+                "definition": {
+                  "va": "0x228371d16d0",
+                  "rva": null,
+                  "rva_identity": "runtime_va_or_heap"
+                },
+                "definition_name": {
+                  "status": "observed",
+                  "complete": true,
+                  "address": {
+                    "va": "0x228371d16e0",
+                    "rva": null,
+                    "rva_identity": "runtime_va_or_heap"
+                  },
+                  "header_hex": "2035be3728020000000000000000000031000000000000003f00000000000000",
+                  "length": 49,
+                  "length_offset": "0x10",
+                  "capacity": 63,
+                  "capacity_offset": "0x18",
+                  "storage": "heap",
+                  "heap_pointer": {
+                    "va": "0x22837be3520",
+                    "rva": null,
+                    "rva_identity": "runtime_va_or_heap"
+                  },
+                  "payload_hex": "6672656e63685f6d697373696f6e735f335f636f6e74696e756174696f6e5f61667465725f6872655f6d697373696f6e7300",
+                  "nul_terminator_observed": true,
+                  "text": "french_missions_3_continuation_after_hre_missions",
+                  "unknown_reason": null,
+                  "read_label": "slot[2].root[2]"
+                },
+                "status": "observed",
+                "definition_name_address": {
+                  "va": "0x228371d16e0",
+                  "rva": null,
+                  "rva_identity": "runtime_va_or_heap"
+                },
+                "definition_name_field_offset": "0x10"
+              },
+              {
+                "slot_index": 2,
+                "root_index": 3,
+                "pointer_raw_hex": "20181d3728020000",
+                "definition": {
+                  "va": "0x228371d1820",
+                  "rva": null,
+                  "rva_identity": "runtime_va_or_heap"
+                },
+                "definition_name": {
+                  "status": "observed",
+                  "complete": true,
+                  "address": {
+                    "va": "0x228371d1830",
+                    "rva": null,
+                    "rva_identity": "runtime_va_or_heap"
+                  },
+                  "header_hex": "f0fa7b3728020000000000000000000022000000000000002f00000000000000",
+                  "length": 34,
+                  "length_offset": "0x10",
+                  "capacity": 47,
+                  "capacity_offset": "0x18",
+                  "storage": "heap",
+                  "heap_pointer": {
+                    "va": "0x228377bfaf0",
+                    "rva": null,
+                    "rva_identity": "runtime_va_or_heap"
+                  },
+                  "payload_hex": "6672656e63685f6d697373696f6e735f335f6e6f726d616c5f636f6e74696e75656400",
+                  "nul_terminator_observed": true,
+                  "text": "french_missions_3_normal_continued",
+                  "unknown_reason": null,
+                  "read_label": "slot[2].root[3]"
+                },
+                "status": "observed",
+                "definition_name_address": {
+                  "va": "0x228371d1830",
+                  "rva": null,
+                  "rva_identity": "runtime_va_or_heap"
+                },
+                "definition_name_field_offset": "0x10"
+              }
+            ],
+            "status": "observed"
+          },
+          {
+            "slot_index": 3,
+            "address": {
+              "va": "0x22844d28108",
+              "rva": null,
+              "rva_identity": "runtime_va_or_heap"
+            },
+            "raw_hex": "4883a3f9f67f000010112044280200000400000004000000",
+            "stride": 24,
+            "root_array": {
+              "va": "0x22844201110",
+              "rva": null,
+              "rva_identity": "runtime_va_or_heap"
+            },
+            "root_array_field_offset": "0x8",
+            "root_count": 4,
+            "root_count_field_offset": "0x14",
+            "root_array_raw_hex": "c01a1d3728020000b01e1d372802000080001d3728020000500c1d3728020000",
+            "roots": [
+              {
+                "slot_index": 3,
+                "root_index": 0,
+                "pointer_raw_hex": "c01a1d3728020000",
+                "definition": {
+                  "va": "0x228371d1ac0",
+                  "rva": null,
+                  "rva_identity": "runtime_va_or_heap"
+                },
+                "definition_name": {
+                  "status": "observed",
+                  "complete": true,
+                  "address": {
+                    "va": "0x228371d1ad0",
+                    "rva": null,
+                    "rva_identity": "runtime_va_or_heap"
+                  },
+                  "header_hex": "c079c53728020000000000000000000018000000000000001f00000000000000",
+                  "length": 24,
+                  "length_offset": "0x10",
+                  "capacity": 31,
+                  "capacity_offset": "0x18",
+                  "storage": "heap",
+                  "heap_pointer": {
+                    "va": "0x22837c579c0",
+                    "rva": null,
+                    "rva_identity": "runtime_va_or_heap"
+                  },
+                  "payload_hex": "6672656e63685f6d697373696f6e735f345f6e6f726d616c00",
+                  "nul_terminator_observed": true,
+                  "text": "french_missions_4_normal",
+                  "unknown_reason": null,
+                  "read_label": "slot[3].root[0]"
+                },
+                "status": "observed",
+                "definition_name_address": {
+                  "va": "0x228371d1ad0",
+                  "rva": null,
+                  "rva_identity": "runtime_va_or_heap"
+                },
+                "definition_name_field_offset": "0x10"
+              },
+              {
+                "slot_index": 3,
+                "root_index": 1,
+                "pointer_raw_hex": "b01e1d3728020000",
+                "definition": {
+                  "va": "0x228371d1eb0",
+                  "rva": null,
+                  "rva_identity": "runtime_va_or_heap"
+                },
+                "definition_name": {
+                  "status": "observed",
+                  "complete": true,
+                  "address": {
+                    "va": "0x228371d1ec0",
+                    "rva": null,
+                    "rva_identity": "runtime_va_or_heap"
+                  },
+                  "header_hex": "007cc5372802000000000000000000001b000000000000001f00000000000000",
+                  "length": 27,
+                  "length_offset": "0x10",
+                  "capacity": 31,
+                  "capacity_offset": "0x18",
+                  "storage": "heap",
+                  "heap_pointer": {
+                    "va": "0x22837c57c00",
+                    "rva": null,
+                    "rva_identity": "runtime_va_or_heap"
+                  },
+                  "payload_hex": "6672656e63685f6d697373696f6e735f345f6272616e6368696e6700",
+                  "nul_terminator_observed": true,
+                  "text": "french_missions_4_branching",
+                  "unknown_reason": null,
+                  "read_label": "slot[3].root[1]"
+                },
+                "status": "observed",
+                "definition_name_address": {
+                  "va": "0x228371d1ec0",
+                  "rva": null,
+                  "rva_identity": "runtime_va_or_heap"
+                },
+                "definition_name_field_offset": "0x10"
+              },
+              {
+                "slot_index": 3,
+                "root_index": 2,
+                "pointer_raw_hex": "80001d3728020000",
+                "definition": {
+                  "va": "0x228371d0080",
+                  "rva": null,
+                  "rva_identity": "runtime_va_or_heap"
+                },
+                "definition_name": {
+                  "status": "observed",
+                  "complete": true,
+                  "address": {
+                    "va": "0x228371d0090",
+                    "rva": null,
+                    "rva_identity": "runtime_va_or_heap"
+                  },
+                  "header_hex": "b0107c3728020000000000000000000025000000000000002f00000000000000",
+                  "length": 37,
+                  "length_offset": "0x10",
+                  "capacity": 47,
+                  "capacity_offset": "0x18",
+                  "storage": "heap",
+                  "heap_pointer": {
+                    "va": "0x228377c10b0",
+                    "rva": null,
+                    "rva_identity": "runtime_va_or_heap"
+                  },
+                  "payload_hex": "6672656e63685f6d697373696f6e735f345f6e6f726d616c5f636f6e74696e756174696f6e00",
+                  "nul_terminator_observed": true,
+                  "text": "french_missions_4_normal_continuation",
+                  "unknown_reason": null,
+                  "read_label": "slot[3].root[2]"
+                },
+                "status": "observed",
+                "definition_name_address": {
+                  "va": "0x228371d0090",
+                  "rva": null,
+                  "rva_identity": "runtime_va_or_heap"
+                },
+                "definition_name_field_offset": "0x10"
+              },
+              {
+                "slot_index": 3,
+                "root_index": 3,
+                "pointer_raw_hex": "500c1d3728020000",
+                "definition": {
+                  "va": "0x228371d0c50",
+                  "rva": null,
+                  "rva_identity": "runtime_va_or_heap"
+                },
+                "definition_name": {
+                  "status": "observed",
+                  "complete": true,
+                  "address": {
+                    "va": "0x228371d0c60",
+                    "rva": null,
+                    "rva_identity": "runtime_va_or_heap"
+                  },
+                  "header_hex": "f00f7c3728020000000000000000000024000000000000002f00000000000000",
+                  "length": 36,
+                  "length_offset": "0x10",
+                  "capacity": 47,
+                  "capacity_offset": "0x18",
+                  "storage": "heap",
+                  "heap_pointer": {
+                    "va": "0x228377c0ff0",
+                    "rva": null,
+                    "rva_identity": "runtime_va_or_heap"
+                  },
+                  "payload_hex": "6672656e63685f6d697373696f6e735f345f6e6f726d616c5f636f6e7469756174696f6e00",
+                  "nul_terminator_observed": true,
+                  "text": "french_missions_4_normal_contiuation",
+                  "unknown_reason": null,
+                  "read_label": "slot[3].root[3]"
+                },
+                "status": "observed",
+                "definition_name_address": {
+                  "va": "0x228371d0c60",
+                  "rva": null,
+                  "rva_identity": "runtime_va_or_heap"
+                },
+                "definition_name_field_offset": "0x10"
+              }
+            ],
+            "status": "observed"
+          },
+          {
+            "slot_index": 4,
+            "address": {
+              "va": "0x22844d28120",
+              "rva": null,
+              "rva_identity": "runtime_va_or_heap"
+            },
+            "raw_hex": "4883a3f9f67f0000a0112044280200000400000004000000",
+            "stride": 24,
+            "root_array": {
+              "va": "0x228442011a0",
+              "rva": null,
+              "rva_identity": "runtime_va_or_heap"
+            },
+            "root_array_field_offset": "0x8",
+            "root_count": 4,
+            "root_count_field_offset": "0x14",
+            "root_array_raw_hex": "d0011d372802000020031d3728020000c052cd34280200009049cd3428020000",
+            "roots": [
+              {
+                "slot_index": 4,
+                "root_index": 0,
+                "pointer_raw_hex": "d0011d3728020000",
+                "definition": {
+                  "va": "0x228371d01d0",
+                  "rva": null,
+                  "rva_identity": "runtime_va_or_heap"
+                },
+                "definition_name": {
+                  "status": "observed",
+                  "complete": true,
+                  "address": {
+                    "va": "0x228371d01e0",
+                    "rva": null,
+                    "rva_identity": "runtime_va_or_heap"
+                  },
+                  "header_hex": "90a0c53728020000000000000000000018000000000000001f00000000000000",
+                  "length": 24,
+                  "length_offset": "0x10",
+                  "capacity": 31,
+                  "capacity_offset": "0x18",
+                  "storage": "heap",
+                  "heap_pointer": {
+                    "va": "0x22837c5a090",
+                    "rva": null,
+                    "rva_identity": "runtime_va_or_heap"
+                  },
+                  "payload_hex": "6672656e63685f6d697373696f6e735f355f6e6f726d616c00",
+                  "nul_terminator_observed": true,
+                  "text": "french_missions_5_normal",
+                  "unknown_reason": null,
+                  "read_label": "slot[4].root[0]"
+                },
+                "status": "observed",
+                "definition_name_address": {
+                  "va": "0x228371d01e0",
+                  "rva": null,
+                  "rva_identity": "runtime_va_or_heap"
+                },
+                "definition_name_field_offset": "0x10"
+              },
+              {
+                "slot_index": 4,
+                "root_index": 1,
+                "pointer_raw_hex": "20031d3728020000",
+                "definition": {
+                  "va": "0x228371d0320",
+                  "rva": null,
+                  "rva_identity": "runtime_va_or_heap"
+                },
+                "definition_name": {
+                  "status": "observed",
+                  "complete": true,
+                  "address": {
+                    "va": "0x228371d0330",
+                    "rva": null,
+                    "rva_identity": "runtime_va_or_heap"
+                  },
+                  "header_hex": "00a3c5372802000000000000000000001b000000000000001f00000000000000",
+                  "length": 27,
+                  "length_offset": "0x10",
+                  "capacity": 31,
+                  "capacity_offset": "0x18",
+                  "storage": "heap",
+                  "heap_pointer": {
+                    "va": "0x22837c5a300",
+                    "rva": null,
+                    "rva_identity": "runtime_va_or_heap"
+                  },
+                  "payload_hex": "6672656e63685f6d697373696f6e735f355f6272616e6368696e6700",
+                  "nul_terminator_observed": true,
+                  "text": "french_missions_5_branching",
+                  "unknown_reason": null,
+                  "read_label": "slot[4].root[1]"
+                },
+                "status": "observed",
+                "definition_name_address": {
+                  "va": "0x228371d0330",
+                  "rva": null,
+                  "rva_identity": "runtime_va_or_heap"
+                },
+                "definition_name_field_offset": "0x10"
+              },
+              {
+                "slot_index": 4,
+                "root_index": 2,
+                "pointer_raw_hex": "c052cd3428020000",
+                "definition": {
+                  "va": "0x22834cd52c0",
+                  "rva": null,
+                  "rva_identity": "runtime_va_or_heap"
+                },
+                "definition_name": {
+                  "status": "observed",
+                  "complete": true,
+                  "address": {
+                    "va": "0x22834cd52d0",
+                    "rva": null,
+                    "rva_identity": "runtime_va_or_heap"
+                  },
+                  "header_hex": "301a7c3728020000000000000000000027000000000000002f00000000000000",
+                  "length": 39,
+                  "length_offset": "0x10",
+                  "capacity": 47,
+                  "capacity_offset": "0x18",
+                  "storage": "heap",
+                  "heap_pointer": {
+                    "va": "0x228377c1a30",
+                    "rva": null,
+                    "rva_identity": "runtime_va_or_heap"
+                  },
+                  "payload_hex": "6672656e63685f6d697373696f6e735f355f636f6e74696e756174696f6e5f6e6f726d616c5f3100",
+                  "nul_terminator_observed": true,
+                  "text": "french_missions_5_continuation_normal_1",
+                  "unknown_reason": null,
+                  "read_label": "slot[4].root[2]"
+                },
+                "status": "observed",
+                "definition_name_address": {
+                  "va": "0x22834cd52d0",
+                  "rva": null,
+                  "rva_identity": "runtime_va_or_heap"
+                },
+                "definition_name_field_offset": "0x10"
+              },
+              {
+                "slot_index": 4,
+                "root_index": 3,
+                "pointer_raw_hex": "9049cd3428020000",
+                "definition": {
+                  "va": "0x22834cd4990",
+                  "rva": null,
+                  "rva_identity": "runtime_va_or_heap"
+                },
+                "definition_name": {
+                  "status": "observed",
+                  "complete": true,
+                  "address": {
+                    "va": "0x22834cd49a0",
+                    "rva": null,
+                    "rva_identity": "runtime_va_or_heap"
+                  },
+                  "header_hex": "309ac5372802000000000000000000001b000000000000001f00000000000000",
+                  "length": 27,
+                  "length_offset": "0x10",
+                  "capacity": 31,
+                  "capacity_offset": "0x18",
+                  "storage": "heap",
+                  "heap_pointer": {
+                    "va": "0x22837c59a30",
+                    "rva": null,
+                    "rva_identity": "runtime_va_or_heap"
+                  },
+                  "payload_hex": "6672615f6d697373696f6e735f355f636f6e74696e756174696f6e00",
+                  "nul_terminator_observed": true,
+                  "text": "fra_missions_5_continuation",
+                  "unknown_reason": null,
+                  "read_label": "slot[4].root[3]"
+                },
+                "status": "observed",
+                "definition_name_address": {
+                  "va": "0x22834cd49a0",
+                  "rva": null,
+                  "rva_identity": "runtime_va_or_heap"
+                },
+                "definition_name_field_offset": "0x10"
+              }
+            ],
+            "status": "observed"
+          }
+        ],
+        "rootstrings": [
+          {
+            "slot_index": 0,
+            "root_index": 0,
+            "text": "french_missions_1",
+            "status": "observed"
+          },
+          {
+            "slot_index": 0,
+            "root_index": 1,
+            "text": "french_missions_1_blank_hre",
+            "status": "observed"
+          },
+          {
+            "slot_index": 0,
+            "root_index": 2,
+            "text": "french_missions_1_Continuation_a",
+            "status": "observed"
+          },
+          {
+            "slot_index": 1,
+            "root_index": 0,
+            "text": "french_missions_2",
+            "status": "observed"
+          },
+          {
+            "slot_index": 1,
+            "root_index": 1,
+            "text": "french_missions_2_blank_hre",
+            "status": "observed"
+          },
+          {
+            "slot_index": 1,
+            "root_index": 2,
+            "text": "french_missions_2_Continuation_b",
+            "status": "observed"
+          },
+          {
+            "slot_index": 2,
+            "root_index": 0,
+            "text": "french_missions_3",
+            "status": "observed"
+          },
+          {
+            "slot_index": 2,
+            "root_index": 1,
+            "text": "french_missions_3_blank_hre",
+            "status": "observed"
+          },
+          {
+            "slot_index": 2,
+            "root_index": 2,
+            "text": "french_missions_3_continuation_after_hre_missions",
+            "status": "observed"
+          },
+          {
+            "slot_index": 2,
+            "root_index": 3,
+            "text": "french_missions_3_normal_continued",
+            "status": "observed"
+          },
+          {
+            "slot_index": 3,
+            "root_index": 0,
+            "text": "french_missions_4_normal",
+            "status": "observed"
+          },
+          {
+            "slot_index": 3,
+            "root_index": 1,
+            "text": "french_missions_4_branching",
+            "status": "observed"
+          },
+          {
+            "slot_index": 3,
+            "root_index": 2,
+            "text": "french_missions_4_normal_continuation",
+            "status": "observed"
+          },
+          {
+            "slot_index": 3,
+            "root_index": 3,
+            "text": "french_missions_4_normal_contiuation",
+            "status": "observed"
+          },
+          {
+            "slot_index": 4,
+            "root_index": 0,
+            "text": "french_missions_5_normal",
+            "status": "observed"
+          },
+          {
+            "slot_index": 4,
+            "root_index": 1,
+            "text": "french_missions_5_branching",
+            "status": "observed"
+          },
+          {
+            "slot_index": 4,
+            "root_index": 2,
+            "text": "french_missions_5_continuation_normal_1",
+            "status": "observed"
+          },
+          {
+            "slot_index": 4,
+            "root_index": 3,
+            "text": "fra_missions_5_continuation",
+            "status": "observed"
+          }
+        ],
+        "candidate_completed_missions": {
+          "status": "observed",
+          "container": {
+            "va": "0x22807042108",
+            "rva": null,
+            "rva_identity": "runtime_va_or_heap"
+          },
+          "sentinel": {
+            "va": "0x22805de5e30",
+            "rva": null,
+            "rva_identity": "runtime_va_or_heap"
+          },
+          "begin": {
+            "va": "0x22805de5e30",
+            "rva": null,
+            "rva_identity": "runtime_va_or_heap"
+          },
+          "nodes": [],
+          "rootstrings": [],
+          "max_nodes": 4096,
+          "container_field": {
+            "address": {
+              "va": "0x22807042108",
+              "rva": null,
+              "rva_identity": "runtime_va_or_heap"
+            },
+            "field_offset": "0x9998",
+            "raw_hex": null,
+            "value": {
+              "va": "0x22807042108",
+              "rva": null,
+              "rva_identity": "runtime_va_or_heap"
+            },
+            "storage": "embedded_object"
+          },
+          "sentinel_field": {
+            "address": {
+              "va": "0x22807042110",
+              "rva": null,
+              "rva_identity": "runtime_va_or_heap"
+            },
+            "field_offset": "0x8",
+            "raw_hex": "305ede0528020000",
+            "value": {
+              "va": "0x22805de5e30",
+              "rva": null,
+              "rva_identity": "runtime_va_or_heap"
+            }
+          },
+          "begin_field": {
+            "address": {
+              "va": "0x22805de5e30",
+              "rva": null,
+              "rva_identity": "runtime_va_or_heap"
+            },
+            "raw_hex": "305ede0528020000",
+            "value": {
+              "va": "0x22805de5e30",
+              "rva": null,
+              "rva_identity": "runtime_va_or_heap"
+            }
+          },
+          "empty": true
+        },
+        "slot_array_field_offset": "0x18",
+        "slot_count_field_offset": "0x24"
+      }
+    }
+  }
+}

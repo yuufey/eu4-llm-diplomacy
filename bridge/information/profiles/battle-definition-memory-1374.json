@@ -1,0 +1,97 @@
+{
+  "profile_id": "battle-definition-memory-1374",
+  "game_version": "1.37.4",
+  "executable": {
+    "sha256": "b23fa0e1f698d31b01cdd1c3817a675805d8c6286cb66f9c231e6e2a42544d77"
+  },
+  "country": {
+    "supported_country": "FRA"
+  },
+  "globals": {
+    "manager_cell_rva": "0x242bcd8"
+  },
+  "keys": [
+    {
+      "key": "LANDBATTLEOVER",
+      "kind": 1
+    },
+    {
+      "key": "NAVALBATTLEOVER",
+      "kind": 2
+    }
+  ],
+  "manager": {
+    "bucket_count_offset": 4,
+    "bucket_array_offset": 8
+  },
+  "node": {
+    "definition_offset": 0,
+    "next_offset": 8
+  },
+  "definition": {
+    "key_offset": 56,
+    "key_length_offset": 72,
+    "key_capacity_offset": 80,
+    "kind_offset": 88,
+    "layout_raw_offset": 92,
+    "button_flag_raw_offset": 96
+  },
+  "hash": {
+    "seed": 0,
+    "multiplier": 61,
+    "arithmetic_bits": 32,
+    "algorithm": "h=((h+ASCII_byte)*61)&0xffffffff"
+  },
+  "limits": {
+    "max_total_rpm": 131072,
+    "max_single_rpm": 8192,
+    "max_rpm_calls": 2048,
+    "max_nodes_per_bucket": 64,
+    "max_bucket_count": 65536,
+    "max_key_bytes": 64,
+    "max_string_capacity": 8192
+  },
+  "code_guards": [
+    {
+      "label": "manager_getter",
+      "rva": "0x8befa0",
+      "expected_hex": "48895c2410574883ec20488b0527cdb6014885c00f858a0000008d4850e86e421701488bd8488944243033ff8938c74004ff010000b9f80f0000e88d42170148894308448b430449c1e00333d2488bc8e86b6d170148897b1048897b18897b2040887b24897b2848897b3048897b3848897b40c6434801488b0dbaccb60148891db3ccb6014885c97417e821000000488b05a2ccb601488b5c24384883c4205fc3488bc3488b5c24384883c4205fc3",
+      "runtime": false,
+      "bytes": 175,
+      "sha256": "9384533ee51922da8345f36e827d3719924ee58f3379bb6caa3526e04f646ad3"
+    },
+    {
+      "label": "manager_getter_unpatched_return",
+      "rva": "0x8bf044",
+      "expected_hex": "488b5c24384883c4205fc3",
+      "runtime": true,
+      "bytes": 11,
+      "sha256": "6f2d7302f65f6caf3e9609493afde3eccc6aa54b63065de5fd17f41a4885a4d6"
+    },
+    {
+      "label": "definition_lookup",
+      "rva": "0x8c02a0",
+      "expected_hex": "48895c241848897424205557415441564157488d6c24c04881ec40010000488bfa4c8bd14533e4448965704c8b72184983fe107203488b12458bc4498bcc4c634f104d85c97e1c660f1f8400000000000fbe04114103c0446bc03d48ffc1493bc97ced33d2418bc041f77204498b4208488b1cd04885db74434c8b7f100f1f00488b33488d4e38488bd74983fe107203488b174c8b411048837918107203488b094d3bc7750de86552170185c00f8474020000488b5b084885db75c4e80f19e500488bd8488d053df94f0148894424404c8965e80f57c0f30f7f45104c896520c7457004000000488d05e2ef3501488945e0c745dc900000004533c0488d542448488d4de0e876118eff90488b44244048634804488d05cdb53f014889440c40488b442440486348048d9178ffffff89540c3c488d4c2448e8b3108eff488d054418380148894424484c8965b0c745b804000000488b44244048634804488d05acf84f014889440c40488b442440486348048d9160ffffff89540c3c48895dc0488d05b9044001488945c8c745d0eb000000c745d403000100488d0568b4b601488944242032db885c2428381dc076a901741a488b0d4eb4b601e89d34150185c00f8574010000b301885c242841b81d000000488d153e054001488d4c2440e8acf3e3009084db740c488b0d18b4b601e88b34150148837f18107203488b3f488bd7488d4c2440e8d4f57cff488bd8488b08486349044803c8b20ae8e0f37cff0fb6d0488bcbe835f27cff488bcbe86df87cff90488d4de0e8130ee50090488d056bed3501488945e0488d4de0e8fec6140190488b1dd6f9a7014885db0f85a5000000b9b0000000e8232d1701488bd84889457848c74424380f00000048c74424300c000000f20f10057a184001f20f114424208b057618400189442428c644242c00c7457027000000488d542420488bcbe8c9280100488d05d218400148890348891d68f9a701488b5424384883fa10723548ffc2488b4c2420488bc14881fa0010000072154883c227488b49f8482bc14883c0f84883f81f7739e87f8ee700488b1d28f9a701488bc34c8d9c2440010000498b5b40498b7348498be3415f415e415c5f5dc34885f60f848cfdffff488bc6ebd6e8f2151801908bc8e8c62f1501",
+      "runtime": true,
+      "bytes": 834,
+      "sha256": "5254239556fc92f52c63aa1b1ebe0deade397d69255dce7b1f79d0dd215d9d4a"
+    },
+    {
+      "label": "land_layout_consumer",
+      "rva": "0x8c9470",
+      "expected_hex": "83785c000f8487000000",
+      "runtime": true,
+      "bytes": 10,
+      "sha256": "5a642eb0580d05687b4f52b6de7c91c83bf62e2801406b0e397d7dd9ced2b103"
+    },
+    {
+      "label": "land_button_consumer",
+      "rva": "0x8c9fa2",
+      "expected_hex": "498b07807860000f8425010000",
+      "runtime": true,
+      "bytes": 13,
+      "sha256": "62de806c8461e171e8eaf7cb479f6ee8531465e70d205862d956fb2ac9e9abe7"
+    }
+  ],
+  "boundary": "Read current registered definitions only. No native lookup/fallback, allocator, window creation, event attachment, or observer visibility claim."
+}

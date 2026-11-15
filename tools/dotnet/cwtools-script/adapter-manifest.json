@@ -1,0 +1,64 @@
+{
+  "schema": "eu4.cwtools.parser.source.v1",
+  "package": {
+    "id": "CWTools",
+    "version": "0.6.0-alpha"
+  },
+  "license": "MIT",
+  "license_source": "https://github.com/cwtools/cwtools/blob/master/LICENSE",
+  "target_framework": "net8.0",
+  "max_batch_files": 64,
+  "project": "tools/dotnet/cwtools-script/CwtoolsScript.fsproj",
+  "output_directory": "work/deps/cwtools-script/publish",
+  "assembly": "work/deps/cwtools-script/publish/CwtoolsScript.dll",
+  "parser": {
+    "name": "CWTools",
+    "version": "0.6.0-alpha",
+    "entry_point": "CWTools.Parser.CKParser.parseString",
+    "output_schema": "eu4.cwtools.script_ast.v1"
+  },
+  "files": [
+    {
+      "path": "tools/dotnet/cwtools-script/CWTOOLS-LICENSE-MIT.txt",
+      "bytes": 1068,
+      "sha256": "4d34783c79d5a0a8c286ab60c4cfe67f94e1df9915e0b3304098de4651f61d2a"
+    },
+    {
+      "path": "tools/dotnet/cwtools-script/CwtoolsScript.fsproj",
+      "bytes": 714,
+      "sha256": "c60fd2e6b458cd0c76aeff04389f962d6a4edcc3cd4f80d1a9f2a7e458916054"
+    },
+    {
+      "path": "tools/dotnet/cwtools-script/NuGet.Config",
+      "bytes": 217,
+      "sha256": "f545a7e2ea14ac53cdfb91217cae67b8ff14275313f6298f9a3331d205b6c948"
+    },
+    {
+      "path": "tools/dotnet/cwtools-script/Program.fs",
+      "bytes": 7250,
+      "sha256": "60a69dd64ead8d351e4d9e9c72095b4515bd6efbeec014987937a47057bd7e97"
+    },
+    {
+      "path": "tools/dotnet/cwtools-script/packages.lock.json",
+      "bytes": 4603,
+      "sha256": "563605ed29e792314023eb607dcf8c54f6dbf86d11aeec7de37dffe5c4c4e15a"
+    }
+  ],
+  "package_lock": {
+    "CWTools": "0.6.0-alpha",
+    "FSharp.Core": "9.0.303"
+  },
+  "input_contract": {
+    "schema": "eu4.cwtools.script_ast.v1",
+    "max_batch_files": 64,
+    "max_total_bytes": 4194304,
+    "decoding": [
+      "utf-8-bom",
+      "utf-8",
+      "windows-1252"
+    ],
+    "source_lines": "1-based",
+    "source_columns": "CWTools range values (0-based)",
+    "evaluation": false
+  }
+}

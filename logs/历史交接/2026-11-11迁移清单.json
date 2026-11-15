@@ -1,0 +1,20 @@
+[
+  {
+    "source": "HANDOFF.md",
+    "original_sha256": "77d4b56d50e8d4f90c7731e5a46182c944f57d7d8de844dde303374b1f896ed3",
+    "archive": "logs\\历史交接\\2026-11-11-HANDOFF.md",
+    "links": "relative Markdown targets rebased two levels"
+  },
+  {
+    "source": "PLAN.md",
+    "original_sha256": "5fdeaed24dd8ecaa895073947e817038820c5a64f6452ccd884b340a524a4431",
+    "archive": "logs\\历史交接\\2026-11-11-PLAN.md",
+    "links": "relative Markdown targets rebased two levels"
+  },
+  {
+    "source": "VALIDATION.md",
+    "original_sha256": "7731721912ec8d1d3f34fdc20898be0451e4f0f5d4bc60f5f6b19611ace96e8c",
+    "archive": "logs\\历史交接\\2026-11-11-VALIDATION.md",
+    "links": "relative Markdown targets rebased two levels"
+  }
+]

@@ -6,6 +6,7 @@ import json
 from pathlib import Path
 import tempfile
 import unittest
+from types import SimpleNamespace
 from unittest.mock import patch
 
 from work import verify_v12_experiment_1375 as review
@@ -110,6 +111,16 @@ class V12ReviewTests(unittest.TestCase):
                 with self.assertRaises(ValueError): review.Inputs(root,{"one":bad})
             with self.assertRaises(ValueError): review.Inputs(root,{"one":row,"two":row})
             with self.assertRaises(ValueError): review.Inputs(root,{str(i):dict(row,path=f"{i}.json") for i in range(review.MAX_ARTIFACTS+1)})
+
+    def test_reparse_metadata_fallback_rejects_unknown_windows_metadata(self):
+        with patch.object(review, "_IS_WINDOWS", True):
+            self.assertTrue(review._metadata_has_reparse_point(
+                SimpleNamespace(st_file_attributes=review._REPARSE_POINT_ATTRIBUTE)))
+            self.assertFalse(review._metadata_has_reparse_point(SimpleNamespace(st_file_attributes=0)))
+            with self.assertRaisesRegex(ValueError, "Cannot verify Windows reparse-point attributes"):
+                review._metadata_has_reparse_point(SimpleNamespace(st_mode=0))
+        with patch.object(review, "_IS_WINDOWS", False):
+            self.assertFalse(review._metadata_has_reparse_point(SimpleNamespace(st_mode=0)))
 
     def test_guard_rejection_does_not_claim_native_legality_or_cleanup(self):
         row=pair("support_independence","guard_rejected")

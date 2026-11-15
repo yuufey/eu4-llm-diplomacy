@@ -1,0 +1,228 @@
+{
+  "profile_id": "subject-pressure-memory-1374",
+  "profile_version": 3,
+  "support_independence": {
+    "vector_offset": 5736,
+    "count_offset": 5748,
+    "element_stride": 16,
+    "max_entries": 4096
+  },
+  "code_guards": [
+    {
+      "name": "support_actor_owner",
+      "rva": "0x50e1b4",
+      "end_rva_exclusive": "0x50e1f7",
+      "bytes": "498b4f10488b05f1f6e201488b901801000048c1e920480fbfc14c8b34c24983c720498b0f48c1e920480fbfc14c8b2cc24d8da6f81400000fbfc1488b4d6740387138",
+      "sha256": "83fd858fab5e6c0ed2527ab9b363f445b2ba8db5a4dbd9d8e0d942fec6b05b36"
+    },
+    {
+      "name": "support_stop_membership",
+      "rva": "0x50ece8",
+      "end_rva_exclusive": "0x50ed15",
+      "bytes": "498b9424700100004d6384247c01000049c1e0044c03c2493bd0741139020f84d10000004883c210493bd075ef",
+      "sha256": "d40c183b29f888f75e3688c9f0ed23be61f037b46b750f42eb4bfe2dd7f5a832"
+    },
+    {
+      "name": "support_stop_success",
+      "rva": "0x50eddd",
+      "end_rva_exclusive": "0x50ede2",
+      "bytes": "0fb6c3eb02",
+      "sha256": "2fc669672ca07ab81812296772094a740658d6c6b7db65f354de02b81a3663e5"
+    },
+    {
+      "name": "subject_type_pays_overlord",
+      "rva": "0xb1fb61",
+      "end_rva_exclusive": "0xb1fb75",
+      "bytes": "488d9770010000488bcbe830bfbe00e9cf090000",
+      "sha256": "5de9e7c118c3d6dbfd7b81731c6a1dbd1e5f842e5a0421818bad310a64ee0999"
+    },
+    {
+      "name": "subject_type_can_send_tribute",
+      "rva": "0xb1fafd",
+      "end_rva_exclusive": "0xb1fb11",
+      "bytes": "488d974e010000488bcbe8a41567ffe9330a0000",
+      "sha256": "9d9623a27e5daac436d7995a8c304f0cfdebbccfd230209a93faa07f5f452aed"
+    },
+    {
+      "name": "subject_type_force_limit",
+      "rva": "0xb20248",
+      "end_rva_exclusive": "0xb2025c",
+      "bytes": "488d9174010000488bcbe849b8be00e9e8020000",
+      "sha256": "d47d9c74ff93cc964507cfd1f68877f5db0e36514828600a85344ec4c7e28b99"
+    },
+    {
+      "name": "subject_type_manpower",
+      "rva": "0xb203c7",
+      "end_rva_exclusive": "0xb203db",
+      "bytes": "488d977c010000488bcbe8cab6be00e969010000",
+      "sha256": "8da8902ba9de4c33447333656c4de9173d8f246a29c1e4b4b45c9527a3aa3d72"
+    },
+    {
+      "name": "subject_type_sailors",
+      "rva": "0xb203db",
+      "end_rva_exclusive": "0xb203ef",
+      "bytes": "488d9780010000488bcbe8b6b6be00e955010000",
+      "sha256": "f8449d58b7ef8eafd47b11b23d0862f9d8c1dc425e2baaf6436d75e4a92e0a17"
+    },
+    {
+      "name": "subject_type_copy_from",
+      "rva": "0xb1f534",
+      "end_rva_exclusive": "0xb1f550",
+      "bytes": "488b53304885d274184881c2b8000000488d8fb8000000e830150000",
+      "sha256": "e409e94b8054aa23a7fd2f8de8c8b7e5d45143b1768ccc4f7cc06a4ab69a89e3"
+    },
+    {
+      "name": "subject_type_copy_tribute_flag",
+      "rva": "0xb20c70",
+      "end_rva_exclusive": "0xb20c7e",
+      "bytes": "0fb683960000008887960000000f",
+      "sha256": "7d3f9310f81062941c8e5b87cce9cf474b8aa90f6f63be3f43613eed8adc2144"
+    },
+    {
+      "name": "subject_type_copy_contributions",
+      "rva": "0xb20db2",
+      "end_rva_exclusive": "0xb20dee",
+      "bytes": "8b83b80000008987b80000008b83bc0000008987bc0000008b83c00000008987c00000008b83c40000008987c40000008b83c80000008987c8000000",
+      "sha256": "948f65da61c1493490217791ea68d2504e893a0e6d5844a7f0edd8d1356d3aa0"
+    },
+    {
+      "name": "type_can_integrate",
+      "rva": "0xb1f3a4",
+      "end_rva_exclusive": "0xb1f3b8",
+      "bytes": "488d973f010000488bcbe8fd1c67ffe98c110000",
+      "sha256": "c7cf3eff664cae136504568929beb2eed3d09c751e84743bb0be47ce6fd24d08"
+    },
+    {
+      "name": "type_can_annex",
+      "rva": "0xb1faad",
+      "end_rva_exclusive": "0xb1fac1",
+      "bytes": "488d9749010000488bcbe8f41567ffe9830a0000",
+      "sha256": "ac41e27deec79e78926802642fcc86392f0dd123229829a62a752a88c47dfcab"
+    },
+    {
+      "name": "type_annex_cost",
+      "rva": "0xb20373",
+      "end_rva_exclusive": "0xb20387",
+      "bytes": "488d979c010000488d8b40040000e8caf1be0084",
+      "sha256": "c6868887fa77ca4c20bc5646294b0c7501e317de99dab3ab1e939b26b59d33fb"
+    },
+    {
+      "name": "type_integration_religion",
+      "rva": "0xb20535",
+      "end_rva_exclusive": "0xb20544",
+      "bytes": "488d9163010000488bcbe86c0b67ff",
+      "sha256": "d04b3fc6ee9723c2d9bc1466b5eb3f7f587186872cbaa753521120165354e946"
+    },
+    {
+      "name": "integration_task_type",
+      "rva": "0xa72dc0",
+      "end_rva_exclusive": "0xa72dc6",
+      "bytes": "b8d52d0000c3",
+      "sha256": "6b4f4c4615798ea6f328ae42677beab17a3bcff54d829d8f2030482b8af60f74"
+    },
+    {
+      "name": "integration_progress_member",
+      "rva": "0xa72be9",
+      "end_rva_exclusive": "0xa72c02",
+      "bytes": "4181f8082b00007521488d5140488d8b40040000e84ec9c900",
+      "sha256": "13ced39b42836ae9ba0979e70f7cee97a429250e952fefe8f6ea3ec6399a44fd"
+    },
+    {
+      "name": "integration_progress_spend",
+      "rva": "0xa71699",
+      "end_rva_exclusive": "0xa716b8",
+      "bytes": "448bc341f7d84a8b0cd1418d5101e884de90ff69c3e80300000147403b7740",
+      "sha256": "5885a03ee8928c89e7bbd4ccb3b9ee6e905c93a01cd1be4fd55db249241eba44"
+    },
+    {
+      "name": "integration_index",
+      "rva": "0x51c07e",
+      "end_rva_exclusive": "0x51c09f",
+      "bytes": "488b10488b401048c1e82098488b8a000200004c63820c02000049c1e0044c03c1",
+      "sha256": "92ff1cd99c347520bc5f92b5ed42ecb2221bd0ac922e63fb4458595d727d1885"
+    }
+  ],
+  "source_evidence": {
+    "path": "work/runtime/information-subject-support-20261112-001/native-source.json",
+    "sha256": "5d6f16ac39929c71db41defb8d1ae3c047080157f40a1b64a5af75f4ed9ebf9c"
+  },
+  "obligations": {
+    "vtable_rva": 30307152,
+    "name_offset": 16,
+    "fields": {
+      "tribute": {
+        "vassal_tax_multiplier": {
+          "offset": 368,
+          "width": 4,
+          "kind": "fixed",
+          "scale": 1000
+        },
+        "annual_tribute": {
+          "offset": 334,
+          "width": 1,
+          "kind": "bool"
+        }
+      },
+      "levy": {
+        "land_force_limit_share_percent": {
+          "offset": 372,
+          "width": 4,
+          "kind": "fixed",
+          "scale": 10
+        },
+        "manpower_factor": {
+          "offset": 380,
+          "width": 4,
+          "kind": "fixed",
+          "scale": 1000
+        },
+        "sailors_factor": {
+          "offset": 384,
+          "width": 4,
+          "kind": "fixed",
+          "scale": 1000
+        }
+      },
+      "integration": {
+        "annexation_allowed": {
+          "offset": 329,
+          "width": 1,
+          "kind": "bool"
+        },
+        "union_integration_allowed": {
+          "offset": 319,
+          "width": 1,
+          "kind": "bool"
+        },
+        "same_religion_group_required": {
+          "offset": 355,
+          "width": 1,
+          "kind": "bool"
+        },
+        "base_diplomatic_cost_per_development": {
+          "offset": 412,
+          "width": 4,
+          "kind": "fixed",
+          "scale": 1000
+        }
+      }
+    }
+  },
+  "obligation_source_evidence": {
+    "path": "work/runtime/information-subject-obligations-20261112-001/native-source.json",
+    "sha256": "7f30d1bdfb52c467783e3c2892558c54844bdd4b95c4cd0184e7553ba29e2e35"
+  },
+  "integration_task": {
+    "index_offset": 512,
+    "max_entries": 4096,
+    "vtable_rva": 29890264,
+    "body_bytes": 72,
+    "progress_offset": 64,
+    "progress_scale": 1000,
+    "removed_offset": 40
+  },
+  "integration_source_evidence": {
+    "path": "work/runtime/information-subject-integration-20261112-001/native-source.json",
+    "sha256": "236b136501336f228fa03882f9b0dbb193beed2ea3bcb5fbada55f418a5f876e"
+  }
+}

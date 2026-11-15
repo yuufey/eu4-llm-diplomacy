@@ -385,7 +385,8 @@ def _project_event(event: dict, codec: str) -> dict:
 
 def project_participants(
         native_participants: object, events: object,
-        codec: str = DEFAULT_NATIVE_TEXT_CODEC) -> dict | None:
+        codec: str = DEFAULT_NATIVE_TEXT_CODEC, *,
+        actor: str = "FRA", recipient: str = "ENG") -> dict | None:
     """Project a valid native participant query without private fields."""
 
     try:
@@ -417,7 +418,7 @@ def project_participants(
         else:
             if not validate_participants(
                     native_participants, events, "empty-query", "empty-session",
-                    "FRA", "ENG", 0,
+                    actor, recipient, 0,
                     selection if any(selection.values()) else None):
                 return None
         candidates = [_project_event(event, codec) for event in events]

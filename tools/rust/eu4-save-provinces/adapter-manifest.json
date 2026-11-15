@@ -1,0 +1,401 @@
+{
+  "schema": "eu4.save_provinces.parser.v1",
+  "jomini_commit": "8fbd6861f453c719da59daac6970babd9ddc19ac",
+  "binary": {
+    "path": "work/deps/jomini-rust-toolchain-104/eu4-save-provinces.exe",
+    "bytes": 2556185,
+    "sha256": "eaf105770c456a45b5a5fec21ae18e4f145a38d6db1ddc9698d369198f932526"
+  },
+  "sources": [
+    {
+      "path": "third_party/jomini/Cargo.toml",
+      "bytes": 1040,
+      "sha256": "50905e839cdd085263b77e67ccfa8410c160436855652f50ca1b4f15e757a33a"
+    },
+    {
+      "path": "third_party/jomini/LICENSE.txt",
+      "bytes": 1040,
+      "sha256": "c118d742cc937fe458812f8cddf5191303b3eab88ed49c0723f5c9ce8a39ab4d"
+    },
+    {
+      "path": "third_party/jomini/crates/eu4save/Cargo.toml",
+      "bytes": 1212,
+      "sha256": "6bb36d2da67b65b0cbd9d202c10117582392723ad21c9fe44f18a4a1669039e6"
+    },
+    {
+      "path": "third_party/jomini/crates/eu4save/src/country_tag.rs",
+      "bytes": 6372,
+      "sha256": "62169226bb995dfec4dd49c96300f07b42b57b1d2f8445ad50ad9be5918579dd"
+    },
+    {
+      "path": "third_party/jomini/crates/eu4save/src/de/alternating_key_values.rs",
+      "bytes": 1894,
+      "sha256": "690cd545d80363dcdf16731329baca771e4ac5726a90ccabf15aceaacc6b58f7"
+    },
+    {
+      "path": "third_party/jomini/crates/eu4save/src/de/country_history.rs",
+      "bytes": 10963,
+      "sha256": "ea2b5b90390ae2842a5011b4d6941697cd8bef5d7faec5a17ce41fab3951a39b"
+    },
+    {
+      "path": "third_party/jomini/crates/eu4save/src/de/gameplay_settings.rs",
+      "bytes": 3188,
+      "sha256": "cc602bb03a2b763456d39fdeae3c677d65bca99719979015720e56f5239294a9"
+    },
+    {
+      "path": "third_party/jomini/crates/eu4save/src/de/leader_kind.rs",
+      "bytes": 1168,
+      "sha256": "02bfea89fc924d6e008f17407783d2683219c9b6aa8fe12e06c5b1d9da762fc8"
+    },
+    {
+      "path": "third_party/jomini/crates/eu4save/src/de/ledger_vec.rs",
+      "bytes": 2443,
+      "sha256": "06fa82d5a3431286f321d26412dd0331e4f69cf4d8999600d6d437ea9e2d7a7f"
+    },
+    {
+      "path": "third_party/jomini/crates/eu4save/src/de/list_overflow_byte.rs",
+      "bytes": 1948,
+      "sha256": "42dd4b7f5103a2b04e205110f8723da478ca2631097a5ab0d25623f185ba135e"
+    },
+    {
+      "path": "third_party/jomini/crates/eu4save/src/de/map_capacity.rs",
+      "bytes": 1612,
+      "sha256": "c6bb03197413f0585734d7152527875784bda4b48a20cc5c678bf3b278b7d6d9"
+    },
+    {
+      "path": "third_party/jomini/crates/eu4save/src/de/map_pair.rs",
+      "bytes": 2728,
+      "sha256": "5e870e5e5fba8ed0054e47da9ef19979f5ba9b58fccec886bd5ad9447175087b"
+    },
+    {
+      "path": "third_party/jomini/crates/eu4save/src/de/mod.rs",
+      "bytes": 922,
+      "sha256": "3ac997ba43246ab953a84184262ec277daa775aaa7b50b0dcfcbdf5368a44b8c"
+    },
+    {
+      "path": "third_party/jomini/crates/eu4save/src/de/province_event_value.rs",
+      "bytes": 2656,
+      "sha256": "9579d5b3eacf80a4ebda5d64c4b84b30aeae1070389386933e1a651b8371943e"
+    },
+    {
+      "path": "third_party/jomini/crates/eu4save/src/de/province_history.rs",
+      "bytes": 12548,
+      "sha256": "ad95588f10b73b18a5ce291fe670e8c8db4f9aaff42f446eb56e274a33cb0fba"
+    },
+    {
+      "path": "third_party/jomini/crates/eu4save/src/de/token_bool.rs",
+      "bytes": 665,
+      "sha256": "818e5eac7e6e3840e2f199a496807474388791c8cb46e14533a60180e5158b98"
+    },
+    {
+      "path": "third_party/jomini/crates/eu4save/src/de/trade_node.rs",
+      "bytes": 6187,
+      "sha256": "0b8b0c5abc925da790307b62eb8f3eb03dcbac430701d71d80ab2a886e7e369b"
+    },
+    {
+      "path": "third_party/jomini/crates/eu4save/src/de/utf8_string.rs",
+      "bytes": 1289,
+      "sha256": "b2e0dec052e4c4c3a6010d005141b51ea997ff005e9668bcfc9a7e96236b1011"
+    },
+    {
+      "path": "third_party/jomini/crates/eu4save/src/de/vec_pair.rs",
+      "bytes": 1684,
+      "sha256": "328944f8858c633fd9cb36dd16b1a7e9d676036c6842bdb257c2c250aae099c7"
+    },
+    {
+      "path": "third_party/jomini/crates/eu4save/src/de/war_history.rs",
+      "bytes": 6964,
+      "sha256": "769686a239d2115082b8cf9aaeccfe49ea835501fb1acebcc651586306074bc3"
+    },
+    {
+      "path": "third_party/jomini/crates/eu4save/src/de/yes_map.rs",
+      "bytes": 1096,
+      "sha256": "8d5f15ecdda51a3e21950e273092a7d6a23ce66b6cae0ff6e699cc7bdbf66fae"
+    },
+    {
+      "path": "third_party/jomini/crates/eu4save/src/errors.rs",
+      "bytes": 3336,
+      "sha256": "3abf32c7281007b5bd1a7e791d3b298336e88b8842a3f334b795e60a5d74d17f"
+    },
+    {
+      "path": "third_party/jomini/crates/eu4save/src/eu4date.rs",
+      "bytes": 282,
+      "sha256": "908b13d6a11f949d87c2cd93d6a0b7ba14ced624ae3f7dc9a07d2505fd75424d"
+    },
+    {
+      "path": "third_party/jomini/crates/eu4save/src/extraction.rs",
+      "bytes": 1590,
+      "sha256": "010af04539d660e85d70095b6a14756acbba1ef37c8c8a31f0812fcfe828f0bf"
+    },
+    {
+      "path": "third_party/jomini/crates/eu4save/src/file.rs",
+      "bytes": 25420,
+      "sha256": "7e05250f8b6bd8f21c0c2e76c352c3757e7b052b681bcfdeb64224ad13a6717d"
+    },
+    {
+      "path": "third_party/jomini/crates/eu4save/src/flavor.rs",
+      "bytes": 7395,
+      "sha256": "4ff02021afe89adaead78b6c94703fbd0ea1c4af1b0f09c72ae37b1571081287"
+    },
+    {
+      "path": "third_party/jomini/crates/eu4save/src/lib.rs",
+      "bytes": 2542,
+      "sha256": "e094e3c75d9bef3572460dba0ef741a58bfe75b0bc9f1e61b2db5b5208355226"
+    },
+    {
+      "path": "third_party/jomini/crates/eu4save/src/melt.rs",
+      "bytes": 17169,
+      "sha256": "d6ca03104d4d682f0da17f273f275d83f146859b64e1c54e432a11b0ab376323"
+    },
+    {
+      "path": "third_party/jomini/crates/eu4save/src/models.rs",
+      "bytes": 41849,
+      "sha256": "d9c011663defbb6b861c3eac55821b99010dec9de3ba81211a05fb5464712bcc"
+    },
+    {
+      "path": "third_party/jomini/crates/eu4save/src/province_id.rs",
+      "bytes": 1031,
+      "sha256": "26b63d971140334099aebf4d1baf8d6378d5a1205aca11397c9059667526f607"
+    },
+    {
+      "path": "third_party/jomini/crates/eu4save/src/query.rs",
+      "bytes": 53590,
+      "sha256": "984dea7082069ac9389eb1af6c091a1d1b7031be99b0618f2496582c4b086bcc"
+    },
+    {
+      "path": "third_party/jomini/crates/eu4save/src/resolver.rs",
+      "bytes": 3444,
+      "sha256": "85e51e720e64fb8939c76bb5ba12bb6419fd2182d4b195820af2113232704fea"
+    },
+    {
+      "path": "third_party/jomini/crates/eu4save/src/tag_resolver.rs",
+      "bytes": 11494,
+      "sha256": "7c0ca7fa2e8a397f299af5fde952ccc3c5f26c8d65f498ebca685b309eb1ab81"
+    },
+    {
+      "path": "third_party/jomini/crates/jomini/Cargo.toml",
+      "bytes": 1652,
+      "sha256": "0a69c4706e0aac3a985ed2b34f3c663e3aa12facae087daa87df95f38690bc76"
+    },
+    {
+      "path": "third_party/jomini/crates/jomini/src/bin/dump.rs",
+      "bytes": 7878,
+      "sha256": "858bb7139491cad5df44f56c8e563d0044cf28e43dee4edad58fb2584f8ad991"
+    },
+    {
+      "path": "third_party/jomini/crates/jomini/src/bin/envelope.rs",
+      "bytes": 1217,
+      "sha256": "e54186a465ef86b3e6ecff334be2cd7d755be0344da10611165c002bd1d77e4a"
+    },
+    {
+      "path": "third_party/jomini/crates/jomini/src/bin/fmt.rs",
+      "bytes": 1028,
+      "sha256": "2c72323f7e743de357cea5c89498e3e9cb0c9ea78f1a7f6af0bfca782500dc81"
+    },
+    {
+      "path": "third_party/jomini/crates/jomini/src/bin/json.rs",
+      "bytes": 637,
+      "sha256": "d360cfadbadf7c2a46184f698fd189849481ae7fd825a95df3b681e15115020c"
+    },
+    {
+      "path": "third_party/jomini/crates/jomini/src/bin/stats.rs",
+      "bytes": 10543,
+      "sha256": "d7e759d8543e8d447142d446401c874d1f53bb202316cc9c21f6777ea7d620c1"
+    },
+    {
+      "path": "third_party/jomini/crates/jomini/src/bin/tape_text.rs",
+      "bytes": 543,
+      "sha256": "c29144e21b4f70c18278bf64d87c8553404df281c084aec6e46fdd63ead82ea4"
+    },
+    {
+      "path": "third_party/jomini/crates/jomini/src/bin/token.rs",
+      "bytes": 1919,
+      "sha256": "dfc1d84d7d7790831332618b7468fa4f3ad0d806e6f72fdfde576146466d64be"
+    },
+    {
+      "path": "third_party/jomini/crates/jomini/src/binary/de.rs",
+      "bytes": 107842,
+      "sha256": "96201a27cb055f9651c6bbebb8c5545eac24ba5be5be7dcfd8c6520103bf4cad"
+    },
+    {
+      "path": "third_party/jomini/crates/jomini/src/binary/flavor.rs",
+      "bytes": 2082,
+      "sha256": "36df4d8ddec96805e66a8c4bc20fe80d70e5069d48bfdab695a7f593386e4598"
+    },
+    {
+      "path": "third_party/jomini/crates/jomini/src/binary/format.rs",
+      "bytes": 29435,
+      "sha256": "34962665ca84ab207393a3caff6e68166b847a416eab6d0ee637446b4df3b366"
+    },
+    {
+      "path": "third_party/jomini/crates/jomini/src/binary/lexer.rs",
+      "bytes": 42661,
+      "sha256": "1bdf5d204db5842053ab17fd4c873b6aba3ef5a7dcd70e8f624cab743864f87d"
+    },
+    {
+      "path": "third_party/jomini/crates/jomini/src/binary/mod.rs",
+      "bytes": 3209,
+      "sha256": "f05a53a54075e3916ea3c5a749bfc8056bc4619f170e29de386c706a767e2194"
+    },
+    {
+      "path": "third_party/jomini/crates/jomini/src/binary/reader.rs",
+      "bytes": 32980,
+      "sha256": "e480b7e0e00a637b912690969b18c3b043a42dc502ef415218b0a6b1da73fcf4"
+    },
+    {
+      "path": "third_party/jomini/crates/jomini/src/binary/resolver.rs",
+      "bytes": 7804,
+      "sha256": "394f8891057c93799465c1b8ddb9de6c129d65c5de3acbb0850cb25f727364ca"
+    },
+    {
+      "path": "third_party/jomini/crates/jomini/src/binary/rgb.rs",
+      "bytes": 425,
+      "sha256": "cb88af30b7a018629931a3954b7d2d5079f92d881bf8f701cdb41404dd3d9b35"
+    },
+    {
+      "path": "third_party/jomini/crates/jomini/src/common/date.rs",
+      "bytes": 53239,
+      "sha256": "0cf4357162920132d9b042a7f0cddd220df2d34ace5bd0243bc6084ac0bcbff1"
+    },
+    {
+      "path": "third_party/jomini/crates/jomini/src/common/mod.rs",
+      "bytes": 77,
+      "sha256": "e43530b00bea02e66c1515ca4e38a513a3309ced3faffde753d3b1ee6eabfaaa"
+    },
+    {
+      "path": "third_party/jomini/crates/jomini/src/data.rs",
+      "bytes": 2456,
+      "sha256": "ad7fea60fca214da967cea46f9fdd8386eb189b3f130bc135657ff09f22b05dc"
+    },
+    {
+      "path": "third_party/jomini/crates/jomini/src/de.rs",
+      "bytes": 6588,
+      "sha256": "58c938071d361e8955416ba3ac2163e1ba711bfa6beb7b41683631aeaa236e6f"
+    },
+    {
+      "path": "third_party/jomini/crates/jomini/src/encoding.rs",
+      "bytes": 9359,
+      "sha256": "0c2a9eb91a975046923f9a1ad12087f66dcf1da98d5d8efd1294e4afd51dd10b"
+    },
+    {
+      "path": "third_party/jomini/crates/jomini/src/envelope.rs",
+      "bytes": 2175,
+      "sha256": "a83482d1927cdfc9948bd3b621900366556a58a971761838b766c700439a9eb4"
+    },
+    {
+      "path": "third_party/jomini/crates/jomini/src/envelope/errors.rs",
+      "bytes": 3126,
+      "sha256": "0745065c174717e7e05daddd5feef3307f0106ef7bbd6da51d202979432251cd"
+    },
+    {
+      "path": "third_party/jomini/crates/jomini/src/envelope/file.rs",
+      "bytes": 39637,
+      "sha256": "06208ee8a79160458c95850e387d5d0b9a919cd1790bcfdf2329dc3861cfc958"
+    },
+    {
+      "path": "third_party/jomini/crates/jomini/src/envelope/header.rs",
+      "bytes": 10990,
+      "sha256": "45e672d68c72c934b0cc8f2776ccf86ca45685fcb2c2f79d6ce39a735fdfbb6d"
+    },
+    {
+      "path": "third_party/jomini/crates/jomini/src/errors.rs",
+      "bytes": 12344,
+      "sha256": "d2f2435d2a3a2a8ffb280d75c12c33d305052b76f0c12d46dff99c09f3ae5f68"
+    },
+    {
+      "path": "third_party/jomini/crates/jomini/src/json/mod.rs",
+      "bytes": 47115,
+      "sha256": "ab6677f7727b692dc79280ed06db403d9d302a634270b381cf7e12530ec631c8"
+    },
+    {
+      "path": "third_party/jomini/crates/jomini/src/lib.rs",
+      "bytes": 11602,
+      "sha256": "48699358b3bb8fd66279e395487b171fb0e023b68b7081720e931d196e302151"
+    },
+    {
+      "path": "third_party/jomini/crates/jomini/src/scalar.rs",
+      "bytes": 19763,
+      "sha256": "af52fac37ea8d1e4a55ca7458b00395ec0e0dcf6f4edbe83de9dd47e2492d8ce"
+    },
+    {
+      "path": "third_party/jomini/crates/jomini/src/source.rs",
+      "bytes": 35979,
+      "sha256": "f8e8ca441a64442fe474119620cc2295f9e1584b9411d1eac3f0e703387cf17a"
+    },
+    {
+      "path": "third_party/jomini/crates/jomini/src/text/de.rs",
+      "bytes": 90247,
+      "sha256": "a14f8447f927ea49625cf03f581c6b7def38dac2516e4605daf2afff088e2c5c"
+    },
+    {
+      "path": "third_party/jomini/crates/jomini/src/text/dom.rs",
+      "bytes": 59603,
+      "sha256": "bacae5a964d0ef4779c0a885ffaed242779489cce080d69151b6868d3807e9fa"
+    },
+    {
+      "path": "third_party/jomini/crates/jomini/src/text/fnv.rs",
+      "bytes": 731,
+      "sha256": "1bfa70ed5f61c65d201eb2d886cb7f6c33212b89b00575d2af7583cfdb618235"
+    },
+    {
+      "path": "third_party/jomini/crates/jomini/src/text/mod.rs",
+      "bytes": 1610,
+      "sha256": "aa35b4767f2f74f8cf9b4ea2a1541e1935bf2b6ab40c4da259805158e43765d5"
+    },
+    {
+      "path": "third_party/jomini/crates/jomini/src/text/operator.rs",
+      "bytes": 4199,
+      "sha256": "04800e3133c93849fd4a29bc2a8858684e187cbc8963b2bff5331037e7b56a19"
+    },
+    {
+      "path": "third_party/jomini/crates/jomini/src/text/reader.rs",
+      "bytes": 48807,
+      "sha256": "327d765810335241d4852a4839d227e19590be8206fedff83c1e979cf2e53930"
+    },
+    {
+      "path": "third_party/jomini/crates/jomini/src/text/tape.rs",
+      "bytes": 106578,
+      "sha256": "1ee78ab992fcb00726dbd4040b6299dfc4838c0371715b21311c80cff87638a8"
+    },
+    {
+      "path": "third_party/jomini/crates/jomini/src/text/writer.rs",
+      "bytes": 53244,
+      "sha256": "39e0b4353e9257e20bf9eebf5f58f69dc0a7a049d6007a0bb510fdb6f11d9943"
+    },
+    {
+      "path": "third_party/jomini/crates/jomini/src/util.rs",
+      "bytes": 3853,
+      "sha256": "f33d84ba0e289366abb459caba32e65915983e2179854115b3baa03d25964285"
+    },
+    {
+      "path": "third_party/jomini/crates/jomini_derive/Cargo.toml",
+      "bytes": 576,
+      "sha256": "a4501b633903cb9726e8f2505959abbab04242f59f3e9f68fb99ec7d3f788ba9"
+    },
+    {
+      "path": "third_party/jomini/crates/jomini_derive/src/lib.rs",
+      "bytes": 24052,
+      "sha256": "bdbc7146e6de6441b0dbb07bde81d64b951fda2c3ff267c0040a23574753ce96"
+    },
+    {
+      "path": "tools/rust/eu4-save-provinces/Cargo.lock",
+      "bytes": 5018,
+      "sha256": "fef3116bc637e978e37e10a8ae6a87fd0f9a0afa9baa71b658ae7b7e77ec77cc"
+    },
+    {
+      "path": "tools/rust/eu4-save-provinces/Cargo.toml",
+      "bytes": 374,
+      "sha256": "b918cb82647bc941ad1ddac59bb04a125dcc970403ee5ba54f12f5eb09df2d51"
+    },
+    {
+      "path": "tools/rust/eu4-save-provinces/src/main.rs",
+      "bytes": 9290,
+      "sha256": "78844a4f129959072fd03781e81c4c7afd27c6c3daae7e3f71a5e42f0c741903"
+    }
+  ],
+  "limitations": [
+    "Supports Jomini text and text-zip EU4 saves; binary/Ironman token resolution is not configured.",
+    "Snapshot exports current cores, claims, and top-level discovered_by only; permanent claims are not distinguished.",
+    "Province serialized keys are preserved privately alongside absolute canonical province IDs."
+  ]
+}

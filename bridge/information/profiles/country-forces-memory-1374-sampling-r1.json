@@ -1,0 +1,143 @@
+{
+  "profile_id": "country-forces-memory-1374",
+  "profile_version": 1,
+  "game_version": "1.37.4",
+  "executable": {
+    "sha256": "b23fa0e1f698d31b01cdd1c3817a675805d8c6286cb66f9c231e6e2a42544d77",
+    "image_base": "0x140000000"
+  },
+  "semantics": {
+    "field": "country_forces_records",
+    "basis": "native_country_direct_linked_force_records",
+    "value_origin": "bounded_rpm_record_graph",
+    "unit": "native_force_records",
+    "scale": 1,
+    "period": "current",
+    "complete": false,
+    "partial": true,
+    "semantic_boundary": [
+      "record identity and raw strength are observed fields",
+      "army/navy, regiment/ship, men, active/deployed, and force-limit meanings are adapter-level or unresolved"
+    ]
+  },
+  "layout": {
+    "database_global_rva": "0x233d8b0",
+    "database_table_offset": "0x118",
+    "database_table_count_offset": "0x124",
+    "database_max_slots": 4095,
+    "game_global_rva": "0x233fe58",
+    "game_date_offset": "0x1dd0",
+    "country_fullref_offset": "0x20",
+    "country_group_offset": "0xd18",
+    "group_object_offset": "0x0",
+    "group_next_offset": "0x10",
+    "group_vector_begin_offset": "0x30",
+    "group_vector_end_offset": "0x38",
+    "vector_entry_stride": 8,
+    "record_body_size": "0x30",
+    "record_id_type_offset": "0x10",
+    "record_id_offset": "0x14",
+    "record_type_offset": "0x20",
+    "record_strength_offset": "0x28",
+    "type_kind_offset": "0x10",
+    "pointer_min": "0x10000",
+    "pointer_max": "0x800000000000"
+  },
+  "limits": {
+    "max_total_rpm": 1048576,
+    "max_single_rpm": 65536,
+    "max_groups": 128,
+    "max_records": 1024,
+    "max_records_per_group": 1024
+  },
+  "code_guards": [
+    {
+      "name": "country_force_counter_body",
+      "rva": "0xee54d7",
+      "rva_end_exclusive": "0xee54e7",
+      "hex": "498b83180d00004885c074670f1f4000",
+      "sha256": "4936fd9b4b6c8f4a42f9b126e7eabbd34246a1162753ca8583a452c750803a00",
+      "aslr_invariant": true,
+      "source": "ordinary bounded disassembly; FUN_140ee5430 body"
+    },
+    {
+      "name": "country_force_counter_caller",
+      "rva": "0xee5710",
+      "rva_end_exclusive": "0xee5720",
+      "hex": "48895c24084889542410555657415441",
+      "sha256": "ff75c7ad410cdf5ed8670c38832cb0c5978a1a02d33b949a537fb3d01e2d518d",
+      "aslr_invariant": true,
+      "source": "ordinary bounded disassembly; FUN_140ee5710 caller"
+    }
+  ],
+  "source_evidence": [
+    {
+      "path": "work/runtime/information-war-context-forces-20261027-001/country-army-record-semantics-001.json",
+      "sha256": "b70486e528f1adefbe2688728b5942930ffec62333e116f70effbc44f135a540",
+      "bytes": 12742,
+      "role": "bounded static pointer chain and ABI"
+    },
+    {
+      "path": "work/runtime/information-war-context-forces-20261027-001/country-army-count-callers-001.json",
+      "sha256": "b18b81aa905b6dd7fbca3593465db8b72bb96805358ef321ab2bbbf93a5c891a",
+      "bytes": 11153,
+      "role": "bounded ordinary caller evidence"
+    },
+    {
+      "path": "work/runtime/information-war-score-20261027-001/country-army-getter-static-001.json",
+      "sha256": "0c3f51ab0177f0e6e8d4e19d1882be52fafeab643f87c8158d834e11386a0ff3",
+      "bytes": 11818,
+      "role": "prior bounded static contract"
+    },
+    {
+      "path": "work/runtime/information-war-context-forces-20261027-001/n02-static-001/fun-140ee5430-linked-window-ordinary.objdump.txt",
+      "sha256": "c670a3ca8fdf2b1c60d1b96a051c9ba0371fe54c574707b4ac189ac0190c6634",
+      "bytes": 5299,
+      "role": "ordinary bounded body disassembly"
+    },
+    {
+      "path": "work/runtime/information-war-context-forces-20261027-001/n02-static-001/fun-140ee5710-ordinary.objdump.txt",
+      "sha256": "3894d43fa3984854c074bf8098b2775c0c9072807a6b9c030ed46a213aae8ddd",
+      "bytes": 19133,
+      "role": "ordinary bounded caller disassembly"
+    },
+    {
+      "path": "work/native/declarewar-forces-query.inc",
+      "sha256": "533ec6e72dc6db7fc156600fcf539d89dd472606277cc65e2e4badd38df6883d",
+      "bytes": 9712,
+      "role": "existing read-only force query contract"
+    },
+    {
+      "path": "work/native/declarewar-participants-query.inc",
+      "sha256": "15a06d5016480b697ea279e7ab12d52c879c1e02372b10879001ca079b7ebdee",
+      "bytes": 17721,
+      "role": "existing country handle identity contract"
+    },
+    {
+      "path": "work/runtime/information-country-forces-20261027-001/country-forces-unit-join-001.json",
+      "sha256": "6c0a12683852fc9e86485e2a990ff5bb75b0abbaefba4b492b3c0487278ad41a",
+      "bytes": 26763,
+      "role": "offline record identity join; no semantic projection"
+    },
+    {
+      "path": "work/runtime/information-country-forces-20261027-001/country-forces-raw-rpm-001.json",
+      "sha256": "073ef90db0e83b316d6576fecacbe62f7da0e33428ef2f16948aa4f1e1bba12f",
+      "bytes": 225884,
+      "role": "prior read-only raw receipt for offline replay only"
+    },
+    {
+      "path": "bridge/information/observation_time.py",
+      "bytes": 2372,
+      "sha256": "70b5eda6373f15587a96e9b4ea3a634d4bfa1879f7e9f1e9f06ac14750fa8a67",
+      "role": "scoped macro observation-time policy"
+    }
+  ],
+  "observation_time_revision": {
+    "scope": "live_macro_query_only",
+    "clock_progress": "monotonic_with_sampling_window",
+    "strict_default_preserved": true,
+    "native_layout_and_guards_changed": false,
+    "previous_profile": "bridge/information/profiles/country-forces-memory-1374.json",
+    "reviewed_dependencies": []
+  }
+}

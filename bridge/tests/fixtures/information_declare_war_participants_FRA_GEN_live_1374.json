@@ -1,0 +1,769 @@
+{
+  "evidence_kind": "actual_public_declare_war_inspection",
+  "source_path": "work/runtime/information-text-codec-20261115-001/preview-eu4-escape.json",
+  "source_sha256": "9c61778353c783d0a5c82fb55b281720fdad9fb8301d1bf73422edd7f9571fa6",
+  "game_date_raw": 56696424,
+  "inspection": {
+    "contract_version": 1,
+    "action_id": "declare_war",
+    "native_identifier": "declare_war",
+    "actor": "FRA",
+    "recipient": "GEN",
+    "phase": "initiate",
+    "decision_country": null,
+    "decision_country_verified": false,
+    "requested_decision_country": "FRA",
+    "interface_support": {
+      "query": "partial_native_rules",
+      "execute": "native_declare_war_submission",
+      "complete": false
+    },
+    "session": {
+      "status": "ready",
+      "state_id": "aced9c3995eca4c6a24282443e87f03fb21bdd5dcf844cb7ac58c98bedccdcfe",
+      "date_raw": 56696424,
+      "reasons": [],
+      "complete": true
+    },
+    "visibility": {
+      "status": "visible",
+      "complete": true
+    },
+    "legality": {
+      "status": "unavailable",
+      "reasons": [
+        {
+          "code": "NATIVE_DECLARE_WAR_PARTICIPANT_SELECTION_FALSE",
+          "text": "与一个国家开战时你可以移动你的部队进入其领土，通过占领对方的省份，提出苛刻的和平协议以获取敌人的省份。但除非你拥有宣战理由，否则无故宣战将极大地降低你的稳定度。",
+          "source": "native_rule",
+          "complete": false
+        }
+      ],
+      "complete": false
+    },
+    "authorization": {
+      "status": "available",
+      "complete": true,
+      "reasons": [
+        {
+          "code": "NATIVE_DECLARE_WAR_SUBMISSION_CAPABILITY_ACKNOWLEDGED",
+          "text": "安装确认允许桥接提交法国发起的宣战操作；本次参数和原生合法性仍需单独决定。",
+          "source": "installation_capability",
+          "complete": true
+        }
+      ]
+    },
+    "parameters": {
+      "requested": {
+        "casus_belli": "no_casus_belli",
+        "war_goal": {
+          "province_id": -1,
+          "beneficiary": "FRA"
+        },
+        "call_allies": [
+          "SAV"
+        ],
+        "promise_land_to": [
+          "SAV"
+        ],
+        "co_belligerents": []
+      },
+      "actual": {
+        "casus_belli": "no_casus_belli",
+        "war_goal": {
+          "province_id": -1,
+          "beneficiary": "FRA"
+        },
+        "call_allies": [
+          "SAV"
+        ],
+        "promise_land_to": [
+          "SAV"
+        ],
+        "co_belligerents": []
+      },
+      "candidates": [],
+      "complete": true
+    },
+    "costs": {
+      "status": "partial",
+      "items": [
+        {
+          "resource": "stability_loss",
+          "native_raw": 2000,
+          "amount_raw": 2000,
+          "amount": 2.0,
+          "unit": "stability_loss",
+          "unit_verified": true,
+          "scale": 1000,
+          "scale_verified": true,
+          "source": "native_rule",
+          "complete": true
+        },
+        {
+          "resource": "war_exhaustion",
+          "native_raw": 2000,
+          "amount_raw": 2000,
+          "amount": 2.0,
+          "unit": "war_exhaustion",
+          "unit_verified": true,
+          "scale": 1000,
+          "scale_verified": true,
+          "source": "native_rule",
+          "complete": true
+        }
+      ],
+      "complete": false,
+      "context": "selected_parameters",
+      "native_text": "§R-2: §!无宣战理由\n\n厌战度：+§R2§!\n这将导致§Y法兰西§!受到总计§Y139§!个国家的§R0§! ~ §R16§!点侵略扩张关系惩罚。",
+      "native_text_decoded": true,
+      "native_text_truncated": false,
+      "coverage": {
+        "status": "partial",
+        "known_items": 2,
+        "additional_costs": "unknown",
+        "complete": false,
+        "source": "native_rule"
+      },
+      "raw_components": {
+        "stability_available": true,
+        "stability_hit_raw": 2000,
+        "stability_scale": 1000,
+        "warex_available": true,
+        "warex_display_raw": 2000,
+        "primary_available": true,
+        "primary_raw": 20000,
+        "secondary_available": true,
+        "secondary_raw": 16920,
+        "native_text": "§R-2: §!无宣战理由\n\n厌战度：+§R2§!\n这将导致§Y法兰西§!受到总计§Y139§!个国家的§R0§! ~ §R16§!点侵略扩张关系惩罚。",
+        "text_readable": true,
+        "text_decoded": true,
+        "text_truncated": false
+      }
+    },
+    "acceptance": {
+      "applicability": "not_applicable",
+      "prediction_available": false,
+      "native_total": null,
+      "unit": null,
+      "scale_verified": false,
+      "predicted_response": "not_applicable",
+      "details_available": false,
+      "items": [],
+      "complete": true
+    },
+    "resources": {
+      "diplomats": {
+        "native_requirement": true,
+        "available_count": 3,
+        "availability_verified": true,
+        "allocation_verified": false,
+        "source": "native_rule",
+        "complete": false
+      }
+    },
+    "native_diagnostic": {
+      "text": "与一个国家开战时你可以移动你的部队进入其领土，通过占领对方的省份，提出苛刻的和平协议以获取敌人的省份。但除非你拥有宣战理由，否则无故宣战将极大地降低你的稳定度。",
+      "source": "native_rule",
+      "complete": false,
+      "text_decoded": true,
+      "text_encoding_verified": false,
+      "truncated": false
+    },
+    "native_rule_components": {
+      "ui_selection_checked": true,
+      "native_visibility": true,
+      "ui_enabled_gate_checked": true,
+      "common_action_gate": true,
+      "validity_called": true,
+      "native_validity": true,
+      "initiation_gate_checked": true,
+      "initiation_gate": true,
+      "parameter_context_complete": true,
+      "native_default_payload": true,
+      "candidate_context_complete": true,
+      "candidate_enumeration_called": true,
+      "candidate_enumeration_complete": true,
+      "candidate_native_count": 0,
+      "candidate_capture_truncated": false,
+      "candidate_cleanup_verified": true,
+      "full_rules_complete": true,
+      "complete": false,
+      "selection_requested": true,
+      "selection_matched": true,
+      "selection_match_count": 1
+    },
+    "family": "declare_war",
+    "initiation_gate_checked": true,
+    "parameter_context_complete": true,
+    "native_default_payload": true,
+    "candidate_context_complete": true,
+    "candidates": [],
+    "candidate_enumeration_called": true,
+    "candidate_enumeration_complete": true,
+    "candidate_native_count": 0,
+    "candidate_capture_truncated": false,
+    "candidate_cleanup_verified": true,
+    "candidate_enumeration": {
+      "called": true,
+      "complete": true,
+      "native_count": 0,
+      "captured_count": 0,
+      "capture_truncated": false,
+      "cleanup_verified": true,
+      "query_complete": true
+    },
+    "full_rules_complete": true,
+    "submitted": false,
+    "selection_requested": true,
+    "selection_matched": true,
+    "selection_match_count": 1,
+    "requested_casus_belli": "no_casus_belli",
+    "requested_province_id": -1,
+    "requested_beneficiary": "FRA",
+    "participants": {
+      "source": "native_declare_war_participants",
+      "called": true,
+      "action_unchanged": true,
+      "selection": {
+        "applied": true,
+        "allowed": false,
+        "call_allies": [
+          "SAV"
+        ],
+        "promise_land_to": [
+          "SAV"
+        ],
+        "co_belligerents": []
+      },
+      "candidate_count": 9,
+      "candidates": [
+        {
+          "index": 0,
+          "side": "attacker",
+          "country": "AMG",
+          "related_country": "FRA",
+          "join_reason_raw": 7,
+          "automatic": true,
+          "selected": false,
+          "promise_land": false,
+          "promise_available": false,
+          "legality_checked": true,
+          "native_legality": true,
+          "diagnostic": {
+            "text": "",
+            "readable": true,
+            "truncated": false,
+            "complete": true
+          },
+          "willingness": {
+            "score_available": true,
+            "native_total_raw": 1000,
+            "acceptance_threshold_raw": 1,
+            "reason_count": 0,
+            "reasons": [],
+            "reasons_complete": true,
+            "complete": true
+          },
+          "context_complete": true,
+          "complete": true
+        },
+        {
+          "index": 1,
+          "side": "attacker",
+          "country": "AUV",
+          "related_country": "FRA",
+          "join_reason_raw": 7,
+          "automatic": true,
+          "selected": false,
+          "promise_land": false,
+          "promise_available": false,
+          "legality_checked": true,
+          "native_legality": true,
+          "diagnostic": {
+            "text": "",
+            "readable": true,
+            "truncated": false,
+            "complete": true
+          },
+          "willingness": {
+            "score_available": true,
+            "native_total_raw": 1000,
+            "acceptance_threshold_raw": 1,
+            "reason_count": 0,
+            "reasons": [],
+            "reasons_complete": true,
+            "complete": true
+          },
+          "context_complete": true,
+          "complete": true
+        },
+        {
+          "index": 2,
+          "side": "attacker",
+          "country": "BOU",
+          "related_country": "FRA",
+          "join_reason_raw": 7,
+          "automatic": true,
+          "selected": false,
+          "promise_land": false,
+          "promise_available": false,
+          "legality_checked": true,
+          "native_legality": true,
+          "diagnostic": {
+            "text": "",
+            "readable": true,
+            "truncated": false,
+            "complete": true
+          },
+          "willingness": {
+            "score_available": true,
+            "native_total_raw": 1000,
+            "acceptance_threshold_raw": 1,
+            "reason_count": 0,
+            "reasons": [],
+            "reasons_complete": true,
+            "complete": true
+          },
+          "context_complete": true,
+          "complete": true
+        },
+        {
+          "index": 3,
+          "side": "attacker",
+          "country": "FOI",
+          "related_country": "FRA",
+          "join_reason_raw": 7,
+          "automatic": true,
+          "selected": false,
+          "promise_land": false,
+          "promise_available": false,
+          "legality_checked": true,
+          "native_legality": true,
+          "diagnostic": {
+            "text": "",
+            "readable": true,
+            "truncated": false,
+            "complete": true
+          },
+          "willingness": {
+            "score_available": true,
+            "native_total_raw": 1000,
+            "acceptance_threshold_raw": 1,
+            "reason_count": 0,
+            "reasons": [],
+            "reasons_complete": true,
+            "complete": true
+          },
+          "context_complete": true,
+          "complete": true
+        },
+        {
+          "index": 4,
+          "side": "attacker",
+          "country": "ORL",
+          "related_country": "FRA",
+          "join_reason_raw": 7,
+          "automatic": true,
+          "selected": false,
+          "promise_land": false,
+          "promise_available": false,
+          "legality_checked": true,
+          "native_legality": true,
+          "diagnostic": {
+            "text": "",
+            "readable": true,
+            "truncated": false,
+            "complete": true
+          },
+          "willingness": {
+            "score_available": true,
+            "native_total_raw": 1000,
+            "acceptance_threshold_raw": 1,
+            "reason_count": 0,
+            "reasons": [],
+            "reasons_complete": true,
+            "complete": true
+          },
+          "context_complete": true,
+          "complete": true
+        },
+        {
+          "index": 5,
+          "side": "attacker",
+          "country": "HES",
+          "related_country": "FRA",
+          "join_reason_raw": 7,
+          "automatic": true,
+          "selected": false,
+          "promise_land": false,
+          "promise_available": false,
+          "legality_checked": true,
+          "native_legality": true,
+          "diagnostic": {
+            "text": "",
+            "readable": true,
+            "truncated": false,
+            "complete": true
+          },
+          "willingness": {
+            "score_available": true,
+            "native_total_raw": 1000,
+            "acceptance_threshold_raw": 1,
+            "reason_count": 0,
+            "reasons": [],
+            "reasons_complete": true,
+            "complete": true
+          },
+          "context_complete": true,
+          "complete": true
+        },
+        {
+          "index": 6,
+          "side": "attacker",
+          "country": "SAV",
+          "related_country": "FRA",
+          "join_reason_raw": 1,
+          "automatic": false,
+          "selected": true,
+          "promise_land": true,
+          "promise_available": true,
+          "legality_checked": true,
+          "native_legality": true,
+          "diagnostic": {
+            "text": "",
+            "readable": true,
+            "truncated": false,
+            "complete": true
+          },
+          "willingness": {
+            "score_available": true,
+            "native_total_raw": -1037,
+            "acceptance_threshold_raw": 1,
+            "reason_count": 8,
+            "reasons": [
+              {
+                "index": 0,
+                "value": 20,
+                "text": "承诺给予热那亚土地：",
+                "readable": true,
+                "truncated": false,
+                "complete": true
+              },
+              {
+                "index": 1,
+                "value": -1000,
+                "text": "正在打另一场战争：",
+                "readable": true,
+                "truncated": false,
+                "complete": true
+              },
+              {
+                "index": 2,
+                "value": 9,
+                "text": "法兰西的外交声誉：",
+                "readable": true,
+                "truncated": false,
+                "complete": true
+              },
+              {
+                "index": 3,
+                "value": -16,
+                "text": "萨伏依陆军实力：",
+                "readable": true,
+                "truncated": false,
+                "complete": true
+              },
+              {
+                "index": 4,
+                "value": -40,
+                "text": "萨伏依负债90¤：",
+                "readable": true,
+                "truncated": false,
+                "complete": true
+              },
+              {
+                "index": 5,
+                "value": -28,
+                "text": "被占领和被围攻的省份：",
+                "readable": true,
+                "truncated": false,
+                "complete": true
+              },
+              {
+                "index": 6,
+                "value": 20,
+                "text": "对敌人的态度：",
+                "readable": true,
+                "truncated": false,
+                "complete": true
+              },
+              {
+                "index": 7,
+                "value": -2,
+                "text": "厌战度：",
+                "readable": true,
+                "truncated": false,
+                "complete": true
+              }
+            ],
+            "reasons_complete": true,
+            "complete": true
+          },
+          "context_complete": true,
+          "complete": true
+        },
+        {
+          "index": 7,
+          "side": "defender",
+          "country": "PAP",
+          "related_country": "GEN",
+          "join_reason_raw": 1,
+          "automatic": false,
+          "selected": false,
+          "promise_land": false,
+          "promise_available": false,
+          "legality_checked": true,
+          "native_legality": true,
+          "diagnostic": {
+            "text": "",
+            "readable": true,
+            "truncated": false,
+            "complete": true
+          },
+          "willingness": {
+            "score_available": true,
+            "native_total_raw": 5,
+            "acceptance_threshold_raw": 1,
+            "reason_count": 3,
+            "reasons": [
+              {
+                "index": 0,
+                "value": 30,
+                "text": "防御性质的战争：",
+                "readable": true,
+                "truncated": false,
+                "complete": true
+              },
+              {
+                "index": 1,
+                "value": -5,
+                "text": "热那亚的外交声誉：",
+                "readable": true,
+                "truncated": false,
+                "complete": true
+              },
+              {
+                "index": 2,
+                "value": -20,
+                "text": "对敌人的态度：",
+                "readable": true,
+                "truncated": false,
+                "complete": true
+              }
+            ],
+            "reasons_complete": true,
+            "complete": true
+          },
+          "context_complete": true,
+          "complete": true
+        },
+        {
+          "index": 8,
+          "side": "defender",
+          "country": "SZO",
+          "related_country": "GEN",
+          "join_reason_raw": 1,
+          "automatic": false,
+          "selected": false,
+          "promise_land": false,
+          "promise_available": false,
+          "legality_checked": true,
+          "native_legality": true,
+          "diagnostic": {
+            "text": "",
+            "readable": true,
+            "truncated": false,
+            "complete": true
+          },
+          "willingness": {
+            "score_available": true,
+            "native_total_raw": -36,
+            "acceptance_threshold_raw": 1,
+            "reason_count": 7,
+            "reasons": [
+              {
+                "index": 0,
+                "value": -20,
+                "text": "萨卢佐的统治者拥有心狠手辣特质：",
+                "readable": true,
+                "truncated": false,
+                "complete": true
+              },
+              {
+                "index": 1,
+                "value": 30,
+                "text": "防御性质的战争：",
+                "readable": true,
+                "truncated": false,
+                "complete": true
+              },
+              {
+                "index": 2,
+                "value": -5,
+                "text": "热那亚的外交声誉：",
+                "readable": true,
+                "truncated": false,
+                "complete": true
+              },
+              {
+                "index": 3,
+                "value": -1,
+                "text": "萨卢佐陆军实力：",
+                "readable": true,
+                "truncated": false,
+                "complete": true
+              },
+              {
+                "index": 4,
+                "value": -19,
+                "text": "萨卢佐负债24¤：",
+                "readable": true,
+                "truncated": false,
+                "complete": true
+              },
+              {
+                "index": 5,
+                "value": -20,
+                "text": "对敌人的态度：",
+                "readable": true,
+                "truncated": false,
+                "complete": true
+              },
+              {
+                "index": 6,
+                "value": -1,
+                "text": "厌战度：",
+                "readable": true,
+                "truncated": false,
+                "complete": true
+              }
+            ],
+            "reasons_complete": true,
+            "complete": true
+          },
+          "context_complete": true,
+          "complete": true
+        }
+      ],
+      "enumeration_complete": true,
+      "legality_complete": true,
+      "complete": true
+    },
+    "forces": {
+      "source": "native_declare_war_dialog",
+      "complete": true,
+      "attackers": {
+        "countries": [
+          "AMG",
+          "AUV",
+          "BOU",
+          "FOI",
+          "FRA",
+          "HES",
+          "ORL"
+        ],
+        "deployed": {
+          "infantry": 47075,
+          "cavalry": 9905,
+          "artillery": 2000,
+          "total": 58980,
+          "unit": "men",
+          "complete": true
+        },
+        "reserve_manpower": {
+          "amount": 144373,
+          "unit": "men",
+          "complete": true
+        },
+        "scope_complete": true
+      },
+      "defenders": {
+        "countries": [
+          "GEN",
+          "PAP"
+        ],
+        "deployed": {
+          "infantry": 26000,
+          "cavalry": 10995,
+          "artillery": 0,
+          "total": 36995,
+          "unit": "men",
+          "complete": true
+        },
+        "reserve_manpower": {
+          "amount": 43851,
+          "unit": "men",
+          "complete": true
+        },
+        "scope_complete": true
+      }
+    },
+    "peace_term_rules": {
+      "source": "native_declare_war_peace_options",
+      "called": true,
+      "action_unchanged": true,
+      "complete": true,
+      "selection_rules_evaluated": false,
+      "disabled": {
+        "available": true,
+        "complete": true,
+        "records": [],
+        "unmapped": [],
+        "target_evaluation_required": false,
+        "target_conditions_evaluated": false,
+        "disabled_actions": []
+      },
+      "attacker_declared": {
+        "available": true,
+        "complete": true,
+        "records": [],
+        "unmapped": [],
+        "target_evaluation_required": false,
+        "target_conditions_evaluated": false,
+        "declared_justified_actions": []
+      },
+      "defender_declared": {
+        "available": true,
+        "complete": true,
+        "records": [],
+        "unmapped": [],
+        "target_evaluation_required": false,
+        "target_conditions_evaluated": false,
+        "declared_justified_actions": []
+      }
+    },
+    "declaration_details": {
+      "source": "native_declare_war_dialog",
+      "complete": true,
+      "casus_belli": {
+        "name": "无宣战理由",
+        "description": "我们没有合法的战争理由。",
+        "complete": true
+      },
+      "war_goal": {
+        "applicable": false,
+        "name": null,
+        "description": null,
+        "complete": true
+      },
+      "peace_conditions": {
+        "disabled_terms_description": "",
+        "complete": true
+      },
+      "description": "宣战理由: §Y无宣战理由§W\n我们没有合法的战争理由。\n\n§Y对稳定的影响：§!\n§R-2: §!无宣战理由\n\n\n厌战度：+§R2§!\n@GEN 热那亚和 @PAP 教宗国与@SZO 萨卢佐结盟。 \n\n",
+      "description_complete": true,
+      "context": "selected_parameters"
+    }
+  }
+}

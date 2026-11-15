@@ -18,7 +18,7 @@ import threading
 import types
 from urllib.parse import unquote, urlsplit
 
-ROOT = Path("E:/work/Programming/eullm")
+ROOT = Path(__file__).resolve().parents[1]
 _RETAINED = []
 _ENVELOPE = "v1-owner-tool-dispatch"
 _ID = re.compile(r"[A-Za-z0-9_.:-]{1,96}\Z", re.ASCII)

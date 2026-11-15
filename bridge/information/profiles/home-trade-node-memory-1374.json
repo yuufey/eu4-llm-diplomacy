@@ -1,0 +1,58 @@
+{
+  "profile_id": "home-trade-node-memory-1374",
+  "game_version": "1.37.4",
+  "executable": {
+    "sha256": "b23fa0e1f698d31b01cdd1c3817a675805d8c6286cb66f9c231e6e2a42544d77"
+  },
+  "source_index": {
+    "source_index_id": "information-home-trade-node-source-index-001",
+    "path": "work/runtime/information-trade-state-20261027-001/home-trade-node-source-index-001.json",
+    "sha256": "fca029b41fbd17c271a5d880d659e8562914e7b7a73ae506983dba0c1386c56f"
+  },
+  "layout": {
+    "entry_home_flag_offset": "0xad",
+    "required_home_count": 1,
+    "source_trade_profile_sha256": "1375800668ed0ddec29d2e5f8efe8e1369d1e4da8b0aa6916b5b970078b137cd"
+  },
+  "semantics": {
+    "basis": "native_trade_node_home_flag",
+    "value_origin": "derived_from_copied_native_flags"
+  },
+  "code_guards": [
+    {
+      "name": "country_selected_fullref_getter",
+      "rva": "0x763840",
+      "rva_end_exclusive": "0x76386e",
+      "hex": "80b9661e000007751780b96f1e000000740e488b81681e0000488902488bc2c3488b81601e0000488902488bc2c3",
+      "sha256": "c65e4ee4d2e23ba5039cd6f7071cffe030ad92f14666532684490f47e48509b7"
+    },
+    {
+      "name": "home_node_flag_getter",
+      "rva": "0xb58c40",
+      "rva_end_exclusive": "0xb58c61",
+      "hex": "48c1ea20480fbfc2488d144048c1e2064803511874080fb682ad000000c332c0c3",
+      "sha256": "fcca0f9ccb47a08f6f4dc692f23b0351d636145f90a52f863fec3bad0a0e6fb7"
+    },
+    {
+      "name": "country_and_home_label_binding",
+      "rva": "0x13d40cc",
+      "rva_end_exclusive": "0x13d416a",
+      "hex": "4c8b0585bdf600498bc8e865f738ff488b08488b05cb97f60048c1e920480fbfc9488b8018010000488b1cc8498b85f8000000488b88a8000000486381dc0000004869d0102e0000490390a81c0000c644242800c64424200141b1014c8d45a0488bcbe8bcf1f7fe84c0747e488b5320498b8df8000000e8f84a78ff4533c94533c0488d4c245884c0488d151cbb97007407488d15abbb9700e836f20d00",
+      "sha256": "7f344ee87d4ea04a8bee0867afb060ee27238892d181931d8a255eea9ad0321d"
+    },
+    {
+      "name": "transit_node_literal",
+      "rva": "0x1d4fc78",
+      "rva_end_exclusive": "0x1d4fc8b",
+      "hex": "54524144455f5452414e5349545f4e4f444500",
+      "sha256": "21745e6551d5c75510cfb3d1980023b6e66ac8fbd217f396aae88707ead4f1bd"
+    },
+    {
+      "name": "home_transit_node_literal",
+      "rva": "0x1d4fd10",
+      "rva_end_exclusive": "0x1d4fd2b",
+      "hex": "54524144455f5452414e5349545f4e4f44455f4341504954414c00",
+      "sha256": "62250f58a69795294d8bc193770421d1da1eef8ec3a3d53de13b09c00fc5ae8a"
+    }
+  ]
+}

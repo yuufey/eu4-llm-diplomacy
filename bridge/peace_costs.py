@@ -1,9 +1,7 @@
-"""Projection of native peace-special cost observations.
+"""Project native peace costs and selected-term comparisons.
 
-The native observer reports raw values even when the selected-term rule is
-unavailable.  This module deliberately projects only those raw comparison
-values; it does not infer a public unit or turn an unverified scale into a
-verified one.
+The aggregate offer getter returns rounded integer war-score points.
+Special-term comparisons retain their recorded units and scale flags.
 """
 
 from __future__ import annotations
@@ -30,6 +28,24 @@ def _is_int(value: object) -> bool:
     """Return true for native integer values, excluding JSON booleans."""
 
     return isinstance(value, int) and not isinstance(value, bool)
+
+
+def project_offer_war_score(evaluation: object) -> dict[str, Any] | None:
+    """Project 1.37.4 CPeaceOffer's rounded integer war-score cost.
+
+    Native 978ed0 rounds the fixed-point offer total to integer points.
+    The selected-term gate compares this result with the same point cap
+    exported by the existing live war-score query.
+    """
+    if not isinstance(evaluation, Mapping):
+        return None
+    value = evaluation.get('aggregate_score_raw')
+    if (evaluation.get('called') is not True
+            or evaluation.get('aggregate_score_available') is not True
+            or not _is_int(value) or not -(1 << 31) <= value < (1 << 31)):
+        return None
+    return {'status': 'known', 'value': value, 'raw': value,
+            'unit': 'war_score_point', 'scale': 1, 'scale_verified': True, 'complete': True}
 
 
 def project_special_cost_comparisons(
@@ -101,4 +117,4 @@ def project_special_cost_comparisons(
     }
 
 
-__all__ = ["project_special_cost_comparisons"]
+__all__ = ["project_special_cost_comparisons", "project_offer_war_score"]

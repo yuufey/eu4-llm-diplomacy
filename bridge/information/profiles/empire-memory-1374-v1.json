@@ -1,0 +1,221 @@
+{
+  "code_guards": [
+    {
+      "bytes": "e802080000488d05e33f5601488903",
+      "end_rva_exclusive": "0x74c0e8",
+      "file_rva_match": true,
+      "length": 15,
+      "name": "hre_world_ctor_to_vtable",
+      "relocation_sites": [],
+      "relocation_status": "not_independently_enumerated; selected windows are relative-call/relative-LEA or fixed register/store instructions",
+      "rva": "0x74c0d9",
+      "sha256": "7013b8ae6483e4d644c5f10e2506fdbe0c36b48e4f9004c51e79794ab1a8fd8d",
+      "source_evidence": "work/runtime/information-live-empire-20261102-001/world-constructor-site-ordinary-001.json",
+      "source_evidence_sha256": "394bdbfd7f01b6ff371c3cf59def53674759c3889731f87543fa4d7a93d97759"
+    },
+    {
+      "bytes": "48891dcb3cbf014883c4205bc3",
+      "end_rva_exclusive": "0x74c193",
+      "file_rva_match": true,
+      "length": 13,
+      "name": "hre_world_global_store",
+      "relocation_sites": [],
+      "relocation_status": "not_independently_enumerated; selected windows are relative-call/relative-LEA or fixed register/store instructions",
+      "rva": "0x74c186",
+      "sha256": "a4e458a5f053cd5bd75dc5f3f972c159d6b8c755d12f86afba13af89f6d97c0e",
+      "source_evidence": "work/runtime/information-live-empire-20261102-001/world-constructor-site-ordinary-001.json",
+      "source_evidence_sha256": "394bdbfd7f01b6ff371c3cf59def53674759c3889731f87543fa4d7a93d97759"
+    },
+    {
+      "bytes": "488d8fd0150000e8f80a0000",
+      "end_rva_exclusive": "0x74cbe8",
+      "file_rva_match": true,
+      "length": 12,
+      "name": "hre_embedded_world_plus_15d0_init",
+      "relocation_sites": [],
+      "relocation_status": "not_independently_enumerated; selected windows are relative-call/relative-LEA or fixed register/store instructions",
+      "rva": "0x74cbdc",
+      "sha256": "c02f04b5d845067409051f553c11f94f2de7a24c2f3adc819ba4d85f95fcb33e",
+      "source_evidence": "work/runtime/information-live-empire-20261102-001/hre-owner-constructor-ordinary-001.json",
+      "source_evidence_sha256": "9f016788722351a19727b28f3c220a1fbc5dda05ee7edcd84665b1242096f203"
+    },
+    {
+      "bytes": "488d05ed275601488901",
+      "end_rva_exclusive": "0x74d71e",
+      "file_rva_match": true,
+      "length": 10,
+      "name": "hre_vtable_init",
+      "relocation_sites": [],
+      "relocation_status": "not_independently_enumerated; selected windows are relative-call/relative-LEA or fixed register/store instructions",
+      "rva": "0x74d714",
+      "sha256": "63461cc99e7e6f30d5edebe84a04cbd590064936b30b9cc2f1e8c8ebe479e6c0",
+      "source_evidence": "work/runtime/information-live-empire-20261102-001/hre-constructor-ordinary-001.json",
+      "source_evidence_sha256": "976fa6afb79f22bcb291616a11bec2c4a0eea6c1b522419c7e78f7bbd6eb5709"
+    },
+    {
+      "bytes": "488b15a8331e018b821c2400008981b80600008b82182400008981bc060000488b82e01500004489a14005000048898144050000488b82e01500004489a11006000048898114060000",
+      "end_rva_exclusive": "0x115caf2",
+      "file_rva_match": true,
+      "length": 73,
+      "name": "hre_ui_global_embedded_identity",
+      "relocation_sites": [],
+      "relocation_status": "not independently enumerated; bounded executable slice from the pinned ordinary report",
+      "rva": "0x115caa9",
+      "sha256": "228f79038ced8baa962492b9952e99595ae27314a81a06976807df81a619b746",
+      "source_evidence": "work/runtime/information-live-empire-20261102-001/ui-binding-audit-001/report.json",
+      "source_evidence_sha256": "875432eb1c5c96159b93e0d1c205e472652676cc192ef0f2a5fde3a9ead5fc2f"
+    },
+    {
+      "bytes": "4c8b3521331e014981c6d01500004c8975c0",
+      "end_rva_exclusive": "0x115cb42",
+      "file_rva_match": true,
+      "length": 18,
+      "name": "hre_ui_global_plus_15d0_provenance",
+      "relocation_sites": [],
+      "relocation_status": "not independently enumerated; bounded executable slice from the pinned ordinary report",
+      "rva": "0x115cb30",
+      "sha256": "01668fcbf8aae32f81a335b927da5e081cbb8fbc06e29823157a43efebc5cbf5",
+      "source_evidence": "work/runtime/information-live-empire-20261102-001/ui-binding-audit-001/report.json",
+      "source_evidence_sha256": "875432eb1c5c96159b93e0d1c205e472652676cc192ef0f2a5fde3a9ead5fc2f"
+    },
+    {
+      "bytes": "4c8b75c0498b5e10488b4e28488b01488d1515a9bc00ff5068c644243800c644243001c644242800c6442420014533c94c8bc3488bd0488bcfe85d67f5ff",
+      "end_rva_exclusive": "0x115dc23",
+      "file_rva_match": true,
+      "length": 62,
+      "name": "hre_ui_emperor_reference_consumer",
+      "relocation_sites": [],
+      "relocation_status": "not independently enumerated; bounded executable slice from the pinned ordinary report",
+      "rva": "0x115dbe5",
+      "sha256": "461e9c3a6e797f2709ff817b2d7035dc90520225c5aaac793b328f1665824eea",
+      "source_evidence": "work/runtime/information-live-empire-20261102-001/ui-binding-audit-001/report.json",
+      "source_evidence_sha256": "875432eb1c5c96159b93e0d1c205e472652676cc192ef0f2a5fde3a9ead5fc2f"
+    },
+    {
+      "bytes": "488b07488b98b80100004c896424404c8964245048c74424580f000000c64424400041b80c000000488d15e235c000488d4c2440e8b074f3fe90488d542440488bcfffd34c8be0",
+      "end_rva_exclusive": "0x115dc6e",
+      "file_rva_match": true,
+      "length": 71,
+      "name": "hre_ui_elector_container_lookup",
+      "relocation_sites": [],
+      "relocation_status": "not independently enumerated; bounded executable slice from the pinned ordinary report",
+      "rva": "0x115dc27",
+      "sha256": "64f89b98040ee3899dc73f9ba1a471f65544973410287d54c2f9bc00d2bf5357",
+      "source_evidence": "work/runtime/information-live-empire-20261102-001/ui-binding-audit-001/report.json",
+      "source_evidence_sha256": "875432eb1c5c96159b93e0d1c205e472652676cc192ef0f2a5fde3a9ead5fc2f"
+    },
+    {
+      "bytes": "498bbe800000004885ff744b66660f1f840000000000488b1fb948000000e843558d00488985300300004c8bc3488b9690040000488bc8e8caa700009041b001488bd0498bcce82be0dcff488b4710488bf84885c075bf",
+      "end_rva_exclusive": "0x115dd21",
+      "file_rva_match": true,
+      "length": 87,
+      "name": "hre_ui_elector_population",
+      "relocation_sites": [],
+      "relocation_status": "not independently enumerated; bounded executable slice from the pinned ordinary report",
+      "rva": "0x115dcca",
+      "sha256": "808e5b2f54a38090d6f7c5d879dd1943f0dda9a56754cb7e8eea32a606462eac",
+      "source_evidence": "work/runtime/information-live-empire-20261102-001/ui-binding-audit-001/report.json",
+      "source_evidence_sha256": "875432eb1c5c96159b93e0d1c205e472652676cc192ef0f2a5fde3a9ead5fc2f"
+    },
+    {
+      "bytes": "488b05ee161e01488b4b20488b80501600004885c0741e48c1e9206690488b1048c1ea20663bd17437488b5010488bc24885d275e8",
+      "end_rva_exclusive": "0x115e798",
+      "file_rva_match": true,
+      "length": 53,
+      "name": "hre_ui_elector_membership_consumer",
+      "relocation_sites": [],
+      "relocation_status": "not independently enumerated; bounded executable slice from the pinned ordinary report",
+      "rva": "0x115e763",
+      "sha256": "e8898542d655703145a92906dd361125e4f93ef46f461a83348d85361551a89c",
+      "source_evidence": "work/runtime/information-live-empire-20261102-001/ui-binding-audit-001/report.json",
+      "source_evidence_sha256": "875432eb1c5c96159b93e0d1c205e472652676cc192ef0f2a5fde3a9ead5fc2f"
+    }
+  ],
+  "executable": {
+    "sha256": "b23fa0e1f698d31b01cdd1c3817a675805d8c6286cb66f9c231e6e2a42544d77"
+  },
+  "framework_profile_sha256": "fd663e01bdd46bda1c456d52cc83e579b2eb9c79d7a0b8404a98db4f1e192158",
+  "game_version": "1.37.4",
+  "layout_dependencies": [
+    {
+      "bytes": 17196,
+      "path": "bridge/information/foreign_technology_capture.py",
+      "sha256": "df3aa0a7eed52b5721b6e7ee13b191b3f137cf6509321208558f38336e509257"
+    },
+    {
+      "bytes": 13345,
+      "path": "bridge/information/country_reference_memory.py",
+      "sha256": "17c183ec1228f029d4f91896ef7454237ca40c2abcf3e7aee3e41aea7acfc593"
+    },
+    {
+      "bytes": 12085,
+      "path": "bridge/information/empire_memory.py",
+      "sha256": "a204487ea8b66da011e274990a33d3ca3715f3196ea413fbe9165200dcf87512"
+    }
+  ],
+  "object_scope": "single_global_hre_record",
+  "profile_id": "empire-memory-1374-v1",
+  "profile_version": 1,
+  "schema": "information.empire_rom_profile.v1",
+  "source_evidence": [
+    {
+      "bytes": 5679,
+      "path": "work/runtime/information-live-empire-20261102-001/world-constructor-site-ordinary-001.json",
+      "sha256": "394bdbfd7f01b6ff371c3cf59def53674759c3889731f87543fa4d7a93d97759"
+    },
+    {
+      "bytes": 83610,
+      "path": "work/runtime/information-live-empire-20261102-001/hre-owner-constructor-ordinary-001.json",
+      "sha256": "9f016788722351a19727b28f3c220a1fbc5dda05ee7edcd84665b1242096f203"
+    },
+    {
+      "bytes": 10830,
+      "path": "work/runtime/information-live-empire-20261102-001/hre-constructor-ordinary-001.json",
+      "sha256": "976fa6afb79f22bcb291616a11bec2c4a0eea6c1b522419c7e78f7bbd6eb5709"
+    },
+    {
+      "bytes": 6736,
+      "path": "work/runtime/information-live-empire-20261102-001/array-writer-fallthrough-001.json",
+      "sha256": "7b14f18ebe82ea1cca135141c3ddd3586ff9a028117dd0efe9da6dda3e329de1"
+    },
+    {
+      "bytes": 5463,
+      "path": "work/runtime/information-live-empire-20261102-001/array-writer-421110-001/report.json",
+      "sha256": "3e1d3b6aefaed4ce87568f9d3539690dd98f7deed8a6e3296b25317a39628aa8"
+    },
+    {
+      "bytes": 62,
+      "path": "work/runtime/information-live-empire-20261102-001/array-writer-421110-001/function.bin",
+      "sha256": "5cbf7508c4f9a80dcf095424749150cf88f87dea306fd60906559b2c9f300627"
+    },
+    {
+      "bytes": 90856,
+      "path": "work/runtime/information-live-empire-20261102-001/ui-binding-audit-001/report.json",
+      "sha256": "875432eb1c5c96159b93e0d1c205e472652676cc192ef0f2a5fde3a9ead5fc2f"
+    },
+    {
+      "bytes": 9121,
+      "path": "work/runtime/information-live-empire-20261102-001/ui-owner-115ca80-001/function-115ca80.bin",
+      "sha256": "f5518218d170961ec0a65c387b73af85034f416946c094d4af9e000aad85e4d3"
+    },
+    {
+      "bytes": 28276,
+      "path": "work/runtime/information-live-empire-20261102-001/ui-owner-115ca80-001/report.json",
+      "sha256": "34806f5f486c90f20eb9a45bb319a60ec66b5d6fe18cb5870c5ec18a48945871"
+    },
+    {
+      "bytes": 21590,
+      "path": "work/runtime/information-live-empire-20261102-001/ui-native-seeds-001/report.json",
+      "sha256": "a527a5ed5f9e25cc2ba950c1d7382762d7d5303458dab946bf3360d7a5d92ab7"
+    },
+    {
+      "bytes": 68418,
+      "path": "work/runtime/information-live-empire-20261102-001/ui-owner-world-references-001/report.json",
+      "sha256": "faa67dbd9f75ebcccf49d2ced919f746425fb88723c9e21e3cc0508bcd8e6db3"
+    }
+  ],
+  "visibility": {
+    "actual_ui_observed": false,
+    "basis": "bounded_static_global_hre_control_flow; external helper semantics and actual rendering remain unobserved"
+  }
+}

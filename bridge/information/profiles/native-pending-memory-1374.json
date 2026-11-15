@@ -1,0 +1,56 @@
+{
+  "schema": "information.native_pending_memory.v1",
+  "game_version": "1.37.4",
+  "executable_sha256": "b23fa0e1f698d31b01cdd1c3817a675805d8c6286cb66f9c231e6e2a42544d77",
+  "observer": "FRA",
+  "scope": "recipient_owned_native_pending_action_list",
+  "preferred_image_base": "0x140000000",
+  "queue_offsets": {
+    "head": 6360,
+    "tail": 6368,
+    "count": 6376
+  },
+  "max_entries": 256,
+  "action_vtable_rvas": {
+    "offer_alliance": 29886240,
+    "offer_royal_marriage": 29887152,
+    "support_independence": 29885936,
+    "ask_military_access": 29883248,
+    "offer_vassalization": 29883680,
+    "trade_favors_for_gold": 29886848,
+    "trade_favors_for_trust": 29887584,
+    "trade_favors_for_men": 29888496,
+    "peace_offer": 29866048
+  },
+  "code_guards": [
+    {
+      "rva": 5145141,
+      "size": 64,
+      "raw_hex": "488b057456e50148c1ea20480fbfca488b8018010000488b3cc8498b00498bc8ff90b0000000488bd84885c00f84cc000000488b10488bc8ff92a800000084c0"
+    }
+  ],
+  "evidence_kind": "existing_native_source_contract_and_ordinary_PE_guard_bytes",
+  "recorded_source_references": [
+    {
+      "path": "work/native/inbound-pending-recovery.inc",
+      "bytes": 6941,
+      "sha256": "c51ae6d5662df0797296daa6e4d10eeaffd905aba29e1503a38d43e21424507e"
+    },
+    {
+      "path": "work/native/alliance-lifecycle.inc",
+      "bytes": 71585,
+      "sha256": "10c09de0fd7077b5c5bcd28dce9e869f94a8d82fc995e37933e9ff3110e7fce9"
+    },
+    {
+      "path": "work/native/alliance-pending-membership.h",
+      "bytes": 2989,
+      "sha256": "05708ae7d72c229af5afa10881e2b09d98cf17fe6420bfcafbcc9f98d7f43c50"
+    }
+  ],
+  "limitations": [
+    "other_pending_channels_not_enumerated",
+    "action_payloads_not_projected",
+    "inventory_ids_have_no_response_authority",
+    "two_external_passes_are_not_atomic"
+  ]
+}

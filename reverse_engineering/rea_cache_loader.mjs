@@ -33,6 +33,9 @@ const replace = (source, anchor, value) => {
     return source.slice(0, first) + value + source.slice(first + anchor.length);
 };
 const transforms = new Map([
+    ["GhidraInstallation.js", (source) => replace(source,
+        'spawnSync(command, ["-XX:-UsePerfData", "-XshowSettings:properties", "-version"], {',
+        'spawnSync(command, ["-Xms16m", "-Xmx64m", "-XX:-UsePerfData", "-XshowSettings:properties", "-version"], {')],
     ["GhidraLauncher.js", (source) => {
         // Change final argv only. REA's private runtime/DACL ownership stays intact.
         let result = replace(source,
