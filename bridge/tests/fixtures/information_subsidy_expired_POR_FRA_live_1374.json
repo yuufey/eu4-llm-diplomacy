@@ -1,0 +1,95 @@
+{
+  "scenario": {
+    "type": "controlled_saved_subsidy_contract",
+    "payer": "POR",
+    "recipient": "FRA",
+    "monthly_amount": 1,
+    "duration_years": 10,
+    "start_date": "1462.2.6",
+    "end_date": "1472.2.6",
+    "loaded_date": "1472.2.6",
+    "observed_end": "1472.3.13",
+    "physical_player": "POR",
+    "observer": "FRA"
+  },
+  "game_sha256": "b23fa0e1f698d31b01cdd1c3817a675805d8c6286cb66f9c231e6e2a42544d77",
+  "dll_sha256": "f05d9eb9209e8d35f512bd1d066cf5fc6585d66f58786527a86ef27cbddd64e6",
+  "manifest_sha256": "64c38d19e2a2decc2a0a039476a33e9f6c8295c7279bec590bdb50649c834f53",
+  "ack": {
+    "event": "diplomacy_observer_installed",
+    "version": 64,
+    "pid": 56244,
+    "session_id": "56244-1dd74aba27ba4a4",
+    "creation_filetime": 134391844405224612,
+    "native_subsidy_expiry_observation": true,
+    "native_subsidy_expiry_wire": 1
+  },
+  "ack_location": {
+    "path": "work/runtime/diplomacy-observer-20261115-subsidy-monthly-v64-001/control-probe.jsonl",
+    "byte_offset": 9748,
+    "bytes": 7365,
+    "sha256": "3fd2cb1976109a8a9ebb2d14138adcd7038d44491c38d72e10637a57089d7905"
+  },
+  "native_event": {
+    "event": "native_subsidy_expired",
+    "session_id": "56244-1dd74aba27ba4a4",
+    "sequence": 1,
+    "date_raw": 56696136,
+    "payer_ref": "0x10000bd00524f50",
+    "recipient_ref": "0x100007a00415246",
+    "observer_ref": "0x100007a00415246",
+    "start_date_raw": 56607984,
+    "end_date_raw": 56695584,
+    "monthly_amount_raw": 1000,
+    "source": "subsidy_record_expiry_remove_return",
+    "wire": 1
+  },
+  "native_event_location": {
+    "path": "work/runtime/diplomacy-observer-20261115-subsidy-monthly-v64-001/control-probe.jsonl",
+    "byte_offset": 1025669,
+    "bytes": 340,
+    "sha256": "4c4e29c1dc00642e45fb5e1f54cc0f74dd19f4d638ecc84025d755053a975649"
+  },
+  "event": {
+    "collected_game_date": 56696424,
+    "complete": true,
+    "event_id": "subsidy-expired:beddf90eb8715ec5e3d5424ccea27554",
+    "event_type": "subsidy_expired",
+    "game_date": 56696136,
+    "objects": [
+      {
+        "actor": "POR",
+        "recipient": "FRA",
+        "type": "country_pair"
+      },
+      {
+        "country": "POR",
+        "type": "country"
+      },
+      {
+        "country": "FRA",
+        "type": "country"
+      }
+    ],
+    "observer": "FRA",
+    "payload": {
+      "end_date_raw": 56695584,
+      "monthly_amount_raw": 1000,
+      "payer": "POR",
+      "recipient": "FRA",
+      "scope": "FRA_payer_or_recipient_subsidy_expiry_returns",
+      "start_date_raw": 56607984
+    },
+    "sequence": 1,
+    "session_id": "56244-1dd74aba27ba4a4",
+    "source": {
+      "complete": true,
+      "date_semantics": "native_subsidy_expiry_remove_return_game_date",
+      "mode": "live",
+      "name": "ObserverSession.read_native_subsidy_expiry_events",
+      "native_sequence": 1,
+      "scope": "FRA_payer_or_recipient_subsidy_expiry_returns",
+      "session_id": "56244-1dd74aba27ba4a4"
+    }
+  }
+}

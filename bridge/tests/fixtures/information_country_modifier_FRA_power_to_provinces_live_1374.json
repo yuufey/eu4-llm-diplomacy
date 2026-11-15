@@ -1,0 +1,30 @@
+{
+  "evidence_kind": "observed_runtime",
+  "source_log": "work\\runtime\\diplomacy-observer-20261112-territorial-interest-v61-002\\control-probe.jsonl",
+  "source_offset": 93522983,
+  "source_line_bytes": 356,
+  "source_line_sha256": "ab29cfd3150af5961c271cd53ca2a6a6f7ec45305107a5b6449d7ea22afc5cd9",
+  "game_sha256": "b23fa0e1f698d31b01cdd1c3817a675805d8c6286cb66f9c231e6e2a42544d77",
+  "dll_sha256": "968ee8e84e0426c86bd8e1e59b4b944cada8f06c90d01540a3c09846a2f14646",
+  "event": {
+    "event": "native_country_modifier_added",
+    "schema_version": 1,
+    "session_id": "36136-1dd72b7c17e6fb7",
+    "sequence": 3,
+    "country": "FRA",
+    "country_fullref": "0x100007a00415246",
+    "modifier_id": "power_to_provinces",
+    "date_raw": 56685648,
+    "start_date_raw": 43808760,
+    "end_date_raw": 56773248,
+    "flags": [
+      1,
+      0,
+      0,
+      0
+    ],
+    "source": "temporary_country_modifier_insert_return",
+    "complete": true
+  },
+  "installation_ack_fixture": "information_war_FRA_BUR_declaration_live_1374.json"
+}

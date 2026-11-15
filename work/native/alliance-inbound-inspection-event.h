@@ -17,6 +17,11 @@ struct Observation {
     const char* reason="none";
     bool royal_marriage=false;
     bool support_independence=false;
+#ifdef BRIDGE_SUPPORT_ROLE_CONTEXT
+    bool support_roles_readable=false;
+    bool support_actor_is_subject=false;
+    bool support_recipient_is_subject=false;
+#endif
     bool military_access=false;
     bool vassalization=false;
     bool favor_gold=false;
@@ -195,9 +200,25 @@ inline bool format(char* buffer,std::size_t capacity,
             : (observed.royal_marriage
                 ? "native_current_royal_marriage_readable"
                 : "native_current_alliance_readable"));
+#ifdef BRIDGE_SUPPORT_ROLE_CONTEXT
+    char role_fields[192]{};
+    if (observed.support_independence) {
+        std::snprintf(role_fields,sizeof(role_fields),
+            "\"support_roles_readable\":%s,\"support_actor_is_subject\":%s,\"support_recipient_is_subject\":%s,",
+            observed.support_roles_readable?"true":"false",observed.support_actor_is_subject?"true":"false",
+            observed.support_recipient_is_subject?"true":"false");
+    }
+#endif
     const int written=std::snprintf(buffer,capacity,
-        "{\"event\":\"native_alliance_inbound_inspection\",\"query_id\":\"%.64s\",\"session_id\":\"%.27s\",\"action_id\":\"%.23s\",\"family\":\"%s\",\"extra60\":%u,\"actor\":\"%.3s\",\"mirror\":\"%.3s\",\"recipient\":\"FRA\",\"phase\":\"%.6s\",\"native_proposal_id\":%llu,\"date_raw\":%d,\"pending_active\":%s,\"decision_country\":\"FRA\",\"decision_country_verified\":%s,\"native_validity\":%s,\"response_rules_complete\":%s,\"%s\":%s,\"%s\":%s,\"%s\":%s,\"date28\":%d,\"date2c\":%d,\"envoy30\":%d,\"state34\":%d,\"variant38\":%u,\"token3c\":%u,\"requested_decision\":\"%.6s\",\"reason\":\"%.96s\"}\n",
+        "{\"event\":\"native_alliance_inbound_inspection\",\"query_id\":\"%.64s\",\"session_id\":\"%.27s\",\"action_id\":\"%.23s\",\"family\":\"%s\","
+#ifdef BRIDGE_SUPPORT_ROLE_CONTEXT
+        "%s"
+#endif
+        "\"extra60\":%u,\"actor\":\"%.3s\",\"mirror\":\"%.3s\",\"recipient\":\"FRA\",\"phase\":\"%.6s\",\"native_proposal_id\":%llu,\"date_raw\":%d,\"pending_active\":%s,\"decision_country\":\"FRA\",\"decision_country_verified\":%s,\"native_validity\":%s,\"response_rules_complete\":%s,\"%s\":%s,\"%s\":%s,\"%s\":%s,\"date28\":%d,\"date2c\":%d,\"envoy30\":%d,\"state34\":%d,\"variant38\":%u,\"token3c\":%u,\"requested_decision\":\"%.6s\",\"reason\":\"%.96s\"}\n",
         request.query_id,request.session_id,request.action_id,family,
+#ifdef BRIDGE_SUPPORT_ROLE_CONTEXT
+        role_fields,
+#endif
         static_cast<unsigned>(observed.extra60),request.original_actor,request.original_actor,
         request.decision,static_cast<unsigned long long>(request.native_proposal_id),request.date_raw,
         observed.pending_active?"true":"false",observed.decision_country_verified?"true":"false",

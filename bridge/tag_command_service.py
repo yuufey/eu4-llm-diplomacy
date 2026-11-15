@@ -7,6 +7,7 @@ from urllib.parse import parse_qs, urlsplit
 from bridge.tag_command_backend import PublicationUnknownError, decode, require, validate_identity
 from bridge.tag_action_conditions import action_conditions
 from bridge.tag_action_lookup import lookup_action, search_actions
+from bridge.http_rejection import discard_rejected_body
 
 
 def search_parameters(query):
@@ -67,6 +68,7 @@ def make_server(backend, identity, *, port=8774, token):
         def dispatch(self,method):
             try:
                 if not self.authorized():
+                    discard_rejected_body(self)
                     return self.send_json(403,{"error":"unauthorized"})
                 path = urlsplit(self.path)
                 require(not path.fragment, "Fragments are unsupported")

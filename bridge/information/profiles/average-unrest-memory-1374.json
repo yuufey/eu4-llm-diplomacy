@@ -1,0 +1,136 @@
+{
+  "profile_id": "average-unrest-memory-1374",
+  "profile_version": 1,
+  "game_version": "1.37.4",
+  "executable": {
+    "sha256": "b23fa0e1f698d31b01cdd1c3817a675805d8c6286cb66f9c231e6e2a42544d77",
+    "image_base": "0x140000000"
+  },
+  "source_index": {
+    "path": "work/runtime/information-average-unrest-20261026-001/unrest-formatter-source-001.json",
+    "sha256": "cfb87a9304915e932916a70d660a47034a6bc4f673f3cad94ebddfcd2a5079f7"
+  },
+  "layout": {
+    "country_average_unrest_offset": "0x2030",
+    "country_average_unrest_normalization_divisor_offset": "0x1344"
+  },
+  "value_semantics": {
+    "width_bytes": 4,
+    "signed": true,
+    "unit": "unrest points",
+    "scale": 1000,
+    "ui_display": "signed raw / 1000, two fractional digits, not percent"
+  },
+  "runtime_observation": false,
+  "notes": [
+    "The registered average_unrest getter copies the signed int32 at country+0x2030 without conversion.",
+    "The bounded producer and threshold paths independently establish the fixed-point scale of 1000.",
+    "The UI formatter consumes the same signed value and writes a decimal with two fractional digits; the third fractional digit is truncated on the observed path.",
+    "The producer's country+0x1344 divisor is guarded for binary compatibility but its independent semantic name is outside this profile.",
+    "This profile does not infer or freeze a current country value, save serialization, or read atomicity."
+  ],
+  "code_guards": [
+    {
+      "name": "key_registration",
+      "rva": "0x6a801a",
+      "end_rva_exclusive": "0x6a803b",
+      "size": 33,
+      "hex": "488d15770c6001488d8d70040000e8e3d09eff488d05ac815f0148898590040000",
+      "sha256": "40b980dbca5e2ca224b94356fb94fd6500b9bb9bf534cc60468bf06ddc202e74"
+    },
+    {
+      "name": "property_getter",
+      "rva": "0x6e0220",
+      "end_rva_exclusive": "0x6e022d",
+      "size": 13,
+      "hex": "418b80302000008902488bc2c3",
+      "sha256": "6e6cd3199d6ec0ca57f6574386fc1fd7bb76ac454df6e40d55a4dc2ce91ae205"
+    },
+    {
+      "name": "normalization_divisor",
+      "rva": "0x940f70",
+      "end_rva_exclusive": "0x940f8a",
+      "size": 26,
+      "hex": "8b874413000085c0746d69c0e803000048638f382000004c63c0",
+      "sha256": "29c5efac9ed4ac1b63a1bc9ff004c0d937b623a20fce0f6512002ffd95ab52fd"
+    },
+    {
+      "name": "average_unrest_normalization",
+      "rva": "0x940fb5",
+      "end_rva_exclusive": "0x940fce",
+      "size": 25,
+      "hex": "486387302000004869c0e8030000489949f7f8898730200000",
+      "sha256": "459df0400b06d4fd88710a9983025624462679f19f9f98f5920dc2f89b1a63a7"
+    },
+    {
+      "name": "threshold_scale",
+      "rva": "0xc66c90",
+      "end_rva_exclusive": "0xc66ce2",
+      "size": 82,
+      "hex": "807a4b004c8bc9b92c000000b8440000000f44c14c8b0410498bc048c1e83884c0742d488b05f66b6d0149c1e820490fbfd0488b881801000041694168e8030000488b14d13982302000007c03b001c332c0",
+      "sha256": "b82774b9834567a4876b06d7c0496a69d0938bb0f6165ce54962b77af2a1fcd3"
+    },
+    {
+      "name": "formatter_value_read",
+      "rva": "0xc66d52",
+      "end_rva_exclusive": "0xc66d59",
+      "size": 7,
+      "hex": "448b9130200000",
+      "sha256": "d88bdd715e46684e18765a9ae07159dab405d1570fe576d61db85b5a02f338ab"
+    },
+    {
+      "name": "formatter_integer_split",
+      "rva": "0xc66d89",
+      "end_rva_exclusive": "0xc66def",
+      "size": 102,
+      "hex": "418bc2998bf833fa2bfa488d5de0488d45e14585d2480f48d8b8d34d6210f7ef448bf241c1fe06418bc6c1e81f4403f0488bd3418bcee8dcf3a900803b00740f0f1f800000000048ffc3803b0075f84169c6e80300002bf88d8fe8030000488bd3e8b1f3a900",
+      "sha256": "335fdde9035d49a57eff70e144abe006dd940cf9aacb3880f11920c4bdde0f24"
+    },
+    {
+      "name": "formatter_fraction_tail",
+      "rva": "0xc66ee8",
+      "end_rva_exclusive": "0xc66f06",
+      "size": 30,
+      "hex": "4169c6e80300002bf88d8fe8030000488bd3e8a1f2a900c6032ec6430300",
+      "sha256": "759160f805252292531036fd3fc10b24b7d515525cd7d70c659206a1b3298ed3"
+    },
+    {
+      "name": "formatter_lower_key_ref",
+      "rva": "0xc66e19",
+      "end_rva_exclusive": "0xc66e35",
+      "size": 28,
+      "hex": "4d8d4f68488d45c04889442428488d15c3720a01488bcee8eb5d0c00",
+      "sha256": "85688ac2291bd3fff5fdafb51e1c475591f653ecc256be4a28db053e7aaf5b85"
+    },
+    {
+      "name": "formatter_higher_key_ref",
+      "rva": "0xc66f1b",
+      "end_rva_exclusive": "0xc66f40",
+      "size": 37,
+      "hex": "488d55e0488d4dc0e8e8e142ff904d8d4f68488d45c04889442428488d151b720a01488bce",
+      "sha256": "2d038d7912ec9616205e92542598b3b1039a66a46e510950c3e2b1f110270962"
+    },
+    {
+      "name": "localization_lower_key",
+      "rva": "0x1d0e0f0",
+      "end_rva_exclusive": "0x1d0e10f",
+      "size": 31,
+      "hex": "415645524147455f5245564f4c545f5249534b5f4c4f5745525f5448414e00",
+      "sha256": "2d88449c2fee35023a3cc130b8322b68c4ef43db76d024ea4afb4c405b9ceccb"
+    },
+    {
+      "name": "localization_higher_key",
+      "rva": "0x1d0e158",
+      "end_rva_exclusive": "0x1d0e178",
+      "size": 32,
+      "hex": "415645524147455f5245564f4c545f5249534b5f4849474845525f5448414e00",
+      "sha256": "9d5d983f1138bb23086372a3a294bf0842317bb905bad6845841ad34381494c3"
+    }
+  ],
+  "read_constraints": {
+    "non_recalculation": true,
+    "not_save_field": true,
+    "double_pass_not_atomic": true,
+    "description": "Read bounded signed int32 values at the selected country pointer; preserve the source/profile distinction between static unit evidence and runtime observations."
+  }
+}

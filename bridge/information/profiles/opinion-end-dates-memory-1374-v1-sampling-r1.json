@@ -1,0 +1,126 @@
+{
+  "profile_id": "opinion-end-dates-memory-1374-v1",
+  "profile_version": 1,
+  "base_profile_sha256": "005b3e92697fb5dfd099cdc10ba665b3c5557163fd2794905ce872f2b168336a",
+  "observer": "FRA",
+  "game_version": "1.37.4",
+  "executable_sha256": "b23fa0e1f698d31b01cdd1c3817a675805d8c6286cb66f9c231e6e2a42544d77",
+  "raw_fields": [
+    "R04.opinion_modifiers.outgoing",
+    "R04.opinion_modifiers.incoming"
+  ],
+  "public_field": "R04.end_date",
+  "unit": "game_date",
+  "scale": 1,
+  "complete": false,
+  "semantics": {
+    "record_date_offset": 24,
+    "duration_mode_offset": 38,
+    "finite_duration_mode": 0,
+    "non_fixed_duration_mode": 1,
+    "actual_expiry_or_removal_evaluated": false
+  },
+  "evidence_ids": [
+    "ev_cc5500d7b44dae46f0699a35f8a46afe85499e75d16b3a19621e1b783bdce1f6",
+    "ev_e85c421180a7ad30a45f685bb463cec072d303ee06475fa8252e718fb20590b0",
+    "ev_892d901656d88093e9fff4746d786eb00a8e3d08274b28dc22404be666c1c6ad",
+    "ev_3eb88f4cccf633951bf5801de0593b35be38e3a32eb253337e2f0f0348b8ba79"
+  ],
+  "dependencies": [
+    {
+      "path": "bridge/information/opinion_modifiers_memory.py",
+      "bytes": 26811,
+      "sha256": "153f472e4fe6922b8e922ab0c5414b0297080d06b2adb8da5410e620b8977920"
+    },
+    {
+      "path": "bridge/information/engine_dates.py",
+      "bytes": 5062,
+      "sha256": "3a452de6fc1da9711faec90dfa0fc8d298a13a2fbb18aea11a41906827657b3f"
+    },
+    {
+      "path": "work/runtime/information-country-records-localization-20261027-001/date-calendar-source-002.json",
+      "bytes": 32231,
+      "sha256": "fd851ea9a6869e61b2ae05dbb251136ff281fe3801907568900a60a8fa800957"
+    },
+    {
+      "path": "work/runtime/military-access-runtime-abi-20261015-001/rea-384070/evidence.json",
+      "bytes": 524754,
+      "sha256": "dfd7112cabef6ab8be33f88548a3f226ea4ef0f87d2e9909d69d2d7397a54225"
+    },
+    {
+      "path": "work/runtime/information-opinion-expiry-20261105-188-001/rea-dated-country-add-001/evidence.json",
+      "bytes": 316464,
+      "sha256": "9bca242a2f3fecbef655194d7dcfff97c081eccf6b9d4dd04386a86a5f232caa"
+    },
+    {
+      "path": "work/runtime/information-opinion-expiry-20261105-188-001/rea-dated-record-write-001/evidence.json",
+      "bytes": 503630,
+      "sha256": "6806da15384de8060bc67646660f02f0c919de9feeea3d8fe40c02020a408cd2"
+    },
+    {
+      "path": "work/runtime/information-opinion-expiry-20261105-188-001/rea-date-add-period-001/evidence.json",
+      "bytes": 651428,
+      "sha256": "4fb6157eba85696c29f56e8cae92af1ee269879bdd647d670bc64e0bb963b1bb"
+    }
+  ],
+  "code_guards": [
+    {
+      "name": "opinion_end_date_384070",
+      "rva": "0x384070",
+      "end_rva_exclusive": "0x3840f5",
+      "bytes": "48895c240848896c2410565741564883ec30488b05cfbdfb01488bda488be9418bf1488d4c2460498bf88b90d01d000089542460418b5054e8833e1401837f5400488bcf488b07410f9ec6ff504084c0741e44887424284c8d4c24604c8bc789742420488bd3488bcde842feffffeb0233c0488b5c2450488b6c24584883c430415e5f5ec3",
+      "sha256": "84bc1c876baa7509082613542e4d3752586503b5848eb63ceb67571c3dd92559",
+      "aslr_invariant": true
+    },
+    {
+      "name": "opinion_end_date_383f20",
+      "rva": "0x383f20",
+      "end_rva_exclusive": "0x384069",
+      "bytes": "48895c24084889542410555657415641574883ec404d8bf9498bf8488bf1e83d0c1501f6403801745f0fb61d74d1c401889c2480000000c60566d1c40101488d571048837a18107203488b12488b46204889442430488d442478488944242848895424204c8d4c24304c8d05b8a78d01bade9a0000488d0d0c3c8d01e80f0e150190881d1cd1c40133db4885ff0f84a2000000488b07488bcfff504084c00f8491000000488b4e2048c1e920488b44247848c1e820663bc80f8477000000385c247f7471807c247e07746a0fbf44247c3b058e98fb01745d3b05ba98fb0174553b05b698fb01744d8b8c249000000085c97e428be9440fb6b42498000000669098488d14c0488b8610150000488b0cd044887424204d8bcf4c8bc7488b54d010e8db84f0ff488bd84883ed0174070fb744247cebcb488bc3488b5c24704883c440415f415e5f5e5dc3",
+      "sha256": "f3f69985cffafb703e3db3b6f91e574868abe70221cce23e8fe347a9eef9dd2e",
+      "aslr_invariant": true
+    },
+    {
+      "name": "opinion_end_date_28c520",
+      "rva": "0x28c520",
+      "end_rva_exclusive": "0x28c720",
+      "bytes": "48895c241048896c241857415641574883ec304d8bf1498bf8488bda4c8bf9e83c050000488be84885c00f8464020000488b4808486340144889742450488d14c1483bca741f66660f1f840000000000488b314c8b46104c3bc7746c4883c108483bca75ebb928000000e8a16c7a01488bf04889442420c7400865010000488d05e32da40148897e10488906418b06894618c7461c01000000694750e8030000894620488b561066c746240000c6462600694f60e80300003bc10f8ec2000000894e20e9bc00000045694850e8030000498b4710488b15b5120b02488b402044034e2048c1e820480fbfc844894e20488b8218010000488b04c8488bcb48c1e920488b80f0180000488bd048c1ea20663bd1751848c1e83884c07410418b4864418b406085c974088bc1eb04418b406069c8e8030000443bc97e06894e20448bc94169405ce8030000443bc87d038946200fb6442470884626418b0e394e180f8d9f000000488b05cc370b024883b8c8740000000f858a000000894e18e9820000008bc869425ce80300003bc87d038946200fb64424708846268b45148b7d10448d7001443bf77e3703ffb808000000443bf7410f4ffe8bcf48f7e148c7c1ffffffff480f40c1488bc8e87d6b7a01448bc7488bd0488bcde8f32de0ff8b4514443bf07e1b4863c84963d6483bca7d10488b4508488934c848ffc1483bca7cf0",
+      "sha256": "679c210c1c2d3edb5fa9581d5b24ab13d8711ea1d51e324d6239a8e7a4313425",
+      "aslr_invariant": true
+    },
+    {
+      "name": "opinion_end_date_28c720",
+      "rva": "0x28c720",
+      "end_rva_exclusive": "0x28c7c8",
+      "bytes": "4489751448c1eb200fbfc3488d04c0488d1cc500000000498b4710488b88101500004803cb7405e864377e00488b0505370b024d8b4f184c03cb4883b8c87400000075054180494604498b4908488bc64c8b0539110b02488b74245048c1e920480fbfd1498b8818010000488b14d1c6828428000001498b491048c1e920480fbfd1498b8818010000488b14d1c6828428000001488b5c2458488b6c24604883c430415f415e5fc3",
+      "sha256": "2fcb666ce820bd5769b11d7967649d4fb865f99f12d3f6b27f422955c2ae61ab",
+      "aslr_invariant": true
+    },
+    {
+      "name": "opinion_end_date_14c7f30",
+      "rva": "0x14c7f30",
+      "end_rva_exclusive": "0x14c801d",
+      "bytes": "85d20f84e40000004889742420574883ec208bfa48895c2430b8abaaaa2a48896c2438f7ef4c8974244033ed448bf2488bf141d1fe8bdd418bc6c1e81f4403f0438d0476c1e0022bf8e8927ec0fe83e81f7817488d0d3e267700660f1f440000ffc3488d49042b0179f68d043b488bce83f80c400f9dc5c1e81f2be86bc5f403f8e8ba7dc0fe448d14284503d64c8b742440418bc29933c22bc269e86d0100004585d2790669e893feffff488bcee82d7ec0fe8d88e8d81b0003cd448d0c49488bcee8d9feffff8d143b428d0cc8890e488bcee898fdffff488b6c2438488b5c2430488b7424484883c4205fc3",
+      "sha256": "0915947b865f71858c06df7154ffc2c76317a27428dcdded5d1dd1c844cb3e2b",
+      "aslr_invariant": true
+    }
+  ],
+  "relocation_overlap_targets": [],
+  "source_compatibility": {
+    "original_profile": "bridge/information/profiles/opinion-end-dates-memory-1374-v1.json",
+    "original_sha256": "211b76e0d32f656c6c2bf5030c88a34fb981ebdb41c881df9f8b9d4829fc334a",
+    "native_layout_and_guard_bytes_changed": false,
+    "updates": [
+      {
+        "field": "base_profile_sha256",
+        "before": "f32964d38ed5009b5a584f173ef16f46a80a1efc0985c4dbcc11cdf4070ad4e8",
+        "after": "005b3e92697fb5dfd099cdc10ba665b3c5557163fd2794905ce872f2b168336a"
+      },
+      {
+        "field": "bridge/information/opinion_modifiers_memory.py",
+        "before_sha256": "91c4948e157967a1a46177bf021e5235e24df57734a12768faff63b67c61e58b",
+        "after_sha256": "153f472e4fe6922b8e922ab0c5414b0297080d06b2adb8da5410e620b8977920"
+      }
+    ]
+  }
+}

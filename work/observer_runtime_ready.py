@@ -51,7 +51,7 @@ def _heartbeat_thread_token(event: dict) -> tuple[str, int | str] | tuple[str]:
 
 
 def _stable_matching_heartbeat(events: list[object], expected_session: str,
-                               *, player: str = "POR") -> dict | None:
+                               *, player: str = "POR", allow_date_progress: bool = False) -> dict | None:
     """Return the last heartbeat in a consecutive stable pair.
 
     The pair must carry the same session, thread identity, player and
@@ -59,6 +59,7 @@ def _stable_matching_heartbeat(events: list[object], expected_session: str,
     thread; and its integer frame counter must strictly increase.  A later
     same-session heartbeat that breaks those conditions clears the pair, so an
     earlier stable pair cannot make a changed or stale world appear ready.
+    Read-only information callers may accept monotonically advancing dates.
     """
 
     if not isinstance(expected_session, str) or not expected_session:
@@ -86,7 +87,11 @@ def _stable_matching_heartbeat(events: list[object], expected_session: str,
             and isinstance(frames, int) and not isinstance(frames, bool)
             and thread_token != ()
         )
-        if (valid and previous_context == context
+        matching_context = previous_context == context
+        if allow_date_progress and valid and previous_context is not None:
+            matching_context = (previous_context[:2] == context[:2]
+                                and date_raw >= previous_context[2])
+        if (valid and matching_context
                 and previous_frames is not None and frames > previous_frames):
             stable_event = candidate
         else:

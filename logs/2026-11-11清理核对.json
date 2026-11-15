@@ -1,0 +1,18 @@
+{
+  "runtime_after": {
+    "files": 160752,
+    "bytes": 49327327999,
+    "python_files": 23281
+  },
+  "control_logs": {
+    "logical_bytes": 8336858738,
+    "compressed_bytes": 3125501952,
+    "difference_bytes": 5211356786
+  },
+  "retention_probe": {
+    "passed_fixture_removed": true,
+    "failed_fixture_retained": true,
+    "probe_cleaned": true
+  },
+  "regression_passed": 15
+}

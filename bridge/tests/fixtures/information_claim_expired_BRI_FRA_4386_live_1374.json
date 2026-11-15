@@ -1,0 +1,94 @@
+{
+  "scenario": {
+    "type": "controlled_saved_claim_date",
+    "record": "provinces.-4386.history.add_claim.BRI",
+    "history_date_before": "1456.4.23",
+    "history_date_after": "1447.1.1",
+    "loaded_date": "1471.12.27",
+    "observed_end": "1472.1.1",
+    "duration_years_verified": 25,
+    "physical_player": "POR",
+    "observer": "FRA"
+  },
+  "game_sha256": "b23fa0e1f698d31b01cdd1c3817a675805d8c6286cb66f9c231e6e2a42544d77",
+  "dll_sha256": "8db058b325bef33c2ee7fcd1bfa4418c9991ff2fdb0013893c94f97a069ac953",
+  "ack": {
+    "event": "diplomacy_observer_installed",
+    "version": 64,
+    "pid": 8344,
+    "session_id": "8344-1dd74a65edeeac6",
+    "creation_filetime": 134391821796043462,
+    "native_claim_expiry_observation": true,
+    "native_claim_expiry_wire": 1,
+    "native_claim_expiry_scope": "FRA_claimant_or_current_owner_at_native_claim_expiry_remove_return"
+  },
+  "ack_location": {
+    "offset": 11862,
+    "projection": "claim capability and installation identity fields from the actual native ACK"
+  },
+  "native_event": {
+    "event": "native_claim_expired",
+    "session_id": "8344-1dd74a65edeeac6",
+    "sequence": 1,
+    "date_raw": 56694720,
+    "claimant_ref": "0x100007400495242",
+    "owner_ref": "0x100007a00415246",
+    "observer_ref": "0x100007a00415246",
+    "province_id": 4386,
+    "source": "claim_record_natural_expiry_remove_return",
+    "wire": 1
+  },
+  "native_location": {
+    "offset": 751713,
+    "source_report": "work/runtime/information-subsidy-expiry-peer-root-20261115-001/short-scene/native-events.json",
+    "source_report_sha256": "05870e3054a2d853eaa862851e964d26634ab20fb16cff77f18592f548bf89ae"
+  },
+  "event": {
+    "collected_game_date": 56694720,
+    "complete": true,
+    "event_id": "claim-expired:cb8820848d483f74e48b08c53585bb36",
+    "event_type": "claim_expired",
+    "game_date": 56694720,
+    "objects": [
+      {
+        "country": "BRI",
+        "type": "country"
+      },
+      {
+        "province_id": 4386,
+        "type": "province"
+      },
+      {
+        "country": "FRA",
+        "type": "country"
+      },
+      {
+        "actor": "BRI",
+        "recipient": "FRA",
+        "type": "country_pair"
+      }
+    ],
+    "observer": "FRA",
+    "payload": {
+      "claimant": "BRI",
+      "owner": "FRA",
+      "province_id": 4386,
+      "scope": "FRA_claimant_or_current_owner_at_native_claim_expiry_remove_return"
+    },
+    "sequence": 1,
+    "session_id": "8344-1dd74a65edeeac6",
+    "source": {
+      "complete": true,
+      "date_semantics": "native_claim_expiry_remove_return_game_date",
+      "mode": "live",
+      "name": "ObserverSession.read_native_claim_expiry_events",
+      "native_sequence": 1,
+      "scope": "FRA_claimant_or_current_owner_at_native_claim_expiry_remove_return",
+      "session_id": "8344-1dd74a65edeeac6"
+    }
+  },
+  "pre_claims": [
+    "BRI"
+  ],
+  "post_claims": []
+}

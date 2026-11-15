@@ -1,0 +1,87 @@
+{
+  "profile_id": "country-rivals-memory-1374",
+  "profile_version": 1,
+  "game_version": "1.37.4",
+  "executable": {
+    "sha256": "b23fa0e1f698d31b01cdd1c3817a675805d8c6286cb66f9c231e6e2a42544d77",
+    "image_base": "0x140000000"
+  },
+  "source_evidence": [
+    {
+      "path": "work/runtime/information-diplomacy-state-20261028-001/rivals-source-001/report-002.json",
+      "sha256": "6d1af31e9e9630b3de57edf22ae495dc93eab2ee336e819df1604e967533d4d5",
+      "bytes": 220971,
+      "role": "R34 accepted-reader contract, checkpoint oracle, and pinned bounded REA/static evidence"
+    },
+    {
+      "path": "work/runtime/diplomacy-observer-20261028-information-resources-v30-005/rival-query.inc",
+      "sha256": "0922452c8eff6b74416754feffa1928aa51b2be045b391f2dcd8582f8aec53d9",
+      "bytes": 11927,
+      "role": "archived successful R34 rival-query membership reader"
+    }
+  ],
+  "layout": {
+    "database_global_rva": "0x233d8b0",
+    "database_table_offset": "0x118",
+    "database_table_count_offset": "0x124",
+    "database_max_slots": 4095,
+    "game_global_rva": "0x233fe58",
+    "game_date_offset": "0x1dd0",
+    "country_fullref_offset": "0x20",
+    "country_rivals_head_offset": "0x2248",
+    "country_rivals_count_offset": "0x2258",
+    "rival_node_fullref_offset": "0x10",
+    "rival_node_since_date_offset": "0x18",
+    "rival_node_next_offset": "0x28",
+    "pointer_min": "0x10000",
+    "pointer_max": "0x800000000000"
+  },
+  "limits": {
+    "max_country_slots": 4096,
+    "max_rivals": 64,
+    "max_single_rpm": 65536,
+    "max_total_rpm": 1048576
+  },
+  "semantics": {
+    "field": "rivals",
+    "basis": "native_outgoing_rival_membership",
+    "value_origin": "copied_native_cache",
+    "unit": "country_tags",
+    "scale": 1,
+    "period": "current",
+    "direction": "outgoing_declared_by_country",
+    "complete": true,
+    "partial": false,
+    "scope": "outgoing_active_rivals_only",
+    "population": "The actor country's directly stored outgoing active rival list.",
+    "order": "Public tags are sorted ascending; private rows retain native linked-list order.",
+    "date": "Node date is retained as a signed raw value only; it is not projected or reinterpreted.",
+    "exclusions": ["historical rivals", "AI rival priorities", "incoming rival declarations"]
+  },
+  "code_guards": [
+    {
+      "name": "rival_list_iteration",
+      "rva": "0xf14dd9",
+      "rva_end_exclusive": "0xf14e1a",
+      "hex": "4c8b9648220000498b104d8b4010488b5210498bca4d85d274274c8bca49c1e920660f1f440000488b411048c1e82066413bc17429488b4128488bc84885c075e6",
+      "sha256": "32f8769e6ad64376072835b3edc38f20162b3a98fde19a0f10b413be48811c12",
+      "aslr_invariant": true
+    },
+    {
+      "name": "rival_country_reference_match",
+      "rva": "0x3d1c74",
+      "rva_end_exclusive": "0x3d1caf",
+      "hex": "488b8148220000410fb6f1410fb6e8488bda488bf94885c07421488bca48c1e920488b501048c1ea20663bd10f84d6000000488b40284885c075e6",
+      "sha256": "b51299185990f478fc5ae2c2c83993b1ea6ac0e0ec45ff55bca667f74b14dd47",
+      "aslr_invariant": true
+    },
+    {
+      "name": "rival_member_date_and_next",
+      "rva": "0x3d2a38",
+      "rva_end_exclusive": "0x3d2b56",
+      "hex": "488b99482200004885db0f840e0100004d8bee49c1ed2090488b431048c1e82066413bc50f85e40000008b7b186935b1b2f601e8030000498d8fc0280000e845ab56004c8d40084180781000740c498b40588b80bc080000eb2533c9496350644885d27e18498b4058813817010000743d48ffc14883c008483bca7cec33c0898588000000488b0d9c55f801488b89e06800004885c9741b488b014c8d8d88000000488d5570ff50088b4570eb088b4004ebcc89457005e80300004863c84863c6480fafc848b8cff753e3a59bc42048f7e948c1fa07488bc248c1e83f4803d0b8d34d6210f7eac1fa068bc2c1e81f03d069c23822000003f8897c2430488b4424583bb8d01d00000f8f44010000488b4328488bd84885c00f85fafeffff",
+      "sha256": "70f73beaaf05c249619c2a22087f329eeda3b0872eb330478c79ae5d0eb039c2",
+      "aslr_invariant": true
+    }
+  ]
+}

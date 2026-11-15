@@ -1,0 +1,1169 @@
+{
+  "source": "work/runtime/information-rival-release-20261110-360-001/after-discovery.json",
+  "scope": "Latest saved formal v61 configuration; not all developed source configurations",
+  "topic_counts": {
+    "available": 61,
+    "planned": 13
+  },
+  "field_counts": {
+    "available": 55,
+    "partial": 235,
+    "planned": 113
+  },
+  "topic_enabled_percent": 82.43243243243244,
+  "field_connected_percent": 71.96029776674938,
+  "compact_discovery_bytes": 215188,
+  "additional_topics_with_separate_delivery_evidence": [
+    "T01",
+    "B01",
+    "B02",
+    "B03",
+    "B04"
+  ],
+  "cross_configuration_minimum_query_topics": 66,
+  "cross_configuration_minimum_percent": 89.1891891891892,
+  "topics": [
+    {
+      "id": "C01",
+      "title": "决策背景与当前会话",
+      "status": "available",
+      "fields": {
+        "session_id": "available",
+        "game_date": "available",
+        "game_day": "partial",
+        "observer": "available",
+        "game_version": "partial",
+        "game_sha256": "partial",
+        "dll_sha256": "partial",
+        "world_id": "partial",
+        "paused": "partial",
+        "status": "available"
+      },
+      "planned_fields": []
+    },
+    {
+      "id": "C02",
+      "title": "已发现国家、省份及相关国家集合",
+      "status": "available",
+      "fields": {
+        "discovered_countries": "partial",
+        "discovered_provinces": "partial",
+        "related_countries": "planned"
+      },
+      "planned_fields": [
+        "related_countries"
+      ]
+    },
+    {
+      "id": "C03",
+      "title": "战略目标、外交限制与待回应事项",
+      "status": "available",
+      "fields": {
+        "strategic_goals": "planned",
+        "diplomatic_constraints": "planned",
+        "pending_matters": "partial"
+      },
+      "planned_fields": [
+        "strategic_goals",
+        "diplomatic_constraints"
+      ]
+    },
+    {
+      "id": "C04",
+      "title": "重要局势变化",
+      "status": "available",
+      "fields": {
+        "event_id": "available",
+        "event_type": "available",
+        "event_date": "partial",
+        "event_objects": "partial",
+        "event_payload": "partial",
+        "complete": "available"
+      },
+      "planned_fields": []
+    },
+    {
+      "id": "N01",
+      "title": "本国财政（已核对字段）",
+      "status": "available",
+      "fields": {
+        "treasury": "available",
+        "monthly_income": "partial",
+        "monthly_expenses": "partial",
+        "monthly_balance": "partial",
+        "loans": "partial",
+        "war_income": "partial",
+        "loan_summary": "partial"
+      },
+      "planned_fields": []
+    },
+    {
+      "id": "N02",
+      "title": "本国军队与人力（已核对字段）",
+      "status": "available",
+      "fields": {
+        "army_size": "partial",
+        "navy_size": "partial",
+        "army_composition": "partial",
+        "navy_composition": "partial",
+        "manpower": "available",
+        "sailors": "available",
+        "force_limits": "partial"
+      },
+      "planned_fields": []
+    },
+    {
+      "id": "N03",
+      "title": "本国军事质量",
+      "status": "available",
+      "fields": {
+        "military_technology": "available",
+        "morale": "available",
+        "discipline": "partial",
+        "army_tradition": "available",
+        "professionalism": "available",
+        "military_modifiers": "partial"
+      },
+      "planned_fields": []
+    },
+    {
+      "id": "N04",
+      "title": "本国国内压力（原生只读字段）",
+      "status": "available",
+      "fields": {
+        "stability": "available",
+        "war_exhaustion": "available",
+        "overextension": "available",
+        "unrest": "available",
+        "corruption": "available",
+        "religious_unity": "partial"
+      },
+      "planned_fields": []
+    },
+    {
+      "id": "N05",
+      "title": "本国外交官与关系容量",
+      "status": "available",
+      "fields": {
+        "diplomats_total": "partial",
+        "diplomats_available": "available",
+        "diplomat_tasks": "partial",
+        "relations_count": "partial",
+        "relations_limit": "partial"
+      },
+      "planned_fields": []
+    },
+    {
+      "id": "N06",
+      "title": "本国点数与外交负担",
+      "status": "available",
+      "fields": {
+        "monarch_points": "available",
+        "diplomatic_reputation": "partial",
+        "prestige": "available",
+        "integrating": "planned",
+        "governance_capacity": "partial"
+      },
+      "planned_fields": [
+        "integrating"
+      ]
+    },
+    {
+      "id": "N07",
+      "title": "本国当前修正",
+      "status": "available",
+      "fields": {
+        "modifier_id": "partial",
+        "name": "partial",
+        "description": "partial",
+        "source": "planned",
+        "target": "partial",
+        "effects": "partial"
+      },
+      "planned_fields": [
+        "source"
+      ]
+    },
+    {
+      "id": "N08",
+      "title": "修正期限与持续条件",
+      "status": "available",
+      "fields": {
+        "modifier_start_date": "partial",
+        "modifier_end_date": "partial",
+        "remaining_days": "partial",
+        "duration_type": "partial",
+        "removal_conditions": "planned"
+      },
+      "planned_fields": [
+        "removal_conditions"
+      ]
+    },
+    {
+      "id": "N09",
+      "title": "修正效果与最终属性",
+      "status": "available",
+      "fields": {
+        "modifier_effects": "partial",
+        "effective_status": "planned",
+        "source_breakdown": "partial",
+        "final_value": "partial"
+      },
+      "planned_fields": [
+        "effective_status"
+      ]
+    },
+    {
+      "id": "F01",
+      "title": "外国实力规模",
+      "status": "available",
+      "fields": {
+        "development": "partial",
+        "territory": "partial",
+        "subject_scale": "partial",
+        "major_power": "partial",
+        "wars": "partial"
+      },
+      "planned_fields": []
+    },
+    {
+      "id": "F02",
+      "title": "外国军事技术、人力、陆海军统计和质量及字段准入",
+      "status": "available",
+      "fields": {
+        "visible_army": "partial",
+        "visible_navy": "partial",
+        "military_technology": "partial",
+        "manpower": "partial",
+        "military_quality": "partial",
+        "visibility": "partial"
+      },
+      "planned_fields": []
+    },
+    {
+      "id": "F03",
+      "title": "外国国家收入、债务与财政义务",
+      "status": "available",
+      "fields": {
+        "income": "partial",
+        "debt": "partial",
+        "bankruptcy_risk": "planned",
+        "reparations": "partial",
+        "subsidies": "partial"
+      },
+      "planned_fields": [
+        "bankruptcy_risk"
+      ]
+    },
+    {
+      "id": "F04",
+      "title": "外国压力与继承风险",
+      "status": "planned",
+      "fields": {
+        "war_exhaustion": "planned",
+        "unrest": "planned",
+        "occupied": "planned",
+        "subject_loyalty": "planned",
+        "succession_risk": "planned"
+      },
+      "planned_fields": [
+        "war_exhaustion",
+        "unrest",
+        "occupied",
+        "subject_loyalty",
+        "succession_risk"
+      ]
+    },
+    {
+      "id": "R01",
+      "title": "本国关系网与选定国家对（部分类型）",
+      "status": "available",
+      "fields": {
+        "relation_type": "partial",
+        "grantor": "partial",
+        "recipient": "partial",
+        "status": "partial",
+        "expires_at": "planned"
+      },
+      "planned_fields": [
+        "expires_at"
+      ]
+    },
+    {
+      "id": "R02",
+      "title": "选定国家对的宗主与属国关系（部分字段）",
+      "status": "available",
+      "fields": {
+        "overlord": "partial",
+        "subject": "partial",
+        "subject_type": "partial",
+        "confederation": "planned",
+        "tribute": "planned",
+        "permissions": "planned"
+      },
+      "planned_fields": [
+        "confederation",
+        "tribute",
+        "permissions"
+      ]
+    },
+    {
+      "id": "R03",
+      "title": "停战、战争、宿敌与包围网",
+      "status": "available",
+      "fields": {
+        "truce_until": "partial",
+        "wars": "partial",
+        "rivals": "available",
+        "coalition_members": "planned",
+        "targets": "planned"
+      },
+      "planned_fields": [
+        "coalition_members",
+        "targets"
+      ]
+    },
+    {
+      "id": "R04",
+      "title": "双向好感",
+      "status": "available",
+      "fields": {
+        "opinion": "partial",
+        "opinion_modifiers": "partial",
+        "decay": "partial",
+        "end_date": "partial"
+      },
+      "planned_fields": []
+    },
+    {
+      "id": "R05",
+      "title": "信任与人情",
+      "status": "available",
+      "fields": {
+        "trust": "partial",
+        "favors_available": "partial",
+        "favors_direction": "partial",
+        "favor_tasks": "partial",
+        "exchange_conditions": "partial"
+      },
+      "planned_fields": []
+    },
+    {
+      "id": "R06",
+      "title": "AI 态度与公开关系倾向",
+      "status": "planned",
+      "fields": {
+        "ai_attitude": "planned",
+        "history": "planned",
+        "personality": "planned",
+        "relationship_tendency": "planned"
+      },
+      "planned_fields": [
+        "ai_attitude",
+        "history",
+        "personality",
+        "relationship_tendency"
+      ]
+    },
+    {
+      "id": "R07",
+      "title": "持续承诺",
+      "status": "available",
+      "fields": {
+        "land_commitments": "planned",
+        "war_commitments": "planned",
+        "economic_support": "partial",
+        "expiry": "planned",
+        "source": "partial"
+      },
+      "planned_fields": [
+        "land_commitments",
+        "war_commitments",
+        "expiry"
+      ]
+    },
+    {
+      "id": "M01",
+      "title": "当前实际加载的任务树",
+      "status": "available",
+      "fields": {
+        "task_id": "partial",
+        "name": "partial",
+        "description": "partial",
+        "branches": "partial"
+      },
+      "planned_fields": []
+    },
+    {
+      "id": "M02",
+      "title": "任务前置与状态",
+      "status": "available",
+      "fields": {
+        "prerequisites": "partial",
+        "unlock_conditions": "partial",
+        "completion_status": "partial",
+        "currently_completable": "partial",
+        "condition_progress": "partial"
+      },
+      "planned_fields": []
+    },
+    {
+      "id": "M03",
+      "title": "任务具体目标条件",
+      "status": "available",
+      "fields": {
+        "provinces": "partial",
+        "regions": "partial",
+        "countries": "partial",
+        "control": "partial",
+        "ownership": "partial",
+        "cores": "partial",
+        "subjects": "partial"
+      },
+      "planned_fields": []
+    },
+    {
+      "id": "M04",
+      "title": "任务奖励与后续解锁",
+      "status": "available",
+      "fields": {
+        "rewards": "partial",
+        "unlocks": "partial",
+        "claims": "partial",
+        "casus_belli": "partial",
+        "trade_modifiers": "partial",
+        "duration": "partial"
+      },
+      "planned_fields": []
+    },
+    {
+      "id": "M05",
+      "title": "任务链与候选扩张方案",
+      "status": "available",
+      "fields": {
+        "linked_targets": "partial",
+        "reward_timing": "partial",
+        "costs": "partial",
+        "basis": "partial"
+      },
+      "planned_fields": []
+    },
+    {
+      "id": "G01",
+      "title": "核心、宣称与战略目标",
+      "status": "available",
+      "fields": {
+        "cores": "partial",
+        "claims": "partial",
+        "permanent_claims": "partial",
+        "task_targets": "partial",
+        "strategic_targets": "partial"
+      },
+      "planned_fields": []
+    },
+    {
+      "id": "G02",
+      "title": "省份状态与资源（部分）",
+      "status": "available",
+      "fields": {
+        "owner": "partial",
+        "controller": "partial",
+        "development": "partial",
+        "culture": "partial",
+        "religion": "partial",
+        "autonomy": "partial",
+        "center_of_trade": "partial",
+        "resource": "partial"
+      },
+      "planned_fields": []
+    },
+    {
+      "id": "G03",
+      "title": "地理与通行条件",
+      "status": "available",
+      "fields": {
+        "bordering": "planned",
+        "distance": "planned",
+        "straits": "planned",
+        "island": "planned",
+        "land_connection": "planned",
+        "access": "planned",
+        "fort": "partial",
+        "supply": "planned"
+      },
+      "planned_fields": [
+        "bordering",
+        "distance",
+        "straits",
+        "island",
+        "land_connection",
+        "access",
+        "supply"
+      ]
+    },
+    {
+      "id": "G04",
+      "title": "领土与贸易节点关系",
+      "status": "available",
+      "fields": {
+        "trade_node": "planned",
+        "ports": "partial",
+        "transfer_relations": "partial"
+      },
+      "planned_fields": [
+        "trade_node"
+      ]
+    },
+    {
+      "id": "G05",
+      "title": "公开领土兴趣",
+      "status": "planned",
+      "fields": {
+        "country": "planned",
+        "interests": "planned",
+        "conflicts": "planned",
+        "visibility": "planned"
+      },
+      "planned_fields": [
+        "country",
+        "interests",
+        "conflicts",
+        "visibility"
+      ]
+    },
+    {
+      "id": "T01",
+      "title": "贸易节点网络",
+      "status": "planned",
+      "fields": {
+        "node_id": "planned",
+        "name": "planned",
+        "provinces": "planned",
+        "upstream": "planned",
+        "downstream": "planned",
+        "routes": "planned"
+      },
+      "planned_fields": [
+        "node_id",
+        "name",
+        "provinces",
+        "upstream",
+        "downstream",
+        "routes"
+      ]
+    },
+    {
+      "id": "T02",
+      "title": "本埠与贸易收集路线",
+      "status": "available",
+      "fields": {
+        "home_node": "partial",
+        "collect_node": "partial",
+        "upstream": "planned",
+        "leak_direction": "planned",
+        "routes": "planned"
+      },
+      "planned_fields": [
+        "upstream",
+        "leak_direction",
+        "routes"
+      ]
+    },
+    {
+      "id": "T03",
+      "title": "节点贸易价值",
+      "status": "available",
+      "fields": {
+        "local_value": "partial",
+        "incoming_value": "partial",
+        "total_value": "partial",
+        "outgoing_value": "partial",
+        "collected_value": "partial"
+      },
+      "planned_fields": []
+    },
+    {
+      "id": "T04",
+      "title": "贸易节点份额与来源",
+      "status": "available",
+      "fields": {
+        "country_power": "partial",
+        "total_power": "partial",
+        "shares": "partial",
+        "sources": "partial"
+      },
+      "planned_fields": []
+    },
+    {
+      "id": "T05",
+      "title": "贸易收集、转移与收入",
+      "status": "available",
+      "fields": {
+        "collection": "partial",
+        "transfer": "partial",
+        "merchant_task": "partial",
+        "steering_direction": "planned",
+        "income": "partial"
+      },
+      "planned_fields": [
+        "steering_direction"
+      ]
+    },
+    {
+      "id": "T06",
+      "title": "贸易扩张与外交收益",
+      "status": "available",
+      "fields": {
+        "targets": "planned",
+        "expected_trade": "partial",
+        "assumptions": "partial",
+        "costs": "partial"
+      },
+      "planned_fields": [
+        "targets"
+      ]
+    },
+    {
+      "id": "D01",
+      "title": "可用宣战理由",
+      "status": "available",
+      "fields": {
+        "action_id": "available",
+        "target": "available",
+        "casus_belli": "partial",
+        "beneficiary": "partial",
+        "expiry": "partial",
+        "war_goal": "partial"
+      },
+      "planned_fields": []
+    },
+    {
+      "id": "D02",
+      "title": "宣战合法性与成本",
+      "status": "available",
+      "fields": {
+        "legality_status": "available",
+        "legality_reasons": "available",
+        "stability_cost": "partial",
+        "war_exhaustion_cost": "partial",
+        "other_costs": "planned"
+      },
+      "planned_fields": [
+        "other_costs"
+      ]
+    },
+    {
+      "id": "D03",
+      "title": "宣战参战方案",
+      "status": "available",
+      "fields": {
+        "automatic_participants": "partial",
+        "allies": "partial",
+        "guarantors": "partial",
+        "subjects": "partial",
+        "co_belligerents": "partial"
+      },
+      "planned_fields": []
+    },
+    {
+      "id": "D04",
+      "title": "盟友参战意愿",
+      "status": "available",
+      "fields": {
+        "ally": "partial",
+        "willingness": "partial",
+        "reasons": "partial",
+        "favor_requirement": "partial",
+        "land_promise_available": "partial"
+      },
+      "planned_fields": []
+    },
+    {
+      "id": "D05",
+      "title": "宣战阵营兵力与风险",
+      "status": "available",
+      "fields": {
+        "attacker_forces": "partial",
+        "defender_forces": "partial",
+        "resource_comparison": "partial",
+        "reachability": "partial",
+        "risks": "partial"
+      },
+      "planned_fields": []
+    },
+    {
+      "id": "D06",
+      "title": "宣战理由与议和规则",
+      "status": "available",
+      "fields": {
+        "allowed_terms": "partial",
+        "forbidden_terms": "partial",
+        "beneficiaries": "partial",
+        "cost_rules": "partial"
+      },
+      "planned_fields": []
+    },
+    {
+      "id": "W01",
+      "title": "战争身份与参战名单",
+      "status": "available",
+      "fields": {
+        "war_id": "available",
+        "leaders": "partial",
+        "participants": "partial",
+        "join_dates": "partial",
+        "co_belligerent_roles": "partial"
+      },
+      "planned_fields": []
+    },
+    {
+      "id": "W02",
+      "title": "战争分与战争目标",
+      "status": "available",
+      "fields": {
+        "war_score": "partial",
+        "war_score_sources": "partial",
+        "war_goal_controller": "partial",
+        "cumulative_goal_score": "partial",
+        "duration": "partial"
+      },
+      "planned_fields": []
+    },
+    {
+      "id": "W03",
+      "title": "占领、封锁与战损",
+      "status": "planned",
+      "fields": {
+        "occupations": "planned",
+        "blockades": "planned",
+        "battle_losses": "planned",
+        "current_forces": "planned",
+        "reinforcement_change": "planned"
+      },
+      "planned_fields": [
+        "occupations",
+        "blockades",
+        "battle_losses",
+        "current_forces",
+        "reinforcement_change"
+      ]
+    },
+    {
+      "id": "W04",
+      "title": "战争承受能力与贡献",
+      "status": "available",
+      "fields": {
+        "war_exhaustion": "partial",
+        "contribution": "planned",
+        "land_commitment": "planned",
+        "exit_risk": "planned"
+      },
+      "planned_fields": [
+        "contribution",
+        "land_commitment",
+        "exit_risk"
+      ]
+    },
+    {
+      "id": "B01",
+      "title": "逐场战役身份",
+      "status": "planned",
+      "fields": {
+        "event_id": "planned",
+        "war_id": "planned",
+        "battle_type": "planned",
+        "name": "planned",
+        "location": "planned",
+        "end_date": "planned",
+        "sides": "planned",
+        "commanders": "planned",
+        "winner": "planned"
+      },
+      "planned_fields": [
+        "event_id",
+        "war_id",
+        "battle_type",
+        "name",
+        "location",
+        "end_date",
+        "sides",
+        "commanders",
+        "winner"
+      ]
+    },
+    {
+      "id": "B02",
+      "title": "逐场战役数量与损失",
+      "status": "planned",
+      "fields": {
+        "initial_forces": "planned",
+        "losses": "planned",
+        "remaining_forces": "planned",
+        "unit_breakdown": "planned"
+      },
+      "planned_fields": [
+        "initial_forces",
+        "losses",
+        "remaining_forces",
+        "unit_breakdown"
+      ]
+    },
+    {
+      "id": "B03",
+      "title": "逐场战役结果效果",
+      "status": "planned",
+      "fields": {
+        "annihilation": "planned",
+        "retreat": "planned",
+        "ships_captured": "planned",
+        "war_score": "planned",
+        "prestige": "planned",
+        "army_tradition": "planned",
+        "naval_tradition": "planned",
+        "war_exhaustion": "planned"
+      },
+      "planned_fields": [
+        "annihilation",
+        "retreat",
+        "ships_captured",
+        "war_score",
+        "prestige",
+        "army_tradition",
+        "naval_tradition",
+        "war_exhaustion"
+      ]
+    },
+    {
+      "id": "B04",
+      "title": "逐场战役完整结果文本",
+      "status": "planned",
+      "fields": {
+        "raw_text": "planned",
+        "details": "planned",
+        "record_order": "planned",
+        "deduplication": "planned",
+        "completeness": "planned",
+        "gaps": "planned"
+      },
+      "planned_fields": [
+        "raw_text",
+        "details",
+        "record_order",
+        "deduplication",
+        "completeness",
+        "gaps"
+      ]
+    },
+    {
+      "id": "P01",
+      "title": "当前战争可用和约条款",
+      "status": "available",
+      "fields": {
+        "war_id": "partial",
+        "terms": "available",
+        "candidates": "partial",
+        "beneficiaries": "partial",
+        "scope": "partial"
+      },
+      "planned_fields": []
+    },
+    {
+      "id": "P02",
+      "title": "和约合法性与成本",
+      "status": "available",
+      "fields": {
+        "legality_status": "available",
+        "war_score_cost": "partial",
+        "war_score_limit": "partial",
+        "term_compatibility": "partial",
+        "rejection_reasons": "available"
+      },
+      "planned_fields": []
+    },
+    {
+      "id": "P03",
+      "title": "对方接受度预览",
+      "status": "available",
+      "fields": {
+        "acceptance_status": "available",
+        "acceptance_total": "partial",
+        "acceptance_threshold": "partial",
+        "acceptance_factors": "partial",
+        "acceptance_complete": "available"
+      },
+      "planned_fields": []
+    },
+    {
+      "id": "P04",
+      "title": "和约后果预览",
+      "status": "available",
+      "fields": {
+        "consequences": "partial",
+        "territorial_changes": "partial",
+        "money_changes": "partial",
+        "relation_changes": "partial",
+        "subject_changes": "partial"
+      },
+      "planned_fields": []
+    },
+    {
+      "id": "P05",
+      "title": "和约扩张成本",
+      "status": "available",
+      "fields": {
+        "overextension": "partial",
+        "affected_countries": "partial",
+        "coalition": "partial",
+        "core_admin_points": "partial",
+        "unjustified_diplomatic_points": "partial"
+      },
+      "planned_fields": []
+    },
+    {
+      "id": "P06",
+      "title": "和约持续义务与后续条件",
+      "status": "planned",
+      "fields": {
+        "new_truce": "planned",
+        "obligations": "planned",
+        "integration_conditions": "planned",
+        "restart_conditions": "planned"
+      },
+      "planned_fields": [
+        "new_truce",
+        "obligations",
+        "integration_conditions",
+        "restart_conditions"
+      ]
+    },
+    {
+      "id": "A01",
+      "title": "日常外交行动与合法性",
+      "status": "available",
+      "fields": {
+        "action_id": "available",
+        "actor": "available",
+        "recipient": "available",
+        "phase": "available",
+        "legality_status": "available",
+        "legality_reasons": "available",
+        "costs": "available",
+        "diplomat_required": "partial",
+        "cooldown": "partial"
+      },
+      "planned_fields": []
+    },
+    {
+      "id": "A02",
+      "title": "具体外交行动接受意愿",
+      "status": "available",
+      "fields": {
+        "acceptance_status": "available",
+        "acceptance_total": "partial",
+        "acceptance_threshold": "partial",
+        "acceptance_factors": "partial",
+        "acceptance_complete": "available"
+      },
+      "planned_fields": []
+    },
+    {
+      "id": "A03",
+      "title": "经济与人情外交预览",
+      "status": "available",
+      "fields": {
+        "parameters": "available",
+        "costs": "available",
+        "duration": "partial",
+        "resource_direction": "partial",
+        "relation_effects": "partial",
+        "acceptance_status": "partial"
+      },
+      "planned_fields": []
+    },
+    {
+      "id": "A04",
+      "title": "外来提议",
+      "status": "available",
+      "fields": {
+        "proposal_id": "available",
+        "action_id": "available",
+        "actor": "available",
+        "recipient": "available",
+        "phase": "available",
+        "proposal_status": "partial",
+        "currently_pending": "partial",
+        "parameters": "partial",
+        "deadline": "partial",
+        "response_consequences": "partial"
+      },
+      "planned_fields": []
+    },
+    {
+      "id": "A05",
+      "title": "本国请求的实际回应与结果",
+      "status": "available",
+      "fields": {
+        "request_id": "available",
+        "action_id": "available",
+        "status": "available",
+        "submitted": "available",
+        "game_outcome": "available",
+        "result": "partial",
+        "evidence": "partial",
+        "updated_at": "available"
+      },
+      "planned_fields": []
+    },
+    {
+      "id": "S01",
+      "title": "神圣罗马帝国机制",
+      "status": "available",
+      "fields": {
+        "empire_status": "planned",
+        "emperor": "partial",
+        "electors": "partial",
+        "intervention": "planned",
+        "religious_leagues": "planned",
+        "reforms": "partial"
+      },
+      "planned_fields": [
+        "empire_status",
+        "intervention",
+        "religious_leagues"
+      ]
+    },
+    {
+      "id": "S02",
+      "title": "宗教与教廷机制",
+      "status": "available",
+      "fields": {
+        "religion_group": "partial",
+        "faith": "partial",
+        "defender": "partial",
+        "papacy": "partial",
+        "schools": "partial",
+        "mechanics": "partial"
+      },
+      "planned_fields": []
+    },
+    {
+      "id": "S03",
+      "title": "属国忠诚与义务",
+      "status": "planned",
+      "fields": {
+        "liberty_desire": "planned",
+        "loyalty": "planned",
+        "support_independence": "planned",
+        "tribute": "planned",
+        "levy": "planned",
+        "integration": "planned"
+      },
+      "planned_fields": [
+        "liberty_desire",
+        "loyalty",
+        "support_independence",
+        "tribute",
+        "levy",
+        "integration"
+      ]
+    },
+    {
+      "id": "S04",
+      "title": "统治者与继承",
+      "status": "available",
+      "fields": {
+        "ruler": "partial",
+        "heir": "partial",
+        "dynasty": "partial",
+        "succession_dispute": "planned",
+        "personal_union": "partial"
+      },
+      "planned_fields": [
+        "succession_dispute"
+      ]
+    },
+    {
+      "id": "S05",
+      "title": "特殊外交机制",
+      "status": "available",
+      "fields": {
+        "great_power_intervention": "planned",
+        "trade_league": "partial",
+        "tributary": "planned",
+        "colonial_nation": "planned",
+        "government_mechanics": "planned"
+      },
+      "planned_fields": [
+        "great_power_intervention",
+        "tributary",
+        "colonial_nation",
+        "government_mechanics"
+      ]
+    },
+    {
+      "id": "H01",
+      "title": "历史快照与逐场战报序列",
+      "status": "available",
+      "fields": {
+        "snapshot_changes": "partial",
+        "relationship_changes": "partial",
+        "military_changes": "partial",
+        "war_score_changes": "partial",
+        "resource_changes": "partial",
+        "battle_sequence": "partial"
+      },
+      "planned_fields": []
+    },
+    {
+      "id": "H02",
+      "title": "到期事件与修正生命周期",
+      "status": "available",
+      "fields": {
+        "truce_expiry": "partial",
+        "claim_expiry": "partial",
+        "cooldown_expiry": "partial",
+        "subsidy_expiry": "partial",
+        "modifier_lifecycle": "partial"
+      },
+      "planned_fields": []
+    },
+    {
+      "id": "H03",
+      "title": "威胁、机会与候选方案推算",
+      "status": "planned",
+      "fields": {
+        "threats": "planned",
+        "opportunities": "planned",
+        "candidates": "planned",
+        "inputs": "planned",
+        "uncertainty": "planned"
+      },
+      "planned_fields": [
+        "threats",
+        "opportunities",
+        "candidates",
+        "inputs",
+        "uncertainty"
+      ]
+    },
+    {
+      "id": "H04",
+      "title": "既有判断、承诺与实际结果差异",
+      "status": "planned",
+      "fields": {
+        "judgement": "planned",
+        "commitments": "planned",
+        "actual_results": "planned",
+        "differences": "planned",
+        "decision_source": "planned"
+      },
+      "planned_fields": [
+        "judgement",
+        "commitments",
+        "actual_results",
+        "differences",
+        "decision_source"
+      ]
+    }
+  ]
+}

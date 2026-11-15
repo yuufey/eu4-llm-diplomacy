@@ -197,9 +197,27 @@ static void rival_authority_entry(void* object,RivalEntryKind kind,
         return;
     }
     if (original) {
+#ifdef BRIDGE_RIVAL_OBSERVATION
+#ifdef BRIDGE_RIVAL_RECORD_OBSERVATION
+        auto observation = rival_change_observer::begin(
+            static_cast<unsigned>(kind), actor, target, old_rival, shape && canonical,
+            &rival_record_observer::command_snapshot);
+        rival_record_observer::CommandScope record_scope(observation);
+#else
+        auto observation = rival_change_observer::begin(
+            static_cast<unsigned>(kind), actor, target, old_rival, shape && canonical);
+#endif
+#endif
         // The matching trampoline contains the complete original prologue and
         // the return jump.  Forward exactly once for every non-FRA actor.
         original(object);
+#ifdef BRIDGE_RIVAL_OBSERVATION
+#ifdef BRIDGE_RIVAL_RECORD_OBSERVATION
+        rival_change_observer::finish(observation,&rival_record_observer::command_snapshot);
+#else
+        rival_change_observer::finish(observation);
+#endif
+#endif
         if (binding>=0) rival_execution_finish(static_cast<unsigned>(binding));
     }
 }

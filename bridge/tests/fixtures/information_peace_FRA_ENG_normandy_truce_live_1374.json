@@ -1,0 +1,146 @@
+{
+  "evidence_kind": "retained_actual_peace_preview_execution_and_direct_truce",
+  "source_files": {
+    "preview": {
+      "path": "work/runtime/information-mission-progress-live-20261113-001/normandy-peace-preview.json",
+      "sha256": "4c1e338d6fa2c969bfed57deaed0a74e20d358d59d182827507a6b7515e8544f"
+    },
+    "execution": {
+      "path": "work/runtime/information-mission-progress-live-20261113-001/peace-result.json",
+      "sha256": "111aa46bf248ca675a19bf7a191f0d616dc1f6ae72ac42eb719cc56f4e527d33"
+    },
+    "before_context": {
+      "path": "work/runtime/information-mission-progress-live-20261113-001/eng-war-before.json",
+      "sha256": "cdb6e8e2f9d5e885e02f61031680cbf086e9a60283a088b607df27224be5cf75"
+    },
+    "actual_truce": {
+      "path": "work/runtime/information-mission-progress-live-20261113-001/eng-truce-after-peace.json",
+      "sha256": "b7b185232603ac9ab6677798a4a15b85844f1ff7c60efd6621392478fbd78b41"
+    },
+    "rules": {
+      "path": "work/runtime/information-peace-truce-20261113-001/full-result.json",
+      "sha256": "6f80d5be039a8223f0f2c0e85b5238214293d743eed12527170ce53d09c546cf"
+    }
+  },
+  "context": {
+    "status": "ready",
+    "session_id": "36136-1dd72b7c17e6fb7",
+    "game_version": "1.37.4",
+    "game_sha256": "b23fa0e1f698d31b01cdd1c3817a675805d8c6286cb66f9c231e6e2a42544d77",
+    "dll_sha256": "968ee8e84e0426c86bd8e1e59b4b944cada8f06c90d01540a3c09846a2f14646",
+    "observer": "FRA",
+    "game_date": 56684352,
+    "game_day": 2361848,
+    "world_id": null,
+    "paused": null,
+    "mode": "live",
+    "complete": true,
+    "reasons": [],
+    "game_date_raw": 56684352,
+    "game_date_kind": "eu4_hour_tick",
+    "observer_binding": "operator_configuration"
+  },
+  "inspection": {
+    "parameters": {
+      "requested": {
+        "peace_context": {
+          "war_id": "war_ac9bea43fd7d3c3c_00000001",
+          "direction": "demand",
+          "terms": [
+            {
+              "action_id": "cede_province",
+              "province_ids": [
+                167,
+                168,
+                1879,
+                4385
+              ],
+              "beneficiary": "FRA"
+            }
+          ]
+        }
+      },
+      "actual": {
+        "peace_context": {
+          "war_id": "war_ac9bea43fd7d3c3c_00000001",
+          "direction": "demand",
+          "terms": [
+            {
+              "action_id": "cede_province",
+              "province_ids": [
+                167,
+                168,
+                1879,
+                4385
+              ],
+              "beneficiary": "FRA"
+            }
+          ]
+        }
+      }
+    },
+    "costs": {
+      "war_score": {
+        "status": "known",
+        "value": 32,
+        "raw": 32,
+        "unit": "war_score_point",
+        "scale": 1,
+        "scale_verified": true,
+        "complete": true
+      }
+    },
+    "war_context": {
+      "war_score": {
+        "max_score": {
+          "raw": 100,
+          "value": 100,
+          "unit": "war_score_point",
+          "scale": 1,
+          "scale_verified": true
+        }
+      }
+    },
+    "peace_consequences": {
+      "requested_terms_applied": true
+    }
+  },
+  "execution": {
+    "request_id": "p1_normandy_peace_fra_eng_14701026_001",
+    "status": "accepted",
+    "date_raw": 56684352,
+    "war_id": "war_ac9bea43fd7d3c3c_00000001",
+    "actor": "FRA",
+    "recipient": "ENG",
+    "province_ids": [
+      167,
+      168,
+      1879,
+      4385
+    ]
+  },
+  "rules": {
+    "values": {
+      "TRUCE_YEARS": 5,
+      "SCALED_TRUCE_YEARS": 10
+    },
+    "source": {
+      "configuration_sha256": "7b628430d182e2fcc113f9b5d9ec9094913b12b2d608fdfffc97fccf8d1a4122",
+      "definitions_sha256": "3286bff313841911cbb70f9a27000102977a60f42e9345f4ac86bd21ff47ef6b"
+    },
+    "reasons": {}
+  },
+  "actual_truce": {
+    "status": "known",
+    "value": 56756784,
+    "raw": 56756784,
+    "date": "1479.2.1",
+    "hour": 0,
+    "direct_record_flag": true,
+    "unit": "eu4_hour_tick",
+    "scale": 1,
+    "period": "current",
+    "partial": true,
+    "complete": false
+  }
+}

@@ -1,0 +1,129 @@
+{
+  "root": "C:\\Users\\wangyufei\\Documents\\Paradox Interactive\\Europa Universalis IV\\save games",
+  "keep": "C:\\Users\\wangyufei\\Documents\\Paradox Interactive\\Europa Universalis IV\\save games\\llm_diplomacy_frontier_1470_8_17_rival_v61_360.eu4",
+  "keep_sha256": "be79c51ef5e7f8c50cf14bb08dd2315b5410b492d1d190b5464890839e3ac967",
+  "delete": [
+    {
+      "path": "C:\\Users\\wangyufei\\Documents\\Paradox Interactive\\Europa Universalis IV\\save games\\llm_diplomacy_alternate1445_frontier_276.eu4",
+      "bytes": 37801775,
+      "mtime_ns": 1794092701185472600
+    },
+    {
+      "path": "C:\\Users\\wangyufei\\Documents\\Paradox Interactive\\Europa Universalis IV\\save games\\llm_diplomacy_alternate1445_frontier_282.eu4",
+      "bytes": 37918712,
+      "mtime_ns": 1794105546818483800
+    },
+    {
+      "path": "C:\\Users\\wangyufei\\Documents\\Paradox Interactive\\Europa Universalis IV\\save games\\llm_diplomacy_frontier_1467_10_1_ui_cleanup_v44_311.eu4",
+      "bytes": 46063267,
+      "mtime_ns": 1794147924007461300
+    },
+    {
+      "path": "C:\\Users\\wangyufei\\Documents\\Paradox Interactive\\Europa Universalis IV\\save games\\llm_diplomacy_frontier_1467_11_5_modifier_v45_316.eu4",
+      "bytes": 46108810,
+      "mtime_ns": 1794163924201490100
+    },
+    {
+      "path": "C:\\Users\\wangyufei\\Documents\\Paradox Interactive\\Europa Universalis IV\\save games\\llm_diplomacy_frontier_1467_12_10_modifier_v46_318.eu4",
+      "bytes": 46141483,
+      "mtime_ns": 1794169053094477800
+    },
+    {
+      "path": "C:\\Users\\wangyufei\\Documents\\Paradox Interactive\\Europa Universalis IV\\save games\\llm_diplomacy_frontier_1467_6_13_v44_298.eu4",
+      "bytes": 46010159,
+      "mtime_ns": 1794128193060566000
+    },
+    {
+      "path": "C:\\Users\\wangyufei\\Documents\\Paradox Interactive\\Europa Universalis IV\\save games\\llm_diplomacy_frontier_1467_7_23_router_v44_307.eu4",
+      "bytes": 45969992,
+      "mtime_ns": 1794143001186547500
+    },
+    {
+      "path": "C:\\Users\\wangyufei\\Documents\\Paradox Interactive\\Europa Universalis IV\\save games\\llm_diplomacy_frontier_1467_8_27_fragment_retry_v44_308.eu4",
+      "bytes": 45992000,
+      "mtime_ns": 1794144689551263400
+    },
+    {
+      "path": "C:\\Users\\wangyufei\\Documents\\Paradox Interactive\\Europa Universalis IV\\save games\\llm_diplomacy_frontier_1468_10_21_support_subject_v60_354.eu4",
+      "bytes": 46254004,
+      "mtime_ns": 1794260200779318300
+    },
+    {
+      "path": "C:\\Users\\wangyufei\\Documents\\Paradox Interactive\\Europa Universalis IV\\save games\\llm_diplomacy_frontier_1468_1_14_macro_v54_333.eu4",
+      "bytes": 46009413,
+      "mtime_ns": 1794203288789229900
+    },
+    {
+      "path": "C:\\Users\\wangyufei\\Documents\\Paradox Interactive\\Europa Universalis IV\\save games\\llm_diplomacy_frontier_1468_2_18_macro_v55_336.eu4",
+      "bytes": 46150403,
+      "mtime_ns": 1794213281313825800
+    },
+    {
+      "path": "C:\\Users\\wangyufei\\Documents\\Paradox Interactive\\Europa Universalis IV\\save games\\llm_diplomacy_frontier_1468_6_3_condition_v56_341.eu4",
+      "bytes": 46175803,
+      "mtime_ns": 1794226774012295700
+    },
+    {
+      "path": "C:\\Users\\wangyufei\\Documents\\Paradox Interactive\\Europa Universalis IV\\save games\\llm_diplomacy_frontier_1468_7_8_province_v57_346.eu4",
+      "bytes": 46173446,
+      "mtime_ns": 1794241873064180700
+    },
+    {
+      "path": "C:\\Users\\wangyufei\\Documents\\Paradox Interactive\\Europa Universalis IV\\save games\\llm_diplomacy_frontier_1468_8_12_royal_v58_349.eu4",
+      "bytes": 46217775,
+      "mtime_ns": 1794247402191081200
+    },
+    {
+      "path": "C:\\Users\\wangyufei\\Documents\\Paradox Interactive\\Europa Universalis IV\\save games\\llm_diplomacy_frontier_1468_9_16_directed_v59_351.eu4",
+      "bytes": 46266522,
+      "mtime_ns": 1794253244179220000
+    },
+    {
+      "path": "C:\\Users\\wangyufei\\Documents\\Paradox Interactive\\Europa Universalis IV\\save games\\llm_diplomacy_outcome_tail_v40_20261107_001.eu4",
+      "bytes": 43304249,
+      "mtime_ns": 1794021464435014700
+    },
+    {
+      "path": "C:\\Users\\wangyufei\\Documents\\Paradox Interactive\\Europa Universalis IV\\save games\\llm_diplomacy_outcome_text_v39_20261107_001.eu4",
+      "bytes": 43400350,
+      "mtime_ns": 1794015835287382400
+    },
+    {
+      "path": "C:\\Users\\wangyufei\\Documents\\Paradox Interactive\\Europa Universalis IV\\save games\\llm_diplomacy_r70_country_money_rejected_20261020.eu4",
+      "bytes": 43165756,
+      "mtime_ns": 1792429711103077200
+    },
+    {
+      "path": "C:\\Users\\wangyufei\\Documents\\Paradox Interactive\\Europa Universalis IV\\save games\\llm_diplomacy_r74_economic_completed_20261020.eu4",
+      "bytes": 43288217,
+      "mtime_ns": 1792446292311599800
+    },
+    {
+      "path": "C:\\Users\\wangyufei\\Documents\\Paradox Interactive\\Europa Universalis IV\\save games\\llm_war_v7_before.eu4",
+      "bytes": 4446735,
+      "mtime_ns": 1791191788636434000
+    }
+  ],
+  "deleted": [
+    "C:\\Users\\wangyufei\\Documents\\Paradox Interactive\\Europa Universalis IV\\save games\\llm_diplomacy_alternate1445_frontier_276.eu4",
+    "C:\\Users\\wangyufei\\Documents\\Paradox Interactive\\Europa Universalis IV\\save games\\llm_diplomacy_alternate1445_frontier_282.eu4",
+    "C:\\Users\\wangyufei\\Documents\\Paradox Interactive\\Europa Universalis IV\\save games\\llm_diplomacy_frontier_1467_10_1_ui_cleanup_v44_311.eu4",
+    "C:\\Users\\wangyufei\\Documents\\Paradox Interactive\\Europa Universalis IV\\save games\\llm_diplomacy_frontier_1467_11_5_modifier_v45_316.eu4",
+    "C:\\Users\\wangyufei\\Documents\\Paradox Interactive\\Europa Universalis IV\\save games\\llm_diplomacy_frontier_1467_12_10_modifier_v46_318.eu4",
+    "C:\\Users\\wangyufei\\Documents\\Paradox Interactive\\Europa Universalis IV\\save games\\llm_diplomacy_frontier_1467_6_13_v44_298.eu4",
+    "C:\\Users\\wangyufei\\Documents\\Paradox Interactive\\Europa Universalis IV\\save games\\llm_diplomacy_frontier_1467_7_23_router_v44_307.eu4",
+    "C:\\Users\\wangyufei\\Documents\\Paradox Interactive\\Europa Universalis IV\\save games\\llm_diplomacy_frontier_1467_8_27_fragment_retry_v44_308.eu4",
+    "C:\\Users\\wangyufei\\Documents\\Paradox Interactive\\Europa Universalis IV\\save games\\llm_diplomacy_frontier_1468_10_21_support_subject_v60_354.eu4",
+    "C:\\Users\\wangyufei\\Documents\\Paradox Interactive\\Europa Universalis IV\\save games\\llm_diplomacy_frontier_1468_1_14_macro_v54_333.eu4",
+    "C:\\Users\\wangyufei\\Documents\\Paradox Interactive\\Europa Universalis IV\\save games\\llm_diplomacy_frontier_1468_2_18_macro_v55_336.eu4",
+    "C:\\Users\\wangyufei\\Documents\\Paradox Interactive\\Europa Universalis IV\\save games\\llm_diplomacy_frontier_1468_6_3_condition_v56_341.eu4",
+    "C:\\Users\\wangyufei\\Documents\\Paradox Interactive\\Europa Universalis IV\\save games\\llm_diplomacy_frontier_1468_7_8_province_v57_346.eu4",
+    "C:\\Users\\wangyufei\\Documents\\Paradox Interactive\\Europa Universalis IV\\save games\\llm_diplomacy_frontier_1468_8_12_royal_v58_349.eu4",
+    "C:\\Users\\wangyufei\\Documents\\Paradox Interactive\\Europa Universalis IV\\save games\\llm_diplomacy_frontier_1468_9_16_directed_v59_351.eu4",
+    "C:\\Users\\wangyufei\\Documents\\Paradox Interactive\\Europa Universalis IV\\save games\\llm_diplomacy_outcome_tail_v40_20261107_001.eu4",
+    "C:\\Users\\wangyufei\\Documents\\Paradox Interactive\\Europa Universalis IV\\save games\\llm_diplomacy_outcome_text_v39_20261107_001.eu4",
+    "C:\\Users\\wangyufei\\Documents\\Paradox Interactive\\Europa Universalis IV\\save games\\llm_diplomacy_r70_country_money_rejected_20261020.eu4",
+    "C:\\Users\\wangyufei\\Documents\\Paradox Interactive\\Europa Universalis IV\\save games\\llm_diplomacy_r74_economic_completed_20261020.eu4",
+    "C:\\Users\\wangyufei\\Documents\\Paradox Interactive\\Europa Universalis IV\\save games\\llm_war_v7_before.eu4"
+  ]
+}

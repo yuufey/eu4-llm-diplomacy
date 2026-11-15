@@ -75,6 +75,8 @@ static void execution_lifecycle_source_destroyed(void* source,
 struct LifecycleEvent {
     uint64_t sequence;
     uintptr_t caller_return;
+    int32_t observed_game_date_raw=0;
+    bool observed_game_date_verified=false;
     uint64_t source_event_id;
     uint64_t target_event_id;
     DWORD thread;
@@ -139,6 +141,8 @@ static LifecycleEvent lifecycle_events[128]{};
 static unsigned lifecycle_head=0;
 static unsigned lifecycle_size=0;
 static volatile LONG lifecycle_dropped=0;
+// Private diagnostic count of calls whose two temporary UI rows are omitted.
+static volatile LONG64 lifecycle_temporary_ui_cleanup_suppressed=0;
 // Callback ordering shares observation_callback_sequence with command entry.
 // A sequence identifies an observation, never an object's allocation lifetime.
 static volatile LONG lifecycle_install_state=0;
@@ -468,6 +472,7 @@ static void* lifecycle_wrapper_observe(void* source,void** out) {
 }
 
 static void* lifecycle_destructor_observe(void* source,unsigned flags) {
+    const uintptr_t caller_return=reinterpret_cast<uintptr_t>(__builtin_return_address(0));
     LifecycleActionShape before=lifecycle_capture_shape(source);
     uintptr_t class_vtable=0;
     read(reinterpret_cast<uintptr_t>(source),class_vtable);
@@ -479,15 +484,33 @@ static void* lifecycle_destructor_observe(void* source,unsigned flags) {
         ? lifecycle_favor_trust_destructor_original : class_vtable==base+lifecycle_gift_vtable_rva
         ? lifecycle_gift_destructor_original : lifecycle_destructor_original;
     if (!original) return nullptr;
+    // B23's diploaction_list refresh frees its newly enumerated temporary
+    // entries at 0xf0bf75 when the visible list has not changed. Keep query
+    // diagnostics and every pending/response shape on the normal path.
+    const bool temporary_ui_cleanup=before.tracked && caller_return==base+0xf0bf77
+        && GetCurrentThreadId()==frame_thread && !observation_active_query
+        && flags==1 && before.readable && before.matched && before.handles_canonical
+        && before.state34==0 && before.variant38==1 && before.proposal3c==0;
+    const bool record_lifecycle=before.tracked && !temporary_ui_cleanup;
+    if (temporary_ui_cleanup)
+        InterlockedIncrement64(&lifecycle_temporary_ui_cleanup_suppressed);
+    uintptr_t game=0;
+    int32_t observed_game_date_raw=0;
+    const bool observed_game_date_verified=record_lifecycle
+        && read(base+0x233fe58,game) && read(game+0x1dd0,observed_game_date_raw);
+    if (!observed_game_date_verified) observed_game_date_raw=0;
     if (before.tracked)
         execution_lifecycle_source_destroyed(source,before,flags);
-    if (before.tracked) {
+    if (record_lifecycle) {
         LifecycleEvent event{};
         event.sequence=lifecycle_next_sequence();
         event.source_event_id=event.sequence;
         event.target_event_id=0;
         event.thread=GetCurrentThreadId();
         event.kind=lifecycle_destructor_event;
+        event.caller_return=caller_return;
+        event.observed_game_date_raw=observed_game_date_raw;
+        event.observed_game_date_verified=observed_game_date_verified;
         event.source=before;
         event.native_flags=flags;
         lifecycle_copy_query(event.query_id);
@@ -496,12 +519,15 @@ static void* lifecycle_destructor_observe(void* source,unsigned flags) {
         lifecycle_enqueue(event);
     }
     void* result=original(source,flags);
-    if (before.tracked) {
+    if (record_lifecycle) {
         LifecycleEvent event{};
         event.sequence=lifecycle_next_sequence();
         event.source_event_id=event.sequence;
         event.thread=GetCurrentThreadId();
         event.kind=lifecycle_destructor_return_event;
+        event.caller_return=caller_return;
+        event.observed_game_date_raw=observed_game_date_raw;
+        event.observed_game_date_verified=observed_game_date_verified;
         event.source=before; // Snapshot from before the call; never dereference a released object.
         event.native_flags=flags;
         event.native_result=reinterpret_cast<uintptr_t>(result);
@@ -1238,7 +1264,7 @@ static void lifecycle_emit(const LifecycleEvent& event) {
     lifecycle_shape_json(target,sizeof(target),event.target);
     char message[5000];
     snprintf(message,sizeof(message),
-        "{\"event\":\"native_alliance_lifecycle\",\"session_id\":\"%lu-%llx\",\"kind\":\"%s\",\"sequence\":%llu,\"source_event_id\":%llu,\"target_event_id\":%llu,\"thread\":%lu,\"caller_return_rva\":\"0x%llx\",\"query_id\":\"%s\",\"request_id\":null,\"authorization\":\"unknown\",\"business_result\":\"unknown\",\"native_forward_count_by_hook_contract\":1,\"native_return_observed\":%s,\"source\":%s,\"target\":%s,\"native_result\":\"0x%llx\",\"out_pointer\":\"0x%llx\",\"out_value\":\"0x%llx\",\"wrapper_vtable_rva\":\"0x%llx\",\"wrapper_identity\":%s,\"wrapper_readable\":%s,\"wrapper_action\":\"0x%llx\",\"origin48\":%u,\"seq4c\":%u,\"rawflag4a\":%u,\"wrapper_prefix_readable\":%s,\"wrapper_raw10\":%u,\"wrapper_raw38\":%d,\"wrapper_raw3c\":%d,\"wrapper_raw40\":%u,\"wrapper_raw44\":%d,\"native_flags\":%u,\"result_readable\":%s}\n",
+        "{\"event\":\"native_alliance_lifecycle\",\"session_id\":\"%lu-%llx\",\"kind\":\"%s\",\"sequence\":%llu,\"source_event_id\":%llu,\"target_event_id\":%llu,\"thread\":%lu,\"caller_return_rva\":\"0x%llx\",\"query_id\":\"%s\",\"request_id\":null,\"authorization\":\"unknown\",\"business_result\":\"unknown\",\"native_forward_count_by_hook_contract\":1,\"native_return_observed\":%s,\"source\":%s,\"target\":%s,\"native_result\":\"0x%llx\",\"out_pointer\":\"0x%llx\",\"out_value\":\"0x%llx\",\"wrapper_vtable_rva\":\"0x%llx\",\"wrapper_identity\":%s,\"wrapper_readable\":%s,\"wrapper_action\":\"0x%llx\",\"origin48\":%u,\"seq4c\":%u,\"rawflag4a\":%u,\"wrapper_prefix_readable\":%s,\"wrapper_raw10\":%u,\"wrapper_raw38\":%d,\"wrapper_raw3c\":%d,\"wrapper_raw40\":%u,\"wrapper_raw44\":%d,\"native_flags\":%u,\"observed_game_date_raw\":%d,\"observed_game_date_verified\":%s,\"result_readable\":%s}\n",
         static_cast<unsigned long>(GetCurrentProcessId()),static_cast<unsigned long long>(observation_creation),
         lifecycle_kind_name(event.kind),static_cast<unsigned long long>(event.sequence),
         static_cast<unsigned long long>(event.source_event_id),static_cast<unsigned long long>(event.target_event_id),
@@ -1255,6 +1281,7 @@ static void lifecycle_emit(const LifecycleEvent& event) {
         event.seq4c,static_cast<unsigned>(event.rawflag4a),event.wrapper_prefix_readable?"true":"false",
         static_cast<unsigned>(event.wrapper_raw10),event.wrapper_raw38,event.wrapper_raw3c,
         static_cast<unsigned>(event.wrapper_raw40),event.wrapper_raw44,event.native_flags,
+        event.observed_game_date_raw,event.observed_game_date_verified?"true":"false",
         event.result_readable?"true":"false");
     line(message);
 }

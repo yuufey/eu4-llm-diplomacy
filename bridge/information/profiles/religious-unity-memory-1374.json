@@ -1,0 +1,111 @@
+{
+  "profile_id": "religious-unity-memory-1374",
+  "profile_version": 1,
+  "game_version": "1.37.4",
+  "executable": {
+    "sha256": "b23fa0e1f698d31b01cdd1c3817a675805d8c6286cb66f9c231e6e2a42544d77",
+    "image_base": "0x140000000"
+  },
+  "source_index": {
+    "path": "work/runtime/information-religious-unity-20261025-001/effective-unity-paths-001.json",
+    "sha256": "ace212c037dd13a13cf6efa7a66ab5effc29c836803de492628957fe4c68db19"
+  },
+  "code_guards": [
+    {
+      "name": "effective_unity_getter",
+      "rva": "0x3b4530",
+      "end_rva_exclusive": "0x3b47a3",
+      "hex": "48895c2408488974241048897c2418554154415541564157488d6c24e04881ec20010000450fb6f9498bf0488bfa488bd94533ed44896c2430bae7000000498bc8e82a34530084c0740bc707e8030000e9fa0100008b9be00e00004c8b75704d85f60f84bf00000085db0f84b70000004c8d25e9a8cdff4c896424204c8d0dbdb0cdffba68000000448d4299488d4db0e8afec670190488d050fe48701488945b0c745d807000000895d0041b9010000004c8d45b0488d1574b78a01488d4c2438e8aaed0f01c7442430030000004d8bccba68000000448d4299488d4db0e8d1ec67014c8d442438488d157de38701488d4d88e8d804ceff904c8b401048837818107203488b00488bd0498bcee8aeeccdff90488d4d88e81410ceff90488d4c2438e80910ceff807e1000740c488b46588b8044050000eb2e486356644885d27e22498bcd488b46580f1f80000000008138a8000000743f48ffc14883c008483bca7cec418bc589442430488b0dbe39fa01488b89403f00004885c9741e488b014c8d4c24304c8bc6488d542434ff50088b442434eb098b4004ebcb8944243403d84d85f60f848800000085c00f8480000000c6442470014c896c2478c6458000c7442458a800000048c744245ce8030000c6442464004c896c24684c8d442458488d542438488bcee8c2435300904c8d442438488d1571e28701488d4d88e8cc03ceff904c8b401048837818107203488b00488bd0498bcee8a2ebcdff90488d4d88e8080fceff90488d4c2438e8fd0eceff4584ff740c81fbe80300000f8f06feffff85db790544892feb02891f488bc74c8d9c2420010000498b5b30498b7338498b7b40498be3415f415e415d415c5dc3",
+      "sha256": "f23d32bd0fcb30a903860d8dd1826425dfc55811abd8b6e1ca31db35f46f7138"
+    },
+    {
+      "name": "effective_unity_wrapper",
+      "rva": "0x3b47b0",
+      "end_rva_exclusive": "0x3b480d",
+      "hex": "48895c240848896c24104889742418574883ec30498bd9410fb6f8488bea488bf14881c1c0280000e8e38d58004c8d400848895c2420440fb6cf488bd5488bcee83bfdffff488bc5488b5c2440488b6c2448488b7424504883c4305fc3",
+      "sha256": "89f2c84b40ddedf79f3e351dfc0f5bc8091dcd6b945d5b5a86ce2b973e0ae101"
+    },
+    {
+      "name": "effective_unity_cache",
+      "rva": "0x93d5c0",
+      "end_rva_exclusive": "0x93d8a2",
+      "hex": "48895c241048897c241855488d6c24b04881ec50010000488bd933ff897d60488d5560488d0dce746901e8311d7aff4883c3084839180f843f020000833b010f853602000048897c2420660f6f051e464801f30f7f44243040887c242033d2448d4764488d4c2420e8e389b900448d470f488d15783d3001488d4c2420e8ae5c75ffe82946dd00488bd8488d0557264801488944245048897df80f57c0f30f7f452048897d30c7456004000000488d05fc1c2e01488945f0c745ec900000004533c0488d542458488d4df0e8903e86ff90488b44245048634804488d05e7e237014889440c50488b442450486348048d9178ffffff89540c4c488d4c2458e8cd3d86ff488d055e453001488944245848897dc0c745c804000000488b44245048634804488d05c62548014889440c50488b442450486348048d9160ffffff89540c4c48895dd0488d05cbee3801488945d8c745e0b9010000c745e403000100488d0582e1ae01488944244032db885c2448381ddaa3a101741a488b0d68e1ae01e8b7610d0185c00f850c010000b301885c244841b838000000488d15e8ee3801488d4c2450e8c620dc009084db740c488b0d32e1ae01e8a5610d01488d54242048837c243810480f43542420488d4c2450e8ea2275ff488bd8488b08486349044803c8b20ae8f62075ff0fb6d0488bcbe84b1f75ff488bcbe8832575ff90488d4df0e8293bdd0090488d05811a2e01488945f0488d4df0e814f40c0190ba0800000065488b042558000000488b088b040a390511e3b1017f68488b5424384883fa10722e48ffc2488b4c2420488bc14881fa0010000072154883c227488b49f8482bc14883c0f84883f81f7726e8eebbdf00488d05d7e2b101eb03488bc34c8d9c2450010000498b5b18498b7b20498be35dc3e874431001908bc8e8485d0d0190488d0da0e2b101e863560f01833d94e2b101ff758333d2488d0d91e2b101e8dcc4ffff488d0d75262201e888590f0190488d0d70e2b101e8d3550f01e957ffffff",
+      "sha256": "2c9d634f6462448b9f6977c8c947b68aaca2b8086e5e310b63fbc1c258ebe37c"
+    },
+    {
+      "name": "effective_unity_modifier_bool",
+      "rva": "0x8e79a0",
+      "end_rva_exclusive": "0x8e7a22",
+      "hex": "48895c2408574883ec204c8b0daf06a701488bf98bda4c8d045b49c1e0054b8b4c0840478b5408544885c97413488b01418bd2ff50104c8b0d8306a701448bd0418bc2488d0c4048c1e10542f644095c407422448bc3488d542438488bcfe80df0ffff833800740db001488b5c24304883c4205fc3488b5c243032c04883c4205fc3",
+      "sha256": "eae09e01621c40c0b6a8cd36bc790435720d307eeb29fb50b96a4871fec24ffe"
+    },
+    {
+      "name": "effective_unity_modifier_value",
+      "rva": "0x8e6a10",
+      "end_rva_exclusive": "0x8e6aae",
+      "hex": "40534883ec2080791000488bda4c8bd974174181f8860200007f0e488b41584d63c8468b54c804eb2e486341644533d285c07e23488bd0418bca498b43586690443900740e48ffc14883c008483bca7cefeb04448b5004418bc04489542440488d0c40488b05e615a70148c1e105488b4c01404885c9741a488b014c8d4c24404d8bc3488bd3ff5008488bc34883c4205bc3448913488bc34883c4205bc3",
+      "sha256": "3daa522edf97745bc7f589c668f334a8405f353ca5e5092e816d07e184ba05e6"
+    },
+    {
+      "name": "effective_unity_ui_call",
+      "rva": "0xfec7f0",
+      "end_rva_exclusive": "0xfec820",
+      "hex": "48897424204533c9488d556f488bcbe82c7d3cfff30f100d5450dd00488d4d67e83b330eff48634d674863456f480faf",
+      "sha256": "bb83308ef3f0e16ecc7c0442eba37be61c9074a00ab9e1278ea28a7d628ee6e4"
+    },
+    {
+      "name": "modifier_database_constant",
+      "rva": "0x1dc1860",
+      "end_rva_exclusive": "0x1dc1864",
+      "hex": "0000c842",
+      "sha256": "2238f30df488055daf5e8f362cf904e370011a172d20df193c1b7ae8e5db8e01"
+    },
+    {
+      "name": "modifier_boolean_constant",
+      "rva": "0x1c4bf88",
+      "end_rva_exclusive": "0x1c4bf89",
+      "hex": "25",
+      "sha256": "bbf3f11cb5b43e700273a78d12de55e4a7eab741ed2abf13787a4d2dc832b8ec"
+    }
+  ],
+  "layout": {
+    "country_province_component_offset": "0xee0",
+    "country_cache_state_offset": "0x28c8",
+    "country_modifier_object_offset": "0x28d0",
+    "modifier_dense_flag_offset": "0x10",
+    "modifier_values_pointer_offset": "0x58",
+    "modifier_sparse_count_offset": "0x64",
+    "modifier_database_rva": "0x2358060",
+    "record_stride": "0x60",
+    "record_processor_offset": "0x40",
+    "record_resolved_type_offset": "0x54",
+    "record_flags_offset": "0x5c",
+    "dense_entry_stride": "0x8",
+    "dense_value_offset": "0x4",
+    "unity_modifier_id": "0xa8",
+    "special_rule_id": "0xe7",
+    "boolean_flag_mask": "0x40",
+    "calculating_state": 1
+  },
+  "limits": {
+    "max_sparse_entries": 8192,
+    "max_type_id": 65535
+  },
+  "value_semantics": {
+    "unit": "fraction",
+    "scale": 1000,
+    "upper_clamp": false
+  },
+  "runtime_observation": false,
+  "notes": [
+    "The province component at country+0xEE0 is not the final effective religious-unity value.",
+    "A non-null special-rule processor makes the resolved type unknown until its bounded contract is established.",
+    "The normal cache state and processor pointers observed by an existing probe are intentionally not encoded as profile constants.",
+    "The UI callsite requests the getter with upper-clamp argument 0; consumers must preserve that unclamped convention."
+  ],
+  "read_constraints": {
+    "resolved_type_read": "bounded",
+    "non_null_processor": "unknown",
+    "description": "Resolved type reads are bounded by max_type_id; any non-null special-rule or unity modifier processor remains unknown."
+  }
+}

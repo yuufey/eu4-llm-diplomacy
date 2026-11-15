@@ -1,0 +1,117 @@
+{
+  "profile_id": "foreign-technology-memory-1374",
+  "profile_version": 2,
+  "game_version": "1.37.4",
+  "executable": {
+    "sha256": "b23fa0e1f698d31b01cdd1c3817a675805d8c6286cb66f9c231e6e2a42544d77",
+    "image_base": "0x140000000"
+  },
+  "observer": "FRA",
+  "target_scope": "resolved_foreign_country",
+  "source_evidence": [
+    {
+      "path": "work/runtime/information-foreign-visibility-20261029-001/rea-diplomacy-country-select-001/evidence.json",
+      "bytes": 1430581,
+      "sha256": "ce2d13f88c6eebb7ae0453b2ff043839232b51966ee5926aa2615a3608c9ab78"
+    },
+    {
+      "path": "work/runtime/information-foreign-visibility-20261029-001/rea-ui-efd2c0-001/evidence.json",
+      "bytes": 136046,
+      "sha256": "ec49f8d79de962cf5303ada6098e68dc280757a03bc405abd79475448d0e32ae"
+    },
+    {
+      "path": "work/runtime/information-foreign-visibility-20261029-001/foreign-tech-writer-contract-001.json",
+      "bytes": 7744,
+      "sha256": "fb53baa52446687c873d841cfcdcf76428cb01289af0e0feb5731012e2c6f986"
+    }
+  ],
+  "layout_dependencies": [
+    {
+      "path": "bridge/information/profiles/country-rivals-memory-1374.json",
+      "bytes": 3890,
+      "sha256": "a40515fd3e19d59dd73bde7bde442f155c04fd91ef6c3cd786ddaa481690708c"
+    },
+    {
+      "path": "bridge/information/profiles/military-quality-memory-1374.json",
+      "bytes": 4794,
+      "sha256": "3f9113e7d5d87ae1ce19fc4b63e5034d1806f98c2a5630d847d06510fbcb6c32"
+    },
+    {
+      "path": "bridge/information/profiles/relation-memory-1374.json",
+      "bytes": 5156,
+      "sha256": "156cdfc92c96694189544ed99a1e15028236cee0d40460e326a0106597a77ba6"
+    },
+    {
+      "path": "tools/control_information_current_country.py",
+      "bytes": 53219,
+      "sha256": "3d51eb734432e5bf9c75433b7ab8167b849e06053701941a3bb4de2c601576c9"
+    },
+    {
+      "path": "work/runtime/information-battle-event-context-20261028-001/final-world-001.json",
+      "bytes": 2375,
+      "sha256": "b70bc32c3e062187bd88f4ccbbc9110aabc16e2be0db8b805f8d2cf011e8560b"
+    }
+  ],
+  "code_guards": [
+    {
+      "name": "diplomacy_country_selection",
+      "rva": "0xf016e0",
+      "end_rva_exclusive": "0xf01c2e",
+      "bytes": "488954241053574883ec58488bf9488bda488b0d907d4401488b01ff50284c8b1553e74301f20f1187080e00004180ba661e00000775134180ba6f1e00000074094d8b92681e0000eb074d8b92601e0000807c247f004c8997480100000f84df040000807c247e070f84d40400000fbf44247c3b052bc143010f84c30400003b0553c143010f84b70400003b054bc143010f84ab040000488b0d32c14301498bc248c1e8204c0fbfd8488bc348c1e8204889b42480000000480fbff08bc64c89b424880000004c8bb1180100004c8d0cc04b8b0cde4c8b81101500004b8b44c81048c1e820480fbfc0488d14404b8b04c8488b4838837cd114007f4a498b0cf6488b91b0140000f68259090000107436498bc248c1e83884c0742b49c1ea304180fa077421488b92e0050000418bcb458bc383e11f49c1e805428b04820fa3c80f83ec0300004533f6413bf3746a83bfb8090000010f850c010000e84037a7ff488bcf4489b7b8090000e8d1c20000488b8fa0000000488d15e3c1e300c687be09000001488b01ff5068418d5601488b084c8b81a8000000488bc841ffd0488b8fa0000000488d15dcc1e300488b01ff5068418d5602eb6d4439b7b80900000f85a2000000e8d636a7ff488bcfc787b809000001000000e864c20000488b8fa0000000488d1576c1e300c687be09000001488b01ff5068ba02000000488b084c8b81a8000000488bc841ffd0488b8fa0000000488d156ec1e300488b01ff5068ba01000000488b084c8b81a8000000488bc841ffd0e86636a7ff84c07429488b8fa0000000488d1524c1e300488b01ff5068ba01000000488b084c8b81a8000000488bc841ffd0488b873801000048c1e8200fbfc848896c24703bce0f84160100004c89742430488d54243048899f38010000bd0f000000c687e80d00000141b0018b05f048db00894424300fb605e948db0088442434488b0592a5520148896c244848c7442440050000004488742435488b8848030000488b09e840187a00488b542448488bd84883fa107232488b4c243048ffc2488bc14881fa001000007219488b49f84883c227482bc14883c0f84883f81f0f872e020000e8207a8300488bcb4c8974244048896c24484488742430e889166cff84c0752d488b050ea552010f57c0f30f101d6ffbeb004533c0488bd3f30f11442420488b8848030000488b09e8e8617a00488b0561be4301488bcf488b8018010000488b1cf0488d9348220000e867adffff488d9318220000488bcfe898b3ffff488b8fb00000008b412c83f805740c83c0f883f8010f876b010000ba05000000e843867eff488b8fb0000000ba06000000e842a17eff488b8fb0000000ba08000000e821867eff488b8fb0000000ba09000000e810867eff488b8fb0000000ba07000000e80fa17eff488b8fb0000000ba1e000000e8fea07eff488b05b7bd4301488b8018010000488b0cf0488bb1b01400004885f60f84ea0000004883c6100f84e0000000488b87b00000004c897c24504c8bb8801b0000498b5728488bc24885d274140f1f004839307411488b4810488bc14885c975ef4885c074244885d274160f1f440000483932740c488b4210488bd04885c075ef498d4f28e826d61dffb920000000453977387437498b6f28e8a216b3004889304c8970084889681044887018418b5738498947288d4a0141894f3885d2740648894508eb3b49894730eb35498b6f30e86b16b300488930488968084c89701044887018418b5738498947308d4a0141894f3885d2740648894510eb0449894728498bcfe8b7ae26004c8b7c2450488bcfe81abf0000488b6c2470c687be09000001488bb424800000004c8bb424880000004883c4585f5bc3e89effb300",
+      "sha256": "f2fc1747a0a6bd54e3bdcb6d395843b0bec1904e27be10d9117ab8a190aaec79",
+      "aslr_invariant": true,
+      "relocation_sites": []
+    }
+  ],
+  "predicate_layout": {
+    "relation_table_offset": "0x1510",
+    "relation_stride": "0x48",
+    "row_owner_offset": "0x0",
+    "row_target_ref_offset": "0x10",
+    "owner_counter_vector_offset": "0x38",
+    "counter_stride": "0x18",
+    "counter_offset": "0x14",
+    "capital_pointer_offset": "0x14b0",
+    "capital_flags_offset": "0x959",
+    "capital_flag_mask": "0x10",
+    "capital_bitset_pointer_offset": "0x5e0",
+    "special_slot_globals_rva": [
+      "0x233d884",
+      "0x233d8b8",
+      "0x233d8bc"
+    ]
+  },
+  "technology": {
+    "definition_key": "mil_tech",
+    "unit": "technology_level",
+    "scale": 1,
+    "value_origin": "copied_native_country_technology_cache",
+    "period": "current"
+  },
+  "semantics": {
+    "visibility_basis": "native_country_view_predicate_projected_to_observer",
+    "actual_UI_observed": false,
+    "native_function_invoked": false,
+    "physical_player_equals_observer_required": false,
+    "limits": [
+      "Projection substitutes the resolved FRA row for the original client-current-country input",
+      "Applies only to the military technology field shown unconditionally after country selection",
+      "Does not establish the visibility of armies, navies, manpower or other F02 fields",
+      "No claim of an atomic main-thread snapshot or cache refresh time"
+    ]
+  },
+  "limits": {
+    "max_targets": 8,
+    "max_country_slots": 4096,
+    "max_total_rpm": 524288
+  },
+  "observer_role_layout": {
+    "human_count_offset": "0xa60",
+    "controller_types_pointer_offset": "0x1d48",
+    "controller_entry_width": 4,
+    "observer_controller_type_required": 0,
+    "human_count_required": 1,
+    "controller_slot_source": "resolved observer fullref; never the physical player slot",
+    "semantics": "existing B23 read-only runtime controller-role contract; no control operation is imported or invoked"
+  }
+}

@@ -6,6 +6,7 @@ import re
 from urllib.parse import urlsplit
 
 from bridge.diplomacy_effect_profiles import profile_catalog
+from bridge.http_rejection import discard_rejected_body
 from bridge.tag_command_backend import require
 
 
@@ -72,15 +73,7 @@ def make_server(observer, *, port=8775, token):
             # Discard a small, complete advertised body without interpreting
             # it. This avoids Windows resetting a short connection before the
             # caller receives the refusal. No publisher exists in this service.
-            if allowed and not self.headers.get("Transfer-Encoding") and not self.headers.get("Expect"):
-                lengths = self.headers.get_all("Content-Length", [])
-                if len(lengths) == 1 and lengths[0].isascii() and lengths[0].isdigit() and len(lengths[0]) <= 5:
-                    length = int(lengths[0])
-                    if length <= 65536:
-                        try:
-                            self.rfile.read(length)
-                        except OSError:
-                            pass
+            discard_rejected_body(self)
             self.send_json(405 if allowed else 403,
                 {"error": "read_only_observer", "requests_published": 0})
 

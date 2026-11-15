@@ -1,0 +1,90 @@
+{
+  "evidence_kind": "retained_real_native_expiry_event",
+  "evidence_path": "work\\runtime\\information-independent-line-deploy-20261108-279-001\\actual-delivered-proposals.json",
+  "context": {
+    "complete": true,
+    "dll_sha256": "e991b124b1d16b7458230071a1d7ef6f665156942f2b3cb9eeb7ff5feefa77e8",
+    "game_date": 56459880,
+    "game_date_kind": "eu4_hour_tick",
+    "game_date_raw": 56459880,
+    "game_day": 2352495,
+    "game_sha256": "b23fa0e1f698d31b01cdd1c3817a675805d8c6286cb66f9c231e6e2a42544d77",
+    "game_version": "1.37.4",
+    "mode": "live",
+    "observer": "FRA",
+    "observer_binding": "operator_configuration",
+    "paused": null,
+    "reasons": [],
+    "session_id": "42880-1dd6f1892a0b9c8",
+    "status": "ready",
+    "world_id": null
+  },
+  "event": {
+    "collected_game_date": 56459880,
+    "complete": false,
+    "event_id": "inbound-expired:8bfb832d536843347555e51975ea48f0",
+    "event_type": "diplomatic_proposal",
+    "game_date": 56459232,
+    "objects": [
+      {
+        "actor": "BOU",
+        "proposal_id": "427d91d20dff425ad84358f500638d21",
+        "recipient": "FRA",
+        "type": "country_pair"
+      }
+    ],
+    "observer": "FRA",
+    "payload": {
+      "action_id": "offer_royal_marriage",
+      "actor": "BOU",
+      "complete": false,
+      "currently_pending": false,
+      "date_raw": 56459232,
+      "decision_country": "FRA",
+      "execute": {
+        "accept": "unimplemented",
+        "reject": "unimplemented"
+      },
+      "family": "royal_marriage",
+      "gaps": [
+        "ORIGINAL_PROPOSAL_LEGALITY_UNKNOWN"
+      ],
+      "legality": {
+        "complete": false,
+        "status": "unknown"
+      },
+      "legality_status": "unknown",
+      "lifecycle": {
+        "basis": "native_pending_expiry_branch",
+        "created_game_date_raw": 56459136,
+        "game_date_raw": 56459232,
+        "kind": "expired"
+      },
+      "observer_status": "expired",
+      "parameters": {
+        "proposal_lifecycle": {
+          "basis": "native_pending_expiry_branch",
+          "created_game_date_raw": 56459136,
+          "game_date_raw": 56459232,
+          "kind": "expired"
+        }
+      },
+      "phase": "initiate",
+      "proposal_id": "427d91d20dff425ad84358f500638d21",
+      "recipient": "FRA"
+    },
+    "sequence": 2,
+    "session_id": "42880-1dd6f1892a0b9c8",
+    "source": {
+      "collected_game_date": 56459880,
+      "complete": false,
+      "date_semantics": "proposal_source_date",
+      "gaps": [
+        "ORIGINAL_PROPOSAL_LEGALITY_UNKNOWN"
+      ],
+      "mode": "live",
+      "name": "ObserverSession.read_native_alliance_inbound_offers",
+      "session_id": "42880-1dd6f1892a0b9c8"
+    }
+  }
+}

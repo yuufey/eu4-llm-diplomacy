@@ -299,6 +299,52 @@ def _metric(raw: object, scale: int | None, available: bool) -> dict[str, Any]:
     }
 
 
+def _goal_presence(goal: Mapping[str, Any], *, available: bool) -> tuple[
+        bool | None, bool | None, str]:
+    """Keep the native goal-presence proof distinct from score availability.
+
+    Older recorded events predate the explicit ``present``/``inapplicable``
+    markers.  Their verified, available goal is safely interpreted as a
+    configured goal; an unavailable goal remains unknown unless the newer
+    event explicitly proves that no goal applies.  A configured goal whose
+    getter failed therefore cannot be mistaken for a no-goal result.
+    """
+
+    present = goal.get("present")
+    inapplicable = goal.get("inapplicable")
+    presence = goal.get("presence")
+    if type(present) is not bool:
+        if presence == "configured":
+            present = True
+        elif presence == "inapplicable":
+            present = False
+        elif type(inapplicable) is bool:
+            present = not inapplicable
+        elif available:
+            present = True
+        else:
+            present = None
+    if type(inapplicable) is not bool:
+        if presence == "inapplicable":
+            inapplicable = True
+        elif presence == "configured":
+            inapplicable = False
+        elif type(present) is bool:
+            inapplicable = not present
+        elif available:
+            inapplicable = False
+        else:
+            inapplicable = None
+    if presence not in ("configured", "inapplicable", "unknown"):
+        if inapplicable is True:
+            presence = "inapplicable"
+        elif present is True or available:
+            presence = "configured"
+        else:
+            presence = "unknown"
+    return present, inapplicable, presence
+
+
 def _decode_tooltip(value: Mapping[str, Any], codec: str) -> tuple[str | None, bool]:
     if value.get("text_readable") is not True:
         return None, False
@@ -318,8 +364,18 @@ def unknown_war_score(reason: str = "NATIVE_LIVE_WAR_SCORE_EVENT_MISSING") -> di
         "total": _metric(None, None, False),
         "max_score": _metric(None, None, False),
         "overview_goal_cap": _metric(None, None, False),
-        "goal": {"available": None, "presence_verified": False,
-                  "cumulative": _metric(None, None, False), "complete": False},
+        "goal": {
+            "available": None,
+            "presence_verified": False,
+            "present": None,
+            "inapplicable": None,
+            "presence": "unknown",
+            "cumulative_raw": None,
+            "cumulative_unit": None,
+            "cumulative_scale": None,
+            "cumulative": _metric(None, None, False),
+            "complete": False,
+        },
         "tooltip": {"text": None, "text_decoded": False,
                      "text_truncated": False, "complete": False},
         "scale_verified": False, "complete": False, "verified": False,
@@ -359,6 +415,8 @@ def project_live_war_score(
     max_available = score.get("max_score_raw") is not None
     overview_available = score.get("overview_goal_cap_raw") is not None
     goal_available = goal["available"] is True
+    goal_present, goal_inapplicable, goal_presence = _goal_presence(
+        goal, available=goal_available)
     tooltip_text, tooltip_decoded = _decode_tooltip(tooltip, selected_codec)
     tooltip_complete = (tooltip.get("complete") is True
                         and tooltip.get("text_truncated") is False
@@ -394,6 +452,14 @@ def project_live_war_score(
         "goal": {
             "available": goal_available,
             "presence_verified": goal["presence_verified"],
+            "present": goal_present,
+            "inapplicable": goal_inapplicable,
+            "presence": goal_presence,
+            "cumulative_raw": (
+                goal.get("cumulative_raw") if goal_available else None
+            ),
+            "cumulative_unit": goal.get("cumulative_unit"),
+            "cumulative_scale": goal_scale,
             "cumulative": _metric(
                 goal.get("cumulative_raw"), goal_scale, goal_available),
             "complete": goal_available and goal["presence_verified"] is True,

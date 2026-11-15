@@ -1,0 +1,128 @@
+{
+  "profile_id": "localization-memory-1374",
+  "profile_version": 1,
+  "source_evidence_kind": "ordinary_static_file_analysis_plus_REA_Evidence_and_bounded_runtime_header",
+  "game_version": "1.37.4",
+  "executable": {
+    "sha256": "b23fa0e1f698d31b01cdd1c3817a675805d8c6286cb66f9c231e6e2a42544d77",
+    "image_base": "0x140000000"
+  },
+  "globals": {
+    "database_rva": "0x233d8b0",
+    "game_rva": "0x233fe58",
+    "game_date_offset": "0x1dd0",
+    "localization_global_cell_rva": "0x2357b00"
+  },
+  "country": {
+    "table_offset": "0x118",
+    "handle_offset": "0x20",
+    "supported_country": "FRA",
+    "country_scan_entries": 256
+  },
+  "localization": {
+    "outer_inner_offset": "0x0",
+    "outer_value_pool_offset": "0x20",
+    "inner_language_offset": "0x0",
+    "inner_table_begin_offset": "0x20",
+    "inner_table_end_offset": "0x28",
+    "inner_table_capacity_offset": "0x30",
+    "table_entry_stride": 16,
+    "table_entry_hash_offset": "0x0",
+    "table_entry_offset_offset": "0x8",
+    "table_end_semantics": "pointer_difference_end_exclusive_from_inner_plus_0x28",
+    "capacity_semantics": "raw_header_field_observed_only_not_used_for_bounds",
+    "pool_semantics_status": "ordinary bounded loader plus REA Evidence prove begin/end/capacity-end pointers; end is exclusive; value offset must be below end-begin",
+    "language_expected_prefix": "l_",
+    "pool_begin_offset": "0x20",
+    "pool_end_offset": "0x28",
+    "pool_capacity_end_offset": "0x30",
+    "max_pool_length_bytes": 134217728,
+    "lookup_semantics": "native_fnv1_32_hash_only",
+    "secondary_records_not_read": true,
+    "primary_entry_padding_offset": "0xc_not_used"
+  },
+  "hash": {
+    "algorithm": "FNV-1",
+    "seed": "0x811c9dc5",
+    "multiplier": "0x1000193",
+    "width_bits": 32,
+    "byte_operation": "uint32 multiply then xor ASCII byte; key restricted printable ASCII",
+    "helper_rva": "0x16faf60",
+    "hash_body_rva": "0x14b33a0",
+    "hash_body_end_rva_exclusive": "0x14b35ba"
+  },
+  "limits": {
+    "max_total_rpm": 524288,
+    "max_single_rpm": 65536,
+    "max_keys": 128,
+    "max_key_bytes": 160,
+    "max_value_bytes": 8192,
+    "max_table_entries": 1048576,
+    "max_language_ascii_length": 256,
+    "max_string_capacity": 4096,
+    "max_table_span_bytes": 16777216
+  },
+  "code_guards": [
+    {
+      "name": "key_hash_lookup_body",
+      "rva": "0x14b33a0",
+      "end_rva_exclusive": "0x14b35ba",
+      "bytes": "44894c24204c8944241855565741544155415641574883ec30488d6c2430488b053b47ea00488bf148895d40488bfa4c8bda41bac59d1c81488b080fb60284c074194569d2930100014d8d5b010fbec04433d0410fb60384c075e7418bd2e85d7b2400488bd84885c00f8463010000b810000100e837035800482be0ba24000000488bcb4c8d7c243041c7077eca10a14983c70441c787000001007eca10a1e8a81d58004c8be84d8bf74885c00f84930000000f1f4000660f1f840000000000498d4d01ba24000000e87e1d58004c8be04885c00f84e4000000418bcd488bd32bcb4863f9498bce4c8bc7e8e07e59008b45584a8d0c3789442428498d9700000100488b45504d8bcc4d8bc54889442420e88af6ffff488bc84c8bf0492bcf4881f900fc00007f66498d5c2401ba24000000488bcbe8121d58004c8be84885c00f857affffff4c2bf30f1f80000000000fb6034188041e488d5b0184c075f133c048c746180f00000048890649c7c0ffffffff8806488946100f1f800000000049ffc04338040775f7498bd7eb6e33c048c746180f00000048890649c7c0ffffffff8806488946100f1f84000000000049ffc04338040775f7498bd7eb3e4c2bf30fb6034188041e488d5b0184c075f1eb8d48890649c7c0ffffffff88064889461048c746180f000000660f1f44000049ffc04238040775f7488bd7488bcee86c1bbefe488b5d40488bc6488be5415f415e415d415c5f5e5dc3",
+      "sha256": "4fd95f86bcd07e76e290df69ce57f99a2c951862390d8bd108b9cde541ee3cdd"
+    },
+    {
+      "name": "hash_lookup_helper",
+      "rva": "0x16faf60",
+      "end_rva_exclusive": "0x16fafe3",
+      "bytes": "4c8b41204c8bd2488b4128492bc048c1f8044885c07501c34863c84c8bd949c1e3044d03d885c07e380f1f8000000000488bd148d1ea488bc24803c04d3914c073174d8d04c048c7c0ffffffff482bc24983c0104803c8eb03488bca4885c97fcf4d3bc374184d39107513488b052ecbc500418b480848034820488bc1c333c98bc1c3",
+      "sha256": "6f9153414694e7fd322d6a06c9f7000bd25e033188f45b873c0a4630d0ebcb2d"
+    }
+  ],
+  "source_evidence": {
+    "localization_lookup_body": {
+      "path": "work/runtime/information-localization-20261024-001/localization-lookup-body-001.json",
+      "sha256": "d3269edc13d3f52851230299002f74412eb2aa88ba891626cade82797537befa",
+      "schema": null,
+      "evidence_kind": "ordinary_bounded_file_analysis_not_REA_Evidence"
+    },
+    "hash_lookup_rea_evidence": {
+      "path": "work/runtime/information-localization-20261024-001/rea-localization-hash-lookup-001/evidence.json",
+      "sha256": "df2e1f6eeabb3d57acbdbe8e3e2f2f0a827a4381bf45470100008e4b0aa26377",
+      "evidence_id": "ev_9203bf396bcaf3109a60db2d6c1e0d950ecd3da69623e5f70a3d3236199d8fe7"
+    },
+    "localization_header_runtime": {
+      "path": "work/runtime/information-localization-20261024-001/localization-header-runtime-001.json",
+      "sha256": "5d0205276ffd8c6162ebd9ef0fe27f4b8d63bcd06f12fbf47ffefa468652df75",
+      "evidence_kind": "pure_runtime_observation_not_static_evidence"
+    },
+    "mission_memory_delivery": {
+      "path": "work/runtime/information-loaded-tasks-20261024-001/delivery/files/bridge/information/mission_memory.py",
+      "sha256": "1a63436c58a52517c13311e52566cd347c91aca8bcb8d86cd7c2665c185a6f72",
+      "role": "bounded RPM/identity helper source only"
+    },
+    "localization_loader_neighborhood": {
+      "path": "work/runtime/information-localization-20261024-001/localization-loader-neighborhood-001.json",
+      "sha256": "a5f69bfea353ed818c423441ae8856ab0b7adb51c08374df709d545c41526f8f",
+      "evidence_kind": "ordinary_bounded_file_analysis_not_REA_Evidence",
+      "rva_range": "0x16faa10..0x16fac52"
+    },
+    "localization_pool_append_rea_evidence": {
+      "path": "work/runtime/information-localization-20261024-001/rea-localization-pool-append-001/evidence.json",
+      "sha256": "182471f22ebccbd6b29ac1f57cbda42648a0872ae0bb2ae3250ce2bc74f93b51",
+      "evidence_id": "ev_6a7303e81369815c3c15a8865a952bbd0471e6e93da03bfc524b567c1ee60f8b",
+      "rva_range": "0x16faa10..0x16fac52"
+    },
+    "native_localization_contract": {
+      "path": "work/runtime/information-localization-20261024-001/native-localization-contract.json",
+      "sha256": "3e1c46bdf5097735fa145626dc953493e5f7e3fffff67b4bdbeba6dc30b2a275",
+      "role": "frozen batch contract combining three REA references, ordinary lookup bytes, layout, and three-key runtime anchor"
+    }
+  },
+  "unknown_conditions": [
+    "runtime language selection is observed only as inner String32",
+    "runtime pool total length/encoding is not inferred; each value is bounded NUL-delimited raw bytes",
+    "dynamic $ and [] tokens are not substituted",
+    "primary 16-byte entries are hash plus low32 offset; padding at +0xc and secondary key/text records are not read or used",
+    "primary table count is bounded for arithmetic only; reader performs no full-table scan and RPM cost remains binary-search entries"
+  ]
+}

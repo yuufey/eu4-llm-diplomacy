@@ -1,0 +1,88 @@
+{
+  "profile_id": "opinion-memory-1374",
+  "profile_version": 1,
+  "game_version": "1.37.4",
+  "executable": {
+    "sha256": "b23fa0e1f698d31b01cdd1c3817a675805d8c6286cb66f9c231e6e2a42544d77",
+    "image_base": "0x140000000"
+  },
+  "base_profile_sha256": "fd663e01bdd46bda1c456d52cc83e579b2eb9c79d7a0b8404a98db4f1e192158",
+  "observer": "FRA",
+  "source_evidence": [
+    {
+      "path": "work/runtime/r73-favor-acceptance-contract-20261020-001/rea-favor-base-preview/evidence.json",
+      "bytes": 2041647,
+      "sha256": "965f3dadaf2385cc2e33a8ae937138566df64f357d654f8e7915c8d3c97f3fe3"
+    },
+    {
+      "path": "work/runtime/rival-rules-20261016-001/rea-eda880-001/evidence.json",
+      "bytes": 4288753,
+      "sha256": "5a8f81ae854b91e79ddfe7369b2d18e267fceffa347ad7d0fd34781ec8c951aa"
+    },
+    {
+      "path": "work/runtime/information-live-opinion-20261105-184-001/disassembly-opinion-ui-001.json",
+      "bytes": 120253,
+      "sha256": "e24835d5713244c9b4d51aa6c3f48ab53dd5e232c91922437e80f8fa6fae43ab"
+    }
+  ],
+  "layout_dependencies": [
+    {
+      "path": "bridge/information/opinion_memory.py",
+      "bytes": 5277,
+      "sha256": "b0262ba18e97099136999d2e535d3253cf4d648e0805aced75ed482367483179"
+    },
+    {
+      "path": "bridge/information/foreign_technology_capture.py",
+      "bytes": 17196,
+      "sha256": "df3aa0a7eed52b5721b6e7ee13b191b3f137cf6509321208558f38336e509257"
+    },
+    {
+      "path": "bridge/information/foreign_country_memory.py",
+      "bytes": 17517,
+      "sha256": "4f1913dfbfe0d56220a660ab9b8475e2fa30870684a0fdb35834434af93b0bbd"
+    },
+    {
+      "path": "bridge/information/country_reference_memory.py",
+      "bytes": 13345,
+      "sha256": "17c183ec1228f029d4f91896ef7454237ca40c2abcf3e7aee3e41aea7acfc593"
+    },
+    {
+      "path": "bridge/information/country_view_admission_memory.py",
+      "bytes": 23158,
+      "sha256": "8e6be1a319b36a2423256587402af0bb40fd255b9fe0a96f2c822d8938c2f34a"
+    },
+    {
+      "path": "bridge/information/profiles/foreign-technology-memory-1374-v2.json",
+      "bytes": 6919,
+      "sha256": "fd663e01bdd46bda1c456d52cc83e579b2eb9c79d7a0b8404a98db4f1e192158"
+    }
+  ],
+  "code_guards": [
+    {
+      "name": "bilateral_opinion_first_cell",
+      "rva": "0xef3d55",
+      "end_rva_exclusive": "0xef3da4",
+      "bytes": "4c8b05549b4401498bc648c1e820480fbfc8498b8018010000488b14c8498bc748c1e820440fbfc8488b8a80230000488b8288230000482bc148d1f8443bc87d07420fb70c49eb03418bcd440fbfe1",
+      "sha256": "c66d20b7ae0354d04431634f60e98b288deb1a6af98879cd8e809af8d117a359",
+      "evidence_kind": "ordinary_PE_Capstone_bounded_disassembly_not_REA"
+    },
+    {
+      "name": "bilateral_opinion_reverse_cell",
+      "rva": "0xef405f",
+      "end_rva_exclusive": "0xef40a6",
+      "bytes": "4c8b054a98440149c1ef20490fbfcf498b8018010000488b04c849c1ee20410fbfd6488b8880230000488b8088230000482bc148d1f83bd07d060fb70c51eb03418bcd440fbff1",
+      "sha256": "f3e8c9c32ffec987cdf87c1594e6fdcecfbbbd594e4e65e623ffe047c4b3ce51",
+      "evidence_kind": "ordinary_PE_Capstone_bounded_disassembly_not_REA"
+    }
+  ],
+  "semantics": {
+    "unit": "opinion_points",
+    "scale": 1,
+    "period": "current_cached",
+    "visibility_basis": "native_country_selection_and_bilateral_opinion_controls_projected_to_observer",
+    "physical_player_equals_observer_required": false,
+    "actual_UI_observed": false,
+    "cache_freshness_proven": false,
+    "modifiers_decay_and_end_date_implemented": false
+  }
+}

@@ -1,0 +1,127 @@
+{
+  "profile_id": "trade-power-sum-memory-1374",
+  "profile_version": 2,
+  "game_version": "1.37.4",
+  "executable": {
+    "sha256": "b23fa0e1f698d31b01cdd1c3817a675805d8c6286cb66f9c231e6e2a42544d77",
+    "image_base": "0x140000000"
+  },
+  "observer": "FRA",
+  "layout": {
+    "world_global_rva": "0x233fe58",
+    "members_pointer_offset": "0x1d08",
+    "member_count_offset": "0x1d14",
+    "country_fullref_offset": "0x20",
+    "canonical_database_rva": "0x233d8b0",
+    "canonical_table_offset": "0x118",
+    "human_count_offset": "0xa60",
+    "controllers_pointer_offset": "0x1d48",
+    "max_members": 4096
+  },
+  "code_guards": [
+    {
+      "name": "sum_receiver_and_global_manager",
+      "rva": "0xb51ff0",
+      "end_rva_exclusive": "0xb52010",
+      "bytes": "4c8bf94c8b2d5ede7e014c896da84d8b8d081d0000496385141d00004d8d14c1",
+      "sha256": "757070979c6976cd5f2f51179edf452ddf67d338b04ab6e3922ca159a18b0d85"
+    },
+    {
+      "name": "country_list_sum_loop",
+      "rva": "0xb524e0",
+      "end_rva_exclusive": "0xb5274a",
+      "bytes": "4c8b6da84d8bb5081d0000496385141d00004d8d24c6448b05bbb37e014d3bf40f844402000066660f1f8400000000004d8b2e498b452048c1e820480fbfc8488bd1498b7f18488d344948c1e6064803f7488d044948c1e0064803c7413bc8410f94c175094885c00f856201000032c93888ae00000074100fb680ac00000084c00f95c184c07426488d045248c1e0064803c70f847c01000080b8ad000000000f846f01000084c90f85670100004584c90f8519010000e8e4259800f64038010f84bb0000000fb63d17eb47014088bd20010000c60509eb470101458b9fd400000048635e444c63564c8b4e542b4e50448b4648468d0c01498bd2480fafd348b8cff753e3a59bc42048f7ea48c1fa07488bc248c1e83f4803d033c085d20f4fc2443bc0410f4cc003c1498b55204889952801000044895c2448895c24404489542438894c243044894c2428894424204c8d8d280100004c8d05ca641901ba03020000488d0d8e661901e8612798009040883d6dea470148bbcff753e3a59bc42048634e4c48634644480fafc8488bc348f7e948c1fa07488bc248c1e83f4803d04533db418bcb85d20f4fca394e480f4c4e488b46542b465003c1410187d400000041ff87a0000000448b0508b27e0148634e4c48634644480fafc8488bc348f7e948c1fa07488bc248c1e83f4803d0418bcb85d20f4fca394e480f4c4e488b46542b465003c1410187d000000041ff87a40000008b4628410187cc00000048634e4c48634644480fafc8488bc348f7e948c1fa07488bc248c1e83f4803d0418bcb85d20f4fca394e480f4c4e488b46542b465003c1410187c80000004983c6084d3bf40f85c6fdffff",
+      "sha256": "b61df231f2ac91b40d39b519ab12e612dab416d8c50865a79b2e1070583ec375"
+    },
+    {
+      "name": "node_reset",
+      "rva": "0xb511d0",
+      "end_rva_exclusive": "0xb51370",
+      "bytes": "48895c241048896c24184889742420574883ec20488b4170488bd94889417833ff89b9e800000048bdefeeeeeeeeeeeeee4889b9a00000004883c170488b83a8000000488b90a0000000482b909800000048c1fa03480fafd54863d2e8ef5c8cff4088bb240100004889bbe00000004889bbc80000004889bbd00000004889bbb000000048c783b8000000e803000089bbc00000004889bbd8000000488b7b1848634324488d344048c1e6064803f7483bfe7414488bcfe894c600004881c7c0000000483bfe75ec488b83a80000004c8b8388000000488b88a0000000482b889800000048c1f903480fafcd4c89839000000069f9e803000085ff75058d47ffeb08b840420f0099f7ff894424304863d185c9743b488bbb98000000492bf848c1ff02483bd776134c8d442430488d8b88000000e867c88dffeb154898498bf8488bcaf3ab498d049048898390000000488b83f0000000488983f8000000488b830801000048898310010000e82f1b1e00488d8b08010000488b5018482b501048c1fa034863d2488b5c2438488b6c2440488b7424484883c4205fe9a0798cff",
+      "sha256": "998f76229efc21178d078ce4a90e3110c6f0e9623465a27ad4ba8c6332aa647e"
+    }
+  ],
+  "source_evidence": [
+    {
+      "path": "work/runtime/information-node-total-power-20261106-207-001/ordinary-node-total-writer-001.json",
+      "bytes": 196970,
+      "sha256": "0acbf56eec346667a1055f1fdb5d9a86c19eacb0a4d88b87df89b4ff3bd50ce5"
+    },
+    {
+      "path": "work/runtime/information-province-node-allocation-20261106-205-001/ordinary-node-entry-reset-001.json",
+      "bytes": 13515,
+      "sha256": "47c983b29f33af80380d985c48681e7b33982097e2d73a08bb69e4255ad95f3f"
+    },
+    {
+      "path": "work/runtime/information-node-total-power-20261106-207-001/native-total-power-contract-001.json",
+      "bytes": 6207,
+      "sha256": "ad1cdb774b2d46356c083587a5c82cea7c6918b4b06fa6a96ea141cf244ee1c3"
+    }
+  ],
+  "layout_dependencies": [
+    {
+      "path": "bridge/information/trade_power_sum_memory.py",
+      "bytes": 23108,
+      "sha256": "5f9f062c120d6e1d940be6b6826a57ab4e8cbbe77eb2151a1031da949cb29528"
+    },
+    {
+      "path": "bridge/information/country_resources_memory.py",
+      "bytes": 69937,
+      "sha256": "c4635d676caaf1ad02e73987646732cd6d13830c616d41df76d22d9d6af23ed7"
+    },
+    {
+      "path": "bridge/information/trade_income_memory.py",
+      "bytes": 49638,
+      "sha256": "3e74186eac8471dcad219e9590a2fa8af585e6420a85a14eab51884c1e39837c"
+    },
+    {
+      "path": "bridge/information/country_reference_memory.py",
+      "bytes": 13345,
+      "sha256": "17c183ec1228f029d4f91896ef7454237ca40c2abcf3e7aee3e41aea7acfc593"
+    },
+    {
+      "path": "bridge/information/profiles/trade-income-memory-1374.json",
+      "bytes": 11175,
+      "sha256": "1375800668ed0ddec29d2e5f8efe8e1369d1e4da8b0aa6916b5b970078b137cd"
+    },
+    {
+      "path": "bridge/information/profiles/country-resources-memory-1374-r2.json",
+      "bytes": 54122,
+      "sha256": "3714572d422b20cfdc7b1aea30ba6b638e01e8030c7c7860ca86c8455896d2a2"
+    },
+    {
+      "path": "bridge/information/profiles/foreign-technology-memory-1374-v2.json",
+      "bytes": 6919,
+      "sha256": "fd663e01bdd46bda1c456d52cc83e579b2eb9c79d7a0b8404a98db4f1e192158"
+    }
+  ],
+  "limits": {
+    "child_bytes_per_snapshot": 131072,
+    "child_calls_per_snapshot": 8192,
+    "max_single_read": 32768,
+    "shared_parent_capture_limit_bytes": 524288
+  },
+  "semantics": {
+    "scope": "structural membership identifiers for the already selected own-country T04 scope",
+    "role_basis": "existing B23 foreign-technology v2 observer_role_layout: human_count1/controller_type0",
+    "native_country_view_predicate_invoked": false,
+    "foreign_country_power_read": false,
+    "extra_canonical_country_scan": false,
+    "atomic_snapshot": false,
+    "cache_refresh_timing_proven": false,
+    "complete": false
+  },
+  "source_revision": {
+    "previous_profile": {
+      "path": "bridge/information/profiles/trade-power-sum-memory-1374-v1.json",
+      "bytes": 6242,
+      "sha256": "d2d9bc4d8818a3c034a843b87ce95d0c1c21493b8eb23b8d020b0329926bc1fc"
+    },
+    "previous_parent_source": {
+      "path": "work/runtime/information-native-trade-income-20261106-209-001/country-resources-before-income-001.py",
+      "bytes": 65301,
+      "sha256": "6e3eef20da1a6b5309749ffc27cd461ae3e17f07b474aa481c4dc6c07aab096a"
+    },
+    "native_layout_and_guards_changed": false
+  }
+}

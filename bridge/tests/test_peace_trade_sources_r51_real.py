@@ -416,7 +416,10 @@ class PeaceTradeSourcesR51RealFixtureTests(unittest.TestCase):
             offer, session_id))
         public = ObserverSession._public_native_inbound_offer(
             record["request_id"], offer)
-        self.assertEqual(record["public_projection"], public)
+        expected = dict(record["public_projection"], deadline={
+            "unit": "game_date_raw", "scale": 1, "period": "proposal",
+            "status": "unknown", "reason": "PROPOSAL_EXPIRY_RULE_NOT_VERIFIED"})
+        self.assertEqual(expected, public)
         self.assertEqual([], _private_key_paths(public))
         self.assertEqual("peace_offer", public["action_id"])
         self.assertEqual("ENG", public["actor"])

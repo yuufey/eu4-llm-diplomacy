@@ -6,6 +6,7 @@ native actions never enqueue a legacy request or execute a console script.
 from __future__ import annotations
 
 import hashlib
+from copy import deepcopy
 import json
 import ctypes
 from decimal import Decimal, InvalidOperation
@@ -15,8 +16,18 @@ import re
 import subprocess
 import time
 import uuid
+from threading import RLock
 
 from .diplomacy_catalog import ACTIONS, INBOUND_ACTIONS, PEACE_ACTION_IDS
+from .debt_quote_query import (
+    ACTION_ID as _DEBT_QUOTE_ACTION,
+    QUERY_CAPABILITY as _NATIVE_DEBT_QUOTE_QUERY_CAPABILITY,
+    BASIS as _DEBT_QUOTE_BASIS,
+    normalize_request as _normalize_debt_quote_request,
+    validate_event as _validate_debt_quote_event,
+    project_event as _project_debt_quote_event,
+    query_only_descriptor as _debt_quote_descriptor,
+)
 from .diplomat_availability import (
     apply_diplomat_legality, project_native_diplomat_context,
     validate_native_diplomat_context,
@@ -29,6 +40,21 @@ from .native_text import (DEFAULT_NATIVE_TEXT_CODEC, InvalidNativeText,
                           decode_native_text_hex, validate_native_text_codec)
 from .peace_execution import normalize_peace_execution_parameters
 from .peace_costs import project_special_cost_comparisons
+from .war_participants import project_war_participants
+from . import proposal_expiry
+from . import native_result_date
+from . import country_modifier_observation
+from . import subsidy_expiry_observation
+from . import truce_expiry_observation
+from . import claim_expiry_observation
+from . import land_promise_observation
+from . import rival_observation
+from . import war_declaration_observation
+from . import relation_observation
+from . import mission_observation
+from . import mission_availability_observation
+from . import mission_condition_observation
+from . import support_roles
 from .favor_trade import (ACTION_ID as _FAVOR_GOLD_ACTION,
     QUERY_CAPABILITY as _NATIVE_FAVOR_GOLD_QUERY_CAPABILITY,
     SUBMISSION_CAPABILITY as _NATIVE_FAVOR_GOLD_SUBMISSION_CAPABILITY,
@@ -126,6 +152,7 @@ _NATIVE_SUPPORT_INDEPENDENCE_SUBMISSION_CAPABILITY = "native_support_independenc
 _NATIVE_MILITARY_ACCESS_SUBMISSION_CAPABILITY = "native_military_access_submission"
 _NATIVE_INSULT_SUBMISSION_CAPABILITY = "native_insult_submission"
 _NATIVE_INBOUND_ALLIANCE_CAPABILITY = "native_inbound_alliance"
+_NATIVE_CALL_TO_ARMS_OBSERVATION_CAPABILITY = "native_call_to_arms_observation"
 _NATIVE_INBOUND_RESPONSE_CAPABILITY = "native_inbound_alliance_response"
 _NATIVE_INBOUND_ROYAL_RESPONSE_CAPABILITY = "native_inbound_royal_marriage_response"
 _NATIVE_INBOUND_SUPPORT_RESPONSE_CAPABILITY = "native_inbound_support_independence_response"
@@ -153,6 +180,7 @@ _NATIVE_DECLARE_WAR_PEACE_OPTIONS_CAPABILITY = "native_declare_war_peace_options
 _NATIVE_PEACE_CONSEQUENCES_CAPABILITY = "native_peace_consequences"
 _NATIVE_PEACE_SUBMISSION_CAPABILITY = "native_peace_submission"
 _NATIVE_PEACE_CONTEXT_QUERY_CAPABILITY = "native_peace_context_query"
+_NATIVE_WAR_PARTICIPANTS_QUERY_CAPABILITY = "native_war_participants_query"
 _NATIVE_PEACE_EMPTY_OFFER_QUERY_CAPABILITY = "native_peace_empty_offer_query"
 _NATIVE_PEACE_OFFER_EVALUATION_QUERY_CAPABILITY = "native_peace_offer_evaluation_query"
 _NATIVE_PEACE_MONEY_OFFER_QUERY_CAPABILITY = "native_peace_money_offer_query"
@@ -399,8 +427,30 @@ class ObserverSession:
         # The mapping deliberately remains private: it contains the native
         # session and payload needed by a future response wire.
         self._inbound_log_offset = 0
-        self._inbound_seen_native_proposals: set[int] = set()
+        self._inbound_log_identity = None
+        self._inbound_log_session_id = None
+        self._macro_capture_ready = self.record.get('ready_reason') != 'verified_load_confirmation'
+        self._inbound_seen_native_proposals: set[int | tuple[str, int]] = set()
         self._inbound_private_proposals: dict[str, dict] = {}
+        self._inbound_capture_dropped = 0
+        self._inbound_expiries: dict[str, dict] = {}
+        self._inbound_inactivations: dict[str, dict] = {}
+        self._inbound_unmatched_expiries: dict[int, dict] = {}
+        self._inbound_expiry_sequences: dict[int, dict] = {}
+        self._inbound_lifecycle_gaps: set[str] = set()
+        self._inbound_lifecycle_dropped = 0
+        self._native_observation_lock = RLock()
+        self._country_modifier_observations = country_modifier_observation.Collector(self.session_id)
+        self._subsidy_expiries = subsidy_expiry_observation.Collector(self.session_id)
+        self._truce_expiries = truce_expiry_observation.Collector(self.session_id)
+        self._claim_expiries = claim_expiry_observation.Collector(self.session_id)
+        self._land_promises = land_promise_observation.Collector(self.session_id)
+        self._rival_observations = rival_observation.Collector(self.session_id)
+        self._war_declarations = war_declaration_observation.Collector(self.session_id)
+        self._relation_observations = relation_observation.Collector(self.session_id)
+        self._mission_observations = mission_observation.Collector(self.session_id)
+        self._mission_availability_observations = mission_availability_observation.Collector(self.session_id)
+        self._mission_condition_observations = mission_condition_observation.Collector(self.session_id)
 
     def _installation_ack(self) -> dict | None:
         """Return only this installation's bounded, operator-owned ack."""
@@ -440,6 +490,29 @@ class ObserverSession:
         # The inbound observer and response adapters require their explicit
         # top-level ACKs; a copied caps list cannot grant either authority.
         capabilities.discard(_NATIVE_INBOUND_ALLIANCE_CAPABILITY)
+        capabilities.discard(_NATIVE_CALL_TO_ARMS_OBSERVATION_CAPABILITY)
+        capabilities.discard(proposal_expiry.CAPABILITY)
+        capabilities.discard(native_result_date.CAPABILITY)
+        capabilities.discard(country_modifier_observation.CAPABILITY)
+        capabilities.discard(country_modifier_observation.REMOVE_CAPABILITY)
+        capabilities.discard(country_modifier_observation.EXPIRY_CAPABILITY)
+        capabilities.discard(subsidy_expiry_observation.CAPABILITY)
+        capabilities.discard(truce_expiry_observation.CAPABILITY)
+        capabilities.discard(claim_expiry_observation.CAPABILITY)
+        capabilities.discard(land_promise_observation.CAPABILITY)
+        capabilities.discard(rival_observation.CAPABILITY)
+        capabilities.discard(rival_observation.RECORD_CAPABILITY)
+        capabilities.discard(war_declaration_observation.CAPABILITY)
+        capabilities.discard(relation_observation.CAPABILITY)
+        capabilities.discard(relation_observation.RECORD_CAPABILITY)
+        capabilities.discard(relation_observation.ROYAL_RECORD_CAPABILITY)
+        capabilities.discard(relation_observation.DIRECTED_RECORD_CAPABILITY)
+        capabilities.discard(relation_observation.SUPPORT_SUBJECT_RECORD_CAPABILITY)
+        capabilities.discard(mission_observation.CAPABILITY)
+        capabilities.discard(mission_observation.SET_CAPABILITY)
+        capabilities.discard(mission_availability_observation.CAPABILITY)
+        capabilities.discard(mission_condition_observation.CAPABILITY)
+        capabilities.discard(mission_condition_observation.PROVINCE_CAPABILITY)
         capabilities.discard(_NATIVE_INBOUND_RESPONSE_CAPABILITY)
         capabilities.discard(_NATIVE_INBOUND_ROYAL_RESPONSE_CAPABILITY)
         capabilities.discard(_NATIVE_INBOUND_SUPPORT_RESPONSE_CAPABILITY)
@@ -483,6 +556,7 @@ class ObserverSession:
         capabilities.discard(_NATIVE_INSULT_QUERY_CAPABILITY)
         capabilities.discard(_NATIVE_GIFT_QUERY_CAPABILITY)
         capabilities.discard(_NATIVE_INFLUENCE_QUERY_CAPABILITY)
+        capabilities.discard(_NATIVE_DEBT_QUOTE_QUERY_CAPABILITY)
         # Rival inspection is granted only by its dedicated top-level literal
         # ACK; a copied caps entry cannot grant the countrycommands adapter.
         capabilities.discard(_NATIVE_RIVAL_QUERY_CAPABILITY)
@@ -498,6 +572,7 @@ class ObserverSession:
         # Peace-context discovery is granted only by its exact top-level
         # literal ACK; a copied caps entry cannot authorize QUERY1.
         capabilities.discard(_NATIVE_PEACE_CONTEXT_QUERY_CAPABILITY)
+        capabilities.discard(_NATIVE_WAR_PARTICIPANTS_QUERY_CAPABILITY)
         # The empty-offer constructor/query is a separate read-only ACK.  A
         # context-enumeration ACK must never imply that QUERY4 is available.
         capabilities.discard(_NATIVE_PEACE_EMPTY_OFFER_QUERY_CAPABILITY)
@@ -589,6 +664,51 @@ class ObserverSession:
         # bounded observation, never acceptance or rejection authority.
         if ack.get(_NATIVE_INBOUND_ALLIANCE_CAPABILITY) is True:
             capabilities.add(_NATIVE_INBOUND_ALLIANCE_CAPABILITY)
+        if country_modifier_observation.supported_ack(ack, self.record.get('game_sha256')):
+            capabilities.add(country_modifier_observation.CAPABILITY)
+        if country_modifier_observation.supported_remove_ack(ack, self.record.get('game_sha256')):
+            capabilities.add(country_modifier_observation.REMOVE_CAPABILITY)
+        if country_modifier_observation.supported_expiry_ack(ack, self.record.get('game_sha256')):
+            capabilities.add(country_modifier_observation.EXPIRY_CAPABILITY)
+        if subsidy_expiry_observation.supported_ack(ack, self.record.get('game_sha256')):
+            capabilities.add(subsidy_expiry_observation.CAPABILITY)
+        if truce_expiry_observation.supported_ack(ack, self.record.get('game_sha256')):
+            capabilities.add(truce_expiry_observation.CAPABILITY)
+        if claim_expiry_observation.supported_ack(ack, self.record.get('game_sha256')):
+            capabilities.add(claim_expiry_observation.CAPABILITY)
+        if land_promise_observation.supported_ack(ack, self.record.get('game_sha256')):
+            capabilities.add(land_promise_observation.CAPABILITY)
+        if rival_observation.supported_ack(ack, self.record.get('game_sha256')):
+            capabilities.add(rival_observation.CAPABILITY)
+        if rival_observation.supported_record_ack(ack, self.record.get('game_sha256')):
+            capabilities.add(rival_observation.RECORD_CAPABILITY)
+        if war_declaration_observation.supported_ack(ack, self.record.get('game_sha256')):
+            capabilities.add(war_declaration_observation.CAPABILITY)
+        if relation_observation.supported_ack(ack, self.record.get('game_sha256')):
+            capabilities.add(relation_observation.CAPABILITY)
+        if relation_observation.supported_record_ack(ack, self.record.get('game_sha256')):
+            capabilities.add(relation_observation.RECORD_CAPABILITY)
+        if relation_observation.supported_royal_record_ack(ack, self.record.get('game_sha256')):
+            capabilities.add(relation_observation.ROYAL_RECORD_CAPABILITY)
+        if relation_observation.supported_directed_record_ack(ack, self.record.get('game_sha256')):
+            capabilities.add(relation_observation.DIRECTED_RECORD_CAPABILITY)
+        if relation_observation.supported_support_subject_record_ack(ack, self.record.get('game_sha256')):
+            capabilities.add(relation_observation.SUPPORT_SUBJECT_RECORD_CAPABILITY)
+        if mission_observation.supported_ack(ack, self.record.get('game_sha256')):
+            capabilities.add(mission_observation.CAPABILITY)
+        if mission_observation.supported_set_ack(ack, self.record.get('game_sha256')):
+            capabilities.add(mission_observation.SET_CAPABILITY)
+        if mission_availability_observation.supported_ack(ack, self.record.get('game_sha256')):
+            capabilities.add(mission_availability_observation.CAPABILITY)
+        if mission_condition_observation.supported_ack(ack, self.record.get('game_sha256')):
+            capabilities.add(mission_condition_observation.CAPABILITY)
+        if mission_condition_observation.supported_province_ack(ack, self.record.get('game_sha256')):
+            capabilities.add(mission_condition_observation.PROVINCE_CAPABILITY)
+        if (ack.get(_NATIVE_CALL_TO_ARMS_OBSERVATION_CAPABILITY) is True
+                and ack.get("native_call_to_arms_ai_response_held") is False
+                and type(ack.get("version")) is int
+                and ack["version"] >= 41):
+            capabilities.add(_NATIVE_CALL_TO_ARMS_OBSERVATION_CAPABILITY)
         if ack.get(_NATIVE_INBOUND_RESPONSE_CAPABILITY) is True:
             capabilities.add(_NATIVE_INBOUND_RESPONSE_CAPABILITY)
         if ack.get(_NATIVE_INBOUND_ROYAL_RESPONSE_CAPABILITY) is True:
@@ -623,6 +743,13 @@ class ObserverSession:
             capabilities.add(_NATIVE_GIFT_QUERY_CAPABILITY)
         if ack.get(_NATIVE_INFLUENCE_QUERY_CAPABILITY) is True:
             capabilities.add(_NATIVE_INFLUENCE_QUERY_CAPABILITY)
+        if (type(ack.get("version")) is int and ack["version"] == 34
+                and ack.get(_NATIVE_DEBT_QUOTE_QUERY_CAPABILITY) is True
+                and type(ack.get("native_debt_quote_query_wire")) is int
+                and ack["native_debt_quote_query_wire"] == 1
+                and ack.get("native_debt_quote_read_only") is True
+                and ack.get("native_debt_quote_fp_context") is True):
+            capabilities.add(_NATIVE_DEBT_QUOTE_QUERY_CAPABILITY)
         if ack.get(_NATIVE_RIVAL_QUERY_CAPABILITY) is True:
             capabilities.add(_NATIVE_RIVAL_QUERY_CAPABILITY)
         if ack.get(_NATIVE_VASSALIZATION_QUERY_CAPABILITY) is True:
@@ -631,6 +758,8 @@ class ObserverSession:
             capabilities.add(_NATIVE_DECLARE_WAR_QUERY_CAPABILITY)
         if ack.get(_NATIVE_PEACE_CONTEXT_QUERY_CAPABILITY) is True:
             capabilities.add(_NATIVE_PEACE_CONTEXT_QUERY_CAPABILITY)
+        if ack.get(_NATIVE_WAR_PARTICIPANTS_QUERY_CAPABILITY) is True:
+            capabilities.add(_NATIVE_WAR_PARTICIPANTS_QUERY_CAPABILITY)
         if ack.get(_NATIVE_PEACE_EMPTY_OFFER_QUERY_CAPABILITY) is True:
             capabilities.add(_NATIVE_PEACE_EMPTY_OFFER_QUERY_CAPABILITY)
         if ack.get(_NATIVE_PEACE_OFFER_EVALUATION_QUERY_CAPABILITY) is True:
@@ -694,15 +823,29 @@ class ObserverSession:
             capabilities.discard(capability)
             if ack.get(capability) is True:
                 capabilities.add(capability)
+        if (_NATIVE_INBOUND_ALLIANCE_CAPABILITY in capabilities
+                and ack.get(proposal_expiry.CAPABILITY) is True
+                and self.record.get('game_sha256') == proposal_expiry.GAME_SHA256):
+            capabilities.add(proposal_expiry.CAPABILITY)
+        if (_NATIVE_INBOUND_ALLIANCE_CAPABILITY in capabilities
+                and ack.get(native_result_date.CAPABILITY) is True
+                and self.record.get('game_sha256') == native_result_date.GAME_SHA256):
+            capabilities.add(native_result_date.CAPABILITY)
+        capabilities.discard(support_roles.CAPABILITY)
+        if (ack.get(support_roles.CAPABILITY) is True
+                and _NATIVE_SUPPORT_INDEPENDENCE_QUERY_CAPABILITY in capabilities
+                and _NATIVE_INBOUND_SUPPORT_RESPONSE_CAPABILITY in capabilities
+                and self.record.get('game_sha256') == support_roles.GAME_SHA256):
+            capabilities.add(support_roles.CAPABILITY)
         return frozenset(capabilities)
 
     @staticmethod
     def _valid_native_inbound_offer_event(event: object, session_id: str) -> bool:
         """Validate the narrow r21 pending-offer observation contract.
 
-        The native event contains diagnostic addresses, tokens and dates for
-        operator evidence.  Those fields are intentionally only checked for
-        identity here and are never copied to the public proposal object.
+        Diagnostic addresses and tokens remain private. Pending dates may be
+        projected through the separately guarded deadline contract after this
+        event has passed the proposal admission checks.
         """
 
         if not isinstance(event, dict) or event.get("session_id") != session_id:
@@ -877,7 +1020,7 @@ ew_entry`` or
         return True
 
     @staticmethod
-    def _public_native_inbound_offer(public_id: str, event: dict) -> dict:
+    def _public_native_inbound_offer(public_id: str, event: dict, *, deadline_enabled=False) -> dict:
         """Reduce a verified native event to the AI-facing safe contract."""
 
         action_id = event.get("action_id", "offer_alliance")
@@ -898,15 +1041,27 @@ ew_entry`` or
         }
         if event.get("event") == "native_diplomacy_inbound_pending_restored":
             public["source"] = "saved_native_pending"
+        public['deadline'] = proposal_expiry.project_deadline(event, enabled=deadline_enabled)
+        if action_id in proposal_expiry.PARAMETERLESS_ACTIONS:
+            public["parameters"] = {}
         if family == "peace":
             public_context = ObserverSession._canonicalize_inbound_peace_context(
                 event.get("peace_context"))
             if (public_context is not None
                     and public_context.get("complete") is True):
                 public["peace_context"] = public_context
+            parameters = ObserverSession._public_inbound_peace_parameters(
+                event.get("peace_context"), event["actor"])
+            if parameters is not None:
+                public["parameters"] = parameters
         return public
 
     def read_native_alliance_inbound_offers(self) -> list[dict]:
+        """Serialize consumers of the shared, bounded native observation cursor."""
+        with self._native_observation_lock:
+            return self._read_native_alliance_inbound_offers_locked()
+
+    def _read_native_alliance_inbound_offers_locked(self) -> list[dict]:
         """Read at most one bounded log window of verified inbound offers.
 
         The cursor advances only over complete lines and is reset if the
@@ -915,17 +1070,103 @@ ew_entry`` or
         log or retaining native diagnostics in the public response.
         """
 
-        if _NATIVE_INBOUND_ALLIANCE_CAPABILITY not in self.installation_capabilities():
+        from .call_to_arms_observation import CAPABILITY, public_observation
+        capabilities = self.installation_capabilities()
+        modifier_enabled = country_modifier_observation.CAPABILITY in capabilities
+        subsidy_expiry_enabled = subsidy_expiry_observation.CAPABILITY in capabilities
+        truce_expiry_enabled = truce_expiry_observation.CAPABILITY in capabilities
+        claim_expiry_enabled = claim_expiry_observation.CAPABILITY in capabilities
+        land_promise_enabled = land_promise_observation.CAPABILITY in capabilities
+        rival_enabled = rival_observation.CAPABILITY in capabilities
+        rival_record_enabled = rival_enabled and rival_observation.RECORD_CAPABILITY in capabilities
+        war_enabled = war_declaration_observation.CAPABILITY in capabilities
+        relation_enabled = relation_observation.CAPABILITY in capabilities
+        mission_enabled = mission_observation.CAPABILITY in capabilities
+        mission_availability_enabled = mission_availability_observation.CAPABILITY in capabilities
+        mission_condition_enabled = mission_condition_observation.CAPABILITY in capabilities
+        change_collectors = []
+        if modifier_enabled:
+            change_collectors.append((self._country_modifier_observations, 'COUNTRY_MODIFIER'))
+        if subsidy_expiry_enabled:
+            change_collectors.append((self._subsidy_expiries, 'SUBSIDY_EXPIRY'))
+        if truce_expiry_enabled:
+            change_collectors.append((self._truce_expiries, 'TRUCE_EXPIRY'))
+        if claim_expiry_enabled:
+            change_collectors.append((self._claim_expiries, 'CLAIM_EXPIRY'))
+        if land_promise_enabled:
+            change_collectors.append((self._land_promises, 'LAND_PROMISE'))
+        if rival_enabled:
+            change_collectors.append((self._rival_observations, 'RIVAL'))
+        if war_enabled:
+            change_collectors.append((self._war_declarations, 'WAR_DECLARATION'))
+        if relation_enabled:
+            change_collectors.append((self._relation_observations, 'RELATION'))
+        if mission_enabled:
+            change_collectors.append((self._mission_observations, 'MISSION'))
+        if mission_availability_enabled:
+            change_collectors.append((self._mission_availability_observations, 'MISSION_AVAILABILITY'))
+        if mission_condition_enabled:
+            change_collectors.append((self._mission_condition_observations, 'MISSION_CONDITION'))
+        startup_events = {
+            subsidy_expiry_observation.NATIVE_EVENT: (
+                self._subsidy_expiries, subsidy_expiry_observation.public_observation),
+            truce_expiry_observation.NATIVE_EVENT: (
+                self._truce_expiries, truce_expiry_observation.public_observation),
+            claim_expiry_observation.NATIVE_EVENT: (
+                self._claim_expiries, claim_expiry_observation.public_observation),
+            land_promise_observation.NATIVE_EVENT: (
+                self._land_promises, land_promise_observation.public_observation),
+            country_modifier_observation.NATIVE_EVENT: (
+                self._country_modifier_observations, country_modifier_observation.public_observation),
+            country_modifier_observation.REMOVE_NATIVE_EVENT: (
+                self._country_modifier_observations, country_modifier_observation.public_observation),
+            country_modifier_observation.EXPIRY_NATIVE_EVENT: (
+                self._country_modifier_observations, country_modifier_observation.public_observation),
+            rival_observation.NATIVE_EVENT: (self._rival_observations,
+                lambda row, session: rival_observation.public_observation(row,session)
+                if row.get('schema_version') != 2 or rival_record_enabled else None),
+            war_declaration_observation.NATIVE_EVENT: (
+                self._war_declarations, war_declaration_observation.public_observation),
+            relation_observation.NATIVE_EVENT: (self._relation_observations, relation_observation.public_observation),
+            mission_observation.NATIVE_EVENT: (self._mission_observations, mission_observation.public_observation),
+            mission_availability_observation.NATIVE_EVENT: (
+                self._mission_availability_observations, mission_availability_observation.public_observation),
+            mission_condition_observation.NATIVE_EVENT: (
+                self._mission_condition_observations, mission_condition_observation.public_observation),
+        }
+        if not self._macro_capture_ready:
+            for collector, prefix in change_collectors:
+                collector.gaps.add(prefix+'_STARTUP_CAPTURE_PENDING')
+        if (_NATIVE_INBOUND_ALLIANCE_CAPABILITY not in capabilities
+                and CAPABILITY not in capabilities and not change_collectors):
             return []
+        expiry_enabled = proposal_expiry.CAPABILITY in capabilities
+        pending_end_return_markers = tuple(rva.encode('ascii') for rva in (
+            proposal_expiry.EXPIRY_RETURN_RVA, *proposal_expiry.INACTIVE_RETURN_RVAS))
         log = self.directory / "control-probe.jsonl"
         try:
-            size = log.stat().st_size
+            stat = log.stat()
+            size = stat.st_size
+            identity = (stat.st_dev, stat.st_ino)
             offset = self._inbound_log_offset
-            if size < offset:
+            if size < offset or (self._inbound_log_identity is not None
+                                 and self._inbound_log_identity != identity):
                 offset = 0
                 self._inbound_log_offset = 0
                 self._inbound_seen_native_proposals.clear()
                 self._inbound_private_proposals.clear()
+                self._inbound_expiries.clear()
+                self._inbound_inactivations.clear()
+                self._inbound_unmatched_expiries.clear()
+                self._inbound_expiry_sequences.clear()
+                self._inbound_log_session_id = None
+                self._macro_capture_ready = self.record.get('ready_reason') != 'verified_load_confirmation'
+                self._inbound_lifecycle_gaps.add('PROPOSAL_LIFECYCLE_LOG_RESET')
+                for collector, prefix in change_collectors:
+                    collector.gaps.add(prefix+'_LOG_RESET')
+                    if not self._macro_capture_ready:
+                        collector.gaps.add(prefix+'_STARTUP_CAPTURE_PENDING')
+            self._inbound_log_identity = identity
             with log.open("rb") as stream:
                 stream.seek(offset)
                 pending = b""
@@ -946,13 +1187,114 @@ ew_entry`` or
                         pending = pending[newline + 1:]
                         consumed += newline + 1
                         if len(line) > _RESPONSE_LOG_LINE_BYTES:
+                            for collector, prefix in change_collectors:
+                                collector.gaps.add(prefix+'_LOG_LINE_TOO_LONG')
+                            continue
+                        # This consumer uses the verified pending-end return sites.
+                        # Keep noncanonical/escaped JSON on
+                        # the normal parser path for backwards compatibility.
+                        if (line.startswith(b'{"event":"native_alliance_lifecycle",')
+                                and b'\\' not in line
+                                and line.count(b'"event"') == 1
+                                and not any(marker in line for marker in pending_end_return_markers)):
                             continue
                         try:
                             event = json.loads(line.decode("utf-8"))
                         except (UnicodeDecodeError, ValueError):
+                            if line.strip():
+                                for collector, prefix in change_collectors:
+                                    collector.gaps.add(prefix+'_LOG_INVALID_JSON')
                             continue
+                        if isinstance(event, dict) and event.get('event') == 'diplomacy_observer_installed':
+                            self._inbound_log_session_id = event.get('session_id')
+                        # The confirmed-load installer observes a temporary
+                        # world before the checkpoint is loaded. Keep those
+                        # mutations outside the macro event stream. This
+                        # native marker follows the existing loaded-world
+                        # control readiness check, including its frame delay.
+                        if (event == {'event': 'control_loaded_pause_requested'}
+                                and self._inbound_log_session_id == self.session_id):
+                            self._macro_capture_ready = True
+                            for collector, prefix in change_collectors:
+                                collector.gaps.discard(prefix+'_STARTUP_CAPTURE_PENDING')
+                        if not self._macro_capture_ready and isinstance(event, dict) and isinstance(event.get('event'), str):
+                            startup = startup_events.get(event['event'])
+                            if startup is not None:
+                                collector, decoder = startup
+                                public = decoder(event, self.session_id)
+                                if public is not None:
+                                    collector.last_sequence = max(collector.last_sequence, public['native_sequence'])
+                                continue
+                        if modifier_enabled:
+                            self._country_modifier_observations.observe(event, allow_removal=(
+                                country_modifier_observation.REMOVE_CAPABILITY in capabilities), allow_expiry=(
+                                country_modifier_observation.EXPIRY_CAPABILITY in capabilities))
+                        if subsidy_expiry_enabled:
+                            self._subsidy_expiries.observe(event)
+                        if truce_expiry_enabled:
+                            self._truce_expiries.observe(event)
+                        if claim_expiry_enabled:
+                            self._claim_expiries.observe(event)
+                        if land_promise_enabled:
+                            self._land_promises.observe(event)
+                        if rival_enabled:
+                            self._rival_observations.observe(event,allow_record=rival_record_enabled)
+                        if war_enabled:
+                            self._war_declarations.observe(event)
+                        if relation_enabled:
+                            self._relation_observations.observe(event,
+                                allow_record=relation_observation.RECORD_CAPABILITY in capabilities,
+                                allow_royal_record=relation_observation.ROYAL_RECORD_CAPABILITY in capabilities,
+                                allow_directed_record=relation_observation.DIRECTED_RECORD_CAPABILITY in capabilities,
+                                allow_support_subject_record=relation_observation.SUPPORT_SUBJECT_RECORD_CAPABILITY in capabilities)
+                        if mission_enabled:
+                            self._mission_observations.observe(event, allow_set=(
+                                mission_observation.SET_CAPABILITY in capabilities))
+                        if mission_availability_enabled:
+                            self._mission_availability_observations.observe(event)
+                        if mission_condition_enabled:
+                            self._mission_condition_observations.observe(event)
+                        if expiry_enabled and isinstance(event, dict):
+                            if (event.get('event') == 'native_alliance_lifecycle_drop'
+                                    and self._inbound_log_session_id == self.session_id
+                                    and type(event.get('dropped')) is int
+                                    and 0 < event['dropped'] <= 2**31 - 1):
+                                self._inbound_lifecycle_dropped += event['dropped']
+                            inactive = proposal_expiry.is_inactivation_observation(event, self.session_id)
+                            if inactive or proposal_expiry.is_expiry_observation(event, self.session_id):
+                                candidate = (proposal_expiry.validate_inactivation(event, self.session_id) if inactive
+                                             else proposal_expiry.validate_expiry(event, self.session_id))
+                                if candidate is not None and inactive:
+                                    candidate['end_kind'] = 'inactive'
+                                if candidate is None:
+                                    self._inbound_lifecycle_gaps.add('PROPOSAL_PENDING_END_OBSERVATION_INVALID' if inactive
+                                                                   else 'PROPOSAL_EXPIRY_OBSERVATION_INVALID')
+                                elif candidate['sequence'] in self._inbound_expiry_sequences:
+                                    if self._inbound_expiry_sequences[candidate['sequence']] != candidate:
+                                        self._inbound_lifecycle_gaps.add('PROPOSAL_EXPIRY_SEQUENCE_CONFLICT')
+                                else:
+                                    self._inbound_expiry_sequences[candidate['sequence']] = candidate
+                                    self._inbound_unmatched_expiries[candidate['sequence']] = dict(candidate, log_offset=consumed)
+                        if CAPABILITY in capabilities:
+                            if (isinstance(event, dict) and event.get("event") == "native_call_to_arms_drop"
+                                    and event.get("session_id") == self.session_id
+                                    and type(event.get("dropped")) is int and 0 < event["dropped"] <= 2**31 - 1):
+                                self._inbound_capture_dropped += event["dropped"]
+                            call = public_observation(event, self.session_id)
+                            if call is not None:
+                                identity = ("call_to_arms", event["observation_id"])
+                                if identity not in self._inbound_seen_native_proposals:
+                                    self._inbound_seen_native_proposals.add(identity)
+                                    self._inbound_private_proposals[call["proposal_id"]] = {
+                                        "session_id": self.session_id, "payload": dict(event), "public": call,
+                                        "log_offset": consumed,
+                                    }
+                                continue
                         restored = self._valid_native_inbound_pending_restored_event(
                             event, self.session_id)
+                        if (_NATIVE_INBOUND_ALLIANCE_CAPABILITY not in capabilities
+                                and CAPABILITY not in capabilities):
+                            continue
                         if (not restored
                                 and not self._valid_native_inbound_offer_event(
                                     event, self.session_id)):
@@ -970,38 +1312,233 @@ ew_entry`` or
                             (self.session_id + "\0" + str(native_proposal_id)
                              + "\0" + payload).encode("utf-8")).hexdigest()[:32]
                         public_id = opaque
-                        public = self._public_native_inbound_offer(public_id, event)
+                        public = self._public_native_inbound_offer(
+                            public_id, event, deadline_enabled=expiry_enabled)
                         self._inbound_private_proposals[public_id] = {
                             "session_id": self.session_id,
                             "native_proposal_id": native_proposal_id,
                             "payload": dict(event),
                             "public": public,
+                            "log_offset": consumed,
                         }
                     if len(pending) > _RESPONSE_LOG_LINE_BYTES:
+                        for collector, prefix in change_collectors:
+                            collector.gaps.add(prefix+'_LOG_LINE_TOO_LONG')
                         consumed += len(pending)
                         pending = b""
                 self._inbound_log_offset = consumed
+            self._inbound_lifecycle_gaps.discard('PROPOSAL_LIFECYCLE_LOG_READ_FAILED')
+            for collector, prefix in change_collectors:
+                collector.gaps.discard(prefix+'_LOG_READ_FAILED')
         except OSError:
-            return [dict(item["public"])
-                    for item in self._inbound_private_proposals.values()]
-        return [dict(item["public"])
-                for item in self._inbound_private_proposals.values()]
+            for collector, prefix in change_collectors:
+                collector.gaps.add(prefix+'_LOG_READ_FAILED')
+            if expiry_enabled:
+                self._inbound_lifecycle_gaps.add('PROPOSAL_LIFECYCLE_LOG_READ_FAILED')
+        for sequence, candidate in list(self._inbound_unmatched_expiries.items()):
+            inactive = candidate.get('end_kind') == 'inactive'
+            project = proposal_expiry.project_inactivation if inactive else proposal_expiry.project_expiry
+            projected = project(candidate, self._inbound_private_proposals, self.session_id)
+            if projected is not None:
+                target = self._inbound_inactivations if inactive else self._inbound_expiries
+                target[projected['event_id']] = projected
+                del self._inbound_unmatched_expiries[sequence]
+        # Resolve the complete bounded log window before limiting unmatched rows.
+        for sequence in list(self._inbound_unmatched_expiries)[proposal_expiry.MAX_PENDING:]:
+            del self._inbound_unmatched_expiries[sequence]
+            del self._inbound_expiry_sequences[sequence]
+            self._inbound_lifecycle_gaps.add('PROPOSAL_EXPIRY_BUFFER_FULL')
+        return (self._current_inbound_proposals()
+                if _NATIVE_INBOUND_ALLIANCE_CAPABILITY in capabilities or CAPABILITY in capabilities else [])
+
+    def _current_inbound_proposals(self):
+        current = {key: record['public'] for key, record in self._inbound_private_proposals.items()}
+        for record in self._inbound_inactivations.values():
+            public = record['payload']
+            previous = current.get(public['proposal_id'])
+            if previous is not None and public['date_raw'] >= (previous.get('date_raw') or 0):
+                current[public['proposal_id']] = public
+        # A classified expiry remains the cause of this proposal's ending,
+        # including when another owned copy is cleaned up later.
+        for record in self._inbound_expiries.values():
+            public = record['payload']
+            if public['proposal_id'] in current:
+                current[public['proposal_id']] = public
+        snapshots = deepcopy(list(current.values()))
+        for public in snapshots:
+            original = self._inbound_private_proposals[public['proposal_id']]['public']
+            if 'parameters' in original:
+                public['parameters'] = deepcopy(original['parameters'])
+            else:
+                public.pop('parameters', None)
+        return snapshots
 
     # Short aliases keep the observer-facing method discoverable to offline
     # bridge callers without creating a second reader or cursor.
     read_native_inbound_offers = read_native_alliance_inbound_offers
     read_native_alliance_inbound = read_native_alliance_inbound_offers
 
+    def read_native_country_modifier_events(self, *, after_sequence=0, refresh=True) -> dict:
+        """Reuse the shared cursor and return owned copies newer than the caller's watermark."""
+        with self._native_observation_lock:
+            if country_modifier_observation.CAPABILITY not in self.installation_capabilities():
+                return {'events': [], 'complete': False, 'gaps': ['COUNTRY_MODIFIER_SOURCE_UNAVAILABLE']}
+            if refresh:
+                self.read_native_alliance_inbound_offers()
+            return self._country_modifier_observations.batch(after_sequence)
+
+    def read_native_subsidy_expiry_events(self, *, after_sequence=0, refresh=True) -> dict:
+        """Return expiry snapshots already collected by the shared native log reader."""
+        with self._native_observation_lock:
+            if subsidy_expiry_observation.CAPABILITY not in self.installation_capabilities():
+                return {'events': [], 'complete': False, 'gaps': ['SUBSIDY_EXPIRY_SOURCE_UNAVAILABLE']}
+            if refresh:
+                self.read_native_alliance_inbound_offers()
+            return self._subsidy_expiries.batch(after_sequence)
+
+    def read_native_truce_expiry_events(self, *, after_sequence=0, refresh=True) -> dict:
+        """Return expiry snapshots already collected by the shared native log reader."""
+        with self._native_observation_lock:
+            if truce_expiry_observation.CAPABILITY not in self.installation_capabilities():
+                return {'events': [], 'complete': False, 'gaps': ['TRUCE_EXPIRY_SOURCE_UNAVAILABLE']}
+            if refresh:
+                self.read_native_alliance_inbound_offers()
+            return self._truce_expiries.batch(after_sequence)
+
+    def read_native_claim_expiry_events(self, *, after_sequence=0, refresh=True) -> dict:
+        """Return expiry snapshots already collected by the shared native log reader."""
+        with self._native_observation_lock:
+            if claim_expiry_observation.CAPABILITY not in self.installation_capabilities():
+                return {'events': [], 'complete': False, 'gaps': ['CLAIM_EXPIRY_SOURCE_UNAVAILABLE']}
+            if refresh:
+                self.read_native_alliance_inbound_offers()
+            return self._claim_expiries.batch(after_sequence)
+
+    def read_native_land_promise_events(self, *, after_sequence=0, refresh=True) -> dict:
+        """Return accepted land-promise snapshots already collected by the shared native log reader."""
+        with self._native_observation_lock:
+            if land_promise_observation.CAPABILITY not in self.installation_capabilities():
+                return {'events': [], 'complete': False, 'gaps': ['LAND_PROMISE_SOURCE_UNAVAILABLE']}
+            if refresh:
+                self.read_native_alliance_inbound_offers()
+            return self._land_promises.batch(after_sequence)
+
+    def read_native_rival_events(self, *, after_sequence=0, refresh=True) -> dict:
+        """Return rival changes collected through the shared native log cursor."""
+        with self._native_observation_lock:
+            if rival_observation.CAPABILITY not in self.installation_capabilities():
+                return {'events': [], 'complete': False, 'gaps': ['RIVAL_SOURCE_UNAVAILABLE']}
+            if refresh:
+                self.read_native_alliance_inbound_offers()
+            return self._rival_observations.batch(after_sequence)
+
+    def read_native_war_declaration_events(self, *, after_sequence=0, refresh=True) -> dict:
+        """Read owned declaration-time snapshots through the shared byte cursor."""
+        with self._native_observation_lock:
+            if war_declaration_observation.CAPABILITY not in self.installation_capabilities():
+                return {'events': [], 'complete': False, 'gaps': ['WAR_DECLARATION_SOURCE_UNAVAILABLE']}
+            if refresh:
+                self.read_native_alliance_inbound_offers()
+            return self._war_declarations.batch(after_sequence)
+
+    def read_native_relation_events(self, *, after_sequence=0, refresh=True) -> dict:
+        """Read captured pair-state changes through the existing shared log cursor."""
+        with self._native_observation_lock:
+            if relation_observation.CAPABILITY not in self.installation_capabilities():
+                return {'events': [], 'complete': False, 'gaps': ['RELATION_SOURCE_UNAVAILABLE']}
+            if refresh:
+                self.read_native_alliance_inbound_offers()
+            return self._relation_observations.batch(after_sequence)
+
+    def read_native_mission_events(self, *, after_sequence=0, refresh=True) -> dict:
+        """Read completion-time mission values through the existing log cursor."""
+        with self._native_observation_lock:
+            if mission_observation.CAPABILITY not in self.installation_capabilities():
+                return {'events': [], 'complete': False, 'gaps': ['MISSION_SOURCE_UNAVAILABLE']}
+            if refresh:
+                self.read_native_alliance_inbound_offers()
+            return self._mission_observations.batch(after_sequence)
+
+    def read_native_mission_availability_events(self, *, after_sequence=0, refresh=True) -> dict:
+        """Read task predicate changes collected through the shared native cursor."""
+        with self._native_observation_lock:
+            if mission_availability_observation.CAPABILITY not in self.installation_capabilities():
+                return {'events': [], 'complete': False, 'gaps': ['MISSION_AVAILABILITY_SOURCE_UNAVAILABLE']}
+            if refresh:
+                self.read_native_alliance_inbound_offers()
+            return self._mission_availability_observations.batch(after_sequence)
+
+    def read_native_mission_condition_events(self, *, after_sequence=0, refresh=True) -> dict:
+        """Read partial root-condition observations collected through the shared native cursor."""
+        with self._native_observation_lock:
+            if mission_condition_observation.CAPABILITY not in self.installation_capabilities():
+                return {'events': [], 'complete': False, 'gaps': ['MISSION_CONDITION_SOURCE_UNAVAILABLE']}
+            if refresh:
+                self.read_native_alliance_inbound_offers()
+            return self._mission_condition_observations.batch(after_sequence)
+
+    def read_native_inbound_capture_gaps(self) -> list[str]:
+        dropped = getattr(self, "_inbound_capture_dropped", 0)
+        gaps = ["CALL_TO_ARMS_CAPTURE_DROPPED:" + str(dropped)] if dropped else []
+        gaps.extend(sorted(self._inbound_lifecycle_gaps))
+        if self._inbound_lifecycle_dropped:
+            gaps.append('LIFECYCLE_CAPTURE_DROPPED:' + str(self._inbound_lifecycle_dropped))
+        if self._inbound_unmatched_expiries:
+            gaps.append('PROPOSAL_EXPIRY_UNMATCHED:' + str(len(self._inbound_unmatched_expiries)))
+        return gaps
+
+    def read_native_inbound_events(self, *, refresh=True) -> list[dict]:
+        """Deliver each original before its terminal snapshot across log flushes."""
+        if refresh:
+            self.read_native_alliance_inbound_offers()
+        capabilities = self.installation_capabilities()
+        if not ({_NATIVE_INBOUND_ALLIANCE_CAPABILITY, _NATIVE_CALL_TO_ARMS_OBSERVATION_CAPABILITY}
+                & capabilities):
+            return []
+        events = [
+            {'event_id': 'inbound:' + public_id, 'identity': public_id,
+             'payload': record['public'], 'date_raw': record['public'].get('date_raw'),
+             'log_offset': record.get('log_offset', 0)}
+            for public_id, record in self._inbound_private_proposals.items()
+        ]
+        if proposal_expiry.CAPABILITY in capabilities:
+            events.extend(dict(record, identity=record['event_id']) for record in self._inbound_expiries.values())
+            expired_ids = {record['payload']['proposal_id'] for record in self._inbound_expiries.values()}
+            events.extend(dict(record, identity=record['event_id']) for record in self._inbound_inactivations.values()
+                          if record['payload']['proposal_id'] not in expired_ids)
+        original_offsets = {public_id: record.get('log_offset', 0)
+                            for public_id, record in self._inbound_private_proposals.items()}
+        # Native producers flush independently. An expiry can be logged before
+        # its original, but delivering the terminal first would let consumers
+        # replace it with an older pending observation. Keep the real offsets
+        # and defer only delivery until the corresponding original is emitted.
+        return deepcopy(sorted(events, key=lambda record: (
+            max(record['log_offset'], original_offsets.get(record['payload']['proposal_id'], 0)),
+            record['payload'].get('observer_status') in ('expired', 'inactive'),
+            record['log_offset'],
+        )))
+
     def find_native_alliance_inbound_offer(self, public_id: object) -> dict | None:
         """Return one safe observed proposal by its opaque public id."""
 
         if not isinstance(public_id, str):
             return None
+        return next((item for item in self.read_native_alliance_inbound_offers()
+                     if item.get('proposal_id') == public_id), None)
+
+    def link_native_pending_proposals(self, report: dict) -> dict[str, str]:
+        """Resolve current inventory entries against the bounded admitted offer log."""
+        from .native_pending_links import match_current_proposals
+        log = self.directory / 'control-probe.jsonl'
+        before = log.stat()
+        identity = (before.st_dev, before.st_ino)
         self.read_native_alliance_inbound_offers()
-        item = self._inbound_private_proposals.get(public_id)
-        if item is None:
-            return None
-        return dict(item["public"])
+        after = log.stat()
+        if (identity != (after.st_dev, after.st_ino) or self._inbound_log_identity != identity
+                or after.st_size < self._inbound_log_offset
+                or self._inbound_log_offset < before.st_size):
+            raise ValueError('NATIVE_PENDING_PROPOSAL_LOG_NOT_CAUGHT_UP')
+        return match_current_proposals(report, self._inbound_private_proposals, self.session_id)
 
     def _native_alliance_inbound_context(self, public_id: object) -> dict | None:
         """Return private wire context for an already observed opaque id.
@@ -4570,6 +5107,19 @@ ative_flags`` as private header
         return copied
 
     @classmethod
+    def _public_inbound_peace_parameters(cls, value: object, actor: str) -> dict | None:
+        """Expose complete, party-bound received terms through the shared public shape."""
+        if (not isinstance(value, dict) or value.get("complete") is not True
+                or value.get("selected_terms_complete", True) is not True
+                or not cls._valid_inbound_peace_context(value, actor, "FRA")
+                or (not value["terms"] and value.get("white_peace") is not True)
+                or (value.get("white_peace") is True
+                    and any(term["action_id"] != "white_peace" for term in value["terms"]))):
+            return None
+        context = cls._canonicalize_inbound_peace_context(value)
+        return {"peace_context": context} if context is not None else None
+
+    @classmethod
     def _valid_native_inbound_inspection(cls, event: object, query_id: str,
                                          session_id: str, actor: str, phase: str,
                                          native_proposal_id: object,
@@ -4599,7 +5149,8 @@ ative_flags`` as private header
         if wanted_id is None or cls._safe_native_proposal_id(event.get("native_proposal_id")) != wanted_id:
             return False
         wanted_date = cls._safe_submission_date(date_raw)
-        if wanted_date is None or cls._safe_submission_date(event.get("date_raw")) != wanted_date:
+        actual_date = cls._safe_submission_date(event.get("date_raw"))
+        if wanted_date is None or actual_date is None or actual_date < wanted_date:
             return False
         if event.get("decision_country") != "FRA":
             return False
@@ -4792,6 +5343,8 @@ ative_flags`` as private header
                 result["costs"] = json.loads(json.dumps(
                     event["costs"], ensure_ascii=False, allow_nan=False))
         if family == "support_independence":
+            if any(key in event for key in support_roles.FIELDS):
+                result['support_roles'] = support_roles.project_roles(event, event['actor'], 'FRA')
             result["native_current_support_independence"] = event[
                 "native_current_support_independence"]
             result["native_current_support_independence_readable"] = event[
@@ -4852,8 +5405,7 @@ ative_flags`` as private header
         fresh_date = self._safe_submission_date(health.get("date_raw")) if isinstance(health, dict) else None
         if health.get("status") != "ready" or fresh_date is None:
             return {"error_code": "QUERY_SESSION_UNREADY"}
-        if fresh_date != wanted_date:
-            return {"error_code": "QUERY_DATE_CHANGED"}
+        wanted_date = fresh_date
         log = self.directory / "control-probe.jsonl"
         try:
             offset = log.stat().st_size
@@ -4897,7 +5449,7 @@ ative_flags`` as private header
                             event, query_id, self.session_id, actor, phase, wanted_id, wanted_date,
                             action_id):
                         return {"error_code": "QUERY_NATIVE_INBOUND_RESULT_INVALID"}
-                    return self._public_native_inbound_inspection(event, wanted_date, action_id)
+                    return self._public_native_inbound_inspection(event, event["date_raw"], action_id)
             time.sleep(0.02)
         return {"error_code": "QUERY_OBSERVATION_TIMEOUT"}
 
@@ -5044,6 +5596,9 @@ ative_flags`` as private header
                         self._response_log_offsets[request_id] = consumed
                         if result is None:
                             return {"status": "invalid", "reason_code": "NATIVE_RESPONSE_RESULT_INVALID"}
+                        result = native_result_date.attach(
+                            event, result, enabled=('native_result_game_date_raw' in event
+                                and native_result_date.CAPABILITY in self.installation_capabilities()))
                         return {"status": result["native_outcome"], "result": result}
                     if len(pending) > _RESPONSE_LOG_LINE_BYTES:
                         consumed += len(pending)
@@ -5349,6 +5904,9 @@ ative_flags`` as private header
                             return {"status": "invalid",
                                     "reason_code":
                                     "NATIVE_DECLARE_WAR_EXECUTION_RESULT_INVALID"}
+                        result = native_result_date.attach(
+                            event, result, enabled=('native_result_game_date_raw' in event
+                                and native_result_date.CAPABILITY in self.installation_capabilities()))
                         return {"status": result["native_outcome"], "result": result}
                     if len(pending) > _RESPONSE_LOG_LINE_BYTES:
                         consumed += len(pending)
@@ -5415,6 +5973,9 @@ ative_flags`` as private header
                         if result is None:
                             return {"status": "invalid",
                                     "reason_code": "NATIVE_PEACE_EXECUTION_RESULT_INVALID"}
+                        result = native_result_date.attach(
+                            event, result, enabled=('native_result_game_date_raw' in event
+                                and native_result_date.CAPABILITY in self.installation_capabilities()))
                         return {"status": result["native_outcome"], "result": result}
                     if len(pending) > _RESPONSE_LOG_LINE_BYTES:
                         consumed += len(pending)
@@ -7771,6 +8332,9 @@ ative_peace_execution_result`` before exposing a business outcome.
                           "terms_verified", "war_before", "war_after"):
                 if not isinstance(event.get(field), bool):
                     return None
+            if any(event[field] is not True for field in (
+                    "response_verified", "request_binding_verified", "war_state_verified")):
+                return None
             native_state = event.get("native_state")
             if (isinstance(native_state, bool)
                     or not isinstance(native_state, int)
@@ -7800,8 +8364,12 @@ ative_peace_execution_result`` before exposing a business outcome.
             if outcome != derived and not (derived == "accepted"
                                            and outcome == "unknown"):
                 return None
-            effects_present = "effects" in event
             effects = event.get("effects")
+            # The native white-peace producer can emit an explicit null when
+            # no term effects were requested. Non-white consequences still
+            # require their complete effects object and existing validation.
+            effects_present = "effects" in event and not (
+                effects is None and not context_fields["terms"])
             effects_valid = False
             terms_verified_derived = False
             if effects_present:
@@ -7989,6 +8557,9 @@ ative_peace_execution_result`` before exposing a business outcome.
             nonwhite = bool(context_fields["terms"])
             final_outcome = derived
             terms_verified = event["terms_verified"] is True or terms_verified_derived
+            if not nonwhite and outcome == "unknown":
+                final_outcome = "unknown"
+                terms_verified = False
             if derived == "accepted" and nonwhite:
                 if (not effects_present or not effects_valid
                         or not terms_verified
@@ -8211,6 +8782,9 @@ ative_peace_execution_result`` before exposing a business outcome.
             return {"status": "busy", "reason_code": "INBOUND_RESPONSE_CHANNEL_BUSY"}
         if published != "published":
             return {"status": "failed", "reason_code": "INBOUND_RESPONSE_CHANNEL_WRITE_FAILED"}
+        # A new response cannot precede its publication. Retain this boundary
+        # for later result polling, including an acknowledgement timeout.
+        self._response_log_offsets.setdefault(request_id, offset)
         deadline = time.monotonic() + max(0.0, min(float(timeout), _EXECUTE_WAIT_SECONDS))
         while time.monotonic() < deadline:
             try:
@@ -8313,6 +8887,9 @@ ative_peace_execution_result`` before exposing a business outcome.
                         self._response_log_offsets[request_id] = consumed
                         if result is None:
                             return {"status": "invalid", "reason_code": "NATIVE_RESPONSE_RESULT_INVALID"}
+                        result = native_result_date.attach(
+                            event, result, enabled=('native_result_game_date_raw' in event
+                                and native_result_date.CAPABILITY in self.installation_capabilities()))
                         return {"status": result["native_outcome"], "result": result}
                     if len(pending) > _RESPONSE_LOG_LINE_BYTES:
                         consumed += len(pending)
@@ -8617,10 +9194,59 @@ ative_peace_execution_result`` before exposing a business outcome.
         }
 
     @classmethod
+    def _subject_integration_value(cls, value: object,
+                                   codec: str = DEFAULT_NATIVE_TEXT_CODEC) -> dict | None:
+        if not isinstance(value, dict) or value.get("verified") is not True:
+            return None
+        applicable = cls._safe_bool(value.get("applicable"))
+        if applicable is None:
+            return None
+        if not applicable:
+            return {"verified": True, "applicable": False}
+        can_start = cls._safe_bool(value.get("can_start"))
+        total = cls._safe_int(value.get("total_diplomatic_power"), 0, 2147483647)
+        if can_start is None or total is None:
+            return None
+        conditions = cls._safe_native_text({
+            "text_readable": value.get("conditions_readable") is True,
+            "text_hex": value.get("conditions_hex")}, codec)
+        return {"verified": True, "applicable": True, "can_start": can_start,
+                "total_diplomatic_power": total, "conditions": conditions,
+                "conditions_truncated": value.get("conditions_truncated") is True}
+
+    @classmethod
+    def _subject_state_value(cls, value: object,
+                             codec: str = DEFAULT_NATIVE_TEXT_CODEC) -> dict | None:
+        if not isinstance(value, dict) or value.get("verified") is not True:
+            return None
+        active = cls._safe_bool(value.get("is_subject"))
+        if active is None:
+            return None
+        if not active:
+            return {"verified": True, "is_subject": False, "overlord": None,
+                    "subject_type": None, "liberty_desire_raw": None, "scale": 1000}
+        overlord = value.get("overlord")
+        subject_type = value.get("subject_type")
+        raw = cls._safe_int(value.get("liberty_desire_raw"), -2147483648, 2147483647)
+        if (not isinstance(overlord, str) or not re.fullmatch(r"[A-Z0-9]{3}", overlord)
+                or not isinstance(subject_type, str)
+                or not re.fullmatch(r"[A-Za-z0-9_.:-]{1,64}", subject_type)
+                or raw is None or type(value.get("scale")) is not int or value["scale"] != 1000):
+            return None
+        result = {"verified": True, "is_subject": True, "overlord": overlord,
+                  "subject_type": subject_type, "liberty_desire_raw": raw, "scale": 1000}
+        integration = cls._subject_integration_value(value.get("integration"), codec)
+        if integration is not None:
+            result["integration"] = integration
+        return result
+
+    @classmethod
     def _semantic_inspection(cls, event: dict, reason_events: dict[int, dict],
                              codec: str = DEFAULT_NATIVE_TEXT_CODEC,
                              metadata_acknowledged: bool = False,
                              candidate_events: list[dict] | None = None) -> dict:
+        if event.get("action_id") == _DEBT_QUOTE_ACTION:
+            return _project_debt_quote_event(event, codec)
         selected = validate_native_text_codec(codec)
         reason_count = cls._safe_int(event.get("reason_count"), 0, 4096)
         items = [cls._semantic_reason_item(reason_events[index], selected, metadata_acknowledged)
@@ -8713,6 +9339,8 @@ ative_peace_execution_result`` before exposing a business outcome.
             result["support_independence_state_verified"] = cls._safe_bool(
                 event.get("support_independence_state_verified"))
         if event.get("family") == "support_independence":
+            if any(key in event for key in support_roles.FIELDS):
+                result['support_roles'] = support_roles.project_roles(event, event['actor'], event['recipient'])
             active = cls._safe_bool(event.get("support_independence_active"))
             state_verified = event.get("support_independence_state_verified") is True
             result["relationship_state"] = {
@@ -8782,6 +9410,9 @@ ative_peace_execution_result`` before exposing a business outcome.
                 "cancel_prestige_cost_verified": event.get(
                     "cancel_prestige_cost_verified") is True,
             })
+            for key in ("actor_subject_state", "recipient_subject_state"):
+                if key in event:
+                    result[key] = cls._subject_state_value(event[key], selected)
         if event.get("family") == "insult":
             # Insults are one-sided actions.  Their query never supplies a
             # counterparty acceptance predicate; an empty scornful request
@@ -8986,7 +9617,7 @@ ative_peace_execution_result`` before exposing a business outcome.
         for raw in event.get("wars", [])[:32]:
             if not isinstance(raw, dict):
                 continue
-            war_contexts.append({
+            row = {
                 "war_id": raw.get("war_id"),
                 "identity_scope": raw.get("identity_scope"),
                 "actor": raw.get("actor"),
@@ -8999,7 +9630,13 @@ ative_peace_execution_result`` before exposing a business outcome.
                 "recipient_is_war_leader": None,
                 "leaders_verified": raw.get("leaders_verified") is True,
                 "context_complete": raw.get("context_complete") is True,
-            })
+            }
+            if "participants" in raw:
+                participants = project_war_participants(
+                    raw["participants"], event.get("actor"), event.get("recipient"))
+                if participants is not None:
+                    row["participants"] = participants
+            war_contexts.append(row)
         return {
             "event": "native_peace_context_inspection",
             "family": "peace",
@@ -11461,6 +12098,10 @@ ative_trade_power``.  A mixed ``rt`` or
                                  recipient: str, phase: str, expected_date: object,
                                  expected_query_id: str | None = None,
                                  expected_session_id: str | None = None) -> bool:
+        if action_id == _DEBT_QUOTE_ACTION:
+            return _validate_debt_quote_event(
+                event, actor, recipient, phase, expected_date,
+                expected_query_id, expected_session_id)
         if not validate_native_diplomat_context(event):
             return False
 
@@ -11575,9 +12216,8 @@ ative_trade_power``.  A mixed ``rt`` or
             expected_session_id: str | None = None) -> bool:
         """Validate the QUERY1 peace context discovery event.
 
-        This contract proves only that the native observer enumerated wars for
-        the requested pair.  It deliberately does not accept roles, leaders,
-        peace terms or offer-rule results as inferred values.
+        The optional side-vector extension proves country membership only.
+        Roles, leaders, peace terms and offer rules remain unverified.
         """
 
         if (not isinstance(event, dict)
@@ -11627,6 +12267,9 @@ ative_trade_power``.  A mixed ``rt`` or
                     or row.get("recipient_is_war_leader") is not None
                     or row.get("leaders_verified") is not False
                     or row.get("context_complete") is not False):
+                return False
+            if "participants" in row and project_war_participants(
+                    row["participants"], actor, recipient) is None:
                 return False
         return True
 
@@ -15351,7 +15994,13 @@ ative_wrapper_gate=False``
             return {"error_code": "QUERY_SESSION_UNREADY"}
         query_id = "inspect_" + uuid.uuid4().hex
         expiry = time.time_ns() // 100 + 116444736000000000 + 30 * 10000000
-        if peace_combined_country_offer is not None:
+        if action_id == _DEBT_QUOTE_ACTION:
+            if _NATIVE_DEBT_QUOTE_QUERY_CAPABILITY not in capabilities:
+                return {"error_code": "QUERY_DEBT_QUOTE_CAPABILITY_MISSING"}
+            _normalize_debt_quote_request(actor, recipient, phase, {})
+            wire = (f"EU4DIP_QUERY22 {self.record['creation_filetime']:x} {query_id} "
+                    f"{action_id} {actor} {recipient} {health['date_raw']} {expiry}\n")
+        elif peace_combined_country_offer is not None:
             selection = peace_combined_country_offer
             term_mask = selection.get("term_mask")
             if (not isinstance(term_mask, str)
@@ -16057,6 +16706,13 @@ ative_alliance_inspection`` wire and
         return self.inspect_alliance(
             action_id, actor, recipient, phase,
             frozenset({_NATIVE_INFLUENCE_QUERY_CAPABILITY}))
+
+    def inspect_take_on_debt(self, actor: str, recipient: str,
+                             phase: str = "initiate") -> dict | None:
+        _normalize_debt_quote_request(actor, recipient, phase, {})
+        return self.inspect_alliance(
+            _DEBT_QUOTE_ACTION, actor, recipient, phase,
+            frozenset({_NATIVE_DEBT_QUOTE_QUERY_CAPABILITY}))
 
     def submit_trade_favors_for_gold(self, request_id: str, actor: str, recipient: str,
                                     phase: str, date_raw: int, timeout: float = 10) -> dict:
@@ -17384,7 +18040,14 @@ ative_vassalization_submission`` ACK is issued.
             time.sleep(0.02)
         return {"error_code": "QUERY_OBSERVATION_TIMEOUT"}
 
-    def health(self) -> dict:
+    def information_health(self) -> dict:
+        """Check the live read-only context while game time may advance."""
+        health = self.health
+        if getattr(health, "__func__", None) is ObserverSession.health:
+            return health(allow_date_progress=True)
+        return health()
+
+    def health(self, *, allow_date_progress: bool = False) -> dict:
         try:
             if self.record.get("installation_returncode") != 0:
                 raise RuntimeError("INSTALLATION_NOT_CONFIRMED")
@@ -17398,8 +18061,8 @@ ative_vassalization_submission`` ACK is issued.
             if time.time() - log.stat().st_mtime > 5:
                 raise RuntimeError("FRAME_HEARTBEAT_STALE")
             # Bounded tail; incomplete final lines are ignored, never repaired.
-            # Keep the 64 KiB fast path, then widen only when it contains no
-            # heartbeat for this session and the log is larger than that path.
+            # Keep the 64 KiB fast path. Dense lifecycle diagnostics can hide
+            # a stable pair, so both clock modes share an 8 MiB bounded fallback.
             log_size = log.stat().st_size
 
             def stable_health_from_tail(tail_limit: int) -> dict | None:
@@ -17409,6 +18072,8 @@ ative_vassalization_submission`` ACK is issued.
                     lines = stream.read(tail_size).splitlines()
                 events: list[object] = []
                 for line in lines:
+                    if b'diplomacy_observer_health' not in line:
+                        continue
                     try:
                         event = json.loads(line)
                     except (ValueError, UnicodeDecodeError):
@@ -17418,11 +18083,13 @@ ative_vassalization_submission`` ACK is issued.
                 # helper.  The local import avoids a module-level cycle while
                 # retaining one pure implementation for both paths.
                 from work.observer_runtime_ready import _stable_matching_heartbeat
-                return _stable_matching_heartbeat(events, self.session_id)
+                return _stable_matching_heartbeat(
+                    events, self.session_id, allow_date_progress=allow_date_progress)
 
             latest = stable_health_from_tail(_RESPONSE_LOG_CHUNK_BYTES)
             if latest is None and log_size > _RESPONSE_LOG_CHUNK_BYTES:
-                latest = stable_health_from_tail(_HEALTH_LOG_MAX_TAIL_BYTES)
+                tail_limit = _HEALTH_LOG_MAX_TAIL_BYTES * 8
+                latest = stable_health_from_tail(tail_limit)
             if latest is None:
                 raise RuntimeError("FRAME_THREAD_OR_WORLD_UNREADY")
             stamp = hashlib.sha256(f"{self.session_id}:{latest['frames']}:{latest['date_raw']}".encode()).hexdigest()
@@ -17439,6 +18106,7 @@ class DiplomacyTools:
     def __init__(self, journal: DurableJournal, session: ObserverSession | None = None):
         self.journal = journal
         self.session = session
+        self._pending_native_responses: dict[tuple, dict] = {}
 
     def _health(self) -> dict:
         if self.session is None:
@@ -17461,6 +18129,7 @@ class DiplomacyTools:
         if isinstance(advertised, dict):
             return frozenset(key for key, value in advertised.items()
                              if isinstance(key, str) and value is True
+                             and key != _NATIVE_DEBT_QUOTE_QUERY_CAPABILITY
                              and key not in (_NATIVE_ROYAL_MARRIAGE_QUERY_CAPABILITY,
                                              _NATIVE_IMPROVE_RELATIONS_QUERY_CAPABILITY,
                                              _NATIVE_ROYAL_MARRIAGE_SUBMISSION_CAPABILITY,
@@ -17514,6 +18183,7 @@ class DiplomacyTools:
             # query; only the exact top-level ACK may do so.
             return frozenset(value for value in advertised
                              if isinstance(value, str)
+                             and value != _NATIVE_DEBT_QUOTE_QUERY_CAPABILITY
                              and value not in (_NATIVE_ROYAL_MARRIAGE_QUERY_CAPABILITY,
                                                _NATIVE_IMPROVE_RELATIONS_QUERY_CAPABILITY,
                                                _NATIVE_ROYAL_MARRIAGE_SUBMISSION_CAPABILITY,
@@ -17570,13 +18240,14 @@ class DiplomacyTools:
         actor = item.get("actor")
         action_id = item.get("action_id", "offer_alliance")
         family = _inbound_family(action_id)
+        ending = proposal_expiry.ended_lifecycle(item)
         if (not isinstance(public_id, str) or not re.fullmatch(r"[0-9a-f]{32}", public_id)
                 or not isinstance(actor, str) or not re.fullmatch(r"[A-Z0-9]{3}", actor)
                 or actor == "FRA" or family is None
                 or item.get("family", family) != family
                 or item.get("recipient") != "FRA"
                 or item.get("decision_country") != "FRA"
-                or item.get("observer_status") != "observed_pending"):
+                or (item.get("observer_status") != "observed_pending" and ending is None)):
             return None
         # Do not trust arbitrary extra fields returned by a session adapter.
         # The restored-queue marker is a fixed semantic label produced by the
@@ -17589,14 +18260,32 @@ class DiplomacyTools:
             "recipient": "FRA",
             "decision_country": "FRA",
             "phase": "initiate",
-            "observer_status": "observed_pending",
-            "currently_pending": None,
+            "observer_status": item['observer_status'],
+            "currently_pending": False if ending else None,
             "legality": {"status": "unknown", "complete": False},
             "legality_status": "unknown",
             "execute": {"accept": "unimplemented", "reject": "unimplemented"},
         }
         if item.get("source") == "saved_native_pending":
             safe["source"] = "saved_native_pending"
+        if ending:
+            safe['lifecycle'] = ending
+        deadline = item.get("deadline")
+        if isinstance(deadline, dict):
+            expected = proposal_expiry.deadline_from_created_date(deadline.get("pending_created_game_date"))
+            rule_unknown = {**proposal_expiry.deadline_from_created_date(None),
+                            "reason": "PROPOSAL_EXPIRY_RULE_NOT_VERIFIED"}
+            if deadline == expected:
+                safe["deadline"] = expected
+            elif deadline == rule_unknown:
+                safe["deadline"] = rule_unknown
+        if action_id in proposal_expiry.PARAMETERLESS_ACTIONS:
+            safe["parameters"] = {}
+        elif action_id == "peace_offer":
+            parameters = ObserverSession._public_inbound_peace_parameters(
+                item.get("peace_context"), actor)
+            if parameters is not None:
+                safe["parameters"] = parameters
         return safe
 
     def _read_inbound_proposals(self, health: dict,
@@ -18412,8 +19101,8 @@ class DiplomacyTools:
                                 separators=(",", ":"), allow_nan=False)
         return "native-response:" + hashlib.sha256(serialized.encode("utf-8")).hexdigest()
 
-    def _persist_native_response(self, record: object) -> None:
-        """Consume one verified response and apply only a legal journal transition."""
+    def _read_native_response(self, record: object) -> dict | None:
+        """Read one response through the existing family-specific validators."""
 
         if (getattr(record, "status", None) not in {"submitted", "unknown", "executing", "waiting_response"}
                 or getattr(record, "submitted_at", None) is None
@@ -18520,12 +19209,28 @@ class DiplomacyTools:
             response = reader(getattr(record, "request_id"), *context[:4], action_id, context[4])
         else:
             response = reader(getattr(record, "request_id"), *context)
+        return response
+
+    def _persist_native_response(self, record: object) -> None:
+        """Retain consumed evidence until its journal transaction succeeds."""
+        key = (getattr(record, "experiment_id", None),
+               getattr(record, "session_id", None), getattr(record, "request_id", None))
+        if (getattr(record, "status", None) not in {"submitted", "unknown", "executing", "waiting_response"}
+                or getattr(record, "submitted_at", None) is None
+                or self.session is None
+                or getattr(record, "session_id", None) != getattr(self.session, "session_id", None)):
+            self._pending_native_responses.pop(key, None)
+            return
+        response = self._pending_native_responses.get(key)
+        if response is None:
+            response = self._read_native_response(record)
         if not isinstance(response, dict):
             return
         status = response.get("status")
         result = response.get("result")
         if status not in {"accepted", "rejected", "executed", "invalidated", "unknown"} or not isinstance(result, dict):
             return
+        self._pending_native_responses[key] = response
         event_id = self._native_response_event_id(result)
         if status == "executed":
             try:
@@ -18534,6 +19239,7 @@ class DiplomacyTools:
                     evidence_type="native_execution_consequence", arrival_layer="native_consequence",
                     event_id=event_id, result=result)
             except InvalidTransitionError:
+                self._pending_native_responses.pop(key, None)
                 return
         elif status == "accepted":
             try:
@@ -18545,6 +19251,7 @@ class DiplomacyTools:
                     result=result,
                 )
             except InvalidTransitionError:
+                self._pending_native_responses.pop(key, None)
                 return
         elif status == "rejected":
             try:
@@ -18556,6 +19263,7 @@ class DiplomacyTools:
                     result=result,
                 )
             except InvalidTransitionError:
+                self._pending_native_responses.pop(key, None)
                 return
         elif status == "invalidated":
             try:
@@ -18565,6 +19273,7 @@ class DiplomacyTools:
                     arrival_layer="native_consequence",
                     event_id=event_id)
             except InvalidTransitionError:
+                self._pending_native_responses.pop(key, None)
                 return
         else:
             self.journal.record_result(
@@ -18573,6 +19282,7 @@ class DiplomacyTools:
                 arrival_layer="native_response",
                 event_id=event_id,
             )
+        self._pending_native_responses.pop(key, None)
 
     def reconcile_native_inbound_response(
         self,
@@ -20703,8 +21413,13 @@ class DiplomacyTools:
                     response_phase["execute"] = "native_inbound_response"
                     response_phase["execute_reason_code"] = (
                         "NATIVE_INBOUND_PEACE_RESPONSE_CAPABILITY_ACKNOWLEDGED")
+        query_only_actions = []
+        if category in (None, "diplomatic_action"):
+            query_only_actions.append(_debt_quote_descriptor(
+                _NATIVE_DEBT_QUOTE_QUERY_CAPABILITY in self._installation_capabilities()))
         return {"contract_version": 1, "actor": actor, "recipient": recipient,
                 "session": health, "actions": actions, "catalog_complete": False,
+                "query_only_actions": query_only_actions,
                 "incoming_action_definitions": incoming_action_definitions,
                 "incoming_proposals": incoming_proposals,
                 "incoming_proposals_complete": False,
@@ -20779,6 +21494,12 @@ class DiplomacyTools:
             if aggregate_available else None,
             "aggregate_score_available": aggregate_available,
             "unit": "unknown", "scale_verified": False, "complete": False}
+        from .peace_costs import project_offer_war_score
+        cost = project_offer_war_score(evaluation)
+        if cost is not None:
+            inspection['costs']['war_score'] = cost
+            inspection['costs']['native_evaluation'].update(
+                unit='war_score_point', scale=1, scale_verified=True, complete=True)
 
     @classmethod
     def _apply_peace_core_query(
@@ -22028,10 +22749,102 @@ class DiplomacyTools:
             inspection["session"]["date_raw"] = native["date_raw"]
         return inspection
 
+    def _inspect_debt_quote(self, actor: str, recipient: str, phase: str,
+                            parameters: object) -> dict:
+        normalized = _normalize_debt_quote_request(actor, recipient, phase, parameters)
+        inspection = {
+            "contract_version": 1, "action_id": _DEBT_QUOTE_ACTION,
+            "native_identifier": "0x3469", "family": "debt_quote",
+            "actor": actor, "recipient": recipient, "phase": phase,
+            "decision_country": None, "decision_country_verified": False,
+            "requested_decision_country": actor,
+            "interface_support": {"query": "catalog_only", "execute": "unimplemented",
+                                  "query_only": True, "complete": False},
+            "session": self._health(),
+            "visibility": {"status": "unknown", "complete": False},
+            "legality": {"status": "unknown", "complete": False, "reasons": [reason(
+                "DEBT_QUOTE_LEGALITY_NOT_QUERIED", "此入口只查询代偿报价。", "bridge_policy")]},
+            "authorization": {"status": "unavailable", "complete": True, "reasons": [reason(
+                "DEBT_QUOTE_IS_READ_ONLY", "此入口没有代偿债务的执行权限。", "bridge_policy", True)]},
+            "parameters": {"requested": normalized, "actual": normalized,
+                           "candidates": None, "complete": True},
+            "costs": {"status": "unknown", "items": [], "complete": False},
+            "acceptance": {"applicability": "not_queried", "prediction_available": False,
+                           "native_total": None, "items": [], "complete": False},
+            "debt_quote": {"status": "unknown", "complete": False},
+        }
+        if (self.session is None or inspection["session"].get("status") != "ready"
+                or _NATIVE_DEBT_QUOTE_QUERY_CAPABILITY not in self._installation_capabilities()):
+            return inspection
+        inspector = getattr(self.session, "inspect_take_on_debt", None)
+        if not callable(inspector):
+            inspection["interface_support"]["reason_code"] = "DEBT_QUOTE_ADAPTER_UNAVAILABLE"
+            return inspection
+        try:
+            native = inspector(actor, recipient, phase)
+        except Exception:
+            native = {"error_code": "QUERY_DEBT_QUOTE_CALL_UNKNOWN"}
+        inspection["interface_support"]["query"] = _NATIVE_DEBT_QUOTE_QUERY_CAPABILITY
+        if not isinstance(native, dict) or "error_code" in native:
+            inspection["interface_support"]["reason_code"] = "QUERY_DEBT_QUOTE_UNAVAILABLE"
+            return inspection
+        # ObserverSession has already validated and whitelisted this result.
+        # In particular the operator loan rows never enter the public facade.
+        if type(native.get("native_visibility")) is bool:
+            inspection["visibility"] = {
+                "status": "visible" if native["native_visibility"] else "invisible",
+                "complete": True,
+            }
+        quote = native.get("debt_quote")
+        if isinstance(quote, dict):
+            status = quote.get("status")
+            if status not in ("known", "unknown", "invisible"):
+                status = "unknown"
+            raw = quote.get("total_raw_i32")
+            fp = quote.get("floating_point")
+            known = (status == "known" and quote.get("complete") is True
+                     and type(raw) is int and -2147483648 <= raw <= 2147483647
+                     and type(quote.get("scale")) is int and quote["scale"] == 1000
+                     and quote.get("basis") == _DEBT_QUOTE_BASIS
+                     and quote.get("unit") == "ducats"
+                     and quote.get("as_of_raw") == inspection["session"].get("date_raw")
+                     and isinstance(fp, dict) and fp.get("model_compatible") is True
+                     and fp.get("controls_stable") is True
+                     and native.get("native_visibility") is True)
+            if status == "known" and not known:
+                status = "unknown"
+            safe_quote = {
+                "status": status, "complete": known,
+                "total_raw_i32": raw if known else None,
+                "value": raw / 1000 if known else None,
+                "scale": 1000, "unit": "ducats", "basis": _DEBT_QUOTE_BASIS,
+                "as_of_raw": inspection["session"].get("date_raw"),
+            }
+            if isinstance(fp, dict):
+                safe_quote["floating_point"] = {key: fp.get(key) for key in (
+                    "model_compatible", "controls_stable", "daz_enabled", "ftz_enabled",
+                    "rounding", "exceptions") if isinstance(fp.get(key), (bool, str))
+                    or fp.get(key) is None}
+            inspection["debt_quote"] = safe_quote
+            if known:
+                inspection["costs"] = {"status": "known", "items": [safe_quote], "complete": True}
+                description = native.get("native_description")
+                if (isinstance(description, dict) and description.get("readable") is True
+                        and description.get("truncated") is False
+                        and isinstance(description.get("text"), str)
+                        and len(description["text"]) <= 2048):
+                    inspection["native_description"] = {
+                        "text": description["text"], "readable": True, "truncated": False}
+        inspection["decision_country"] = actor
+        inspection["decision_country_verified"] = True
+        return inspection
+
     def _inspect_diplomatic_action(self, action_id: str, actor: str, recipient: str,
                                    phase: str = "initiate", parameters: dict | None = None,
                                    *, _execution_request: bool = False) -> dict:
         parameters = {} if parameters is None else parameters
+        if action_id == _DEBT_QUOTE_ACTION:
+            return self._inspect_debt_quote(actor, recipient, phase, parameters)
         if action_id in _GIFT_INFLUENCE_ACTIONS:
             return self._inspect_gift_influence(
                 action_id, actor, recipient, phase, parameters)
@@ -22166,6 +22979,11 @@ class DiplomacyTools:
                 and isinstance(parameters, dict)
                 and isinstance(parameters.get("peace_context"), dict)
                 and parameters["peace_context"].get("terms") == [])
+            peace_province_discovery = (
+                action_id == "cede_province" and phase == "initiate"
+                and requested_terms == []
+                and _NATIVE_PEACE_PROVINCE_OFFER_QUERY_CAPABILITY
+                in self._installation_capabilities())
             peace_country_terms_discovery = (
                 action_id in COUNTRY_TERM_ACTIONS
                 and phase == "initiate"
@@ -22206,6 +23024,7 @@ class DiplomacyTools:
             if _execution_request or (public_execution_scope
                                       and not peace_trade_power_source_discovery
                                       and not peace_annul_treaties_discovery
+                                      and not peace_province_discovery
                                       and not peace_core_parameters_requested):
                 try:
                     peace_execution_parameters = normalize_peace_execution_parameters(
@@ -22521,7 +23340,7 @@ class DiplomacyTools:
                                  "war_active", "war_readable", "peace_payload_complete",
                                  "selected_terms_complete", "term_count", "selected_term_count",
                                  "peace_context", "costs",
-                                 "favor_trade",
+                                 "favor_trade", "support_roles",
                                  before_field, "native_current_support_independence",
                                  "native_current_support_independence_readable",
                                  "military_access_active",
@@ -24270,6 +25089,8 @@ class DiplomacyTools:
                             "complete": True,
                         }
                     if support_independence_query_scope:
+                        if isinstance(native.get('support_roles'), dict):
+                            inspection['support_roles'] = deepcopy(native['support_roles'])
                         relationship_state = native.get("relationship_state")
                         if (isinstance(relationship_state, dict)
                                 and isinstance(relationship_state.get(
@@ -24332,7 +25153,8 @@ class DiplomacyTools:
                                 "actor_is_overlord", "actor_is_subject", "subject_type",
                                 "prestige_raw", "cancel_prestige_delta_raw",
                                 "cancel_prestige_effect_allowed", "prestige_scale",
-                                "cancel_prestige_cost_verified"):
+                                "cancel_prestige_cost_verified", "actor_subject_state",
+                                "recipient_subject_state"):
                             if key in native:
                                 inspection[key] = native[key]
                         relationship_state = native.get("relationship_state")
@@ -24834,6 +25656,8 @@ class DiplomacyTools:
 
     def execute_diplomatic_action(self, request_id: str, action_id: str, actor: str, recipient: str,
                                  phase: str = "initiate", parameters: dict | None = None) -> dict:
+        if action_id == _DEBT_QUOTE_ACTION:
+            raise ValueError("DEBT_QUOTE_IS_READ_ONLY")
         if not isinstance(request_id, str) or not re.fullmatch(r"[A-Za-z0-9_-]{1,64}", request_id):
             raise ValueError("INVALID_REQUEST_ID")
         parameters = {} if parameters is None else parameters

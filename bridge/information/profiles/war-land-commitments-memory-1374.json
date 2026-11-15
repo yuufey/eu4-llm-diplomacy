@@ -1,0 +1,42 @@
+{
+  "schema": "information.war_land_commitments_memory.v1",
+  "game_version": "1.37.4",
+  "game_sha256": "b23fa0e1f698d31b01cdd1c3817a675805d8c6286cb66f9c231e6e2a42544d77",
+  "layout": {
+    "participant_vector_offset": "0xc0",
+    "participant_stride": 144,
+    "participant_vtable_rva": "0x1d1f6b0",
+    "participant_country_offset": "0x10",
+    "promised_land_offset": "0x1c",
+    "promised_land_true_byte": 0,
+    "max_participant_records": 512
+  },
+  "code_guards": [
+    {
+      "name": "war_participant_vector_serialization",
+      "rva": "0xd88407",
+      "end_rva_exclusive": "0xd88470",
+      "bytes": "488b86c8000000482b86c000000048c1f80448b9398ee3388ee3388e480fafc14c63f84533ed85c07e3f458bf50f1f40000f1f840000000000488b9ec00000004903debadc300000488bcfe8590d9800488b03488bd7488bcbff50084981c6900000004983ef0175d0",
+      "sha256": "017705fab52996934b9b4fb072b88d287e5f6d3fd45c44326b2c30f4247d4348",
+      "aslr_invariant": true,
+      "relocation_sites": []
+    },
+    {
+      "name": "participant_land_promise_serialization",
+      "rva": "0xd96090",
+      "end_rva_exclusive": "0xd9622c",
+      "bytes": "48895c24104889742418574883ec40488bfa488bf18b5918baec030000488bcfe8fb309700895c2450488d542450488bcfe82a0b4bff488bcfe802239700488d561048c744242000000000660f6f054dbb0201f30f7f442430c64424200049c7c0ffffffff49ffc042803c020075f6488d4c2420e807f02fff90ba052a0000488bcfe899309700488d54242048837c243810480f435424204533c94533c0488bcfe88a1b970090488b5424384883fa10723248ffc2488b4c2420488bc14881fa0010000072194883c227488b49f8482bc14883c0f84883f81f0f87b7000000e8ac329a00807e1c00751fbad3320000488bcfe829309700b201488bcfe87f6469ff488bcfe8372297008b5e20ba742a0000488bcfe807309700895c2450488d542450488bcfe8360a4bff488bcfe80e229700803d379d5a01007409803de49c5a0100742765488b042558000000488b18b80c000000803c18007505e82cd2c900b810000000803c1800741bbafc280000488bcfe8a82f9700488b4628488bd7488d4e28ff5008488b5c2458488b7424604883c4405fc3e8a1b9ca00cc",
+      "sha256": "d4e7c29aff1d91abe09ed9d3a91eb9e7a33b6cf74571b225bd8041ac428490ed",
+      "aslr_invariant": true,
+      "relocation_sites": []
+    }
+  ],
+  "evidence": {
+    "directory": "work/runtime/information-land-commitments-20261115-001",
+    "serializer_rva": "0xd96090",
+    "token_id": "0x32d3",
+    "token_text": "promised_land",
+    "runtime_snapshot": "current-participant-records.json",
+    "scope": "current active participants, archived participant rows excluded"
+  }
+}

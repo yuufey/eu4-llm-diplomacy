@@ -1,4 +1,5 @@
-param([switch]$SavedTestGame, [ValidatePattern('^[A-Za-z0-9_-]+\.eu4$')][string]$SaveName)
+param([switch]$SavedTestGame, [ValidatePattern('^[A-Za-z0-9_-]+\.eu4$')][string]$SaveName,
+    [ValidateSet('dx9', 'dx11', 'opengl', 'opengl4')][string]$Renderer)
 $ErrorActionPreference = 'Stop'
 if (-not $SavedTestGame) { throw 'Restart is for the separate saved test game; pass -SavedTestGame.' }
 $projectRoot = (Resolve-Path (Join-Path $PSScriptRoot '..\..')).Path
@@ -47,12 +48,16 @@ $launchParameters = @{
     FilePath = $expectedExe
     WorkingDirectory = Split-Path -Parent $expectedExe
     PassThru = $true
-    WindowStyle = 'Normal'
+    WindowStyle = 'Hidden'
 }
 if ($SaveName) {
     # Explicit target must take precedence over either saved continue option.
     $originalArguments = [regex]::Replace($originalArguments, '(?i)(?<!\S)-(?:continue=(?:"[^"]*"|\S+)|continuelastsave)(?=\s|$)', '').Trim()
     $originalArguments = ($originalArguments + ' -continue=' + $SaveName).Trim()
+}
+if ($Renderer) {
+    $originalArguments = [regex]::Replace($originalArguments, '(?i)(?<!\S)-(?:dx9|dx11|opengl4?)(?=\s|$)', '').Trim()
+    $originalArguments = ($originalArguments + ' -' + $Renderer).Trim()
 }
 if ($originalArguments) { $launchParameters.ArgumentList = $originalArguments }
 $newGame = Start-Process @launchParameters

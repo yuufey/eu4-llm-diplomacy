@@ -1,0 +1,90 @@
+{
+  "profile_id": "military-quality-memory-1374",
+  "profile_version": 1,
+  "game_version": "1.37.4",
+  "executable": {
+    "sha256": "b23fa0e1f698d31b01cdd1c3817a675805d8c6286cb66f9c231e6e2a42544d77",
+    "image_base": "0x140000000"
+  },
+  "source_evidence": [
+    {
+      "path": "work/runtime/information-military-quality-20261027-001/military-technology-source-002.json",
+      "sha256": "fb642e67080996395f5b8e9568fb2de0465e203a28626c22d895147a26e4f5a4",
+      "bytes": 4025,
+      "role": "final bounded military-technology source contract"
+    },
+    {
+      "path": "work/runtime/information-military-quality-20261027-001/military-technology-code-004.json",
+      "sha256": "a1b3cf3b22b73cc6b0e9fe4b379ff4481c919a9a6e8b564205d11640cbf8c49f",
+      "bytes": 29544,
+      "role": "bounded ordinary-PE getter and exact mil_tech lookup evidence"
+    },
+    {
+      "path": "work/runtime/information-military-quality-20261027-001/military-technology-code-005.json",
+      "sha256": "742a0b6db8c7654ef69c836f94772d1cace88714bba7e6fdda66f55d09e2f9b9",
+      "bytes": 18726,
+      "role": "bounded ordinary-PE singleton layout evidence"
+    }
+  ],
+  "layout": {
+    "singleton_global_rva": "0x242be30",
+    "manager_bucket_count_offset": "0x34",
+    "manager_buckets_offset": "0x38",
+    "bucket_entry_stride": 8,
+    "chain_definition_offset": "0x0",
+    "chain_next_offset": "0x8",
+    "definition_key_string_offset": "0x10",
+    "definition_key_length_offset": "0x20",
+    "definition_key_capacity_offset": "0x28",
+    "definition_index_offset": "0x50",
+    "country_technology_pointer_offset": "0x2440",
+    "technology_vector_begin_offset": "0x128",
+    "technology_vector_end_offset": "0x130",
+    "technology_vector_capacity_offset": "0x138",
+    "technology_component_width": 4,
+    "technology_key": "mil_tech",
+    "technology_key_length": 8,
+    "max_bucket_count": 65536,
+    "max_chain_steps": 64,
+    "max_technology_vector_count": 256,
+    "read_budget_bytes": 65536
+  },
+  "semantics": {
+    "field": "military_technology",
+    "basis": "native_country_technology_level_cache",
+    "value_origin": "copied_native_country_technology_cache",
+    "unit": "technology_level",
+    "scale": 1,
+    "period": "current",
+    "complete": true,
+    "raw_encoding": "signed little-endian int32 copied from vector element; raw_hex preserves four bytes"
+  },
+  "code_guards": [
+    {
+      "name": "military_quality_getter_6df5a0",
+      "rva": "0x6df5a0",
+      "rva_end_exclusive": "0x6df692",
+      "hex": "48895c2408574883ec40498bf8488bdae88bbc9bff4c8bd048c74424380f00000033c048c74424300800000049bb6d696c5f74656368c6442428004533c94c895c24200f1f4000660f1f840000000000420fbe4c0c2049ffc103c86bc13d4983f9087cec33d241f77234498b4238488b14d04885d27432660f1f840000000000488b0a4883792810488d41104c8b40107203488b004983f80875054c39187425488b52084885d275d7488b442470c60000488bc3c70300000000488b5c24504883c4405fc34885c974df488b87402400008b5150488b8828010000690491e80300008903488bc3488b5c24504883c4405fc3",
+      "sha256": "a6735d79f0ab10baf588fceccccf7d67cd5ecd7c6188239328c1f726632a4c48"
+    },
+    {
+      "name": "military_quality_singleton_9b240",
+      "rva": "0x9b240",
+      "rva_end_exclusive": "0x9b31d",
+      "hex": "48895c2410574883ec20488b05df0b39024885c00f85b80000008d4868e8ce7f9901488bd8488944243033ff4889384889780848897810488978184889782048897828897830c74034ff010000b9f80f0000e8d57f990148894338448b433449c1e00333d2488bc8e8b3aa99019048897b4048897b4848897b50897b58c7435cff010000b9f80f0000e89e7f990148894360448b435c49c1e00333d2488bc8e87caa990190488b15440b390248891d3d0b39024885d27417e8e3e20200488b052c0b3902488b5c24384883c4205fc3488bc3488b5c24384883c4205fc3",
+      "sha256": "61de2713f9c7b551b88c314333d5a2591989d0c68602ee7285e58f95969a151c"
+    }
+  ],
+  "read_constraints": {
+    "pointer_min": "0x10000",
+    "pointer_max": "0x7fffffffffff",
+    "definition_key_storage": "std::string at definition+0x10; length +0x20; capacity +0x28; heap data only when capacity >= 0x10",
+    "hash": "unsigned 32-bit accumulator; for each signed ASCII byte: (accumulator + byte) * 61 modulo 2^32; unsigned remainder by manager+0x34",
+    "vector": "begin/end define the bounded stride-4 range and index must be within count; +0x138 capacity is retained as unproven layout evidence and is not required for a known result",
+    "failure": "missing key, malformed definition, cycle, bound violation, guard mismatch, short read, or context pointer failure remains unknown"
+  },
+  "unknown_conditions": [
+    "Only military_technology is closed in this profile; morale, discipline, army_tradition, professionalism and military_modifiers remain outside this child contract.",
+    "The profile proves a bounded native lookup/cache path, not GUI freshness or a live multi-country observer contract."
+  ]
+}

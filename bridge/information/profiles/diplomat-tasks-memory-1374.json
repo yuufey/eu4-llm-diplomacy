@@ -1,0 +1,98 @@
+{
+  "profile_id": "diplomat-tasks-memory-1374",
+  "profile_version": 1,
+  "game_version": "1.37.4",
+  "executable": {
+    "sha256": "b23fa0e1f698d31b01cdd1c3817a675805d8c6286cb66f9c231e6e2a42544d77",
+    "image_base": "0x140000000"
+  },
+  "semantics": {
+    "field": "diplomat_tasks",
+    "basis": "native_country_diplomat_task_records",
+    "value_origin": "copied_native_country_diplomat_task_records",
+    "unit": "diplomat_task_records",
+    "scale": 1,
+    "period": "current",
+    "complete": false,
+    "partial": true,
+    "state_enum": {
+      "0": "idle",
+      "1": "returning",
+      "2": "active"
+    },
+    "known_selector": {
+      "value": 13176,
+      "hex": "0x3378",
+      "family": "build_spy_network"
+    }
+  },
+  "layout": {
+    "country_tasks_offset": "0x1480",
+    "holder_manager_offset": "0x18",
+    "vector_begin_offset": "0x20",
+    "vector_end_offset": "0x28",
+    "entry_stride": 8,
+    "entry_record_offset": "0x10",
+    "entry_state_offset": "0x18",
+    "entry_id_offset": "0x44",
+    "record_actor_offset": "0x80",
+    "record_recipient_offset": "0x88",
+    "record_selector_offset": "0xa8",
+    "record_date_begin_offset": "0x20",
+    "record_date_end_offset": "0x24",
+    "record_raw_unknown_offset": "0x2c",
+    "database_global_rva": "0x233d8b0",
+    "database_table_offset": "0x118",
+    "database_max_slots": 4095,
+    "country_fullref_offset": "0x20",
+    "game_global_rva": "0x233fe58",
+    "game_date_offset": "0x1dd0",
+    "pointer_min": "0x10000",
+    "pointer_max": "0x800000000000",
+    "database_table_count_offset": "0x124"
+  },
+  "limits": {
+    "max_total_rpm": 524288,
+    "max_single_rpm": 65536,
+    "max_entries": 256,
+    "max_fullref_checks": 512
+  },
+  "code_guards": [
+    {
+      "name": "build_spy_selector_getter",
+      "rva": "0x585bf0",
+      "rva_end_exclusive": "0x585bf6",
+      "hex": "b878330000c3",
+      "sha256": "e783a278400ab8497d8627c34a9790437dbe8f5e7dcac171635958f051ce65dc",
+      "aslr_invariant": true
+    },
+    {
+      "name": "diplomat_record_selector_consumer",
+      "rva": "0x25994e",
+      "rva_end_exclusive": "0x259959",
+      "hex": "4181bfa800000078330000",
+      "sha256": "18537b87c38b614f1c5c5ace83e8474c4b23fd70f152df10c0de7ecf96426c87",
+      "aslr_invariant": true
+    }
+  ],
+  "source_evidence": [
+    {
+      "path": "work/probe_diplomat_state.py",
+      "sha256": "9f0cdca30ad0293ce2a81ec05f0b74a57255084904cdfe4553117187a760599a",
+      "bytes": 5753,
+      "role": "bounded runtime layout probe"
+    },
+    {
+      "path": "work/runtime/spy-network-identification-20261015-001/report.md",
+      "sha256": "1ca7317abf79c7c56d64f4a1dba666be5e1bfa65f8b8900c056d69c888ed8537",
+      "bytes": 18912,
+      "role": "current 1.37.4 selector and record-field static evidence"
+    },
+    {
+      "path": "work/native/alliance-query.inc",
+      "sha256": "ed245857d184a0221eca60c0e7b238d4179f4fc3e17f78a4ce2d7137b94458d4",
+      "bytes": 101957,
+      "role": "current country-table count and fullref bounded-reader contract"
+    }
+  ]
+}

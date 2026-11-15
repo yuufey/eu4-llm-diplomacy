@@ -1,0 +1,127 @@
+"""Own a read-only logical-FRA observation of a province fort-level input.
+
+The shared foreign-technology owner supplies process/session identity, a
+read-only handle, code guards, two-pass replay, and cleanup. The province
+reader supplies admission/discovery checks; this module selects only the
+bounded ``G02.fort_level`` input for the requested canonical province ID.
+"""
+from __future__ import annotations
+
+import hashlib
+import json
+from pathlib import Path
+from typing import Any
+
+from . import foreign_technology_capture as _owner
+from . import province_fort_memory as _leaf
+from . import province_state_memory as _province
+
+
+ROOT = Path(__file__).resolve().parents[2]
+PROFILE_FILE = Path(__file__).with_name("profiles") / "province-fort-memory-1374-v1-sampling-r1.json"
+PROFILE_SHA256 = "efd0baaeb400ddbdcea89c8bf48af9fa8c04a31a5d5e2cd971a72bfe0c639aea"
+SCHEMA = "information.province_fort_capture.v1"
+INNER_SCHEMA = "information.province_fort_observer_snapshot.v1"
+_PROFILE_ID = "province-fort-memory-1374"
+_PROFILE_VERSION = 1
+
+
+def _valid_id(value: Any) -> bool:
+    return type(value) is int and 1 <= value <= 0xFFFF
+
+
+def _load_profile() -> dict[str, Any]:
+    if not 0 < PROFILE_FILE.stat().st_size <= 256 * 1024:
+        raise ValueError("PROVINCE_FORT_PROFILE_SIZE")
+    raw = PROFILE_FILE.read_bytes()
+    if hashlib.sha256(raw).hexdigest() != PROFILE_SHA256:
+        raise ValueError("PROVINCE_FORT_PROFILE_PIN")
+    profile = json.loads(raw)
+    if (profile.get("profile_id") != _PROFILE_ID
+            or profile.get("profile_version") != _PROFILE_VERSION
+            or profile.get("game_version") != "1.37.4"
+            or profile.get("executable", {}).get("sha256") != _owner.EXE_SHA256):
+        raise ValueError("PROVINCE_FORT_PROFILE_BUILD")
+    for item in profile["source_evidence"] + profile["layout_dependencies"]:
+        path = (ROOT / item["path"]).resolve()
+        path.relative_to(ROOT)
+        if path.stat().st_size != item["bytes"] or _owner._sha(path) != item["sha256"]:
+            raise ValueError("PROVINCE_FORT_PROFILE_DEPENDENCY")
+    return profile
+
+
+def _observe_for(province_id: int):
+    def observe(reader, module_base, country, profile):
+        if country != "FRA" or not _valid_id(province_id):
+            raise ValueError("PROVINCE_FORT_OBSERVER_SCOPE")
+
+        def backend(read, base, observer_country):
+            if observer_country != "FRA":
+                raise ValueError("PROVINCE_FORT_OBSERVER_SCOPE")
+            return _province.read_two_pass(
+                read,
+                base,
+                province_id,
+                observer="FRA",
+                fields=(_leaf.FIELD_FORT_LEVEL,),
+                read_fields=_leaf.read_fields,
+            )
+
+        return _owner._observe(
+            reader,
+            module_base,
+            country,
+            profile,
+            backend_reader=backend,
+        )
+
+    return observe
+
+
+def capture(installation: Path, province_id: int, *, observer: str = "FRA") -> dict[str, Any]:
+    if not _valid_id(province_id) or observer != "FRA":
+        raise ValueError("PROVINCE_FORT_REQUEST_SCOPE")
+    inner = _owner._capture_common(
+        installation,
+        "FRA",
+        observer=observer,
+        schema=INNER_SCHEMA,
+        profile_sha256=PROFILE_SHA256,
+        load_profile=_load_profile,
+        observe=_observe_for(province_id),
+        allow_observer_target=True,
+    )
+    return {
+        "schema": SCHEMA,
+        "observer": "FRA",
+        "object": {"type": "province", "province_id": province_id},
+        "capture": inner,
+    }
+
+
+def validate_capture(report: Any, context: dict[str, Any], creation: int,
+                     province_id: int) -> bool:
+    if not _valid_id(province_id) or not isinstance(report, dict):
+        return False
+    if set(report) != {"schema", "observer", "object", "capture"}:
+        return False
+    if report["schema"] != SCHEMA or report["observer"] != "FRA":
+        return False
+    expected = {"type": "province", "province_id": province_id}
+    if not _owner._same(report["object"], expected):
+        return False
+    return _owner._validate_capture_common(
+        report["capture"],
+        context,
+        creation,
+        "FRA",
+        schema=INNER_SCHEMA,
+        profile_sha256=PROFILE_SHA256,
+        load_profile=_load_profile,
+        observe=_observe_for(province_id),
+        allow_observer_target=True,
+        require_access=True,
+    )
+
+
+__all__ = ["capture", "validate_capture"]

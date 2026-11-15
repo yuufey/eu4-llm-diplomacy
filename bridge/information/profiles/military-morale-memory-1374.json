@@ -1,0 +1,132 @@
+{
+  "profile_id": "military-morale-memory-1374",
+  "profile_version": 1,
+  "game_version": "1.37.4",
+  "executable": {
+    "sha256": "b23fa0e1f698d31b01cdd1c3817a675805d8c6286cb66f9c231e6e2a42544d77",
+    "image_base": "0x140000000"
+  },
+  "source_evidence": [
+    {
+      "path": "work/runtime/information-military-effective-20261027-001/morale-effective-source-003.json",
+      "sha256": "6a74f53126ce62d6b616628d549db7b9c30e63a5ac40566db4d908d082bf0cb8",
+      "bytes": 11793,
+      "role": "positive current army/navy morale cache contract with writer, label, signed-scale, and country-alias evidence"
+    }
+  ],
+  "layout": {
+    "field_key": "morale",
+    "fields": [
+      "army",
+      "navy"
+    ],
+    "country_offsets": {
+      "army": "0x9874",
+      "navy": "0x987c"
+    },
+    "value_width": 4,
+    "value_signed": true,
+    "read_budget_bytes": 8192
+  },
+  "static_property": {
+    "field_keys": [
+      "army",
+      "navy"
+    ],
+    "record_layout": {
+      "tag_offset": "0x0",
+      "tag": 9,
+      "raw_offset": "0x40",
+      "kind_offset": "0x4",
+      "kind": 2
+    },
+    "writers": {
+      "army": {
+        "function_rva": "0x119fb40",
+        "case_target_rva": "0x119fc4a",
+        "country_offset": "0x9874"
+      },
+      "navy": {
+        "function_rva": "0x119ffd0",
+        "case_target_rva": "0x11a00e9",
+        "country_offset": "0x987c"
+      }
+    },
+    "signed_scale_consumers": {
+      "army": {
+        "rva_start": "0x23e430",
+        "rva_end_exclusive": "0x23e480",
+        "field_offset": "0x9874",
+        "scale": 1000
+      },
+      "navy": {
+        "rva_start": "0x237593",
+        "rva_end_exclusive": "0x2375ff",
+        "field_offset": "0x987c",
+        "scale": 1000
+      }
+    },
+    "labels": {
+      "army_morale": "LAND_MORALE",
+      "navy_morale": "NAVAL_MORALE"
+    },
+    "runtime_absolute_pointers_guarded": false
+  },
+  "semantics": {
+    "field": "morale",
+    "basis": "native_country_morale_caches",
+    "value_origin": "copied_native_country_morale_cache",
+    "unit": "morale",
+    "scale": 1000,
+    "period": "current",
+    "complete": true,
+    "raw_encoding": "signed little-endian int32 copied from country+0x9874/+0x987c; raw_hex preserves each four-byte cache",
+    "scope": "current copied cache only; complete effective/max formula and refresh timing are outside this contract"
+  },
+  "code_guards": [
+    {
+      "name": "army_writer_core",
+      "rva": "0x119fb40",
+      "rva_end_exclusive": "0x119fc61",
+      "hex": "4183f8070f875c04000048895c2408555657488bec4883ec70498bd94c8bca4963c0488d159704e6fe8b8c82b0ff19014803caffe1498d4920488b01c7031700000048c1e82098894344488b5d404885db0f84000400004533c94533c033d2e82c970eff48837818107203488b0049c7c0ffffffff49ffc042803c000075f6488bd0488bcb488b9c24900000004883c4705f5e5de93755effe498d79204533c94533c033d2488bcfe8e3960eff488bd0488bcbe818acfdff488b5d404885db0f84920300004533c94533c033d2488bcfe8bb960eff48837818107203488b0049c7c0ffffffff49ffc042803c000075f6488bd0488bcb488b9c24900000004883c4705f5e5de9c654effe418b8174980000c70309000000894340c7430402000000",
+      "sha256": "708d208ca75d1861c0a2020d8c08b07ae4100fc1b24b37d1c433dbe3baeb5db8",
+      "aslr_invariant": true
+    },
+    {
+      "name": "navy_writer_core",
+      "rva": "0x119ffd0",
+      "rva_end_exclusive": "0x11a0100",
+      "hex": "4183f8070f876b04000048895c240848897c242055488bec4883ec70498bd94c8bca4963c0488d150400e6fe8b8c8248041a014803caffe1498d4920488b01c7031700000048c1e82098894344488b5d304885db0f840a0400004533c94533c033d2e899920eff48837818107203488b0049c7c0ffffffff0f1f84000000000049ffc042803c000075f6488bd0488bcb4c8d5c2470498b5b10498b7b28498be35de99a50effe498d79204533c94533c033d2488bcfe846920eff488bd0488bcbe87ba7fdff488b5d304885db0f84920300004533c94533c033d2488bcfe81e920eff48837818107203488b0049c7c0ffffffff49ffc042803c000075f6488bd0488bcb4c8d5c2470498b5b10498b7b28498be35de92750effe418b817c980000c70309000000894340c7430402000000",
+      "sha256": "0202fbf4e3b68e8e35e18c137028cf59e98e710bfceba2dd619167a72926859c",
+      "aslr_invariant": true
+    },
+    {
+      "name": "army_country_scale_consumer",
+      "rva": "0x23e430",
+      "rva_end_exclusive": "0x23e480",
+      "hex": "488b1579f40f02488b807004000048c1e820480fbfc8488b8218010000488b0cc8486389749800008d81739318003d0d583900771969d1e8030000b8f1197605f7eac1fa068bc2c1e81f03d0eb254869",
+      "sha256": "8a86ff33ebbc7a126163c6419086dfde222ae13894d8a7a62b0ff12467585300",
+      "aslr_invariant": true
+    },
+    {
+      "name": "navy_country_scale_consumer",
+      "rva": "0x237593",
+      "rva_end_exclusive": "0x2375ff",
+      "hex": "4c8b0516631002488b8ed000000048c1e920480fbfd1498b88180100004c8b04d14963887c9800008d81739318003d0d583900771969c9e8030000b8d34d6210f7e9c1fa088bc2c1e81f03d0eb1b4869c9e8030000498bc448f7e948c1fa09488bc248c1e83f4803d03bda0f",
+      "sha256": "7b1309ba4f901fde61d0edc03a0414e25ff9a6b4ab8c03e1efe0615ffe9026b3",
+      "aslr_invariant": true
+    }
+  ],
+  "read_constraints": {
+    "pointer_min": "0x10000",
+    "pointer_max": "0x7fffffffffff",
+    "cache": "two bounded signed little-endian DWORDs at country+0x9874 and country+0x987c",
+    "guard_order": "all RVA-relative writer and signed-scale guards must match before either country cache read",
+    "runtime_absolute_pointers": "not compared; guards contain only fixed RVA-relative code bytes",
+    "failure": "profile/source mismatch, guard mismatch, invalid pointer, short read, or budget failure withdraws both fields"
+  },
+  "unknown_conditions": [
+    "This child copies the current country caches and does not claim UI freshness, refresh timing, or the complete effective/max morale formula.",
+    "The parent owns FRA identity, process lifetime, double-pass comparison, and cleanup/retraction."
+  ]
+}

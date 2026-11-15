@@ -1,0 +1,275 @@
+{
+  "profile_id": "truce-date-memory-1374",
+  "profile_version": 1,
+  "game_version": "1.37.4",
+  "schema": "information.truce_date_capture.v1",
+  "field": "R03.truce_until.inputs",
+  "executable": {
+    "image_base": "0x140000000",
+    "sha256": "b23fa0e1f698d31b01cdd1c3817a675805d8c6286cb66f9c231e6e2a42544d77"
+  },
+  "observer": "FRA",
+  "target_scope": "resolved_country_pair_involving_nonplayer_observer",
+  "base_profile": {
+    "path": "bridge/information/profiles/country-scale-memory-1374-v4.json",
+    "bytes": 59379,
+    "sha256": "cb9b3b1591066d4b965f46798842a3ebfe28dc695cb1e74c98549c2f1618c356"
+  },
+  "source_pins": [
+    {
+      "path": "bridge/information/profiles/country-scale-memory-1374-v4.json",
+      "bytes": 59379,
+      "sha256": "cb9b3b1591066d4b965f46798842a3ebfe28dc695cb1e74c98549c2f1618c356"
+    },
+    {
+      "path": "work/runtime/information-truce-expiry-20261103-124-001/static-date-leaves-001/99d20_window.bin",
+      "bytes": 64,
+      "sha256": "6c002037b7620238443679ed564c8f43b6e7c31fda297d373b778e97b036327e"
+    },
+    {
+      "path": "work/runtime/information-truce-expiry-20261103-124-001/static-date-leaves-001/a6fb90.bin",
+      "bytes": 35,
+      "sha256": "55c7d708d02458d5ae59664b13b310f467bc156cbf9f1ddecaaccb3250104790"
+    },
+    {
+      "path": "work/runtime/information-truce-expiry-20261103-124-001/static-date-leaves-001/helper-001/attempt-001/a6fbc0.bin",
+      "bytes": 201,
+      "sha256": "cb40b54e03a12123a601fed5a2fb426e4fa7ac8a209219188799c48a774be436"
+    },
+    {
+      "path": "work/runtime/information-truce-expiry-20261103-124-001/static-date-arithmetic-001/raw-14c7c10.bin",
+      "bytes": 394,
+      "sha256": "a8a18bc9e2a58ee5b432270771e9360951bdd951bcdfc46417b1f8e265f91d17"
+    },
+    {
+      "path": "work/runtime/information-truce-expiry-20261103-124-001/static-date-arithmetic-002/raw-entry-fragment-14c7f30-14c8020.bin",
+      "bytes": 240,
+      "sha256": "582b262aac367a1f4ac71b113cdcb12e98ef5289387eea5dd91bbbb755c6096f"
+    },
+    {
+      "path": "work/runtime/information-truce-expiry-20261103-125-001/static-calendar-002/raw-cfd70-to-cfe10.bin",
+      "bytes": 148,
+      "sha256": "534506d95a29304130733a84318c1cd87e6d9b10b8edb0af2ba30357ee861e58"
+    },
+    {
+      "path": "work/runtime/information-truce-expiry-20261103-125-001/static-calendar-001/raw-cfe10.bin",
+      "bytes": 103,
+      "sha256": "a18cb41d981855a86eb2470663c6df6cfb8c5198a965b7eb057bfbce2fb6484a"
+    },
+    {
+      "path": "work/runtime/information-truce-expiry-20261103-125-001/static-calendar-002/raw-14c7ed0-to-14c7f30.bin",
+      "bytes": 91,
+      "sha256": "6b310d6125fa7bc591f619316273bada5114b8520596c9185e0683816b7eb470"
+    },
+    {
+      "path": "work/runtime/information-truce-expiry-20261103-125-001/static-calendar-001/raw-14c7da0.bin",
+      "bytes": 194,
+      "sha256": "af0ec663f19935eb8a098ef548767ef77b678f0bbc2fca77ff44da3125124d57"
+    },
+    {
+      "path": "work/runtime/information-truce-expiry-20261103-125-001/static-calendar-002/raw-14c8020-pdata.bin",
+      "bytes": 287,
+      "sha256": "b097e6bae8c8da68ee666d7fe50b5c8f91b40d36c5f52520127e6d79870602fc"
+    },
+    {
+      "path": "work/runtime/information-truce-expiry-20261103-125-001/static-calendar-001/raw-14c8140.bin",
+      "bytes": 50,
+      "sha256": "e04f2b6e8be2c6635a1ed847d2272119877088c409c5828d13dbee556342ffae"
+    },
+    {
+      "path": "work/runtime/information-truce-expiry-20261103-125-001/static-calendar-001/raw-month-table-1c3a5c8.bin",
+      "bytes": 48,
+      "sha256": "8d37c81b9a47c1b878313f8a5fa9a3f69ed9eb4dfcb83e949037e3fa5b4f9eb3"
+    }
+  ],
+  "code_guards": [
+    {
+      "name": "truce_date_direct_flag_99d20",
+      "rva": "0x99d20",
+      "end_rva_exclusive": "0x99d27",
+      "bytes": "0fb641452401c3",
+      "sha256": "319658116271a46b2c05f4e6ca74564959ac1b3942088351278b32523be2391e",
+      "aslr_invariant": true,
+      "relocation_sites": [],
+      "range_basis": "bounded B23 raw artifact; static evidence only",
+      "source_path": "work/runtime/information-truce-expiry-20261103-124-001/static-date-leaves-001/99d20_window.bin",
+      "source_offset": 0,
+      "source_length": 7
+    },
+    {
+      "name": "truce_date_input_a6fb90",
+      "rva": "0xa6fb90",
+      "end_rva_exclusive": "0xa6fbb3",
+      "bytes": "40534883ec20440fbe4124488bda488d5134488bcbe816000000488bc34883c4205bc3",
+      "sha256": "55c7d708d02458d5ae59664b13b310f467bc156cbf9f1ddecaaccb3250104790",
+      "aslr_invariant": true,
+      "relocation_sites": [],
+      "range_basis": "bounded B23 raw artifact; static evidence only",
+      "source_path": "work/runtime/information-truce-expiry-20261103-124-001/static-date-leaves-001/a6fb90.bin",
+      "source_offset": 0,
+      "source_length": 35
+    },
+    {
+      "name": "truce_date_month_math_a6fbc0",
+      "rva": "0xa6fbc0",
+      "end_rva_exclusive": "0xa6fc89",
+      "bytes": "40534883ec208b02488bd98901440faf05b3e08c0144690dace18c01e80300004169c8e80300008d81739318003d0d583900771969d1e8030000b889b5f814f7eac1fa0d8bc2c1e81f03d0eb254863c14869c8e803000048b809e1d1c6116bf12948f7e948c1fa0e488bc248c1e83f4803d0418d0411448d0440b8d34d621041c1e0024181c0e803000041f7e8418bc8c1fa068bc2c1e81f03d069c2e80300002bc8740a33c04585c00f9fc003d0488bcbe8ba82a50033d2488bcbe8907fa500488bc34883c4205bc3",
+      "sha256": "cb40b54e03a12123a601fed5a2fb426e4fa7ac8a209219188799c48a774be436",
+      "aslr_invariant": true,
+      "relocation_sites": [],
+      "range_basis": "bounded B23 raw artifact; static evidence only",
+      "source_path": "work/runtime/information-truce-expiry-20261103-124-001/static-date-leaves-001/helper-001/attempt-001/a6fbc0.bin",
+      "source_offset": 0,
+      "source_length": 201
+    },
+    {
+      "name": "truce_date_calendar_adjust_14c7c10",
+      "rva": "0x14c7c10",
+      "end_rva_exclusive": "0x14c7d9a",
+      "bytes": "48895c240848896c24104889742418574883ec2033db8bea8bfb488bf1e80e0500004c63c8448bc34c8d158929770085c07e714183f908726b418bc90f57d20f57c981e1070000807d07ffc983c9f8ffc1418bc12bc14863c8488bc30f1f4000f3410f6f04824183c008660ffed0f3410f6f4482104883c008660ffec8483bc17cde660ffeca660f6fc1660f73d808660ffec8660f6fc1660f73d804660ffec8660f7ecf4963c08bd34d8bc1493bc17d2f498bc9482bc84883f9027c1a49ffc941031c8241035482044883c002493bc17cee493bc07d0441033c828d041a03f8488bcee87880c0fec1f81f488bce83e0fe448d5001e86680c0fe8b0e9933c281e9c0559c022bc2448bc14469c86d010000b8abaaaa2af7e94403cfc1fa024403cd8bc2c1e81f03d08d0452c1e003442bc085c9792c418bc041b8180000009933c22bc2442bc0b8abaaaa2a41f7e8c1fa028bc2c1e81f03d08d0452c1e003442bc0488b5c2430438d0449488b6c2438418d0cc0410fafca81c1c0559c02890e488b7424404883c4205fc3",
+      "sha256": "a8a18bc9e2a58ee5b432270771e9360951bdd951bcdfc46417b1f8e265f91d17",
+      "aslr_invariant": true,
+      "relocation_sites": [],
+      "range_basis": "bounded B23 raw artifact; static evidence only",
+      "source_path": "work/runtime/information-truce-expiry-20261103-124-001/static-date-arithmetic-001/raw-14c7c10.bin",
+      "source_offset": 0,
+      "source_length": 394
+    },
+    {
+      "name": "truce_date_calendar_adjust_14c7f30",
+      "rva": "0x14c7f30",
+      "end_rva_exclusive": "0x14c8020",
+      "bytes": "85d20f84e40000004889742420574883ec208bfa48895c2430b8abaaaa2a48896c2438f7ef4c8974244033ed448bf2488bf141d1fe8bdd418bc6c1e81f4403f0438d0476c1e0022bf8e8927ec0fe83e81f7817488d0d3e267700660f1f440000ffc3488d49042b0179f68d043b488bce83f80c400f9dc5c1e81f2be86bc5f403f8e8ba7dc0fe448d14284503d64c8b742440418bc29933c22bc269e86d0100004585d2790669e893feffff488bcee82d7ec0fe8d88e8d81b0003cd448d0c49488bcee8d9feffff8d143b428d0cc8890e488bcee898fdffff488b6c2438488b5c2430488b7424484883c4205fc3cccccc",
+      "sha256": "582b262aac367a1f4ac71b113cdcb12e98ef5289387eea5dd91bbbb755c6096f",
+      "aslr_invariant": true,
+      "relocation_sites": [],
+      "range_basis": "bounded B23 raw artifact; static evidence only",
+      "source_path": "work/runtime/information-truce-expiry-20261103-124-001/static-date-arithmetic-002/raw-entry-fragment-14c7f30-14c8020.bin",
+      "source_offset": 0,
+      "source_length": 240
+    },
+    {
+      "name": "truce_date_calendar_year_cfd70",
+      "rva": "0xcfd70",
+      "end_rva_exclusive": "0xcfe04",
+      "bytes": "448b0141b9010000004181e8c0559c027925418bc8b8abaaaa2af7d9f7e9c1fa028bc2c1e81f03d08d0452c1e0033bc87405418bc9eb0233c9b8abaaaa2a41f7e8448bc241c1f802418bc0c1e81f4403c0442bc17922418bc8b8b1f98cb3f7d9f7e903d1c1fa088bc2c1e81f03d069c26d0100003bc875034533c9b8b1f98cb341f7e84103d0c1fa088bc2c1e81f03c2412bc1c3",
+      "sha256": "534506d95a29304130733a84318c1cd87e6d9b10b8edb0af2ba30357ee861e58",
+      "aslr_invariant": true,
+      "relocation_sites": [],
+      "range_basis": "bounded B23 raw artifact; static evidence only",
+      "source_path": "work/runtime/information-truce-expiry-20261103-125-001/static-calendar-002/raw-cfd70-to-cfe10.bin",
+      "source_offset": 0,
+      "source_length": 148
+    },
+    {
+      "name": "truce_date_calendar_month_cfe10",
+      "rva": "0xcfe10",
+      "end_rva_exclusive": "0xcfe77",
+      "bytes": "4883ec28448b114181eac0559c02792b458bc2b8abaaaa2a41f7d841f7e8c1fa028bc2c1e81f03d08d0452c1e003443bc0740841bb01000000eb034533dbe81dffffff4469c06d010000b8abaaaa2a41f7eac1fa028bc2c1e81f03c2412bc0412bc34883c428c3",
+      "sha256": "a18cb41d981855a86eb2470663c6df6cfb8c5198a965b7eb057bfbce2fb6484a",
+      "aslr_invariant": true,
+      "relocation_sites": [],
+      "range_basis": "bounded B23 raw artifact; static evidence only",
+      "source_path": "work/runtime/information-truce-expiry-20261103-125-001/static-calendar-001/raw-cfe10.bin",
+      "source_offset": 0,
+      "source_length": 103
+    },
+    {
+      "name": "truce_date_calendar_adjust_14c7ed0",
+      "rva": "0x14c7ed0",
+      "end_rva_exclusive": "0x14c7f2b",
+      "bytes": "448b01b8abaaaa2a4181e8c0559c0241f7e8418bc8c1fa028bc2c1e81f03d08d0452c1e0032bc88bc14585c0792c9941b81800000033c22bc2442bc0b8abaaaa2a41f7e8c1fa028bcac1e91f03d18d0c52c1e103442bc1418bc0c3",
+      "sha256": "6b310d6125fa7bc591f619316273bada5114b8520596c9185e0683816b7eb470",
+      "aslr_invariant": true,
+      "relocation_sites": [],
+      "range_basis": "bounded B23 raw artifact; static evidence only",
+      "source_path": "work/runtime/information-truce-expiry-20261103-125-001/static-calendar-002/raw-14c7ed0-to-14c7f30.bin",
+      "source_offset": 0,
+      "source_length": 91
+    },
+    {
+      "name": "truce_date_calendar_adjust_14c7da0",
+      "rva": "0x14c7da0",
+      "end_rva_exclusive": "0x14c7e62",
+      "bytes": "48895c240848896c2410488974241848897c242041564883ec208bfa488be9e85c0200008bf0488bcdf7de448bf033dbe83b80c0fe83e81f488d15e9277700780d488bcaffc3488d49042b0179f63bdf743a41b8010000000f1f8400000000003bdf8d43ff8bcb0f4dc84863c18b0c828bc1f7d83bdf0f4dc8b8ffffffff03f13bdf410f4cc003d83bdf75d4488b7c24484863c3488b5c24308b0c82443bf18d41ff410f4cc603c6488b7424408d0440c1e003014500488b6c24384883c420415ec3",
+      "sha256": "af0ec663f19935eb8a098ef548767ef77b678f0bbc2fca77ff44da3125124d57",
+      "aslr_invariant": true,
+      "relocation_sites": [],
+      "range_basis": "bounded B23 raw artifact; static evidence only",
+      "source_path": "work/runtime/information-truce-expiry-20261103-125-001/static-calendar-001/raw-14c7da0.bin",
+      "source_offset": 0,
+      "source_length": 194
+    },
+    {
+      "name": "truce_date_calendar_helper_14c8020",
+      "rva": "0x14c8020",
+      "end_rva_exclusive": "0x14c813f",
+      "bytes": "48895c240848896c24104889742418574883ec2033ff488be98bdfe8d07dc0fe83e81f4c8d157e257700780e498bd290ffc3488d52042b0279f68bf7448bc785db7e7183fb08726c8bcb0f57d20f57c981e1070000807d07ffc983c9f8ffc18bc32bc14863c8488bc70f1f8000000000f3410f6f04824183c008660ffed0f3410f6f4482104883c008660ffec8483bc17cde660ffeca660f6fc1660f73d808660ffec8660f6fc1660f73d804660ffec8660f7ece4963c08bd74c63c3493bc07d3f498bc8482bc84883f9027c2a4d8d48ff0f1f40006666660f1f84000000000041033c8241035482044883c002493bc17cee493bc07d04410334828d043a03f0488bcde8e87cc0fe488b5c24302bc6488b742440488b6c24384883c4205fc3",
+      "sha256": "b097e6bae8c8da68ee666d7fe50b5c8f91b40d36c5f52520127e6d79870602fc",
+      "aslr_invariant": true,
+      "relocation_sites": [],
+      "range_basis": "bounded B23 raw artifact; static evidence only",
+      "source_path": "work/runtime/information-truce-expiry-20261103-125-001/static-calendar-002/raw-14c8020-pdata.bin",
+      "source_offset": 0,
+      "source_length": 287
+    },
+    {
+      "name": "truce_date_calendar_day_14c8140",
+      "rva": "0x14c8140",
+      "end_rva_exclusive": "0x14c8172",
+      "bytes": "40534883ec2033dbe8c37cc0fe83e81f7818488d0d6f2477000f1f8000000000ffc3488d49042b0179f68bc34883c4205bc3",
+      "sha256": "e04f2b6e8be2c6635a1ed847d2272119877088c409c5828d13dbee556342ffae",
+      "aslr_invariant": true,
+      "relocation_sites": [],
+      "range_basis": "bounded B23 raw artifact; static evidence only",
+      "source_path": "work/runtime/information-truce-expiry-20261103-125-001/static-calendar-001/raw-14c8140.bin",
+      "source_offset": 0,
+      "source_length": 50
+    },
+    {
+      "name": "truce_date_calendar_month_lengths_1c3a5c8",
+      "rva": "0x1c3a5c8",
+      "end_rva_exclusive": "0x1c3a5f8",
+      "bytes": "1f0000001c0000001f0000001e0000001f0000001e0000001f0000001f0000001e0000001f0000001e0000001f000000",
+      "sha256": "8d37c81b9a47c1b878313f8a5fa9a3f69ed9eb4dfcb83e949037e3fa5b4f9eb3",
+      "aslr_invariant": true,
+      "relocation_sites": [],
+      "range_basis": "bounded B23 raw artifact; static evidence only",
+      "source_path": "work/runtime/information-truce-expiry-20261103-125-001/static-calendar-001/raw-month-table-1c3a5c8.bin",
+      "source_offset": 0,
+      "source_length": 48
+    }
+  ],
+  "truce_date": {
+    "configuration_rvas": [
+      "0x233dc88",
+      "0x233dd8c"
+    ],
+    "relation_table_offset": "0x1510",
+    "relation_stride": "0x48",
+    "recipient_ref_offset": "0x10",
+    "adjustment_signed_i8_offset": "0x24",
+    "date_input_signed_i32_offset": "0x34",
+    "direct_flag_offset": "0x45",
+    "direction": "FRA↔target",
+    "projection": "raw inputs only; no calendar arithmetic in capture"
+  },
+  "semantics": {
+    "capture_schema": "information.truce_date_capture.v1",
+    "public_field": "R03.truce_until",
+    "private_field": "R03.truce_until.inputs",
+    "complete": false,
+    "actual_UI_observed": false,
+    "native_function_invoked": false,
+    "direct_flag_is_not_expiry": true,
+    "date_input_is_not_expiry": true
+  },
+  "limits": {
+    "max_total_read_bytes": 524288,
+    "max_single_read_bytes": 65536,
+    "max_calls": 32768,
+    "directions": 2,
+    "target_must_differ_from_observer": true
+  }
+}
+

@@ -10,6 +10,7 @@ import threading
 from urllib.parse import unquote, urlsplit
 
 from .diplomacy_api import APIError, DiplomacyAPI, decode_json
+from .http_rejection import discard_rejected_body
 
 MAX_BODY = 64 * 1024
 # Small excess uploads can already be in flight when the headers are rejected.
@@ -100,6 +101,7 @@ def make_server(api: DiplomacyAPI | None, host: str = "127.0.0.1", port: int = 8
                     self._discard_small_rejected_body(length)
                 raise APIError("body_too_large", f"Body must be at most {limit} bytes", 413)
             if self.headers.get_content_type() != "application/json":
+                discard_rejected_body(self)
                 raise APIError("unsupported_media_type", "Use application/json", 415)
             body = self.rfile.read(length)
             if len(body) != length:

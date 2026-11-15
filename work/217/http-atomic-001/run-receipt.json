@@ -1,0 +1,69 @@
+{
+  "schema": "http-atomic-001-single-test-run-v1",
+  "started_at_utc": "2026-11-06T20:12:20.793369+00:00",
+  "completed_at_utc": "2026-11-06T20:12:24.153650+00:00",
+  "duration_seconds": 3.375,
+  "working_directory": "C:\\Users\\wangyufei\\Documents\\ChatGPT\\\u6b27\u9646\u98ce\u4e914",
+  "node_id": "bridge/tests/test_diplomacy_lab_http.py::ResearchHTTPTests::test_concurrent_requests_in_one_instance_never_double_publish",
+  "command": [
+    "C:\\Users\\wangyufei\\anaconda3\\envs\\research\\python.exe",
+    "-m",
+    "pytest",
+    "-q",
+    "-p",
+    "no:cacheprovider",
+    "--basetemp=C:\\Users\\wangyufei\\Documents\\ChatGPT\\\u6b27\u9646\u98ce\u4e914\\work\\217\\http-atomic-001\\pytest-basetemp",
+    "--junitxml=C:\\Users\\wangyufei\\Documents\\ChatGPT\\\u6b27\u9646\u98ce\u4e914\\work\\217\\http-atomic-001\\junit.xml",
+    "bridge/tests/test_diplomacy_lab_http.py::ResearchHTTPTests::test_concurrent_requests_in_one_instance_never_double_publish"
+  ],
+  "subprocess_exit_code": 0,
+  "resource_limit_bytes_per_process": 1073741824,
+  "per_process_peak_rss": [
+    {
+      "pid": 43892,
+      "name": "python.exe",
+      "peak_rss_bytes": 51712000
+    },
+    {
+      "pid": 37672,
+      "name": "cmd.exe",
+      "peak_rss_bytes": 3629056
+    }
+  ],
+  "memory_limit_exceeded": false,
+  "runner_timeout": false,
+  "environment": {
+    "python": "3.11.15 | packaged by conda-forge | (main, Jun 11 2026, 03:27:10) [MSC v.1944 64 bit (AMD64)]",
+    "python_executable": "C:\\Users\\wangyufei\\anaconda3\\envs\\research\\python.exe",
+    "pytest": "9.1.1",
+    "psutil": "7.2.2",
+    "platform": "Windows-10-10.0.26200-SP0",
+    "TEMP": "C:\\Users\\wangyufei\\Documents\\ChatGPT\\\u6b27\u9646\u98ce\u4e914\\work\\217\\http-atomic-001\\os-temp",
+    "TMP": "C:\\Users\\wangyufei\\Documents\\ChatGPT\\\u6b27\u9646\u98ce\u4e914\\work\\217\\http-atomic-001\\os-temp",
+    "TMPDIR": "C:\\Users\\wangyufei\\Documents\\ChatGPT\\\u6b27\u9646\u98ce\u4e914\\work\\217\\http-atomic-001\\os-temp",
+    "pytest_basetemp": "C:\\Users\\wangyufei\\Documents\\ChatGPT\\\u6b27\u9646\u98ce\u4e914\\work\\217\\http-atomic-001\\pytest-basetemp",
+    "PYTHONPYCACHEPREFIX": "C:\\Users\\wangyufei\\Documents\\ChatGPT\\\u6b27\u9646\u98ce\u4e914\\work\\217\\http-atomic-001\\pycache"
+  },
+  "inputs": {
+    "bridge\\diplomacy_lab_http.py": "fd01455cf60a4b326de6d7813be6cdc9a24c459ba2a109b17034a4396e27abda",
+    "bridge\\tests\\test_diplomacy_lab_http.py": "8715cd51d6806d4b8dc07ae0ee2405b6d8a3782afd653b90518ea6cb4b5c4978"
+  },
+  "artifacts": {
+    "junit_xml": "C:\\Users\\wangyufei\\Documents\\ChatGPT\\\u6b27\u9646\u98ce\u4e914\\work\\217\\http-atomic-001\\junit.xml",
+    "merged_stdout_stderr": "C:\\Users\\wangyufei\\Documents\\ChatGPT\\\u6b27\u9646\u98ce\u4e914\\work\\217\\http-atomic-001\\merged-stdout-stderr.txt",
+    "pytest_basetemp": "C:\\Users\\wangyufei\\Documents\\ChatGPT\\\u6b27\u9646\u98ce\u4e914\\work\\217\\http-atomic-001\\pytest-basetemp",
+    "os_temp": "C:\\Users\\wangyufei\\Documents\\ChatGPT\\\u6b27\u9646\u98ce\u4e914\\work\\217\\http-atomic-001\\os-temp",
+    "historical_comparison": "C:\\Users\\wangyufei\\Documents\\ChatGPT\\\u6b27\u9646\u98ce\u4e914\\work\\217\\http-atomic-001\\historical-comparison.json",
+    "summary": "C:\\Users\\wangyufei\\Documents\\ChatGPT\\\u6b27\u9646\u98ce\u4e914\\work\\217\\http-atomic-001\\summary.md"
+  },
+  "source_review": {
+    "test_class": "ResearchHTTPTests",
+    "test_fixture": "SyntheticRuntime plus TemporaryDirectory",
+    "live_process_guard": "LiveLabProcess patched to raise AssertionError if called",
+    "scope": "fake in-memory runtime and temporary synthetic mailbox; no HTTP listener or game process"
+  },
+  "existing_baseline_context": "The current handoff records the existing broad 200-failure baseline. This receipt is a focused current-environment run; it does not infer which environment change explains any difference from that historical run.",
+  "merged_output_bytes": 98,
+  "outer_exec_command_exit_code": 0,
+  "outer_exec_session_id": null
+}

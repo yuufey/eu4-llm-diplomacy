@@ -1,6 +1,8 @@
 """Offline contract/transport tests; these do not assert native game execution."""
 from concurrent.futures import ThreadPoolExecutor
+from email.message import Message
 import http.client
+from io import BytesIO
 import json
 from pathlib import Path
 import tempfile
@@ -223,6 +225,43 @@ class HTTPTransportTest(unittest.TestCase):
         self.assertEqual(self.call("POST", "/v1/preview", "x" * (MAX_BODY + 1))[0], 413)
         self.assertEqual(self.call("POST", "/v1/preview", '{"x":1,"x":2}')[0], 400)
         self.assertEqual(self.call("GET", "/v1/requests/not-there")[0], 404)
+
+    def test_rejected_media_type_drains_small_body_before_415(self):
+        headers = Message()
+        headers["Content-Length"] = "2"
+        headers["Content-Type"] = "text/plain"
+        body = BytesIO(b"{}")
+
+        class FakeConnection:
+            def __init__(self):
+                self.timeout = 10.0
+                self.timeouts = []
+
+            def gettimeout(self):
+                return self.timeout
+
+            def settimeout(self, value):
+                self.timeout = value
+                self.timeouts.append(value)
+
+        class FakeHandler:
+            def __init__(self):
+                self.headers = headers
+                self.rfile = body
+                self.connection = FakeConnection()
+                self.dispatch_calls = []
+
+            def _dispatch(self, *args):
+                self.dispatch_calls.append(args)
+
+        handler = FakeHandler()
+        body_reader = self.server.RequestHandlerClass._body.__get__(handler, FakeHandler)
+        with self.assertRaises(APIError) as raised:
+            body_reader()
+        self.assertEqual(raised.exception.status, 415)
+        self.assertEqual(body.read(), b"")
+        self.assertEqual(handler.dispatch_calls, [])
+        self.assertEqual(handler.connection.timeout, 10.0)
 
     def test_remote_bind_requires_explicit_opt_in_and_token(self):
         for options in ({}, {"allow_remote": True}, {"allow_remote": True, "token": "short"}):

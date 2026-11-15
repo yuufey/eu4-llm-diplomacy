@@ -1,0 +1,563 @@
+{
+  "provenance": {
+    "mode": "recorded",
+    "original_mode": "live",
+    "source": "branch-inputs-runtime-001.json",
+    "source_sha256": "c70497c88b331925d719356b4649dbc2437ab1952907868dd7ae5288ede1a630"
+  },
+  "original_context": {
+    "mode": "live",
+    "status": "ready",
+    "observer": "FRA",
+    "session_id": "37376-1dd639fff00a820",
+    "game_date": 56553384,
+    "game_sha256": "b23fa0e1f698d31b01cdd1c3817a675805d8c6286cb66f9c231e6e2a42544d77"
+  },
+  "native_capture": {
+    "status": "observed",
+    "read_only": true,
+    "request": {
+      "installation": "work\\runtime\\diplomacy-observer-20261024-information-a\\installation.json",
+      "country": "FRA"
+    },
+    "identity": {
+      "installation_path": "work\\runtime\\diplomacy-observer-20261024-information-a\\installation.json",
+      "installation_pid": 37376,
+      "installation_creation_filetime": 134373102720165920,
+      "installation_session_id": "37376-1dd639fff00a820",
+      "process_path": "D:\\Downloads\\Europa Universalis IV（1.37.4）\\Europa Universalis IV\\eu4.exe",
+      "process_path_sha256": "b23fa0e1f698d31b01cdd1c3817a675805d8c6286cb66f9c231e6e2a42544d77",
+      "process_path_sha256_matches_expected": true,
+      "process_creation_filetime": 134373102720165920,
+      "process_creation_utc": "2026-10-24T10:11:12.016592+00:00",
+      "process_creation_matches_installation": true,
+      "module_path": "D:\\Downloads\\Europa Universalis IV（1.37.4）\\Europa Universalis IV\\eu4.exe",
+      "module_path_matches_process": true,
+      "binding_verified": true
+    },
+    "doublepass": {
+      "performed": true,
+      "consistent": true,
+      "mismatches": []
+    },
+    "cleanup": {
+      "handle_close": {
+        "status": "closed",
+        "success": true,
+        "closed": true
+      }
+    },
+    "static_contract_guard": {
+      "status": "observed",
+      "evidence_kind": "ordinary_file_analysis_not_REA_Evidence",
+      "profile_sha256": "6cca3246785c0233f443bf1c8195574bb178cd5ba96907770e3b404a56ec6b3c",
+      "checks": {
+        "profile_sha256": true,
+        "game_sha256": true,
+        "evidence_kind": true,
+        "target_flags": true,
+        "embedded_flags_object": true,
+        "flags_offsets": true,
+        "flags_vtable_chain": true,
+        "flags_table_length_unresolved": true,
+        "map_input_chain": true,
+        "map_evaluator_rva": true,
+        "map_modes": true,
+        "code_guards": true
+      },
+      "unknown_conditions": [],
+      "provenance": {
+        "source_evidence": {
+          "country_flag_contract": {
+            "path": "work/runtime/information-branches-20261024-001/country-flag-contract.json",
+            "sha256": "d79d331a81942c8ee2ca6568429181748500e5cf920c3f9ab5a77354f994cca6",
+            "schema": "information.country.flags.static-contract.v1"
+          },
+          "map_setup_trigger_contract": {
+            "path": "work/runtime/information-branches-20261024-001/map-setup-trigger-contract.json",
+            "sha256": "bdf29ed3eb133824e8bbf9c38973d605914699c2550119c187e827e2b8960257",
+            "schema": "information.map_setup.static_contract.v1"
+          },
+          "mission_memory_profile": {
+            "path": "bridge/information/profiles/mission-memory-1374.json",
+            "sha256": "b506e2a006a9d88504d5c2bad4ceec3a3b837c9a34b1d68145edfeddaf831037",
+            "schema": null
+          },
+          "mission_memory_module": {
+            "path": "bridge/information/mission_memory.py",
+            "sha256": "e13529749d476fb9309e8c48ecb358778144040883b6e0554b4f928c4e12fac0",
+            "schema": null
+          }
+        },
+        "flag_table_length_known": false,
+        "flag_table_length_provenance": "未有静态证据证明运行时表长度；读取器只采用独立的地址、ID、RPM 上限，不把上限解释为表长度"
+      }
+    },
+    "file_code_guard": {
+      "status": "observed",
+      "path": "D:\\Downloads\\Europa Universalis IV（1.37.4）\\Europa Universalis IV\\eu4.exe",
+      "checks": {
+        "flag_serializer_body": true,
+        "map_setup_evaluator": true
+      },
+      "records": {
+        "flag_serializer_body": {
+          "rva": "0x737ce0",
+          "expected_hex": "48895c2410488974241848897c2420554154415541564157488dac2490feffff4881ec70020000488bf24c8bf14533ed458be54489ada0010000418bfd488b4118482b411048d1f84c63f885c00f8e71010000418bdd488bcee85207fd00498b46100fbf145848c1e2054803150f00c20148837a18107203488b12488bcee8ad10fd00803da6fdc101007505e80f54fd00488b15f03acf01833d89fdc101017c044883c220c6856401000000c7442460010000008b421048837a18107203488b12ffc04c63c0488d4c2464e800d92f01488d542460488bcee8e309fd008bcf498b4628488d0c88488d542440e81fd3faff904c896c24204c896c24304c896c24380f10000f114424200f1048100f114c24304c89681048c740180f000000c600004183cc014489a5a001000041b801000000488d1583ab4f01488d4c2420e8cdb495ff488d54242048837c243810480f43542420488bcee8d40ffd004183e4fe488b5424384883fa10722e48ffc2488b4c2420488bc14881fa0010000072154883c227488b49f8482bc14883c0f84883f81f7751e8a71500014c896c243048c74424380f000000c644242000488d4c2440e8cad795ffffc748ffc3493bdf0f8c92feffff4c8d9c2470020000498b5b38498b7340498b7b48498be3415f415e415d415c5dc3e8029d300190",
+          "actual_hex": "48895c2410488974241848897c2420554154415541564157488dac2490feffff4881ec70020000488bf24c8bf14533ed458be54489ada0010000418bfd488b4118482b411048d1f84c63f885c00f8e71010000418bdd488bcee85207fd00498b46100fbf145848c1e2054803150f00c20148837a18107203488b12488bcee8ad10fd00803da6fdc101007505e80f54fd00488b15f03acf01833d89fdc101017c044883c220c6856401000000c7442460010000008b421048837a18107203488b12ffc04c63c0488d4c2464e800d92f01488d542460488bcee8e309fd008bcf498b4628488d0c88488d542440e81fd3faff904c896c24204c896c24304c896c24380f10000f114424200f1048100f114c24304c89681048c740180f000000c600004183cc014489a5a001000041b801000000488d1583ab4f01488d4c2420e8cdb495ff488d54242048837c243810480f43542420488bcee8d40ffd004183e4fe488b5424384883fa10722e48ffc2488b4c2420488bc14881fa0010000072154883c227488b49f8482bc14883c0f84883f81f7751e8a71500014c896c243048c74424380f000000c644242000488d4c2440e8cad795ffffc748ffc3493bdf0f8c92feffff4c8d9c2470020000498b5b38498b7340498b7b48498be3415f415e415d415c5dc3e8029d300190"
+        },
+        "map_setup_evaluator": {
+          "rva": "0xd15590",
+          "expected_hex": "488b05c1a86201488b9050210000448b42348b516881eacb380000742a83ea01741d83ea01741083fa01740332c0c34183f8030f94c0c34183f8020f94c0c34183f8010f94c0c34585c00f94c0c3",
+          "actual_hex": "488b05c1a86201488b9050210000448b42348b516881eacb380000742a83ea01741d83ea01741083fa01740332c0c34183f8030f94c0c34183f8020f94c0c34183f8010f94c0c34585c00f94c0c3"
+        }
+      },
+      "unknown_conditions": []
+    },
+    "runtime_code_guard": {
+      "status": "observed",
+      "module_base": {
+        "va": "0x7ff6f7e00000",
+        "rva": null,
+        "rva_identity": "runtime_va_or_heap"
+      },
+      "checks": {
+        "flag_serializer_body": true,
+        "map_setup_evaluator": true
+      },
+      "records": {
+        "flag_serializer_body": {
+          "address": {
+            "va": "0x7ff6f8537ce0",
+            "rva": "0x737ce0",
+            "rva_identity": "module_relative_candidate"
+          },
+          "expected_hex": "48895c2410488974241848897c2420554154415541564157488dac2490feffff4881ec70020000488bf24c8bf14533ed458be54489ada0010000418bfd488b4118482b411048d1f84c63f885c00f8e71010000418bdd488bcee85207fd00498b46100fbf145848c1e2054803150f00c20148837a18107203488b12488bcee8ad10fd00803da6fdc101007505e80f54fd00488b15f03acf01833d89fdc101017c044883c220c6856401000000c7442460010000008b421048837a18107203488b12ffc04c63c0488d4c2464e800d92f01488d542460488bcee8e309fd008bcf498b4628488d0c88488d542440e81fd3faff904c896c24204c896c24304c896c24380f10000f114424200f1048100f114c24304c89681048c740180f000000c600004183cc014489a5a001000041b801000000488d1583ab4f01488d4c2420e8cdb495ff488d54242048837c243810480f43542420488bcee8d40ffd004183e4fe488b5424384883fa10722e48ffc2488b4c2420488bc14881fa0010000072154883c227488b49f8482bc14883c0f84883f81f7751e8a71500014c896c243048c74424380f000000c644242000488d4c2440e8cad795ffffc748ffc3493bdf0f8c92feffff4c8d9c2470020000498b5b38498b7340498b7b48498be3415f415e415d415c5dc3e8029d300190",
+          "actual_hex": "48895c2410488974241848897c2420554154415541564157488dac2490feffff4881ec70020000488bf24c8bf14533ed458be54489ada0010000418bfd488b4118482b411048d1f84c63f885c00f8e71010000418bdd488bcee85207fd00498b46100fbf145848c1e2054803150f00c20148837a18107203488b12488bcee8ad10fd00803da6fdc101007505e80f54fd00488b15f03acf01833d89fdc101017c044883c220c6856401000000c7442460010000008b421048837a18107203488b12ffc04c63c0488d4c2464e800d92f01488d542460488bcee8e309fd008bcf498b4628488d0c88488d542440e81fd3faff904c896c24204c896c24304c896c24380f10000f114424200f1048100f114c24304c89681048c740180f000000c600004183cc014489a5a001000041b801000000488d1583ab4f01488d4c2420e8cdb495ff488d54242048837c243810480f43542420488bcee8d40ffd004183e4fe488b5424384883fa10722e48ffc2488b4c2420488bc14881fa0010000072154883c227488b49f8482bc14883c0f84883f81f7751e8a71500014c896c243048c74424380f000000c644242000488d4c2440e8cad795ffffc748ffc3493bdf0f8c92feffff4c8d9c2470020000498b5b38498b7340498b7b48498be3415f415e415d415c5dc3e8029d300190"
+        },
+        "map_setup_evaluator": {
+          "address": {
+            "va": "0x7ff6f8b15590",
+            "rva": "0xd15590",
+            "rva_identity": "module_relative_candidate"
+          },
+          "expected_hex": "488b05c1a86201488b9050210000448b42348b516881eacb380000742a83ea01741d83ea01741083fa01740332c0c34183f8030f94c0c34183f8020f94c0c34183f8010f94c0c34585c00f94c0c3",
+          "actual_hex": "488b05c1a86201488b9050210000448b42348b516881eacb380000742a83ea01741d83ea01741083fa01740332c0c34183f8030f94c0c34183f8020f94c0c34183f8010f94c0c34585c00f94c0c3"
+        }
+      },
+      "unknown_conditions": []
+    },
+    "profile": {
+      "path": "C:\\Users\\wangyufei\\Documents\\ChatGPT\\欧陆风云4\\bridge\\information\\profiles\\mission-branch-memory-1374.json",
+      "sha256": "6cca3246785c0233f443bf1c8195574bb178cd5ba96907770e3b404a56ec6b3c",
+      "max_bytes": 65536,
+      "profile_id": "mission-branch-memory-1374"
+    },
+    "probe_script_sha256": "61cfdfced297b6f1753c0430811ff148746ddea5c3acb9229fe91f3e5d81a178",
+    "inputs": {
+      "country_flags": {
+        "fra_shed_the_blood_of_the_saxon_man_flag": {
+          "known": true,
+          "value": false,
+          "status": "observed"
+        },
+        "fra_fufujoni_flag": {
+          "known": true,
+          "value": false,
+          "status": "observed"
+        },
+        "fra_chose_to_piss_off_pope_flag": {
+          "known": true,
+          "value": false,
+          "status": "observed"
+        },
+        "fra_papal_lap_dop_flag": {
+          "known": true,
+          "value": false,
+          "status": "observed"
+        }
+      },
+      "map_setup": {
+        "global_pointer": {
+          "address": {
+            "va": "0x7ff6fa13fe58",
+            "rva": "0x233fe58",
+            "rva_identity": "module_relative_candidate"
+          },
+          "raw_hex": "70d4cd0028020000",
+          "value": {
+            "va": "0x22800cdd470",
+            "rva": null,
+            "rva_identity": "runtime_va_or_heap"
+          }
+        },
+        "context_pointer": {
+          "address": {
+            "va": "0x22800cdf5c0",
+            "rva": null,
+            "rva_identity": "runtime_va_or_heap"
+          },
+          "raw_hex": "a029a30028020000",
+          "value": {
+            "va": "0x22800a329a0",
+            "rva": null,
+            "rva_identity": "runtime_va_or_heap"
+          }
+        },
+        "mode_field": {
+          "address": {
+            "va": "0x22800a329d4",
+            "rva": null,
+            "rva_identity": "runtime_va_or_heap"
+          },
+          "field_offset": "0x34",
+          "raw_hex": "00000000",
+          "raw": 0
+        },
+        "status": "observed",
+        "known": true,
+        "value": 0,
+        "name": "normal",
+        "unknown_reason": null
+      }
+    },
+    "before": {
+      "game_date": {
+        "address": {
+          "va": "0x22800cdf240",
+          "rva": null,
+          "rva_identity": "runtime_va_or_heap"
+        },
+        "field_offset": "0x1dd0",
+        "raw_hex": "a8ef5e03",
+        "raw": 56553384
+      }
+    }
+  },
+  "domination_observation": {
+    "provenance": {
+      "mode": "recorded",
+      "original_mode": "live",
+      "source": "branch-inputs-runtime-003.json",
+      "source_sha256": "04bd64d80153c0a9a201a94dbbe3c7829ef63148ace7b382291b33c8086e3beb"
+    },
+    "original_context": {
+      "mode": "live",
+      "status": "ready",
+      "observer": "FRA",
+      "session_id": "37376-1dd639fff00a820",
+      "game_date": 56553384,
+      "game_sha256": "b23fa0e1f698d31b01cdd1c3817a675805d8c6286cb66f9c231e6e2a42544d77"
+    },
+    "native_capture": {
+      "status": "observed",
+      "read_only": true,
+      "request": {
+        "installation": "work\\runtime\\diplomacy-observer-20261024-information-a\\installation.json",
+        "country": "FRA"
+      },
+      "identity": {
+        "installation_path": "work\\runtime\\diplomacy-observer-20261024-information-a\\installation.json",
+        "installation_pid": 37376,
+        "installation_creation_filetime": 134373102720165920,
+        "installation_session_id": "37376-1dd639fff00a820",
+        "process_path": "D:\\Downloads\\Europa Universalis IV（1.37.4）\\Europa Universalis IV\\eu4.exe",
+        "process_path_sha256": "b23fa0e1f698d31b01cdd1c3817a675805d8c6286cb66f9c231e6e2a42544d77",
+        "process_path_sha256_matches_expected": true,
+        "process_creation_filetime": 134373102720165920,
+        "process_creation_utc": "2026-10-24T10:11:12.016592+00:00",
+        "process_creation_matches_installation": true,
+        "module_path": "D:\\Downloads\\Europa Universalis IV（1.37.4）\\Europa Universalis IV\\eu4.exe",
+        "module_path_matches_process": true,
+        "binding_verified": true
+      },
+      "doublepass": {
+        "performed": true,
+        "consistent": true,
+        "mismatches": []
+      },
+      "cleanup": {
+        "handle_close": {
+          "status": "closed",
+          "success": true,
+          "closed": true
+        }
+      },
+      "static_contract_guard": {
+        "status": "observed",
+        "evidence_kind": "ordinary_file_analysis_not_REA_Evidence",
+        "profile_sha256": "1d92fc05614e15e2a0a8ff7ae5fe4e0ac21e949d5eee28b143c4bc9903ad4301",
+        "checks": {
+          "profile_sha256": true,
+          "game_sha256": true,
+          "evidence_kind": true,
+          "target_flags": true,
+          "embedded_flags_object": true,
+          "flags_offsets": true,
+          "flags_vtable_chain": true,
+          "flags_table_length_unresolved": true,
+          "map_input_chain": true,
+          "map_evaluator_rva": true,
+          "map_modes": true,
+          "domination_source_report": true,
+          "domination_short_circuit": true,
+          "domination_code_guards": true,
+          "code_guards": true
+        },
+        "unknown_conditions": [],
+        "provenance": {
+          "source_evidence": {
+            "country_flag_contract": {
+              "path": "work/runtime/information-branches-20261024-001/country-flag-contract.json",
+              "sha256": "d79d331a81942c8ee2ca6568429181748500e5cf920c3f9ab5a77354f994cca6",
+              "schema": "information.country.flags.static-contract.v1"
+            },
+            "map_setup_trigger_contract": {
+              "path": "work/runtime/information-branches-20261024-001/map-setup-trigger-contract.json",
+              "sha256": "bdf29ed3eb133824e8bbf9c38973d605914699c2550119c187e827e2b8960257",
+              "schema": "information.map_setup.static_contract.v1"
+            },
+            "mission_memory_profile": {
+              "path": "bridge/information/profiles/mission-memory-1374.json",
+              "sha256": "b506e2a006a9d88504d5c2bad4ceec3a3b837c9a34b1d68145edfeddaf831037",
+              "schema": null
+            },
+            "mission_memory_module": {
+              "path": "bridge/information/mission_memory.py",
+              "sha256": "e13529749d476fb9309e8c48ecb358778144040883b6e0554b4f928c4e12fac0",
+              "schema": null
+            },
+            "domination_short_circuit_contract": {
+              "path": "work/runtime/information-branches-20261024-001/domination-short-circuit-contract.json",
+              "sha256": "571f97b9c0b7614d5bc19c698bcbdb45faeb72aa71cf909d003d18aa30c285df",
+              "schema": "information.domination.short-circuit-contract.v1"
+            }
+          },
+          "flag_table_length_known": false,
+          "flag_table_length_provenance": "未有静态证据证明运行时表长度；读取器只采用独立的地址、ID、RPM 上限，不把上限解释为表长度"
+        }
+      },
+      "file_code_guard": {
+        "status": "observed",
+        "path": "D:\\Downloads\\Europa Universalis IV（1.37.4）\\Europa Universalis IV\\eu4.exe",
+        "checks": {
+          "flag_serializer_body": true,
+          "map_setup_evaluator": true,
+          "domination_helper": true,
+          "domination_predicate": true,
+          "domination_short_circuit_branch": true
+        },
+        "records": {
+          "flag_serializer_body": {
+            "rva": "0x737ce0",
+            "expected_hex": "48895c2410488974241848897c2420554154415541564157488dac2490feffff4881ec70020000488bf24c8bf14533ed458be54489ada0010000418bfd488b4118482b411048d1f84c63f885c00f8e71010000418bdd488bcee85207fd00498b46100fbf145848c1e2054803150f00c20148837a18107203488b12488bcee8ad10fd00803da6fdc101007505e80f54fd00488b15f03acf01833d89fdc101017c044883c220c6856401000000c7442460010000008b421048837a18107203488b12ffc04c63c0488d4c2464e800d92f01488d542460488bcee8e309fd008bcf498b4628488d0c88488d542440e81fd3faff904c896c24204c896c24304c896c24380f10000f114424200f1048100f114c24304c89681048c740180f000000c600004183cc014489a5a001000041b801000000488d1583ab4f01488d4c2420e8cdb495ff488d54242048837c243810480f43542420488bcee8d40ffd004183e4fe488b5424384883fa10722e48ffc2488b4c2420488bc14881fa0010000072154883c227488b49f8482bc14883c0f84883f81f7751e8a71500014c896c243048c74424380f000000c644242000488d4c2440e8cad795ffffc748ffc3493bdf0f8c92feffff4c8d9c2470020000498b5b38498b7340498b7b48498be3415f415e415d415c5dc3e8029d300190",
+            "actual_hex": "48895c2410488974241848897c2420554154415541564157488dac2490feffff4881ec70020000488bf24c8bf14533ed458be54489ada0010000418bfd488b4118482b411048d1f84c63f885c00f8e71010000418bdd488bcee85207fd00498b46100fbf145848c1e2054803150f00c20148837a18107203488b12488bcee8ad10fd00803da6fdc101007505e80f54fd00488b15f03acf01833d89fdc101017c044883c220c6856401000000c7442460010000008b421048837a18107203488b12ffc04c63c0488d4c2464e800d92f01488d542460488bcee8e309fd008bcf498b4628488d0c88488d542440e81fd3faff904c896c24204c896c24304c896c24380f10000f114424200f1048100f114c24304c89681048c740180f000000c600004183cc014489a5a001000041b801000000488d1583ab4f01488d4c2420e8cdb495ff488d54242048837c243810480f43542420488bcee8d40ffd004183e4fe488b5424384883fa10722e48ffc2488b4c2420488bc14881fa0010000072154883c227488b49f8482bc14883c0f84883f81f7751e8a71500014c896c243048c74424380f000000c644242000488d4c2440e8cad795ffffc748ffc3493bdf0f8c92feffff4c8d9c2470020000498b5b38498b7340498b7b48498be3415f415e415d415c5dc3e8029d300190"
+          },
+          "map_setup_evaluator": {
+            "rva": "0xd15590",
+            "expected_hex": "488b05c1a86201488b9050210000448b42348b516881eacb380000742a83ea01741d83ea01741083fa01740332c0c34183f8030f94c0c34183f8020f94c0c34183f8010f94c0c34585c00f94c0c3",
+            "actual_hex": "488b05c1a86201488b9050210000448b42348b516881eacb380000742a83ea01741d83ea01741083fa01740332c0c34183f8030f94c0c34183f8020f94c0c34183f8010f94c0c34585c00f94c0c3"
+          },
+          "domination_helper": {
+            "rva": "0xcfc70",
+            "expected_hex": "4883ec288039007409803d3602270200743865488b04255800000048895c2420488b18b80c000000803c18007505e879379601b810000000803c1800488b5c2420750732c04883c428c3b0014883c428c3",
+            "actual_hex": "4883ec288039007409803d3602270200743865488b04255800000048895c2420488b18b80c000000803c18007505e879379601b810000000803c1800488b5c2420750732c04883c428c3b0014883c428c3"
+          },
+          "domination_predicate": {
+            "rva": "0xcc5fb0",
+            "expected_hex": "40534883ec208b4168a8017445803d7c9f6701007409803de99e670100742b65488b042558000000488b18b80c000000803c18007505e831d4d600b810000000803c18000f849c020000b0014883c4205bc3a8027409803d239f670100ebb5a8047409803d9a9e670100eba8a8087411488d0d4d9f67014883c4205be93f9c40ffa8107411488d0d089f67014883c4205be92a9c40ffa8207411488d0dcf9e67014883c4205be9159c40ffa8407411488d0daa9e67014883c4205be9009c40ff84c07911488d0da19e67014883c4205be9eb9b40ff0fbae0087311488d0d6e9e67014883c4205be9d49b40ff0fbae0097311488d0d639e67014883c4205be9bd9b40ff0fbae00a7311488d0d489e67014883c4205be9a69b40ff0fbae00b7311488d0d2d9e67014883c4205be98f9b40ff0fbae00c7311488d0d2a9e67014883c4205be9789b40ff0fbae00d7311488d0d739e67014883c4205be9619b40ff0fbae00e7311488d0df89d67014883c4205be94a9b40ff0fbae00f7311488d0df19d67014883c4205be9339b40ff0fbae0107311488d0dde9d67014883c4205be91c9b40ff0fbae0117311488d0dcb9d67014883c4205be9059b40ff0fbae0127311488d0ddc9d67014883c4205be9ee9a40ff0fbae0137311488d0ddd9d67014883c4205be9d79a40ff0fbae0147311488d0daa9d67014883c4205be9c09a40ff0fbae0157311488d0db39d67014883c4205be9a99a40ff0fbae0167311488d0d609d67014883c4205be9929a40ff0fbae0177311488d0d519d67014883c4205be97b9a40ff0fbae0187311488d0d369d67014883c4205be9649a40ff0fbae0197311488d0d2f9d67014883c4205be94d9a40ff0fbae01a7311488d0d389d67014883c4205be9369a40ff0fbae01b7311488d0d1d9d67014883c4205be91f9a40ff0fbae01c7311488d0d029d67014883c4205be9089a40ff0fbae01d7311488d0de79c67014883c4205be9f19940ff0fbae01e7311488d0dcc9c67014883c4205be9da9940ff32c04883c4205bc3",
+            "actual_hex": "40534883ec208b4168a8017445803d7c9f6701007409803de99e670100742b65488b042558000000488b18b80c000000803c18007505e831d4d600b810000000803c18000f849c020000b0014883c4205bc3a8027409803d239f670100ebb5a8047409803d9a9e670100eba8a8087411488d0d4d9f67014883c4205be93f9c40ffa8107411488d0d089f67014883c4205be92a9c40ffa8207411488d0dcf9e67014883c4205be9159c40ffa8407411488d0daa9e67014883c4205be9009c40ff84c07911488d0da19e67014883c4205be9eb9b40ff0fbae0087311488d0d6e9e67014883c4205be9d49b40ff0fbae0097311488d0d639e67014883c4205be9bd9b40ff0fbae00a7311488d0d489e67014883c4205be9a69b40ff0fbae00b7311488d0d2d9e67014883c4205be98f9b40ff0fbae00c7311488d0d2a9e67014883c4205be9789b40ff0fbae00d7311488d0d739e67014883c4205be9619b40ff0fbae00e7311488d0df89d67014883c4205be94a9b40ff0fbae00f7311488d0df19d67014883c4205be9339b40ff0fbae0107311488d0dde9d67014883c4205be91c9b40ff0fbae0117311488d0dcb9d67014883c4205be9059b40ff0fbae0127311488d0ddc9d67014883c4205be9ee9a40ff0fbae0137311488d0ddd9d67014883c4205be9d79a40ff0fbae0147311488d0daa9d67014883c4205be9c09a40ff0fbae0157311488d0db39d67014883c4205be9a99a40ff0fbae0167311488d0d609d67014883c4205be9929a40ff0fbae0177311488d0d519d67014883c4205be97b9a40ff0fbae0187311488d0d369d67014883c4205be9649a40ff0fbae0197311488d0d2f9d67014883c4205be94d9a40ff0fbae01a7311488d0d389d67014883c4205be9369a40ff0fbae01b7311488d0d1d9d67014883c4205be91f9a40ff0fbae01c7311488d0d029d67014883c4205be9089a40ff0fbae01d7311488d0de79c67014883c4205be9f19940ff0fbae01e7311488d0dcc9c67014883c4205be9da9940ff32c04883c4205bc3"
+          },
+          "domination_short_circuit_branch": {
+            "rva": "0xcc5d91",
+            "expected_hex": "488d1588ad0001480f43cfe8ff73d90085c0750c814b6800000800e9aa010000",
+            "actual_hex": "488d1588ad0001480f43cfe8ff73d90085c0750c814b6800000800e9aa010000"
+          }
+        },
+        "unknown_conditions": []
+      },
+      "runtime_code_guard": {
+        "status": "observed",
+        "module_base": {
+          "va": "0x7ff6f7e00000",
+          "rva": null,
+          "rva_identity": "runtime_va_or_heap"
+        },
+        "checks": {
+          "flag_serializer_body": true,
+          "map_setup_evaluator": true,
+          "domination_helper": true,
+          "domination_predicate": true,
+          "domination_short_circuit_branch": true
+        },
+        "records": {
+          "flag_serializer_body": {
+            "address": {
+              "va": "0x7ff6f8537ce0",
+              "rva": "0x737ce0",
+              "rva_identity": "module_relative_candidate"
+            },
+            "expected_hex": "48895c2410488974241848897c2420554154415541564157488dac2490feffff4881ec70020000488bf24c8bf14533ed458be54489ada0010000418bfd488b4118482b411048d1f84c63f885c00f8e71010000418bdd488bcee85207fd00498b46100fbf145848c1e2054803150f00c20148837a18107203488b12488bcee8ad10fd00803da6fdc101007505e80f54fd00488b15f03acf01833d89fdc101017c044883c220c6856401000000c7442460010000008b421048837a18107203488b12ffc04c63c0488d4c2464e800d92f01488d542460488bcee8e309fd008bcf498b4628488d0c88488d542440e81fd3faff904c896c24204c896c24304c896c24380f10000f114424200f1048100f114c24304c89681048c740180f000000c600004183cc014489a5a001000041b801000000488d1583ab4f01488d4c2420e8cdb495ff488d54242048837c243810480f43542420488bcee8d40ffd004183e4fe488b5424384883fa10722e48ffc2488b4c2420488bc14881fa0010000072154883c227488b49f8482bc14883c0f84883f81f7751e8a71500014c896c243048c74424380f000000c644242000488d4c2440e8cad795ffffc748ffc3493bdf0f8c92feffff4c8d9c2470020000498b5b38498b7340498b7b48498be3415f415e415d415c5dc3e8029d300190",
+            "actual_hex": "48895c2410488974241848897c2420554154415541564157488dac2490feffff4881ec70020000488bf24c8bf14533ed458be54489ada0010000418bfd488b4118482b411048d1f84c63f885c00f8e71010000418bdd488bcee85207fd00498b46100fbf145848c1e2054803150f00c20148837a18107203488b12488bcee8ad10fd00803da6fdc101007505e80f54fd00488b15f03acf01833d89fdc101017c044883c220c6856401000000c7442460010000008b421048837a18107203488b12ffc04c63c0488d4c2464e800d92f01488d542460488bcee8e309fd008bcf498b4628488d0c88488d542440e81fd3faff904c896c24204c896c24304c896c24380f10000f114424200f1048100f114c24304c89681048c740180f000000c600004183cc014489a5a001000041b801000000488d1583ab4f01488d4c2420e8cdb495ff488d54242048837c243810480f43542420488bcee8d40ffd004183e4fe488b5424384883fa10722e48ffc2488b4c2420488bc14881fa0010000072154883c227488b49f8482bc14883c0f84883f81f7751e8a71500014c896c243048c74424380f000000c644242000488d4c2440e8cad795ffffc748ffc3493bdf0f8c92feffff4c8d9c2470020000498b5b38498b7340498b7b48498be3415f415e415d415c5dc3e8029d300190"
+          },
+          "map_setup_evaluator": {
+            "address": {
+              "va": "0x7ff6f8b15590",
+              "rva": "0xd15590",
+              "rva_identity": "module_relative_candidate"
+            },
+            "expected_hex": "488b05c1a86201488b9050210000448b42348b516881eacb380000742a83ea01741d83ea01741083fa01740332c0c34183f8030f94c0c34183f8020f94c0c34183f8010f94c0c34585c00f94c0c3",
+            "actual_hex": "488b05c1a86201488b9050210000448b42348b516881eacb380000742a83ea01741d83ea01741083fa01740332c0c34183f8030f94c0c34183f8020f94c0c34183f8010f94c0c34585c00f94c0c3"
+          },
+          "domination_helper": {
+            "address": {
+              "va": "0x7ff6f7ecfc70",
+              "rva": "0xcfc70",
+              "rva_identity": "module_relative_candidate"
+            },
+            "expected_hex": "4883ec288039007409803d3602270200743865488b04255800000048895c2420488b18b80c000000803c18007505e879379601b810000000803c1800488b5c2420750732c04883c428c3b0014883c428c3",
+            "actual_hex": "4883ec288039007409803d3602270200743865488b04255800000048895c2420488b18b80c000000803c18007505e879379601b810000000803c1800488b5c2420750732c04883c428c3b0014883c428c3"
+          },
+          "domination_predicate": {
+            "address": {
+              "va": "0x7ff6f8ac5fb0",
+              "rva": "0xcc5fb0",
+              "rva_identity": "module_relative_candidate"
+            },
+            "expected_hex": "40534883ec208b4168a8017445803d7c9f6701007409803de99e670100742b65488b042558000000488b18b80c000000803c18007505e831d4d600b810000000803c18000f849c020000b0014883c4205bc3a8027409803d239f670100ebb5a8047409803d9a9e670100eba8a8087411488d0d4d9f67014883c4205be93f9c40ffa8107411488d0d089f67014883c4205be92a9c40ffa8207411488d0dcf9e67014883c4205be9159c40ffa8407411488d0daa9e67014883c4205be9009c40ff84c07911488d0da19e67014883c4205be9eb9b40ff0fbae0087311488d0d6e9e67014883c4205be9d49b40ff0fbae0097311488d0d639e67014883c4205be9bd9b40ff0fbae00a7311488d0d489e67014883c4205be9a69b40ff0fbae00b7311488d0d2d9e67014883c4205be98f9b40ff0fbae00c7311488d0d2a9e67014883c4205be9789b40ff0fbae00d7311488d0d739e67014883c4205be9619b40ff0fbae00e7311488d0df89d67014883c4205be94a9b40ff0fbae00f7311488d0df19d67014883c4205be9339b40ff0fbae0107311488d0dde9d67014883c4205be91c9b40ff0fbae0117311488d0dcb9d67014883c4205be9059b40ff0fbae0127311488d0ddc9d67014883c4205be9ee9a40ff0fbae0137311488d0ddd9d67014883c4205be9d79a40ff0fbae0147311488d0daa9d67014883c4205be9c09a40ff0fbae0157311488d0db39d67014883c4205be9a99a40ff0fbae0167311488d0d609d67014883c4205be9929a40ff0fbae0177311488d0d519d67014883c4205be97b9a40ff0fbae0187311488d0d369d67014883c4205be9649a40ff0fbae0197311488d0d2f9d67014883c4205be94d9a40ff0fbae01a7311488d0d389d67014883c4205be9369a40ff0fbae01b7311488d0d1d9d67014883c4205be91f9a40ff0fbae01c7311488d0d029d67014883c4205be9089a40ff0fbae01d7311488d0de79c67014883c4205be9f19940ff0fbae01e7311488d0dcc9c67014883c4205be9da9940ff32c04883c4205bc3",
+            "actual_hex": "40534883ec208b4168a8017445803d7c9f6701007409803de99e670100742b65488b042558000000488b18b80c000000803c18007505e831d4d600b810000000803c18000f849c020000b0014883c4205bc3a8027409803d239f670100ebb5a8047409803d9a9e670100eba8a8087411488d0d4d9f67014883c4205be93f9c40ffa8107411488d0d089f67014883c4205be92a9c40ffa8207411488d0dcf9e67014883c4205be9159c40ffa8407411488d0daa9e67014883c4205be9009c40ff84c07911488d0da19e67014883c4205be9eb9b40ff0fbae0087311488d0d6e9e67014883c4205be9d49b40ff0fbae0097311488d0d639e67014883c4205be9bd9b40ff0fbae00a7311488d0d489e67014883c4205be9a69b40ff0fbae00b7311488d0d2d9e67014883c4205be98f9b40ff0fbae00c7311488d0d2a9e67014883c4205be9789b40ff0fbae00d7311488d0d739e67014883c4205be9619b40ff0fbae00e7311488d0df89d67014883c4205be94a9b40ff0fbae00f7311488d0df19d67014883c4205be9339b40ff0fbae0107311488d0dde9d67014883c4205be91c9b40ff0fbae0117311488d0dcb9d67014883c4205be9059b40ff0fbae0127311488d0ddc9d67014883c4205be9ee9a40ff0fbae0137311488d0ddd9d67014883c4205be9d79a40ff0fbae0147311488d0daa9d67014883c4205be9c09a40ff0fbae0157311488d0db39d67014883c4205be9a99a40ff0fbae0167311488d0d609d67014883c4205be9929a40ff0fbae0177311488d0d519d67014883c4205be97b9a40ff0fbae0187311488d0d369d67014883c4205be9649a40ff0fbae0197311488d0d2f9d67014883c4205be94d9a40ff0fbae01a7311488d0d389d67014883c4205be9369a40ff0fbae01b7311488d0d1d9d67014883c4205be91f9a40ff0fbae01c7311488d0d029d67014883c4205be9089a40ff0fbae01d7311488d0de79c67014883c4205be9f19940ff0fbae01e7311488d0dcc9c67014883c4205be9da9940ff32c04883c4205bc3"
+          },
+          "domination_short_circuit_branch": {
+            "address": {
+              "va": "0x7ff6f8ac5d91",
+              "rva": "0xcc5d91",
+              "rva_identity": "module_relative_candidate"
+            },
+            "expected_hex": "488d1588ad0001480f43cfe8ff73d90085c0750c814b6800000800e9aa010000",
+            "actual_hex": "488d1588ad0001480f43cfe8ff73d90085c0750c814b6800000800e9aa010000"
+          }
+        },
+        "unknown_conditions": []
+      },
+      "profile": {
+        "path": "C:\\Users\\wangyufei\\Documents\\ChatGPT\\欧陆风云4\\bridge\\information\\profiles\\mission-branch-memory-1374.json",
+        "sha256": "1d92fc05614e15e2a0a8ff7ae5fe4e0ac21e949d5eee28b143c4bc9903ad4301",
+        "max_bytes": 65536,
+        "profile_id": "mission-branch-memory-1374"
+      },
+      "probe_script_sha256": "1346f723279eae20962d38c7c9bd149565d8f15072285aeb4199995067a1e8dd",
+      "inputs": {
+        "country_flags": {
+          "fra_shed_the_blood_of_the_saxon_man_flag": {
+            "known": true,
+            "value": false,
+            "status": "observed"
+          },
+          "fra_fufujoni_flag": {
+            "known": true,
+            "value": false,
+            "status": "observed"
+          },
+          "fra_chose_to_piss_off_pope_flag": {
+            "known": true,
+            "value": false,
+            "status": "observed"
+          },
+          "fra_papal_lap_dop_flag": {
+            "known": true,
+            "value": false,
+            "status": "observed"
+          }
+        },
+        "map_setup": {
+          "global_pointer": {
+            "address": {
+              "va": "0x7ff6fa13fe58",
+              "rva": "0x233fe58",
+              "rva_identity": "module_relative_candidate"
+            },
+            "raw_hex": "70d4cd0028020000",
+            "value": {
+              "va": "0x22800cdd470",
+              "rva": null,
+              "rva_identity": "runtime_va_or_heap"
+            }
+          },
+          "context_pointer": {
+            "address": {
+              "va": "0x22800cdf5c0",
+              "rva": null,
+              "rva_identity": "runtime_va_or_heap"
+            },
+            "raw_hex": "a029a30028020000",
+            "value": {
+              "va": "0x22800a329a0",
+              "rva": null,
+              "rva_identity": "runtime_va_or_heap"
+            }
+          },
+          "mode_field": {
+            "address": {
+              "va": "0x22800a329d4",
+              "rva": null,
+              "rva_identity": "runtime_va_or_heap"
+            },
+            "field_offset": "0x34",
+            "raw_hex": "00000000",
+            "raw": 0
+          },
+          "status": "observed",
+          "known": true,
+          "value": 0,
+          "name": "normal",
+          "unknown_reason": null
+        },
+        "has_domination": {
+          "known": true,
+          "value": true,
+          "status": "observed",
+          "unknown_reason": null,
+          "raw_domination_byte": 1,
+          "raw_override_byte": 0,
+          "source": {
+            "contract_schema": "information.domination.short-circuit-contract.v1",
+            "global_bool": {
+              "address": {
+                "va": "0x7ff6fa13ff6c",
+                "rva": "0x233ff6c",
+                "rva_identity": "module_relative_candidate"
+              },
+              "rva": "0x233ff6c",
+              "raw_hex": "01",
+              "value": 1
+            },
+            "override_byte": {
+              "address": {
+                "va": "0x7ff6fa13feb6",
+                "rva": "0x233feb6",
+                "rva_identity": "module_relative_candidate"
+              },
+              "rva": "0x233feb6",
+              "raw_hex": "00",
+              "value": 0
+            },
+            "tls_read": false,
+            "game_function_called": false
+          }
+        }
+      },
+      "before": {
+        "game_date": {
+          "address": {
+            "va": "0x22800cdf240",
+            "rva": null,
+            "rva_identity": "runtime_va_or_heap"
+          },
+          "field_offset": "0x1dd0",
+          "raw_hex": "a8ef5e03",
+          "raw": 56553384
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,9 @@
+{
+  "schema": "owned-age-fixture-attempt-console/1",
+  "command": "python -B stage78/owned-age-fixture-001/prepare_and_run.py --run-owned-only",
+  "exit_code": 1,
+  "stdout": "{\"status\": \"failed\", \"receipt\": \"receipt.json\", \"error\": \"TypeError: 'PEImage' object does not support the context manager protocol\", \"receipt_sha256\": \"90b14a9953a1340a31d88594528102f1a9562004e4dd9779ce8147dbd1d93ed6\"}",
+  "stderr": "",
+  "owned_cpp_process_started": false,
+  "failure_stage": "Python PE image parsing before byte extraction"
+}

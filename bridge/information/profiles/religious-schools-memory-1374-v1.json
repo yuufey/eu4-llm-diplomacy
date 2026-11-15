@@ -1,0 +1,367 @@
+{
+  "profile_id": "religious-schools-memory-1374",
+  "profile_version": 1,
+  "game_version": "1.37.4",
+  "executable": {
+    "sha256": "b23fa0e1f698d31b01cdd1c3817a675805d8c6286cb66f9c231e6e2a42544d77",
+    "image_base": "0x140000000"
+  },
+  "observer": "FRA",
+  "target_scope": "resolved_country_including_observer",
+  "source_evidence": [
+    {
+      "path": "work/runtime/information-foreign-visibility-20261029-001/rea-ui-efd2c0-001/evidence.json",
+      "bytes": 136046,
+      "sha256": "ec49f8d79de962cf5303ada6098e68dc280757a03bc405abd79475448d0e32ae"
+    },
+    {
+      "path": "work/runtime/information-foreign-visibility-20261029-001/rea-ui-f0ed60-001/evidence.json",
+      "bytes": 234881,
+      "sha256": "0f2a0d6d3c09871513867d9be924b1532210f59d530cb9a5f826bd9baa5ab514"
+    },
+    {
+      "path": "work/runtime/information-foreign-scalars-20261029-001/rea-definition-cstring-001/evidence.json",
+      "bytes": 5160,
+      "sha256": "cbae78ca17df5ba67f707eaf9865610f124d468603ee9a4f8d5698780d5aeef1"
+    },
+    {
+      "path": "work/runtime/information-foreign-scalars-20261029-001/faith-name-contract-002.json",
+      "bytes": 1938,
+      "sha256": "3a3c5416d3482cb9bd1699fb80448679899fc00f5ae0aa93b3909ba7d2f8c44c"
+    },
+    {
+      "path": "work/runtime/information-religion-identity-20261104-166-001/rea-group-condition-001/run.json",
+      "bytes": 1747,
+      "sha256": "10c1413d2c8e22819ecd16b56a8976b5a48a82ba3c572a71ffe6c4320e2ca9a7"
+    },
+    {
+      "path": "work/runtime/information-religion-identity-20261104-166-001/rea-group-condition-001/evidence.json",
+      "bytes": 85250,
+      "sha256": "ff21a70c20ab8e2fe2066a23b8377dd79e504be2601a918b3b64238e66759d52"
+    },
+    {
+      "path": "work/runtime/information-religion-identity-20261104-166-001/identity-seed-windows-001.json",
+      "bytes": 28966,
+      "sha256": "a6926f5189919b5e64cac821ed04bc7c90ae44aa7be81eb39ce80b7b0a4857c6"
+    },
+    {
+      "path": "work/runtime/information-religion-identity-20261104-166-001/ordinary-group-condition-methods-001/report.json",
+      "bytes": 86692,
+      "sha256": "96c6d86f5a2828bb2038397bf6ce2cc62fcb778d88ca03a61a655bf774356957"
+    },
+    {
+      "path": "work/runtime/information-religion-identity-20261104-166-001/identity-candidate-receipt-002.json",
+      "bytes": 1963,
+      "sha256": "f98e0225da881016ab00061804331fb3181d0efbc7a9416e8acc218e2a1f0302"
+    },
+    {
+      "path": "work/runtime/information-religion-identity-20261104-166-001/native-group-name-contract-001.json",
+      "bytes": 2373,
+      "sha256": "e5262d50157fe97553f8e02de03f5bf117eaf97c8bbbac565b38844039fae107"
+    },
+    {
+      "path": "work/runtime/information-religion-identity-20261104-167-001/rea-religion-key-001/run.json",
+      "bytes": 1747,
+      "sha256": "14ff62507bd7eec97467fb3d56b57f18513700605df24b029d617d89dee467ab"
+    },
+    {
+      "path": "work/runtime/information-religion-identity-20261104-167-001/rea-religion-key-001/evidence.json",
+      "bytes": 315312,
+      "sha256": "f0851e154d93694a6358c8e88e738eacae21822e27fdfa7f8c026584a99fcb37"
+    },
+    {
+      "path": "work/runtime/information-religion-identity-20261104-167-001/rea-group-key-001/run.json",
+      "bytes": 1746,
+      "sha256": "3a416efe69eba2916049c3fd8704b23bba69d33a82dc2fa4b06a211228ea48ce"
+    },
+    {
+      "path": "work/runtime/information-religion-identity-20261104-167-001/rea-group-key-001/evidence.json",
+      "bytes": 133946,
+      "sha256": "5d35221b06d0dd350940dc61a32bbbebba6e46d9ab356658e4fd9db1a86f01cf"
+    },
+    {
+      "path": "work/runtime/information-religion-identity-20261104-167-001/religion-key-lookup-window-002.json",
+      "bytes": 8231,
+      "sha256": "b74a47ad5443ebdc7b084420964ee70f71777e6ee0f24372b40ab13bccb97c3c"
+    },
+    {
+      "path": "work/runtime/information-religion-identity-20261104-167-001/religion-lookup-windows-001.json",
+      "bytes": 29378,
+      "sha256": "042e174b621e74857d00e66a4d6be8c208c60395fd93fc9c6fcf3403ffb8df35"
+    },
+    {
+      "path": "work/runtime/information-religion-identity-20261104-167-001/religion-argument-window-002.json",
+      "bytes": 13033,
+      "sha256": "f427eb59ddb9da87a7d396403dbe9c522b9c0175309a37c501ed6bbc30736edf"
+    },
+    {
+      "path": "work/runtime/information-religion-identity-20261104-167-001/definition-key-methods-001.json",
+      "bytes": 62443,
+      "sha256": "2a50f9fe3c489e5085533cf9baaccd94980cee79e5de1e2dbd03e6afb593e91c"
+    },
+    {
+      "path": "work/runtime/information-religion-identity-20261104-167-001/definition-header-receipt-001.json",
+      "bytes": 2910,
+      "sha256": "af71aa1428c915491051af2d22c5433940a73ef94bf0c4492d98fbe5c17824a7"
+    },
+    {
+      "path": "work/runtime/information-religion-identity-20261104-167-001/reuse-audit/religion-key-reuse-audit.json",
+      "bytes": 8441,
+      "sha256": "be9e20e807a350cdfe525e5a13668b867c5f22849dea9e2d81651ab2918c2bc9"
+    },
+    {
+      "path": "work/runtime/information-religion-identity-20261104-167-001/native-identity-contract-001.json",
+      "bytes": 3924,
+      "sha256": "d2443f05bf0965b24d045e752a49409a196b0764a2a1617da76e5563877fff9e"
+    },
+    {
+      "path": "work/runtime/information-religious-schools-20261104-171-001/rea-school-constructor-001/run.json",
+      "bytes": 1747,
+      "sha256": "ab7b4c07d396286ae771e6686062566180dae8f2582b1b73782b2224e004cd5a"
+    },
+    {
+      "path": "work/runtime/information-religious-schools-20261104-171-001/rea-school-constructor-001/evidence.json",
+      "bytes": 182446,
+      "sha256": "9e3e125e23525e2a6390dc3668b3276cdfc13f2db3dd4cc223f958afae11ec83"
+    },
+    {
+      "path": "work/runtime/information-religious-schools-20261104-171-001/rea-school-container-001/run.json",
+      "bytes": 1745,
+      "sha256": "127302d7c3af9ab0b632889326654d8b1c8992702f3a2cb83d52d9012ffaebd4"
+    },
+    {
+      "path": "work/runtime/information-religious-schools-20261104-171-001/rea-school-container-001/evidence.json",
+      "bytes": 281211,
+      "sha256": "1aa56ffc6f5fd40a2f4d5d13cb3fd7952b167a9dc71194a58cb16305fd9b64c2"
+    },
+    {
+      "path": "work/runtime/information-religious-schools-20261104-171-001/ordinary-school-definition-methods-001/report.json",
+      "bytes": 127911,
+      "sha256": "2f943776421c9c64f042d4ecb09edd94ccfce3c17cd3e86609334f57922d0d38"
+    },
+    {
+      "path": "work/runtime/information-religious-schools-20261104-171-001/school-constructor-001.json",
+      "bytes": 13405,
+      "sha256": "41d498a9b9a5bb3466d494b166ca281476dfaa71ae00a72a1507a537548a9363"
+    },
+    {
+      "path": "work/runtime/information-religious-schools-20261104-171-001/ordinary-school-predicates-001/report.json",
+      "bytes": 246233,
+      "sha256": "1db5af536010056aaa2a3cfa3f7ee3728e775ca3bbb8bdeb53d54b2887752985"
+    },
+    {
+      "path": "work/runtime/information-religious-schools-20261104-171-001/school-getter-leaf-001.json",
+      "bytes": 519,
+      "sha256": "70ecb0f6e7bfdc96d92fd3bed0f66fdbe6938fb32791ff01cf5888ce32fd00f7"
+    },
+    {
+      "path": "work/runtime/information-religious-schools-20261104-171-001/native-school-contract-001.json",
+      "bytes": 3844,
+      "sha256": "020a3e42c14c733bc30957ec3a3f4e6835dda3fd3f89caf9b8cf1f605042f8ae"
+    }
+  ],
+  "layout_dependencies": [
+    {
+      "path": "bridge/information/profiles/country-faith-memory-1374.json",
+      "bytes": 7693,
+      "sha256": "9e00eee167643157727e2119328533e52ad3f7230e2483884510f7ed3752fe1e"
+    },
+    {
+      "path": "bridge/information/foreign_country_memory.py",
+      "bytes": 17517,
+      "sha256": "4f1913dfbfe0d56220a660ab9b8475e2fa30870684a0fdb35834434af93b0bbd"
+    },
+    {
+      "path": "bridge/information/country_faith_memory.py",
+      "bytes": 15783,
+      "sha256": "ec37c160a0c9fa089ff16cac6681de190e33449c03868503203acb0c1da39f71"
+    },
+    {
+      "path": "bridge/native_text.py",
+      "bytes": 6753,
+      "sha256": "5f76ccc9c95997aed687798a10a063786a892a6571b39fe729f2843774c5846c"
+    },
+    {
+      "path": "bridge/information/profiles/country-faith-memory-1374-v2.json",
+      "bytes": 7908,
+      "sha256": "10a6c0e8341056ecf21869bf849759a4e1f10016cac33efdadbcaa4c96d348f2"
+    },
+    {
+      "path": "bridge/information/country_faith_capture.py",
+      "bytes": 2852,
+      "sha256": "bcd99afaf5c2883345bf8550959502b08641626be84ac00ec863d637dcc4805c"
+    },
+    {
+      "path": "bridge/information/religion_group_memory.py",
+      "bytes": 17995,
+      "sha256": "91f077ea9e466b32bffde54f1d99fce89e46537f5a5aead43ff5bce7861a2e8d"
+    },
+    {
+      "path": "bridge/information/profiles/religion-group-memory-1374-v1.json",
+      "bytes": 10852,
+      "sha256": "3ec30a4b1760853f4acb4a3d8cbfb351759058a8ef6490813ebb683a70fc8a13"
+    },
+    {
+      "path": "bridge/information/religion_group_memory.py",
+      "bytes": 17995,
+      "sha256": "91f077ea9e466b32bffde54f1d99fce89e46537f5a5aead43ff5bce7861a2e8d"
+    },
+    {
+      "path": "bridge/information/religion_identity_memory.py",
+      "bytes": 15474,
+      "sha256": "4187bda66b70953ae08449706d458d3ccb9c7ad657cbb71e9607a7fe18957c11"
+    },
+    {
+      "path": "bridge/information/profiles/religion-identity-memory-1374-v1.json",
+      "bytes": 15277,
+      "sha256": "7d3eb8cccd55c5b996c5711f54d9b081dd4d0ee8bf66a32b9ff7668abb4061cb"
+    },
+    {
+      "path": "bridge/information/religious_schools_memory.py",
+      "bytes": 6601,
+      "sha256": "a29d4005e259894196f821171d252e7822a295d6fa6227e001deaec54147852a"
+    },
+    {
+      "path": "bridge/information/religious_schools_values.py",
+      "bytes": 1649,
+      "sha256": "c8d1a2d8f2ee0c6d5f099919f2d8330ee8cfc6a7ca146fce4f49712f2d40992d"
+    }
+  ],
+  "code_guards": [
+    {
+      "name": "diplomacy_country_selection",
+      "rva": "0xf016e0",
+      "end_rva_exclusive": "0xf01c2e",
+      "bytes": "488954241053574883ec58488bf9488bda488b0d907d4401488b01ff50284c8b1553e74301f20f1187080e00004180ba661e00000775134180ba6f1e00000074094d8b92681e0000eb074d8b92601e0000807c247f004c8997480100000f84df040000807c247e070f84d40400000fbf44247c3b052bc143010f84c30400003b0553c143010f84b70400003b054bc143010f84ab040000488b0d32c14301498bc248c1e8204c0fbfd8488bc348c1e8204889b42480000000480fbff08bc64c89b424880000004c8bb1180100004c8d0cc04b8b0cde4c8b81101500004b8b44c81048c1e820480fbfc0488d14404b8b04c8488b4838837cd114007f4a498b0cf6488b91b0140000f68259090000107436498bc248c1e83884c0742b49c1ea304180fa077421488b92e0050000418bcb458bc383e11f49c1e805428b04820fa3c80f83ec0300004533f6413bf3746a83bfb8090000010f850c010000e84037a7ff488bcf4489b7b8090000e8d1c20000488b8fa0000000488d15e3c1e300c687be09000001488b01ff5068418d5601488b084c8b81a8000000488bc841ffd0488b8fa0000000488d15dcc1e300488b01ff5068418d5602eb6d4439b7b80900000f85a2000000e8d636a7ff488bcfc787b809000001000000e864c20000488b8fa0000000488d1576c1e300c687be09000001488b01ff5068ba02000000488b084c8b81a8000000488bc841ffd0488b8fa0000000488d156ec1e300488b01ff5068ba01000000488b084c8b81a8000000488bc841ffd0e86636a7ff84c07429488b8fa0000000488d1524c1e300488b01ff5068ba01000000488b084c8b81a8000000488bc841ffd0488b873801000048c1e8200fbfc848896c24703bce0f84160100004c89742430488d54243048899f38010000bd0f000000c687e80d00000141b0018b05f048db00894424300fb605e948db0088442434488b0592a5520148896c244848c7442440050000004488742435488b8848030000488b09e840187a00488b542448488bd84883fa107232488b4c243048ffc2488bc14881fa001000007219488b49f84883c227482bc14883c0f84883f81f0f872e020000e8207a8300488bcb4c8974244048896c24484488742430e889166cff84c0752d488b050ea552010f57c0f30f101d6ffbeb004533c0488bd3f30f11442420488b8848030000488b09e8e8617a00488b0561be4301488bcf488b8018010000488b1cf0488d9348220000e867adffff488d9318220000488bcfe898b3ffff488b8fb00000008b412c83f805740c83c0f883f8010f876b010000ba05000000e843867eff488b8fb0000000ba06000000e842a17eff488b8fb0000000ba08000000e821867eff488b8fb0000000ba09000000e810867eff488b8fb0000000ba07000000e80fa17eff488b8fb0000000ba1e000000e8fea07eff488b05b7bd4301488b8018010000488b0cf0488bb1b01400004885f60f84ea0000004883c6100f84e0000000488b87b00000004c897c24504c8bb8801b0000498b5728488bc24885d274140f1f004839307411488b4810488bc14885c975ef4885c074244885d274160f1f440000483932740c488b4210488bd04885c075ef498d4f28e826d61dffb920000000453977387437498b6f28e8a216b3004889304c8970084889681044887018418b5738498947288d4a0141894f3885d2740648894508eb3b49894730eb35498b6f30e86b16b300488930488968084c89701044887018418b5738498947308d4a0141894f3885d2740648894510eb0449894728498bcfe8b7ae26004c8b7c2450488bcfe81abf0000488b6c2470c687be09000001488bb424800000004c8bb424880000004883c4585f5bc3e89effb300",
+      "sha256": "f2fc1747a0a6bd54e3bdcb6d395843b0bec1904e27be10d9117ab8a190aaec79",
+      "aslr_invariant": true,
+      "relocation_sites": []
+    },
+    {
+      "name": "primary_religion_icon_input",
+      "rva": "0xefd775",
+      "end_rva_exclusive": "0xefd788",
+      "bytes": "498b8f300f00008b9170050000488bc841ffd0",
+      "sha256": "02886820d189de8dc375b333e9ac578c1f50fa45ef18528bdd11402831ab54a1",
+      "aslr_invariant": true,
+      "relocation_sites": [],
+      "evidence_class": "ordinary PE bytes; semantic chain from retained REA"
+    },
+    {
+      "name": "primary_religion_tooltip_key_input",
+      "rva": "0xf0f67d",
+      "end_rva_exclusive": "0xf0f694",
+      "bytes": "498b96300f00004881c2b0000000488d4db0e85c8f18ff",
+      "sha256": "47c2466416b787f7e76e56dab3f955e776f1fa022c49645deeac3bf565477583",
+      "aslr_invariant": true,
+      "relocation_sites": [],
+      "evidence_class": "ordinary PE bytes; semantic chain from retained REA"
+    },
+    {
+      "name": "string32_c_string_copy",
+      "rva": "0x985f0",
+      "end_rva_exclusive": "0x98610",
+      "bytes": "48837a18107203488b1249c7c0ffffffff49ffc042803c020075f6e900cbffff",
+      "sha256": "f24feb23b273405af9c34be9d68d4b314a42b27d1b130a21fd726b36b029adef",
+      "aslr_invariant": true,
+      "relocation_sites": [],
+      "evidence_class": "ordinary PE bytes; semantic chain from retained REA"
+    },
+    {
+      "name": "primary_religion_group_predicate",
+      "rva": "0xc0b1d0",
+      "end_rva_exclusive": "0xc0b25b",
+      "bytes": "40534883ec204883c168488bdae86e23afff48634b284c8bc885c9741f4c69c1102e0000488b0d5d4c7301488b91a81c0000498b8c1048040000eb36807b4b00b92c000000b8440000000f44c1488b041848c1e820480fbfd0488b0580267301488b8818010000488b04d1488b88300f00004c3989d80000007508b0014883c4205bc332c04883c4205bc3",
+      "sha256": "68d32e82d936063d37ef370bdd614b70593efd396aa3160c4168cc8e7cc65951",
+      "scope": "primary_pdata_range_not_all_cold_fragments"
+    },
+    {
+      "name": "religion_group_description_name_operand",
+      "rva": "0xc0b260",
+      "end_rva_exclusive": "0xc0b510",
+      "bytes": "48895c2408488974241848897c2420488954241055488d6c24b14881ec90000000410fb6f9488bda33f68975df4883c168498bd0e8b722afff4885c0751748893348c743180f00000048897310408833e9270200004c8d4038488d1550770201488d4d07e8778b4dff4084ff0f840d0100004c8d0593970301488bd0488d4de7e82b9248ff904c8bc84c8d0550001001488d1591001001488d4d27e8d03948ff9048893348897310488973180f10000f11030f1048100f114b104889701048c740180f000000c60000c745df0800000041b801000000488d155f760201488bcbe8ab7f48ff90488d4d27e811a348ff90488b55ff4883fa10723148ffc2488b4de7488bc14881fa0010000072194883c227488b49f8482bc14883c0f84883f81f0f877e010000e895e0b200660f6f059d681b01f30f7f45f7c645e700488b551f4883fa100f823201000048ffc2488b4d07488bc14881fa001000000f82160100004883c227488b49f8482bc14883c0f84883f81f0f8724010000e9f80000004c8d0586960301488bd0488d4de7e81e9148ff904c8bc84c8d0543ff0f01488d156cff0f01488d4d27e8c33848ff9048893348897310488973180f10000f11030f1048100f114b104889701048c740180f000000c60000c745df4000000041b801000000488d1552750201488bcbe89e7e48ff90488d4d27e804a248ff90488b55ff4883fa10722d48ffc2488b4de7488bc14881fa0010000072154883c227488b49f8482bc14883c0f84883f81f777be88cdfb200660f6f0594671b01f30f7f45f7c645e700488b551f4883fa10722d48ffc2488b4d07488bc14881fa0010000072154883c227488b49f8482bc14883c0f84883f81f7721e844dfb200488bc34c8d9c2490000000498b5b10498b7320498b7b28498be35dc3e8cf66e300cce8c966e30090e8c366e30090e8bd66e300cc",
+      "sha256": "becccec9f88827be65d3fe2b8732fd80772cd2799ee0f3822f16c6b187308ba4",
+      "scope": "primary_pdata_range_not_all_cold_fragments"
+    },
+    {
+      "name": "religion-key_configuration_lookup",
+      "rva": "0xa7a940",
+      "end_rva_exclusive": "0xa7aa0d",
+      "bytes": "48895c241848897c242041564883ec204c8b7218488bfa4c8bd14983fe107203488b124c634f104533c04d85c97e1533c90fbe041148ffc14103c0446bc03d493bc97ced33d248896c2430418bc0488974243841f77204498b4208488b1cd04885db7447488b6f100f1f840000000000488b33488bd7488d8e900000004983fe107203488b1748837918104c8b41107203488b094c3bc57509e8d2abfb0085c07426488b5b084885db75c533c0488b742438488b6c2430488b5c2440488b7c24484883c420415ec3488bc6ebe0",
+      "sha256": "ec8419ca6e6cb285d6cf39cf33792760e27bd646f76ec207d5e4c5892bbe39cd",
+      "scope": "primary_pdata_range"
+    },
+    {
+      "name": "group-key_configuration_lookup",
+      "rva": "0xa7aa10",
+      "end_rva_exclusive": "0xa7aaad",
+      "bytes": "48895c240848896c2410488974241848897c24204154415641574883ec204c8b711033db488b7118488bfa492bf648c1fe0385f67e404c8b7a184c8b62106690498b0cde488bd74883c1184983ff107203488b1748837918104c8b41107203488b094d3bc47509e834abfb0085c07427ffc33bde7cca33c0488b5c2440488b6c2448488b742450488b7c24584883c420415f415e415cc3498b04deebdb",
+      "sha256": "00e5a493b8c7d9a97d246eb2124499653d10fb5cb04775405c47f3b045ac3a86",
+      "scope": "primary_pdata_range"
+    },
+    {
+      "name": "current_school_getter",
+      "rva": "0x36e4c0",
+      "end_rva_exclusive": "0x36e4c8",
+      "bytes": "488b81b8280000c3",
+      "sha256": "c1511a7fd3e16c8f4fe850a3b7368b2ccd36ceab7b1c6452b7c077ccee2d61f3",
+      "scope": "bounded_native_semantic_range"
+    },
+    {
+      "name": "school_key_constructor",
+      "rva": "0xdad040",
+      "end_rva_exclusive": "0xdad11f",
+      "bytes": "48895c241048894c2408574883ec404c8bca488bf9e8c61937ff90488d056e47f700488901488d9950010000498379181072034d8b0933c04889034889431048c743180f000000880349c7c0ffffffff49ffc04338040175f7498bd1488bcbe86c802eff904883bf6001000000746248837b18107203488b1b4533c94533c0488bd3488d4c2420e8d4627000488d5f18488d442420483bd8742c488bcbe87e852eff0f104424200f11030f104c24300f114b10660f6f05354b0101f30f7f442430c644242000488d4c2420e850852eff90488bc7488b5c24584883c4405fc3",
+      "sha256": "a1f539ad19aac4acb80900e4ac5a8215844d44ffe0a49a4a7304a74312b5a1f1",
+      "scope": "bounded_native_semantic_range"
+    },
+    {
+      "name": "school_container_loader",
+      "rva": "0xdacc30",
+      "end_rva_exclusive": "0xdacdfe",
+      "bytes": "48895c241855565741544155415641574883ec40488bea4c8bf14883c2344533e44c896424204c8964243048c74424380f000000448864242049c7c5ffffffff4d8bc549ffc04638240275f7488d4c2420e88a842eff90418b7e2cb9b0020000e89b65c800488bf04889842480000000498b5e10488d542420488bc8e88f03000090488d05874af70048890648899e7001000089be78010000488d9e8001000048899c2488000000488bcbe8a0c8ddff4c8d3d29b3e8004c893b488d3ddfb2e80048897b384c896368c6437000488d9ef801000048899c2488000000488bcbe86cc8ddff4c893b48897b384c896368c6437000488d8e70020000e8711a83ff4c89a6a8020000c686c0000000014889b42480000000488b06488bd5488bceff5018458b462c418d4001418b5e283bc37e3003db3bc30f4fd88bcbb80800000048f7e1490f40c5488bc8e8ee64c800448bc3488bd0498d4e18e8839536ff458b462c4963c8498b4620488d14c8418d40014189462c488932488b5424384883fa10722e48ffc2488b4c2420488bc14881fa0010000072154883c227488b49f8482bc14883c0f84883f81f771de840c69800488b9c24900000004883c440415f415e415d415c5f5e5dc3e8cf4dc900cc",
+      "sha256": "3ad81bb863f8ff1d57ba3e0512ffd471f91e1813e2d8230a8ef729673c31d876",
+      "scope": "bounded_native_semantic_range"
+    },
+    {
+      "name": "school_valid_true",
+      "rva": "0x8f440",
+      "end_rva_exclusive": "0x8f443",
+      "bytes": "b001c3",
+      "sha256": "e18aacce29affcdddaa5f641ac1ec12552e0fe9d066e6408941b1792818b8619",
+      "scope": "bounded_native_semantic_range"
+    },
+    {
+      "name": "school_valid_false",
+      "rva": "0x8f450",
+      "end_rva_exclusive": "0x8f453",
+      "bytes": "32c0c3",
+      "sha256": "01cb47d078b4841b8408ec4fe278efa83115c6f6e101972987507d2b2b57dcf0",
+      "scope": "bounded_native_semantic_range"
+    },
+    {
+      "name": "has_religious_school_predicate",
+      "rva": "0xd05070",
+      "end_rva_exclusive": "0xd053c5",
+      "bytes": "48895c2408488974241048897c241855488d6c24804881ec80010000488bda488bf9b844000000b92c000000807a4b000f44c1488b1410488bc248c1e83884c00f85b802000033f64889742440660f6f056bcb0b01f30f7f44245040887424408d4e304839b3c8000000747fe8cfff38ff660f6f0517cd0b01f30f7f4424500f10059a7dfe000f11000f100da07dfe000f114810f20f1005a47dfe00f20f1140208b0da17dfe008948284088702c4889442440488b93c80000004c8b421048837a18107203488b12488d4c2440e8aee138ff41b802000000488d1561daf200488d4c2440e897e138ffeb49e850ff38ff660f6f0578cc0b01f30f7f4424500f10054b7dfe000f11000f100d517dfe000f114810f20f1005557dfe00f20f1140200fb70d517dfe0066894828c6402a00488944244041b81f000000488d15cff0f900488d4c2440e835e138ff41b801000000488d15d4d7f200488d4c2440e81ee138ff488b07c644242800897424204533c94c8bc3488d542460488bcfff5050904c8b401048837818107203488b00488bd0488d4c2440e8e5e038ff90488d4c2460e84a0439ff8b7f50488d35b814620185ff7e2f803de5286501007505e84e7fa0003b3dd02865017f10488bc748c1e00548030520667201eb0c488b0517667201eb03488bc64889742430488944242848895c242041b847900000488d15ae300001488d4d80e8c5b1b5ff90488d7c244048837c245810480f437c24404863742450488d050f667201488944246032db885c2468381d67286501741a488b0df5657201e844e6d00085c00f85fd000000b301885c24684c8bc6488bd7488d4d80e85ba59f009084db740c488b0dc7657201e83ae6d000488b458048634804488d45804803c8b20ae8a4a538ff0fb6d0488d4d80e8f8a338ff488d4d80e82faa38ff90488d4d20e8d5bfa00090488d052d9ff10048894520488d4d20e8c078d00090488b5424584883fa10722e48ffc2488b4c2440488bc14881fa0010000072154883c227488b49f8482bc14883c0f84883f81f7752e8b640a30032c0eb3048c1ea20480fbfd2488b0533856301488b8818010000488b04d1488b88b8280000488b01ff90880000003a47680f94c04c8d9c2480010000498b5b10498b7318498b7b20498be35dc3e810c8d300908bc8e8e4e1d000cc",
+      "sha256": "757c6d7571e8d9d96dc0671a0a1f8593ac493f98ec7c6775b1e9617088c4b9ea",
+      "scope": "bounded_native_semantic_range"
+    }
+  ],
+  "layout": {
+    "country_school": "0x28b8",
+    "school_key": "0x150",
+    "school_owner_group": "0x170",
+    "school_ordinal": "0x178",
+    "group_schools_container": "0xa0",
+    "array": "0x20",
+    "capacity": "0x28",
+    "count": "0x2c"
+  },
+  "scope": {
+    "read_only": true,
+    "native_calls": false,
+    "complete": false,
+    "empty_school_not_mechanism_gate": true
+  }
+}

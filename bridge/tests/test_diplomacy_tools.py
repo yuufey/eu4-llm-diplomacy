@@ -1392,6 +1392,7 @@ class NativeReasonMetadataTests(unittest.TestCase):
 
     def test_metadata_ack_requires_literal_top_level_true(self):
         session = object.__new__(ObserverSession)
+        session.record = {}
         for value in (None, False, "true", 1):
             with self.subTest(value=value), patch.object(session, "_installation_ack", return_value={
                     "capabilities": ["native_alliance_reason_metadata"],

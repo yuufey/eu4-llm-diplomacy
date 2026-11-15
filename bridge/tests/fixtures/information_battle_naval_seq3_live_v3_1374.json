@@ -1,0 +1,44 @@
+{
+  "schema": "EU4-BATTLE-LIVE-FIXTURE/1",
+  "mode": "recorded",
+  "provenance": {
+    "capture_stage": "work\\runtime\\information-battle-naval-losses-20261026-001",
+    "source_database": "work\\runtime\\information-battle-naval-losses-20261026-001\\raw-v3.sqlite3",
+    "source_database_sha256": "e1b4c84bc308d39cf3afcedc4e94dbc3ad3a3b241ba8e48a3476c00c9762e8eb",
+    "source_database_read_only": true,
+    "source_group_id": 3,
+    "source_received_order": 3,
+    "source_attempt_sequence": "3",
+    "source_reports": {
+      "ingest": "work\\runtime\\information-battle-naval-losses-20261026-001\\ingest-001.json",
+      "ingest_sha256": "c3422622b12f8cf92f866ef668e64614b014f6566527a062e4411766d5909bed",
+      "six_record_values": "work\\runtime\\information-battle-naval-losses-20261026-001\\six-records-values-001.json",
+      "six_record_values_sha256": "e19a45362752c34590c745614accf2911e4f7f7682fa135db97043c684de95ae"
+    },
+    "session_id": "29316-1dd65006510babe",
+    "game_version": "1.37.4",
+    "game_sha256": "b23fa0e1f698d31b01cdd1c3817a675805d8c6286cb66f9c231e6e2a42544d77",
+    "payload_sha256": "e55520571a63b5dbdb2c2d64232daebf64d9eb23b77b240d4c7fdd9d9d241c12",
+    "installation": "ee1e6dc1f199694f",
+    "generation": "01dd65006510babe",
+    "message_id": "3",
+    "physical_player": "POR",
+    "captured_observation_not_complete_battle": true,
+    "source_mode": "live_natural_capture",
+    "live_authority": true,
+    "real_capture": true,
+    "synthetic_extension": false,
+    "business_complete": false
+  },
+  "payload_hex": "49424f5703009501000049424f570200e500000049424f5701000300000000000000bc6100000100f85e0301f8a70000f8a70000520500000c000000106c9a106567109a4e10776d4d4c4300f601000100000000000000000000000000000000000000000f00000009000000000000000000000024000000101f9010656710ee862012f45412b756103f512010996c2011308c10cc91102b5910014e41544a00be01000100000000000000000000000000000000030000000000000000000000030000000000000000000000e0010000a40100007effffff820000006400000000000000fa0000000300000018000000030000000000000001010102000000b802000000c30102504f5200bd00000101010100000041544a00be0100010000000000000000000000000000000000000000000000000101010000004d4c4300f6010001000000000000000000000000000000000000000000000000010300000050534100fb0200014d4c4300f601000153414b00fc0200010400000041544a00be0100014b454400d40200014a4d42006a0300014b454c006c030001010100014e41564c0100260000000000000000000000410900000000000000000000010000000000000000000000000000000000",
+  "recorded_observer_ref": "010001be004a5441",
+  "recorded_observer_tag": "ATJ",
+  "captured_date": 56555520,
+  "context_date": 56555952,
+  "expected_mapping": [
+    1,
+    0
+  ],
+  "expected_winner_result_side_index": 0,
+  "expected_observer_outcome": "defeat"
+}

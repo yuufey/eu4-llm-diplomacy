@@ -1,0 +1,81 @@
+{
+  "profile_id": "military-professionalism-memory-1374",
+  "profile_version": 1,
+  "game_version": "1.37.4",
+  "executable": {
+    "sha256": "b23fa0e1f698d31b01cdd1c3817a675805d8c6286cb66f9c231e6e2a42544d77",
+    "image_base": "0x140000000"
+  },
+  "source_evidence": [
+    {
+      "path": "work/runtime/information-military-professionalism-20261027-001/professionalism-scale-source-001.json",
+      "sha256": "38c22216a0a66ede57132ce41f74f5b20d046c5650318eb552cb64fe5a330cdf",
+      "bytes": 22666,
+      "role": "batch-51 bounded source-scale and direct country+0x50 contract"
+    }
+  ],
+  "layout": {
+    "field_key": "professionalism",
+    "country_army_professionalism_offset": "0x50",
+    "value_width": 8,
+    "value_signed": true,
+    "read_budget_bytes": 8192
+  },
+  "static_property": {
+    "field_key": "professionalism",
+    "key": "army_professionalism",
+    "getter_rva": "0x9a530",
+    "country_offset": "0x50",
+    "formatter_scale": 32768,
+    "scale_evidence_path": "contract.scale",
+    "runtime_vtable_pointer_guarded": false
+  },
+  "semantics": {
+    "field": "professionalism",
+    "basis": "native_country_army_professionalism_cache",
+    "value_origin": "copied_native_country_army_professionalism_cache",
+    "unit": "ratio",
+    "scale": 32768,
+    "period": "current",
+    "complete": true,
+    "raw_encoding": "signed little-endian int64 copied inline from country+0x50; raw_hex preserves eight bytes"
+  },
+  "code_guards": [
+    {
+      "name": "professionalism_getter",
+      "rva": "0x9a530",
+      "rva_end_exclusive": "0x9a53b",
+      "hex": "488b4150488902488bc2c3",
+      "sha256": "5ab296a745c41c80adbd45f39ac98750c971066e7643cafabd985073065e6b93",
+      "aslr_invariant": true
+    },
+    {
+      "name": "professionalism_country_binding",
+      "rva": "0x2dfc0e",
+      "rva_end_exclusive": "0x2dfc46",
+      "hex": "488d9500110000488d0df03b9501e83f2b4301488d9500110000498d4f50e86f04deff84c074114d8d4750bad6360000488bcee80a7e4201",
+      "sha256": "0f628a47cc6327d2d1c880d65535a1ba7652c77b14a94d821892583012625f0d",
+      "aslr_invariant": true
+    },
+    {
+      "name": "professionalism_serializer",
+      "rva": "0x1707a50",
+      "rva_end_exclusive": "0x1707ab1",
+      "hex": "48895c2408574881ec30020000498bd8488bf9e8481700004c8b03488d15b27a6b00488d4c2424c744242067010000c684242402000000e8d447a5fe488d542420488bcfe8070d0000488bcf488b9c24400200004881c4300200005fe91f090000",
+      "sha256": "ea6d8e00fa4566bd1517f0fdf35c203b2964fc065dd36d441881f52c50128705",
+      "aslr_invariant": true
+    }
+  ],
+  "read_constraints": {
+    "pointer_min": "0x10000",
+    "pointer_max": "0x7fffffffffff",
+    "cache": "one bounded signed little-endian QWORD at country+0x50; the bytes are inline, not a pointer",
+    "guard_order": "all RVA-relative code guards must match before the country cache read",
+    "runtime_vtable": "no ASLR materialized vtable pointer is compared",
+    "failure": "profile/source mismatch, guard mismatch, invalid pointer, short read, or budget failure remains unknown"
+  },
+  "unknown_conditions": [
+    "This child copies the current country cache and does not claim refresh or increment timing.",
+    "The parent owns FRA identity, process lifetime, two-pass comparison, and cleanup/retraction."
+  ]
+}

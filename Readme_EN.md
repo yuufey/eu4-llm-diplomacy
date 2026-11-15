@@ -14,9 +14,9 @@ We have confirmed that the diplomatic interfaces exposed by the game itself are 
 
 This project is currently in **early experimental development**.
 
-2026-10-16: [EU4 1.37.5 research checkpoint](docs/research-20261016-en.md) is now available with 120 TAG action bindings, direct runtime observers and a 60-record war/peace evidence index. The original batch contains 41 dispatches, 77 refusals and 2 unknowns; historical selected effects cover 48 actions, with 44 persistence records. Full effect validation, a callable 1.37.5 war/peace executor and LLM integration remain incomplete. Research is paused; this is a source snapshot. See the [tool catalog](docs/runtime-capability-map-1375-v8.json) and [Chinese evidence report](docs/research-20261016.md).
+2026-10-16: [EU4 1.37.5 research checkpoint](docs/05-历史记录/research-20261016-en.md) is now available with 120 TAG action bindings, direct runtime observers and a 60-record war/peace evidence index. The original batch contains 41 dispatches, 77 refusals and 2 unknowns; historical selected effects cover 48 actions, with 44 persistence records. Full effect validation, a callable 1.37.5 war/peace executor and LLM integration remain incomplete. Research is paused; this is a source snapshot. See the [tool catalog](docs/runtime-capability-map-1375-v8.json) and [Chinese evidence report](docs/05-历史记录/research-20261016.md).
 
-2026-10-17: Upstream 1.37.4 development is integrated alongside the frozen 1.37.5 research snapshot. Both the JSON-lines tools and the existing research CLI commands are retained. See the [merge notes and offline validation limits](docs/research-20261016/merge-20261017.md) and [upstream diplomacy guide](docs/外交系统说明.md).
+2026-10-17: Upstream 1.37.4 development is integrated alongside the frozen 1.37.5 research snapshot. Both the JSON-lines tools and the existing research CLI commands are retained. See the [merge notes and offline validation limits](docs/research-20261016/merge-20261017.md) and [upstream diplomacy guide](docs/02-使用与接口/外交系统说明.md).
 
 The following are capabilities validated on EU4 1.37.4:
 
@@ -40,7 +40,7 @@ For the current research status, experiment records, and technical validation, s
 
 1. Clone the repository, or simply give the repository URL to your Agent together with your local EU4 installation directory (the folder containing `eu4.exe`) and user-data directory (usually `C:\Users\<your username>\Documents\Paradox Interactive\Europa Universalis IV`). The Agent can then assist with environment configuration, building, and reproducing experiments.
 
-2. If you prefer to do it yourself, clone the repository, complete your local setup according to the [Path Configuration](docs/%E8%B7%AF%E5%BE%84%E9%85%8D%E7%BD%AE.md) guide, and then follow the [Reproduction Procedure](docs/人工实验与日志读取流程.md).
+2. If you prefer to do it yourself, clone the repository, complete your local setup according to the [Path Configuration](docs/03-开发与验收/路径配置.md) guide, and then follow the [Reproduction Procedure](docs/03-开发与验收/人工实验与日志读取流程.md).
 
 > [!WARNING]
 > **Early Development / Experimental Project**

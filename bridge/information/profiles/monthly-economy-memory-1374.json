@@ -1,0 +1,163 @@
+{
+  "profile_id": "monthly-economy-memory-1374",
+  "game_version": "1.37.4",
+  "executable": {
+    "sha256": "b23fa0e1f698d31b01cdd1c3817a675805d8c6286cb66f9c231e6e2a42544d77"
+  },
+  "source_index": {
+    "source_index_id": "information-monthly-ledger-source-001",
+    "path": "work/runtime/information-economy-20261027-001/monthly-ledger-source-001.json",
+    "sha256": "7fd7af774a6c75731b3f54874ef179444c19b28ddf58845e867cac32462468ac"
+  },
+  "layout": {
+    "income_offset": "0x770",
+    "income_count": 19,
+    "expense_offset": "0x7bc",
+    "expense_count": 38,
+    "payload_size": 228,
+    "component_width": 4,
+    "signed": true,
+    "wrap_bits": 32,
+    "income_indices": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      15,
+      16
+    ],
+    "expense_indices": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      15,
+      21,
+      22,
+      23,
+      24,
+      25,
+      26,
+      27,
+      30,
+      31,
+      33,
+      34
+    ]
+  },
+  "semantics": {
+    "basis": "native_recurring_monthly_ledger",
+    "period": "month",
+    "reference_period": "previous_month",
+    "value_semantics": "previous_month_recurring_ledger",
+    "unit": "ducats",
+    "scale": 1000,
+    "value_origin": "derived_from_copied_native_ledger",
+    "complete": false
+  },
+  "code_guards": [
+    {
+      "name": "monthly_income_property_constructor",
+      "rva": "0x6d8883",
+      "rva_end_exclusive": "0x6d88ae",
+      "hex": "488d151e055d01488bd9488941108801448d400ee874c89bff488d4320488d0d89745c0148894038488908",
+      "sha256": "e18e2749dff7d61a59c4ec6a1bd3041c2a9fa740da3e979427d2744b4654eac4"
+    },
+    {
+      "name": "monthly_income_property_literal",
+      "rva": "0x1ca8da8",
+      "rva_end_exclusive": "0x1ca8db7",
+      "hex": "6d6f6e74686c795f696e636f6d6500",
+      "sha256": "9fd7510dcd6d4e998abc35089190198ca0df1d786ace2fb6797cece1372766d3"
+    },
+    {
+      "name": "monthly_income_callback",
+      "rva": "0x6df9a0",
+      "rva_end_exclusive": "0x6df9f8",
+      "hex": "4c8bca33c9890a4981c07007000041ba0072020083f9117706410fa3ca722a83f9127430418b1085d2741e8bc183e809741783e801741283e801740d83e802740883f8017403410111ffc14983c00483f9137cc0498bc1c3",
+      "sha256": "d467c7730ab901844bc12ffb96665853527683b3bda26ddc9810894d42de0087"
+    },
+    {
+      "name": "recurring_net_helper_and_relative_tables",
+      "rva": "0x33d270",
+      "rva_end_exclusive": "0x33d3ba",
+      "hex": "48895c240848896c2410488974241848897c2420488bf2488bf933db448bc3448bcb448bd3ba00720200660f1f4400004183f9117706440fa3ca72314183f9127438418b843a7007000085c0741f418bc983e909741783e901741283e901740d83e902740883f90174034403c041ffc14983c2044183f9137cb641b9f5ffffff4c8bd3458d5931488d2d022dccff66904183f91a77174963c10fb684287cd333008b8c8574d333004803cdffe1418b843abc07000085c0741f4183f91977174963c90fb68c29a0d333008b948d98d333004803d5ffe203d841ffc14983c2044983eb0175ab442bc3448906488bc6488b5c2408488b6c2410488b742418488b7c2420c39048d333001dd333000000000001000000000001010101010101000001010001010000009048d3330046d333000000000001000000000001010101010101000101010001010000",
+      "sha256": "12d8295546dc8fc75135e1ed379c2775e5dd2848c90410d42eb49ef4b9b04363"
+    },
+    {
+      "name": "country_ledger_writer_binding",
+      "rva": "0x2df5cc",
+      "rva_end_exclusive": "0x2df5e0",
+      "hex": "4d8d8760070000ba75280000488bcee840834201",
+      "sha256": "1d6ffc87f306be7560ba16e98f6aa6a5bba05416368ec2fe301a64b0d5ab5394"
+    },
+    {
+      "name": "ledger_constructor_binding",
+      "rva": "0x2cd306",
+      "rva_end_exclusive": "0x2cd314",
+      "hex": "488d05836ea10148898360070000",
+      "sha256": "58cc8a9d68d73634c445b6259366bc5cc78986664b0d1930fae039c6df2f5c47"
+    },
+    {
+      "name": "ledger_named_monthly_table_dispatch",
+      "rva": "0xaf2efb",
+      "rva_end_exclusive": "0xaf2f4d",
+      "hex": "4c8d4710ba7b280000488bcee8040100008b9f4404000085db7437ba7a280000488bcee88d62c100488d542430895c2430488bcee8bc3c75ff488bcee89454c1004c8d475cba7c280000488bcee853010000",
+      "sha256": "de2d90a00eaa849e9339b30e44a5d25667a8de9a5ee700f3bc139b989ae02ca8"
+    },
+    {
+      "name": "income_19_signed_fixed_point_writer_loop",
+      "rva": "0xaf301f",
+      "rva_end_exclusive": "0xaf307a",
+      "hex": "498d784c498bd8488bf14c3bc7745ce87d61c100488bcee84556c100488bcee84d54c1000f1f4000660f1f8400000000008b03488d542440488bce89442440e88d3b75ff807e18007508488bcee8df52c1004883c304483bdf75d6",
+      "sha256": "95bc2c1ae1f7c0f35f88a10c299d1e02275369ffc8a4ac5181fcce3b0281b580"
+    },
+    {
+      "name": "expense_38_signed_fixed_point_writer_loop",
+      "rva": "0xaf30af",
+      "rva_end_exclusive": "0xaf310a",
+      "hex": "498db898000000498bd8488bf14c3bc77459e8ea60c100488bcee8b255c100488bcee8ba53c10066660f1f8400000000008b03488d542440488bce89442440e8fd3a75ff807e18007508488bcee84f52c1004883c304483bdf75d6",
+      "sha256": "86e3aea030cd11f5c85f43a0d763c4909c0f7573e229760d240687ac1b653018"
+    },
+    {
+      "name": "signed_fixed_point_thousand_writer",
+      "rva": "0x246bf9",
+      "rva_end_exclusive": "0x246c66",
+      "hex": "448b02b8d34d621041f7e8488bd9c74424300d000000c1fa068bc2c684243402000000c1e81f03d069c2e8030000442bc0791985d2488d0d438db701488d05448db701480f48c141f7d8eb07488d052c8db7014489442420488d4c2434448bca4c8bc0baff010000e80a114101",
+      "sha256": "7f777c86dd3d85c0536d0b5201b294a6171b9213ed26713c07359afcda282bc2"
+    },
+    {
+      "name": "signed_fixed_point_format_literals",
+      "rva": "0x1dbf978",
+      "rva_end_exclusive": "0x1dbf98b",
+      "hex": "25642e25303364002d25642e25303364000000",
+      "sha256": "e4ad845564df18f7572eba4f9479c2c58b87c682078ef0911a18aaa68714beb3"
+    },
+    {
+      "name": "lastmonthincometable_token",
+      "rva": "0x207ba90",
+      "rva_end_exclusive": "0x207baa9",
+      "hex": "7b2800006c6173746d6f6e7468696e636f6d657461626c6500",
+      "sha256": "0b7763ae701e60c2eb08f1afbeb2892b5349df2de8ceee8b300e62d1cb21063a"
+    },
+    {
+      "name": "lastmonthexpensetable_token",
+      "rva": "0x207bc98",
+      "rva_end_exclusive": "0x207bcb2",
+      "hex": "7c2800006c6173746d6f6e7468657870656e73657461626c6500",
+      "sha256": "24db4f482d2c37b33afa14316a000c685fccf0926f32cd3cc506566c39f481cb"
+    }
+  ]
+}

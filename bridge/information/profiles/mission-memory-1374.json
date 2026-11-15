@@ -1,0 +1,127 @@
+{
+  "profile_id": "mission-memory-1374",
+  "profile_version": 1,
+  "evidence_kind": "ordinary_static_analysis_plus_bounded_runtime_RPM",
+  "game_version": "1.37.4",
+  "executable": {
+    "sha256": "b23fa0e1f698d31b01cdd1c3817a675805d8c6286cb66f9c231e6e2a42544d77",
+    "image_base": "0x140000000"
+  },
+  "globals": {
+    "database_rva": "0x233d8b0",
+    "game_rva": "0x233fe58",
+    "game_date_offset": "0x1dd0"
+  },
+  "country": {
+    "table_offset": "0x118",
+    "missions_offset": "0x99d8",
+    "completed_offset": "0x9998",
+    "handle_offset": "0x20",
+    "embedded_mission_lea": {
+      "rva": "0x2e10fe",
+      "bytes": "4d8d87d8990000",
+      "operands": "r8,[r15+0x99d8]"
+    },
+    "completed_embedded_lea": {
+      "description": "caller LEA observed in completed iterator contract",
+      "offset": "0x9998"
+    }
+  },
+  "mission_chain": {
+    "wrapper_rva": "0x1707920",
+    "wrapper_dispatch_guard": {
+      "rva": "0x1707948",
+      "bytes": "48ff6008",
+      "operands": "jmp QWORD PTR [rax+0x8]"
+    },
+    "vtable_rva": "0x1c573c8",
+    "vtable_plus_8_rva": "0xd2f280",
+    "vtable_plus_10_rva": "0x445570",
+    "thunk_guards": [
+      {
+        "rva": "0xd2f280",
+        "bytes": "48895c2408",
+        "operands": "QWORD PTR [rsp+0x8],rbx"
+      },
+      {
+        "rva": "0xd2f293",
+        "bytes": "e8e8939d00",
+        "operands": "0x141708680"
+      },
+      {
+        "rva": "0xd2f2a1",
+        "bytes": "ff5010",
+        "operands": "call QWORD PTR [rax+0x10]"
+      },
+      {
+        "rva": "0xd2f2b1",
+        "bytes": "e95a949d00",
+        "operands": "0x141708710"
+      }
+    ],
+    "slots": {
+      "array_offset": "0x18",
+      "count_offset": "0x24",
+      "stride": 24,
+      "root_array_offset": "0x8",
+      "root_count_offset": "0x14",
+      "definition_name_offset": "0x10"
+    }
+  },
+  "completed": {
+    "container_storage": "embedded_object",
+    "container_offset": "0x9998",
+    "sentinel_offset": "0x8",
+    "begin_offset": "0x0",
+    "end_offset": "0x0",
+    "node_next_offset": "0x0",
+    "node_definition_offset": "0x10",
+    "node_stride": 24,
+    "string_definition_offset": "0x10",
+    "helpers": {
+      "begin": {
+        "rva": "0x10c5b0",
+        "bytes": "488b4108488b08",
+        "operands": "sentinel=[container+8]; begin=[sentinel+0]"
+      },
+      "end": {
+        "rva": "0xc3050",
+        "bytes": "488b4108488902",
+        "operands": "end=[container+8]"
+      },
+      "next": {
+        "rva": "0x416630",
+        "bytes": "488b01488902",
+        "operands": "next=[node+0]"
+      },
+      "definition": {
+        "rva": "0x9a920",
+        "bytes": "488d4110",
+        "operands": "definition_string=[definition+0x10]"
+      }
+    }
+  },
+  "string32": {
+    "length_offset": "0x10",
+    "capacity_offset": "0x18",
+    "inline_capacity_limit": 16,
+    "max_capacity": 4096,
+    "max_ascii_length": 256
+  },
+  "limits": {
+    "max_total_rpm": 524288,
+    "max_single_rpm": 65536,
+    "max_table_entries": 4096,
+    "initial_table_entries": 256,
+    "max_mission_slots": 64,
+    "max_roots_per_slot": 128,
+    "max_completed_nodes": 4096
+  },
+  "source_evidence": {
+    "mission-serialization.json": "77cb041351bbf1d0624e10aa93db6f0ae5a5f0ca77b85cf4f98a7c8e0e0088c0",
+    "mission-writer-boundary.json": "2a05a5d385b61b589247034423387b4632c99170741a8160d436ee8421fc7f82",
+    "live-writer-thunk.json": "83e0736cb1fa175a98334f43c14d5a85c86dacffe132417b2f41c4462f5b4047",
+    "completed-iterator.json": "6b869f4f5e02616c7038a631047434cedeec23a387281f823d35e200f601377d"
+  },
+  "source_evidence_kind": "ordinary_file_analysis_not_REA_Evidence"
+}

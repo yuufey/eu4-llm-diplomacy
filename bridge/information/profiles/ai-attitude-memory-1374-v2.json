@@ -1,0 +1,105 @@
+{
+  "profile_id": "ai-attitude-memory-1374",
+  "profile_version": 2,
+  "executable_sha256": "b23fa0e1f698d31b01cdd1c3817a675805d8c6286cb66f9c231e6e2a42544d77",
+  "relation_table_offset": 5392,
+  "relation_row_stride": 72,
+  "recipient_fullref_offset": 16,
+  "attitude_pointer_offset": 40,
+  "definition_name_offset": 8,
+  "max_name_bytes": 128,
+  "code_guards": [
+    {
+      "name": "relation_save_writer_entry",
+      "rva": "0xa66770",
+      "end_rva_exclusive": "0xa6679d",
+      "bytes": "4c8bdc555357498dabb8feffff4881ec30020000488b4110488bfa4c8b0148c1e820498973104d8973184c8bf1",
+      "sha256": "06d54da1bc80b4fa2716a0264bebed36df0fdea19da61906c837c735ac94b6ee"
+    },
+    {
+      "name": "attitude_save_case",
+      "rva": "0xa66b07",
+      "end_rva_exclusive": "0xa66b4a",
+      "bytes": "498b4e284885c9743a488b01ff500884c07430498b5e28ba262c0000488bcf4883c308e88126ca0048837b18107203488b1b4533c94533c0488bd3488bcfe87611ca00",
+      "sha256": "f49eca607c6f9ff4589853b4e53a0da0751e967d363763d2431a8c32ba40d2e3"
+    },
+    {
+      "name": "attitude_save_token",
+      "rva": "0x21233d0",
+      "end_rva_exclusive": "0x21233dd",
+      "bytes": "262c0000617474697475646500",
+      "sha256": "4b80ae9ac2c79e4b0a31fd33c97633fb5945b22ee872d67ca9bf81075545b475"
+    },
+    {
+      "name": "historical_friend_insert",
+      "rva": "0x296ad0",
+      "end_rva_exclusive": "0x296b4e",
+      "bytes": "48895c24084889742410574883ec20488bb150210000488bf9b920000000488bdae83ac779014889184889700848c7401000000000c64018008b9758210000488987502100008d4a01898f5821000085d2741448894610488b5c2430488b7424384883c4205fc3488b5c2430488b742438488987482100004883c4205fc3",
+      "sha256": "2423ddd0e7ce1c07991080f925b886966f63dc1b3a02ba3a49a04c55249eab8d"
+    },
+    {
+      "name": "historical_rival_insert",
+      "rva": "0x296b90",
+      "end_rva_exclusive": "0x296c0e",
+      "bytes": "48895c24084889742410574883ec20488bb180210000488bf9b920000000488bdae87ac679014889184889700848c7401000000000c64018008b9788210000488987802100008d4a01898f8821000085d2741448894610488b5c2430488b7424384883c4205fc3488b5c2430488b742438488987782100004883c4205fc3",
+      "sha256": "8ff63f50c22aed2809d7d24781d6473713f4cca3cada7d26be542510c864fee8"
+    },
+    {
+      "name": "historical_friend_token",
+      "rva": "0x2169b28",
+      "end_rva_exclusive": "0x2169b3e",
+      "bytes": "162d0000686973746f726963616c5f667269656e6400",
+      "sha256": "ee9de5175c88c922b8f3f565603c5484ae22db1fd5c8d856e3647bca6d788c71"
+    },
+    {
+      "name": "historical_rival_token",
+      "rva": "0x2169f38",
+      "end_rva_exclusive": "0x2169f4d",
+      "bytes": "182d0000686973746f726963616c5f726976616c00",
+      "sha256": "23b8289ffe03e37f3c70a5a70ac254fbd7d96c374f3f5e08fd6ea0b8ef1a2a89"
+    },
+    {
+      "name": "historical_friend_effect_key",
+      "rva": "0x29de00",
+      "end_rva_exclusive": "0x29de06",
+      "bytes": "b8162d0000c3",
+      "sha256": "9bb93ff0176ab45f66845644781aa3fba6ef987e4ebe332ebc56d496b8395559"
+    },
+    {
+      "name": "historical_rival_effect_key",
+      "rva": "0x29e210",
+      "end_rva_exclusive": "0x29e216",
+      "bytes": "b8182d0000c3",
+      "sha256": "38ec645ad11801767d843e807ff88e2ee648518f58b9a87ac42140ac1d7256cd"
+    },
+    {
+      "name": "historical_friend_effect",
+      "rva": "0x29dcf0",
+      "end_rva_exclusive": "0x29dd3b",
+      "bytes": "488b41404c8b413884d2740b488bd0498bc8e9c98dffff498d8848210000488b114885d2742048c1e820660f1f4400004c8b0249c1e82066443bc07409488b52104885d275eae96514e4ff",
+      "sha256": "3d70cd1e87713f0d5de2cbfc9cae2a43c7301e629820414d62a25c0fbb4cbbba"
+    },
+    {
+      "name": "historical_rival_effect",
+      "rva": "0x29e100",
+      "end_rva_exclusive": "0x29e14b",
+      "bytes": "488b41404c8b413884d2740b488bd0498bc8e9798affff498d8878210000488b114885d2742048c1e820660f1f4400004c8b0249c1e82066443bc07409488b52104885d275eae95510e4ff",
+      "sha256": "2f76c06fb8004bc7cd8eb99dfcaf5c4eb94d1e9975ecdd2d6115f62c0c9dd270"
+    }
+  ],
+  "source_evidence": {
+    "path": "work/runtime/information-ai-attitude-20261112-001/native-source.json",
+    "sha256": "c52dfcc72a9a18f5963bfcaef9ccf854c9fba07810dfc11f45b38137825308ce"
+  },
+  "history": {
+    "historical_friend": 8520,
+    "historical_rival": 8568,
+    "count_offset": 16,
+    "node_next_offset": 16,
+    "max_entries": 4096
+  },
+  "historical_source_evidence": {
+    "path": "work/runtime/information-historical-relations-20261112-001/native-source.json",
+    "sha256": "d3af3979c60a0043f4f01564240dc4bbc5cd9b206a53322907dee212cc17ce39"
+  }
+}

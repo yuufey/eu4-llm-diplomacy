@@ -1,0 +1,13 @@
+{
+  "schema": "owned-age-fixture-attempt-console/1",
+  "command": "python -B stage78/owned-age-fixture-001/prepare_and_run.py --run-owned-only",
+  "exit_code": 1,
+  "child_exit_code": 3221225477,
+  "child_exit_hex": "0xC0000005",
+  "stdout_bytes": 0,
+  "stderr_bytes": 0,
+  "setup_record": null,
+  "case_rows": 0,
+  "virtual_free_record": null,
+  "note": "C++ compilation succeeded; owned fixture process raised access violation before flushing output. Original process exited; OS reclaimed its private allocation."
+}

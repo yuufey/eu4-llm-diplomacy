@@ -1,0 +1,126 @@
+{
+  "evidence_kind": "observed_runtime",
+  "installation_ack_fixture": "information_war_FRA_BUR_declaration_live_1374.json",
+  "game_sha256": "b23fa0e1f698d31b01cdd1c3817a675805d8c6286cb66f9c231e6e2a42544d77",
+  "dll_sha256": "968ee8e84e0426c86bd8e1e59b4b944cada8f06c90d01540a3c09846a2f14646",
+  "source_log": "work\\runtime\\diplomacy-observer-20261112-territorial-interest-v61-002\\control-probe.jsonl",
+  "records": [
+    {
+      "event": {
+        "event": "native_mission_availability_changed",
+        "schema_version": 1,
+        "session_id": "36136-1dd72b7c17e6fb7",
+        "sequence": 1,
+        "country": "FRA",
+        "country_fullref": "0x100007a00415246",
+        "date_raw": 56684544,
+        "previous_observed_date_raw": 56684160,
+        "mission_id_hex": "6672615f6c696265726174655f6e6f726d",
+        "eligible_before": false,
+        "eligible_after": true,
+        "source": "mission_eligibility_native_return",
+        "complete": true
+      },
+      "offset": 80080196,
+      "line_bytes": 390,
+      "line_sha256": "e878bbc9d8b8bbf231cb301222f5d8c3f4e830c7fdd017a19392a0e26491c5f3"
+    },
+    {
+      "event": {
+        "event": "native_mission_condition_changed",
+        "schema_version": 1,
+        "session_id": "36136-1dd72b7c17e6fb7",
+        "sequence": 1,
+        "country": "FRA",
+        "country_fullref": "0x100007a00415246",
+        "date_raw": 56684544,
+        "previous_observed_date_raw": 56684160,
+        "mission_id_hex": "6672615f6c696265726174655f6e6f726d",
+        "condition_index": 0,
+        "condition_node": "0x26839a03cd0",
+        "condition_method_rva": 12696816,
+        "satisfied_before": false,
+        "satisfied_after": true,
+        "native_return_before": "0x0",
+        "native_return_after": "0x1",
+        "root_condition_count": 1,
+        "observed_condition_count": 1,
+        "source": "mission_root_conjunction_child_return",
+        "complete": false
+      },
+      "offset": 80080586,
+      "line_bytes": 590,
+      "line_sha256": "f90ce711eff5bbb01f404ba0550454163b6c50dae7e8c16839a2de6cb046efbf"
+    },
+    {
+      "event": {
+        "event": "native_mission_condition_changed",
+        "schema_version": 2,
+        "session_id": "36136-1dd72b7c17e6fb7",
+        "sequence": 2,
+        "country": "FRA",
+        "country_fullref": "0x100007a00415246",
+        "date_raw": 56684544,
+        "previous_observed_date_raw": 56684160,
+        "mission_id_hex": "6672615f6c696265726174655f6e6f726d",
+        "condition_index": 0,
+        "condition_node": "0x26839965160",
+        "condition_method_rva": 12489472,
+        "satisfied_before": false,
+        "satisfied_after": true,
+        "native_return_before": "0x0",
+        "native_return_after": "0x1000001",
+        "root_condition_count": 1,
+        "observed_condition_count": 1,
+        "source": "mission_direct_area_province_holding_return",
+        "complete": false,
+        "child_index": 0,
+        "child_count": 1,
+        "province_id": 167
+      },
+      "offset": 80081176,
+      "line_bytes": 652,
+      "line_sha256": "39e15a1a1f18ae94b58e2ba1f5eb32a3cfcb10736e04996f929baf3a31d07a60"
+    },
+    {
+      "event": {
+        "event": "native_mission_completed",
+        "schema_version": 2,
+        "session_id": "36136-1dd72b7c17e6fb7",
+        "sequence": 1,
+        "country": "FRA",
+        "country_fullref": "0x100007a00415246",
+        "date_raw": 56684544,
+        "mission_id_hex": "6672615f6c696265726174655f6e6f726d",
+        "completed_before": false,
+        "completed_after": true,
+        "completion_path": "command_handler",
+        "source": "mission_completed_set_insert_normal_return",
+        "complete": true
+      },
+      "offset": 80093122,
+      "line_bytes": 388,
+      "line_sha256": "8d77e4412f24bd0d5a4e62d60a4b05c537b0729d685b022a9f96cfdd5d604a50"
+    },
+    {
+      "event": {
+        "event": "native_mission_availability_changed",
+        "schema_version": 1,
+        "session_id": "36136-1dd72b7c17e6fb7",
+        "sequence": 2,
+        "country": "FRA",
+        "country_fullref": "0x100007a00415246",
+        "date_raw": 56684904,
+        "previous_observed_date_raw": 56684544,
+        "mission_id_hex": "6672615f6c696265726174655f6e6f726d",
+        "eligible_before": true,
+        "eligible_after": false,
+        "source": "mission_eligibility_native_return",
+        "complete": true
+      },
+      "offset": 80704461,
+      "line_bytes": 390,
+      "line_sha256": "384db98deb8d5c0c32851e1110f8254f14c1e0aba313d857a6ffdb9f6821caa6"
+    }
+  ]
+}

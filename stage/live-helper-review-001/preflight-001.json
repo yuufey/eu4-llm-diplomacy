@@ -1,0 +1,299 @@
+{
+  "battle_source": {
+    "bytes": 1750,
+    "path": "C:\\Users\\wangyufei\\Documents\\ChatGPT\\欧陆风云4\\work\\runtime\\diplomacy-observer-20261028-information-resources-v30-005\\information-battle-status.json",
+    "sha256": "9b09da0830133b9a1fc9f2857c7d580474b78b49aae62e955591a917b8df66c6",
+    "value": {
+      "accepted": true,
+      "business_complete": false,
+      "business_export_available": false,
+      "capture_complete": false,
+      "captured": "0",
+      "code_patch_installed": false,
+      "command": "heartbeat",
+      "container_candidates": "0",
+      "container_copied": "0",
+      "container_copy_failures": "0",
+      "context_copied": "0",
+      "context_copy_failures": "0",
+      "copy_failures": "0",
+      "creation_filetime": "134376348223436218",
+      "dll_pinned": false,
+      "dll_sha256": "92fa4ea3b158e2ff42a69bce1cbbf7053b7f3a0ac128b25c9e5b7d1fb4bdc3ce",
+      "dropped_busy": "0",
+      "dropped_foreign_thread": "0",
+      "dropped_full": "0",
+      "exe_sha256": "b23fa0e1f698d31b01cdd1c3817a675805d8c6286cb66f9c231e6e2a42544d77",
+      "fragment_queued": "0",
+      "fragment_sink_pending": false,
+      "generation": "0",
+      "guard_failures": "0",
+      "installation": "0",
+      "last_sequence": "0",
+      "line1_binding_rejected": "0",
+      "line1_candidates": "0",
+      "line1_copied": "0",
+      "line1_copy_failures": "0",
+      "line1_without_scope": "0",
+      "native_metadata_copied": "0",
+      "native_metadata_failures": "0",
+      "native_title_query_enabled": true,
+      "native_title_query_mode": "native_helper_owned_output",
+      "open_message_scopes": 0,
+      "patch_attempt_published": false,
+      "patch_failure_stage": 0,
+      "pid": 27716,
+      "publication_stage": 0,
+      "published_resources_process_lifetime": true,
+      "reason": "observed",
+      "request_id": "",
+      "same_address_reload_verified": false,
+      "schema": "EU4-BATTLE-SOURCE/1",
+      "scope_overflow": "0",
+      "state": "ready",
+      "stats_consistent": false,
+      "status_publication_failures": 0,
+      "status_publication_pending": false,
+      "status_write_error": 0,
+      "status_write_stage": "none",
+      "template_ambiguous": "0",
+      "template_copied": "0",
+      "template_copy_failures": "0",
+      "title_query_attempted": "0",
+      "title_query_candidates": "0",
+      "title_query_copied": "0",
+      "title_query_destroyed": "0",
+      "title_query_failures": "0",
+      "unwind_registered": false,
+      "visibility_verified": false,
+      "wire_version": 6,
+      "writer_status": 0
+    }
+  },
+  "catalog_route_schema": {
+    "field_route_count": 1,
+    "field_route_source": "NativeCountryRivalsSource",
+    "journal_created": false,
+    "mcp_started": false,
+    "native_query_performed": false,
+    "normalized_query": {
+      "fields": [
+        "rivals"
+      ],
+      "object": {
+        "country": "FRA",
+        "type": "country"
+      },
+      "parameters": {},
+      "topic": "R03"
+    },
+    "offline_operator_session": false,
+    "periodic_config": {
+      "enabled": true,
+      "kind": "periodic",
+      "name": "R03 rivals two-second periodic",
+      "report_id": "report_example",
+      "schedule": {
+        "basis": "real",
+        "every": 2,
+        "missed": "coalesce",
+        "unit": "seconds"
+      }
+    },
+    "query": {
+      "fields": [
+        "rivals"
+      ],
+      "object": {
+        "country": "FRA",
+        "type": "country"
+      },
+      "parameters": {},
+      "topic": "R03"
+    },
+    "query_report_subscription_status_schemas_validated": true,
+    "r03_adapter_field_owners": [
+      "NativeCountryRivalsSource"
+    ],
+    "rivals_field_complete": true,
+    "rivals_field_coverage": "available",
+    "service_database_temporary_and_closed": true,
+    "service_factory": "tools.serve_information._build_runtime",
+    "topic_id": "R03",
+    "topic_source": "NativeCountryRivalsSource",
+    "topic_status": "available",
+    "triggers": [
+      "query",
+      "periodic"
+    ],
+    "truce_until_coverage": "planned"
+  },
+  "checks": {
+    "actual_service_catalog_and_single_field_route": true,
+    "actual_tool_schemas_for_all_acceptance_steps": true,
+    "battle_source_ready_zero_unpatched_never_enabled": true,
+    "checkpoint_fra_outgoing_is_independently_empty": true,
+    "checkpoint_owner_direction_and_complete_scan": true,
+    "configured_game_executable_sha": true,
+    "pinned_native_rivals_profile_contract": true,
+    "standalone_helper_and_dependency_pins": true,
+    "v30_005_installation_and_manifest_identity": true
+  },
+  "dependency_pins": [
+    {
+      "bytes": 220971,
+      "path": "work/runtime/information-diplomacy-state-20261028-001/rivals-source-001/report-002.json",
+      "sha256": "6d1af31e9e9630b3de57edf22ae495dc93eab2ee336e819df1604e967533d4d5"
+    },
+    {
+      "bytes": 11927,
+      "path": "work/runtime/diplomacy-observer-20261028-information-resources-v30-005/rival-query.inc",
+      "sha256": "0922452c8eff6b74416754feffa1928aa51b2be045b391f2dcd8582f8aec53d9"
+    },
+    {
+      "bytes": 6513,
+      "path": "bridge/information/country_rivals.py",
+      "sha256": "4aa564ff4df2fc97dc1275bce1f0e685069927dab85cbc2f049000ff61eb41e0"
+    },
+    {
+      "bytes": 71931,
+      "path": "bridge/information/country_rivals_memory.py",
+      "sha256": "59030a8a24d651ed34f94e5effce075156fa353633957815652bca5aba5deaa6"
+    },
+    {
+      "bytes": 3890,
+      "path": "bridge/information/profiles/country-rivals-memory-1374.json",
+      "sha256": "a40515fd3e19d59dd73bde7bde442f155c04fd91ef6c3cd786ddaa481690708c"
+    },
+    {
+      "bytes": 6465,
+      "path": "bridge/tests/test_information_country_rivals.py",
+      "sha256": "bba95bc4d65a96c35e049cb8751683c1068686e7c16ab177ad9b0a90c06d6725"
+    },
+    {
+      "bytes": 15274,
+      "path": "bridge/tests/test_information_country_rivals_memory.py",
+      "sha256": "68448c67500fe7bd9e58a49b5e0d0af766fc53ae2c187c688782906d663731f7"
+    },
+    {
+      "bytes": 45947,
+      "path": "bridge/information/catalog.py",
+      "sha256": "32be92d4026b08f3ff59852d3f041e557a8fa2094e3b760e51ea492b55a3f0fb"
+    },
+    {
+      "bytes": 12478,
+      "path": "bridge/information/composite.py",
+      "sha256": "902d3d7c7ecf4396a1e8c70d73dddaf9803a7e8844c6fab11e575b94b6917f0e"
+    },
+    {
+      "bytes": 49227,
+      "path": "bridge/information/service.py",
+      "sha256": "52a52e465b5c91a9cadd2c871fd81fa3497ceee928eba2d446caa39e5b9e3c29"
+    },
+    {
+      "bytes": 21129,
+      "path": "bridge/information/tools.py",
+      "sha256": "743c85798a9d38b2bef91e1f09e235061bffa0737b338c3d8d09c193aa2fed3b"
+    },
+    {
+      "bytes": 1437103,
+      "path": "bridge/diplomacy.py",
+      "sha256": "c65e36cb6443cd34394cf12b2da471c688bafac5456a6773ba136e8db195205e"
+    },
+    {
+      "bytes": 91247,
+      "path": "bridge/diplomacy_journal.py",
+      "sha256": "0caa09ba065cfd2d544bf268cf664032cb28bb9a2359e0ae0101512ce0cc0c7f"
+    },
+    {
+      "bytes": 18972,
+      "path": "tools/serve_information.py",
+      "sha256": "f8b85063127826e4a8d4e44abfe8357adf3e0b73a35798c1e84865f8b8243ea5"
+    },
+    {
+      "bytes": 12832,
+      "path": "work/validate_information_live.py",
+      "sha256": "478938d2f709445ccf8f2b7228e1665659f0b75a82dea4944efed37974373b00"
+    },
+    {
+      "bytes": 21665,
+      "path": "work/run_alliance_inbound_response.py",
+      "sha256": "75cbe9f41460413c8f3aeb7116da32b51e54966419b19601ceff9920dd6bf48e"
+    },
+    {
+      "bytes": 2818,
+      "path": "work/local_config.py",
+      "sha256": "55a3bce5a2bf98f83c58e27884699c780456ea40b84d11bcac5fe78082262001"
+    }
+  ],
+  "explicit_live_guard": "--run",
+  "game_executable": {
+    "bytes": 38463016,
+    "path": "D:\\Downloads\\Europa Universalis IV（1.37.4）\\Europa Universalis IV\\eu4.exe",
+    "sha256": "b23fa0e1f698d31b01cdd1c3817a675805d8c6286cb66f9c231e6e2a42544d77"
+  },
+  "helper": {
+    "bytes": 63372,
+    "explicit_live_guard": "--run",
+    "live_cli": "python work/live_information_country_rivals.py --installation work/runtime/diplomacy-observer-20261028-information-resources-v30-005/installation.json --source-audit work/runtime/information-diplomacy-state-20261028-001/rivals-source-001/report-002.json --preflight-receipt stage/live-helper-review-001/preflight-001.json --output work/runtime/information-diplomacy-state-20261028-001/live-acceptance-001 --run",
+    "path": "work/live_information_country_rivals.py",
+    "sha256": "26f950f01ea57f980af8fac8ba364cd1a5db01868c333bfd6e4b853e85785db0"
+  },
+  "independent_expected": {
+    "checkpoint_date": "1456.12.9",
+    "checkpoint_sha256": "c65f8c991420338465888d8a55f9487da3eb6ab3aca65872ae1f58c6ff850a5d",
+    "evidence_kind": "independent_saved_checkpoint_owner_to_target_scan",
+    "outgoing_rivals": [],
+    "public_field": {
+      "basis": "native_outgoing_rival_membership",
+      "complete": true,
+      "direction": "outgoing_declared_by_country",
+      "partial": false,
+      "period": "current",
+      "scale": 1,
+      "status": "known",
+      "unit": "country_tags",
+      "value": [],
+      "value_origin": "copied_native_cache"
+    }
+  },
+  "installation_identity": {
+    "bytes": 21040,
+    "creation_filetime": 134376348223436218,
+    "dll_sha256": "92fa4ea3b158e2ff42a69bce1cbbf7053b7f3a0ac128b25c9e5b7d1fb4bdc3ce",
+    "experiment_id": "diplomacy-observer-20261028-information-resources-v30-005",
+    "game_sha256": "b23fa0e1f698d31b01cdd1c3817a675805d8c6286cb66f9c231e6e2a42544d77",
+    "manifest": {
+      "bytes": 20703,
+      "path": "C:\\Users\\wangyufei\\Documents\\ChatGPT\\欧陆风云4\\work\\runtime\\diplomacy-observer-20261028-information-resources-v30-005\\build-manifest.json",
+      "sha256": "753e456808fec521600a9ded95a6151e6a0e492a3577558d9c97e7ec139408a2"
+    },
+    "manifest_version": 30,
+    "native_source_count": 119,
+    "path": "C:\\Users\\wangyufei\\Documents\\ChatGPT\\欧陆风云4\\work\\runtime\\diplomacy-observer-20261028-information-resources-v30-005\\installation.json",
+    "pid": 27716,
+    "session_id": "27716-1dd6693a61275ba",
+    "sha256": "8669d71cfcf351ba7b53b394414930886002afac217efdbffab2f1c4f951d21b"
+  },
+  "mode": "offline-preflight-only",
+  "profile": {
+    "bytes": 3890,
+    "path": "bridge/information/profiles/country-rivals-memory-1374.json",
+    "sha256": "a40515fd3e19d59dd73bde7bde442f155c04fd91ef6c3cd786ddaa481690708c"
+  },
+  "schema": "information.country_rivals.live_helper_preflight.v1",
+  "side_effects": {
+    "diplomacy_dispatched": false,
+    "information_tick_sent": false,
+    "mcp_started": false,
+    "native_game_calls": false,
+    "rpm_capture_performed": false,
+    "target_memory_writes": false
+  },
+  "source_audit": {
+    "bytes": 220971,
+    "path": "C:\\Users\\wangyufei\\Documents\\ChatGPT\\欧陆风云4\\work\\runtime\\information-diplomacy-state-20261028-001\\rivals-source-001\\report-002.json",
+    "sha256": "6d1af31e9e9630b3de57edf22ae495dc93eab2ee336e819df1604e967533d4d5"
+  },
+  "status": "passed"
+}

@@ -220,7 +220,7 @@ static bool execution_peace_pending_war_id(const AlliancePayload& payload,
         || !peace_query_pair_references(actor,static_cast<unsigned>((payload.recipient20>>32)&0xffffu),left)
         || !peace_query_pair_references(recipient,static_cast<unsigned>((payload.actor10>>32)&0xffffu),right)
         || !peace_query_reference_sets_equal(left,right) || left.count!=1) return false;
-    const auto* entry=peace_query_register_war(left.references[0]);
+    const auto entry=peace_query_register_war(left.references[0]);
     if (!entry) return false;
     std::memcpy(war_id,entry->public_id,sizeof(war_id));
     return true;

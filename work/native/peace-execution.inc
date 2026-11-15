@@ -282,7 +282,8 @@ static void execution_peace_inbound_unknown(const ResponseRequest& request,
 }
 
 static void execution_peace_response(const ExecutionBinding& binding,
-    int32_t state,bool war_after,bool verified,bool pending_removed) noexcept {
+    int32_t state,bool war_after,bool verified,bool pending_removed,
+    const ExecutionGameDate* observed_begin=nullptr) noexcept {
     const bool bound=binding.consumed && binding.transport_verified && !binding.invalidated;
     const bool baseline=binding.alliance_before_verified && binding.alliance_before;
     if (binding.inbound_response_request) {
@@ -312,7 +313,8 @@ static void execution_peace_response(const ExecutionBinding& binding,
             verified && binding.alliance_before_verified?"true":"false",response?"true":"false",bound?"true":"false",
             accepted || rejected?"true":"false",pending_removed?"true":"false",
             terms_verified?"true":"false",context.json,effects.text());
-        if (written>=0 && static_cast<size_t>(written)<message.capacity) line(message.text);
+        if (written>=0 && static_cast<size_t>(written)<message.capacity)
+            execution_result_line(message.text,message.capacity,execution_result_game_date(observed_begin));
         return;
     }
     const bool settled=verified && bound && baseline && !war_after && (state==0 || state==2);
@@ -336,7 +338,8 @@ static void execution_peace_response(const ExecutionBinding& binding,
         state,outcome,binding.alliance_before?"true":"false",war_after?"true":"false",
         verified?"true":"false",bound?"true":"false",settled?"true":"false",
         settled && (binding.peace_request.white_peace || effects.terms_verified)?"true":"false",effects.text());
-    if (written>=0 && static_cast<size_t>(written)<message.capacity) line(message.text);
+    if (written>=0 && static_cast<size_t>(written)<message.capacity)
+        execution_result_line(message.text,message.capacity,execution_result_game_date(observed_begin));
 }
 
 static void execution_peace_pending_results() noexcept {
@@ -577,7 +580,7 @@ static bool execution_peace_country_inbound_fixture(const char* wire,DWORD size)
     const auto& scenario=scenarios[selected];
     uint64_t actor=0,recipient=0; uintptr_t country=0;
     PeaceWarReferenceList pair{};
-    const PeaceWarRegistryEntry* war=nullptr;
+    std::optional<PeaceWarRegistryEntry> war;
     if (alliance_query_country(scenario.actor,actor) && alliance_query_country("FRA",recipient)
         && peace_query_country_pointer(actor,country)
         && peace_query_pair_references(country,static_cast<unsigned>((recipient>>32)&0xffffu),pair)
@@ -643,7 +646,7 @@ static bool execution_peace_inbound_fixture(const char* wire,DWORD size) noexcep
         }
         uint64_t actor=0,recipient=0; uintptr_t country=0;
         PeaceWarReferenceList pair{};
-        const PeaceWarRegistryEntry* selected=nullptr;
+        std::optional<PeaceWarRegistryEntry> selected;
         if (alliance_query_country("ENG",actor) && alliance_query_country("FRA",recipient)
             && peace_query_country_pointer(actor,country)
             && peace_query_pair_references(country,static_cast<unsigned>((recipient>>32)&0xffffu),pair)
@@ -690,7 +693,7 @@ static bool execution_peace_inbound_fixture(const char* wire,DWORD size) noexcep
         }
         uint64_t actor=0,recipient=0; uintptr_t country=0;
         PeaceWarReferenceList pair{};
-        const PeaceWarRegistryEntry* selected=nullptr;
+        std::optional<PeaceWarRegistryEntry> selected;
         if (alliance_query_country("ENG",actor) && alliance_query_country("FRA",recipient)
             && peace_query_country_pointer(actor,country)
             && peace_query_pair_references(country,static_cast<unsigned>((recipient>>32)&0xffffu),pair)
@@ -738,7 +741,7 @@ static bool execution_peace_inbound_fixture(const char* wire,DWORD size) noexcep
         }
         uint64_t actor=0,recipient=0; uintptr_t country=0;
         PeaceWarReferenceList pair{};
-        const PeaceWarRegistryEntry* selected=nullptr;
+        std::optional<PeaceWarRegistryEntry> selected;
         if (alliance_query_country("ENG",actor) && alliance_query_country("FRA",recipient)
             && peace_query_country_pointer(actor,country)
             && peace_query_pair_references(country,static_cast<unsigned>((recipient>>32)&0xffffu),pair)
@@ -824,7 +827,7 @@ static bool execution_peace_inbound_fixture(const char* wire,DWORD size) noexcep
     uint64_t actor=0,recipient=0; uintptr_t country=0;
     const char* proposer=bur_white?"BUR":religion_small_offer?"LEI":"ENG";
     PeaceWarReferenceList pair{};
-    const PeaceWarRegistryEntry* selected=nullptr;
+    std::optional<PeaceWarRegistryEntry> selected;
     if (alliance_query_country(proposer,actor) && alliance_query_country("FRA",recipient)
         && peace_query_country_pointer(actor,country)
         && peace_query_pair_references(country,static_cast<unsigned>((recipient>>32)&0xffffu),pair)

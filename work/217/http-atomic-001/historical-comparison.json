@@ -1,0 +1,36 @@
+{
+  "schema": "http-atomic-001-historical-comparison-v1",
+  "prior_artifact": {
+    "junit": "work/runtime/information-http-rejection-20261025-001/full-pytest-001.xml",
+    "junit_sha256": "d5474607af5f3c93bc7e0fe262e5f861e0dd10d18e2a2d42effb1e9ddfdde6e0",
+    "timestamp_local": "2026-10-25T16:06:31.356365+08:00",
+    "hostname": "LAPTOP-K7JTN3I6",
+    "command": "python -m pytest -q bridge/tests --junitxml=.../full-pytest-001.xml",
+    "full_suite_result": {
+      "tests": 4448,
+      "failures": 107,
+      "errors": 35
+    },
+    "this_node": {
+      "result": "passed",
+      "duration_seconds": 0.023
+    },
+    "python_executable": "C:\\Users\\wangyufei\\anaconda3\\envs\\research\\python.exe",
+    "python_and_pytest_versions_recorded": false,
+    "temp_environment_recorded": false
+  },
+  "current_artifact": {
+    "junit": "work/217/http-atomic-001/junit.xml",
+    "run_receipt": "work/217/http-atomic-001/run-receipt.json",
+    "this_node": {
+      "result": "passed",
+      "duration_seconds": 0.05
+    },
+    "python_version": "3.11.15",
+    "pytest_version": "9.1.1",
+    "platform": "Windows-10-10.0.26200-SP0",
+    "python_executable": "C:\\Users\\wangyufei\\anaconda3\\envs\\research\\python.exe",
+    "temp_environment": "TEMP, TMP, TMPDIR, pytest basetemp, and Python cache are under work/217/http-atomic-001"
+  },
+  "interpretation": "The available prior full-suite artifact shows this exact test passing, not failing, and uses the same host name and Python executable path. It does not record interpreter/pytest versions or temp variables. The latest HANDOFF notes a broad 200-failure baseline but does not point to an exact single-case result for this node. Therefore this run establishes a current isolated pass; the available artifacts do not establish an environment change that explains a prior failure."
+}

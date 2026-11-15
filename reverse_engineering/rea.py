@@ -25,6 +25,8 @@ from .pe_ranges import unwind_ranges
 
 PRESET = "eu4-declared-seeds-pdata-noanalysis-v2"
 MEMORY_LIMIT = 1024**3
+JAVA_HEAP_CHOICES = ("256M", "384M", "512M")
+DEFAULT_JAVA_HEAP = "512M"
 
 
 def _hash(path: Path) -> str:
@@ -76,7 +78,11 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--config", type=Path, default=Path.home() / ".codex/config.toml")
     parser.add_argument("--output", type=Path, help="新输出目录；已有目录不会覆盖")
     parser.add_argument("--timeout", type=int, default=180, help="首个查询时限，秒；允许 30–900")
+    parser.add_argument("--java-heap", choices=JAVA_HEAP_CHOICES, default=DEFAULT_JAVA_HEAP,
+                        help="持久化缓存查询的 Java heap；按需 seeded 模式仅支持默认 512M")
     args = parser.parse_args(argv)
+    if args.java_heap != DEFAULT_JAVA_HEAP and (args.seeded or args.seed):
+        parser.error("按需 seeded 模式只支持默认 --java-heap 512M")
     try:
         import psutil
     except ImportError:
@@ -91,6 +97,8 @@ def main(argv: list[str] | None = None) -> int:
         try:
             if args.cache or latest_cache() is not None:
                 return query(args)
+            if args.java_heap != DEFAULT_JAVA_HEAP:
+                parser.error("非默认 --java-heap 只支持已发布的完整缓存查询")
         except (CacheError, OSError, ValueError, KeyError) as error:
             parser.error(str(error))
     registry = load_catalog()
@@ -148,7 +156,7 @@ def main(argv: list[str] | None = None) -> int:
     environment.update({"EU4_REA_PACKAGE_ROOT": str(package), "REA_GHIDRA_SEED_FILE": str(seeds),
                         "EU4_REA_DECODE_SCRIPT": str(decode_script), "EU4_REA_RANGES": str(range_file),
                         "REA_GHIDRA_STARTUP_TIMEOUT_MS": str(args.timeout * 1000),
-                        "GHIDRA_HEADLESS_MAXMEM": "512M"})
+                        "GHIDRA_HEADLESS_MAXMEM": args.java_heap})
     procedure = image_base + int(str(index[args.node]["rva"]), 0)
     command = [node_command, "--import", loader.as_uri(), *cli_arguments[:-1],
                "function", str(target), f"{procedure:#x}", "--provider", "ghidra", "--format", "json"]
@@ -158,7 +166,7 @@ def main(argv: list[str] | None = None) -> int:
                "adapter_sha256": _hash(loader), "package_version": package_version,
                "decode_script_sha256": _hash(decode_script), "declared_ranges_sha256": _hash(range_file),
                "unwind_ranges_rva": {f"{begin:#x}": f"{end:#x}" for begin, end in ranges.values()},
-               "java_heap": "512M", "process_memory_limit_bytes": MEMORY_LIMIT,
+               "java_heap": args.java_heap, "process_memory_limit_bytes": MEMORY_LIMIT,
                "timeout_seconds": args.timeout, "global_reference_coverage": "incomplete"}
     (output / "request.json").write_text(json.dumps(request, indent=2), encoding="utf-8")
     started = time.monotonic()

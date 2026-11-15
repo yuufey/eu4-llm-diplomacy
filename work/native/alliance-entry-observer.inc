@@ -17,7 +17,9 @@ static DirectBreakObservation direct_break_events[128]{};
 static unsigned direct_break_head=0,direct_break_size=0;
 static volatile LONG direct_break_dropped=0;
 static const unsigned char direct_break_signature[15]={0x48,0x89,0x5c,0x24,0x08,0x48,0x89,0x6c,0x24,0x10,0x48,0x89,0x74,0x24,0x18};
+#ifndef BRIDGE_RIVAL_RECORD_OBSERVATION
 static unsigned char direct_break_patch[15]{};
+#endif
 static bridge_entry_patch::PatchPlan direct_break_patch_plan{};
 static bool direct_break_installed=false;
 
@@ -92,6 +94,11 @@ static bool direct_break_install() {
     unsigned char actual[15]{};
     auto target=reinterpret_cast<unsigned char*>(base+0x3d2350);
     if (!read(reinterpret_cast<uintptr_t>(target),actual) || memcmp(actual,direct_break_signature,15)) return false;
+#ifdef BRIDGE_RIVAL_RECORD_OBSERVATION
+    // The rival record observer owns this same entry and its unwind-aware
+    // trampoline. It also emits the existing before-write observation.
+    return true;
+#else
     auto trampoline=static_cast<unsigned char*>(VirtualAlloc(nullptr,29,MEM_COMMIT|MEM_RESERVE,PAGE_READWRITE));
     if (!trampoline) return false;
     memcpy(trampoline,direct_break_signature,15); absolute_jump(trampoline+15,reinterpret_cast<uintptr_t>(target+15));
@@ -117,4 +124,5 @@ static bool direct_break_install() {
         line(message);
     }
     return result.success;
+#endif
 }

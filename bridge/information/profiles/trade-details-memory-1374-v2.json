@@ -1,0 +1,352 @@
+{
+  "profile_id": "trade-details-memory-1374-v2",
+  "game_version": "1.37.4",
+  "executable": {
+    "sha256": "b23fa0e1f698d31b01cdd1c3817a675805d8c6286cb66f9c231e6e2a42544d77",
+    "image_base_va": "0x140000000"
+  },
+  "source_index": {
+    "source_index_id": "trade-details-source-index-002",
+    "path": "work/runtime/information-trade-source-details-20261027-001/trade-details-source-index-002.json",
+    "sha256": "50ad236e23c0479c60a04aa7741db99e1f2c33c87e615596e24f826f419ccb6a"
+  },
+  "layout": {
+    "entry_size_bytes": 192,
+    "share_offset": "0x2c",
+    "share_width": 4,
+    "share_signed": true,
+    "source_offsets": {
+      "TP_PROVINCE_POWER": "0x28",
+      "TP_SHIP_POWER": "0x1c",
+      "MERCHANT_DOWNSTREAM_BONUS": "0x40"
+    },
+    "source_width": 4,
+    "source_signed": true,
+    "source_conditions": {
+      "TP_PROVINCE_POWER": "signed_i32(entry+0x28) != 0",
+      "TP_SHIP_POWER": "signed_i32(entry+0x1c) != 0",
+      "MERCHANT_DOWNSTREAM_BONUS": "signed_i32(entry+0x40) > 0"
+    },
+    "capital": {
+      "database_global_rva": "0x233d8b0",
+      "table_offset": "0x118",
+      "country_anchor_offset": "0x14c8",
+      "node_identity_offset": "0xe8",
+      "scalar_rva": "0x233f2f0",
+      "scalar_width": 4,
+      "scalar_signed": true,
+      "scalar_scale": 1000,
+      "condition": "u64(country_selected+0x14c8)+0xe8 == supplied_node_pointer"
+    },
+    "dynamic": {
+      "link_head_offset": "0x90",
+      "link_item_offset": "0x0",
+      "link_next_offset": "0x10",
+      "item_value_offset": "0x34",
+      "name_object_offset": "0x10",
+      "name_capacity_offset_from_object": "0x18",
+      "name_heap_pointer_offset_from_object": "0x0",
+      "name_inline_pointer": "object_base",
+      "name_inline_threshold": 16,
+      "name_terminator": "NUL",
+      "name_max_bytes": 1024,
+      "max_items_per_node": 64,
+      "max_items_global": 256,
+      "max_extension_read_bytes_per_pass": 131072,
+      "raw_value_width": 4,
+      "raw_value_signed_view": true,
+      "raw_value_scale": 1000,
+      "raw_value_unit": "unknown",
+      "name_semantics": "dynamic lookup key candidate; not proven display text or template"
+    },
+    "entry_table_offset": "0x18",
+    "entry_stride": "0xc0",
+    "node_definition_offset": "0xa8",
+    "definition_key_offset": "0x10",
+    "predicate_true_rva": "0x8f440",
+    "predicate_false_rva": "0x8f450",
+    "reused_graph_profile_sha256": "2d04808a1e24ecaf7cb7cf162743f7ada7412fa95522ce324f9e5959bca522aa",
+    "signed": true
+  },
+  "semantics": {
+    "basis": "native_trade_node_share_source_capital_and_dynamic_caches",
+    "unit": "mixed",
+    "scale": 1000,
+    "period": "current",
+    "value_origin": "copied_native_cache",
+    "freshness": "partial_cache_observation",
+    "complete": false,
+    "field_units": {
+      "shares": {
+        "unit": "ratio",
+        "scale": 1000,
+        "raw": "signed32 entry+0x2c"
+      },
+      "sources": {
+        "unit": "trade_power",
+        "scale": 1000,
+        "raw": "signed32 entry source offsets"
+      },
+      "TRADE_POWER_CAPITAL": {
+        "unit": "trade_power",
+        "scale": 1000,
+        "raw": "signed32 [module+0x233f2f0] when anchor identity matches"
+      },
+      "dynamic_sources": {
+        "unit": "unknown",
+        "scale": 1000,
+        "raw": "signed32 view of item+0x34; preserve raw bits"
+      }
+    }
+  },
+  "code_guards": [
+    {
+      "name": "share_percentage_raw_chain",
+      "kind": "complete_fixed_point_share_percentage_path",
+      "rva": "0xb58e45",
+      "rva_end_exclusive": "0xb58ec9",
+      "va": "0x140b58e45",
+      "va_end_exclusive": "0x140b58ec9",
+      "hex": "6b462c644c896d8f660f6f05db8d2601f30f7f459f44886d8f0fb64dafba2d00000085c00f48ca884daf8bf0f7de85c00f49f0488d7daf488d4db0480f48f9b8d34d6210f7ee8bcac1f9068bc1c1e81f03c8894d6f488bd7e8fed2ba0044382f740848ffc7803f0075f869456fe80300002bf08d8ee8030000488bd7e8dad2ba00c6072e",
+      "sha256": "5a7f17bcc8b7deb1af1e39aaa1532fa30e9b62f165e2ca489fc70949b40e358b",
+      "address_semantics": "RVA/VA retained separately; end is exclusive; bytes contain no ASLR absolute pointer"
+    },
+    {
+      "name": "share_percentage_label_row",
+      "kind": "complete_share_label_and_formatter_row",
+      "rva": "0xb58efc",
+      "rva_end_exclusive": "0xb58f13",
+      "va": "0x140b58efc",
+      "va_end_exclusive": "0x140b58f13",
+      "hex": "4c8d05d99a0d01488d15defc1801488d4df7e8bd5d53ff",
+      "sha256": "0762247f346eb53c2ed2c31fde2ffc0f9f405bc65d6a42d62f88a5698b0210df",
+      "address_semantics": "RVA/VA retained separately; end is exclusive; bytes contain no ASLR absolute pointer"
+    },
+    {
+      "name": "income_return_separation_ui_path",
+      "kind": "complete_income_key_before_nonshare_return",
+      "rva": "0x101da77",
+      "rva_end_exclusive": "0x101db29",
+      "va": "0x14101da77",
+      "va_end_exclusive": "0x14101db29",
+      "hex": "488d153a21d30041ff90c8000000488b10488bc8ff92b000000083f801488b4f404c8b010f85cc000000488d158853d20041ff9098000000488bd84c8975d748c745ef0f00000048c745e70100000066c745d7a4004c8b47584d8b40204c8974242041b101488d5567488b4f60e817b2b3ff488bd0488d4d17e87bf6ffff904c8d45d7488bd0488d4df7e83a620cff904533c0488bd0488bcbe8fbd1500090488d4df7e8417b07ff90488d4d17e8377b07ff",
+      "sha256": "bed5b8624bb5560cd22a599de2b6942f225efac0a94ac54a927c88829982052c",
+      "address_semantics": "RVA/VA retained separately; end is exclusive; bytes contain no ASLR absolute pointer"
+    },
+    {
+      "name": "tp_province_power_caller_condition",
+      "kind": "complete_source_caller_condition_and_formatter",
+      "rva": "0xb57763",
+      "rva_end_exclusive": "0xb577b6",
+      "va": "0x140b57763",
+      "va_end_exclusive": "0x140b577b6",
+      "hex": "418b4528488d356eb20d014c8d3d83ef7c0185c00f84fd0000008985c00000004c8974242041b101458d4601488d95c0000000488d4db8e8b1519600904c8bc84c8bc6488d15fb131901488d4dd8e81a7553ff",
+      "sha256": "ddab87bcd3b872c30111df79dc137790d895af6a6b2d0cad9248ca888ca9b89b",
+      "address_semantics": "RVA/VA retained separately; end is exclusive; bytes contain no ASLR absolute pointer"
+    },
+    {
+      "name": "tp_ship_power_caller_condition",
+      "kind": "complete_source_caller_condition_and_formatter",
+      "rva": "0xb57890",
+      "rva_end_exclusive": "0xb578e1",
+      "va": "0x140b57890",
+      "va_end_exclusive": "0x140b578e1",
+      "hex": "0f840d0100008b481c85c90f8402010000898dc00000004c8974242041b10141b801000000488d95c0000000488d4c2458e88a509600904c8bc84c8d050bb10d01488d1550121901488d4d98e8ef7353ff",
+      "sha256": "109a759ca60fd266b17996a03268f2123a0214c31b4046c6012b84fcc2f2ebe2",
+      "address_semantics": "RVA/VA retained separately; end is exclusive; bytes contain no ASLR absolute pointer"
+    },
+    {
+      "name": "merchant_downstream_bonus_caller_condition",
+      "kind": "complete_source_caller_condition_and_formatter",
+      "rva": "0xb57e49",
+      "rva_end_exclusive": "0xb57e94",
+      "va": "0x140b57e49",
+      "va_end_exclusive": "0x140b57e94",
+      "hex": "418b454085c00f8e000100008985c000000033db48895c242041b101448d4301488d95c0000000488d4db8e8d74a9600904c8bc84c8d0558ab0d01488d15c50c1901488d4dd8e83c6e53ff",
+      "sha256": "6647e25a184459c2d70fb6a909909ece9dccf5aee6fd07156dc163b95d56a933",
+      "address_semantics": "RVA/VA retained separately; end is exclusive; bytes contain no ASLR absolute pointer"
+    },
+    {
+      "name": "fixed_point_formatter_14bc950",
+      "kind": "complete_pdata_formatter_function",
+      "rva": "0x14bc950",
+      "rva_end_exclusive": "0x14bd0f1",
+      "va": "0x1414bc950",
+      "va_end_exclusive": "0x1414bd0f1",
+      "hex": "48895c2418488954241048894c24085556574154415541564157488d6c24e04881ec200100004d63e0488bfa33f68974242039320f8542030000488d5eff488b95800000004885d2744548837a18107203488b124889742428660f6f057f529000f30f7f44243840887424284c8bc39049ffc04238340275f7488d4c2428e83d87bdfe4c8d6c2428be01000000eb21488974246848c745800f000000488974247840887424684c8d6c2468be02000000897424208b0748c744244800000000660f6f0519529000f30f7f442458c6442448000fb64d88ba2d00000085c00f48ca884d88448bf041f7de85c0440f49f0488d7d88488d4d89480f48f9b8d34d621041f7ee448bfa41c1ff06418bc7c1e81f4403f8488bd7418bcfe832972400803f00740848ffc7803f0075f84183fcff74294585e47e614169c7e8030000442bf0418d8ee8030000488bd7e801972400c6072e41c6443c0100eb3d4169c7e8030000442bf0418d8ee8030000488bd7e8dd962400c6072e807f0330751b807f02307406c6470300eb0f807f01307505c60700eb04c6470200488d45880f1f44000048ffc3803c180075f74c8bc3488d5588488d4c2448e80686bdfe904c8d442448488d157df38c00488d4dd8e8e07fbdfe904d8bc5488bd0488d4db0e81081bdfe90488b4d6033d248891148895110488951180f10000f11010f1048100f1149104889501048c740180f000000881083ce4089742420448d4202488d15a4e27700e87b67bdfe83e6bf83ce04488b55c84883fa10723148ffc2488b4db0488bc14881fa0010000072194883c227488b49f8482bc14883c0f84883f81f0f870a050000e86ac82700660f6f0572509000f30f7f45c0c645b000488d4dd8e8908abdfe90488b5424604883fa10723248ffc2488b4c2448488bc14881fa0010000072194883c227488b49f8482bc14883c0f84883f81f0f87b8040000e812c82700660f6f051a509000f30f7f442458c64424480040f6c602744083e6fd488b55804883fa10723348ffc2488b4c2468488bc14881fa0010000072194883c227488b49f8482bc14883c0f84883f81f0f8766040000e8bac727009040f6c601743d488b5424404883fa10723248ffc2488b4c2428488bc14881fa0010000072194883c227488b49f8482bc14883c0f84883f81f0f8728040000e876c72700488b5d60488bc3488b9c24700100004881c420010000415f415e415d415c5f5e5dc3488d0df5807800488d05eed280004584c9480f45c1488945d0488d05f05378004c8d3de55378004c0f45f8488974244848c74424600f00000048c744245802000000b8a72100006689442448408874244a48c7c3ffffffff488b95800000004885d2744548837a18107203488b1248897588660f6f05ea4e9000f30f7f4598c64588004c8bc349ffc042803c020075f6488d4d88e8ab83bdfe488d4588488945a841be08000000eb22488975b048c745c80f000000488975c0c645b000488d45b0488945a841be1000000044897424208b074889742468660f6f05854e9000f30f7f442478c6442468000fb64c2428ba2d00000085c00f48ca884c24288bf0f7de85c00f49f0488d7c2428488d4c2429480f48f9b8d34d6210f7ee448bea41c1fd06418bc5c1e81f4403e8488bd7418bcde89e932400803f00740848ffc7803f0075f84183fcff74274585e47e5d4169c5e80300002bf08d8ee8030000488bd7e86f932400c6072e41c6443c0100eb3b4169c5e80300002bf08d8ee8030000488bd7e84d932400c6072e807f0330751b807f02307406c6470300eb0f807f01307505c60700eb04c6470200488d4424284c8bc39049ffc042803c000075f6488d542428488d4c2468e87782bdfe90488b45688b00c1e81f34014c0f457dd048c744242800000000660f6f05754d9000f30f7f442438c64424280048ffc341803c1f0075f64c8bc3498bd7488d4c2428e83082bdfe904c8d442468488d542428488d4df8e84c6ec2fe904c8b45a8488bd0488d4dd8e83b7dbdfe904c8d442448488bd0488b5d60488bcbe8266ec2fe4183ce04488b55f04883fa10723148ffc2488b4dd8488bc14881fa0010000072194883c227488b49f8482bc14883c0f84883f81f0f877f010000e8c7c42700660f6f05cf4c9000f30f7f45e8c645d800488d4df8e8ed86bdfe90488b5424404883fa10723348ffc2488b4c2428488bc14881fa0010000072194883c227488b49f8482bc14883c0f84883f81f0f872d010000e86fc4270090488b55804883fa10723348ffc2488b4c2468488bc14881fa0010000072194883c227488b49f8482bc14883c0f84883f81f0f87f6000000e832c427009041f6c61074404183e6ef488b55c84883fa10723248ffc2488b4db0488bc14881fa0010000072194883c227488b49f8482bc14883c0f84883f81f0f87b6000000e8ecc327009041f6c6087438488b55a04883fa10722e48ffc2488b4d88488bc14881fa0010000072154883c227488b49f8482bc14883c0f84883f81f777ee8aec3270090488b5424604883fa100f822cfcffff48ffc2488b4c2448488bc14881fa0010000072154883c227488b49f8482bc14883c0f84883f81f770ae870c32700e9f9fbffffe8124b580090e80c4b580090e8064b580090e8004b580090e8fa4a580090e8f44a580090e8ee4a580090e8e84a580090e8e24a580090e8dc4a5800cc",
+      "sha256": "60dd94dd7c17c89de30515eda804d83edeb384257aa0204069d6471ff2362300",
+      "address_semantics": "RVA/VA retained separately; end is exclusive; bytes contain no ASLR absolute pointer"
+    },
+    {
+      "name": "predicate_true",
+      "kind": "predicate_leaf",
+      "rva": "0x8f440",
+      "rva_end_exclusive": "0x8f443",
+      "va": "0x14008f440",
+      "va_end_exclusive": "0x14008f443",
+      "hex": "b001c3",
+      "sha256": "e18aacce29affcdddaa5f641ac1ec12552e0fe9d066e6408941b1792818b8619",
+      "address_semantics": "RVA/VA retained separately; end is exclusive; bytes contain no ASLR absolute pointer"
+    },
+    {
+      "name": "predicate_false",
+      "kind": "predicate_leaf",
+      "rva": "0x8f450",
+      "rva_end_exclusive": "0x8f453",
+      "va": "0x14008f450",
+      "va_end_exclusive": "0x14008f453",
+      "hex": "32c0c3",
+      "sha256": "01cb47d078b4841b8408ec4fe278efa83115c6f6e101972987507d2b2b57dcf0",
+      "address_semantics": "RVA/VA retained separately; end is exclusive; bytes contain no ASLR absolute pointer"
+    },
+    {
+      "name": "capital_row_caller_context",
+      "kind": "complete_capital_selector_identity_and_formatter_caller",
+      "rva": "0xb57960",
+      "rva_end_exclusive": "0xb57a1d",
+      "va": "0x140b57960",
+      "va_end_exclusive": "0x140b57a1d",
+      "hex": "8b4c2438488bc14881fa0010000072194883c227488b49f8482bc14883c0f84883f81f0f878f090000e8921abe0090488d4d98e8c8dc53ff90488d4c2458e8bddc53ff488b05065f7e01488d34f5000000004889b5d0000000488b8018010000488b0c06488b81c81400004c39a0e80000000f85060100008b0512797e018985c00000004c8974242041b10141b801000000488d95c0000000488d4db8e84e4f9600904c8bc84c8d05cfaf0d01488d1524111901488d4dd8e8b37253ff",
+      "sha256": "2d44a5b0676024b96f7011d616b0af6475e157cc07110741bf92a4de26a16414",
+      "source_report": "information-trade-capital-source-001",
+      "source_report_sha256": "2d0b840411b21b1701ee1c356718d261aa640b9fb0e3b76d71bf6350c0e89d8a",
+      "address_semantics": "RVA/VA retained separately; half-open range; bounded bytes contain no ASLR absolute pointer claim"
+    },
+    {
+      "name": "dynamic_dynamic_list_loop",
+      "kind": "complete_bounded_dynamic_source_path",
+      "rva": "0xb57b5e",
+      "rva_end_exclusive": "0xb57e42",
+      "va": "0x140b57b5e",
+      "va_end_exclusive": "0x140b57e42",
+      "hex": "498b9d9000000049c7c6ffffffff4885db0f84d402000033f6660f1f840000000000488b038b4834898dc0000000488974242041b10141b802000000488d95c0000000488d4d58e8a64d9600488bf033c04889459848c745b00f00000048c745a802000000b93a20000066894d9888459a488b134883c21048837a18107203488b124889442438488944244848c74424500f000000c6442438004d8bc60f1f44000049ffc042803c020075f6488d4c2438e8fcd453ff90488d54243848837c245010480f435424384533c94533c0488d4dd8e86bb7950083cf1033c04889442458488944246848c74424700f0000008844245883cf20897c24304c8d4d984c8d45d8488d4db8e817bf58ff83cf400f1045b80f114424580f104dc80f114c246833c0488945f84889450848c745100f0000008845f80fbaef07897c24304c8bce4c8d442458488d4db8e8d4be58ff0fbaef080f104db80f114df80f1045c80f1145080f114d180f11452833f64889750848c745100f000000408875f80fbaef09897c2430498bd748833d23ea7c0110480f431503ea7c014c8b050cea7c01488d4d18e8ebb553ff488d551848837d3010480f4355184c8b4528488d4c2478e8cfb553ff0fbaf709488b55304883fa10723148ffc2488b4d18488bc14881fa0010000072194883c227488b49f8482bc14883c0f84883f81f0f87cf050000e8c016be000fbaf70783e7df488b5424704883fa10723348ffc2488b4c2458488bc14881fa0010000072194883c227488b49f8482bc14883c0f84883f81f0f8791050000e87c16be0090488d4dd8e8b2d853ff90488b5424504883fa10723348ffc2488b4c2438488bc14881fa0010000072194883c227488b49f8482bc14883c0f84883f81f0f874f050000e83416be0090488b55b04883fa10723248ffc2488b4d98488bc14881fa0010000072194883c227488b49f8482bc14883c0f84883f81f0f8719050000e8f815be0090488d4d58e82ed853ff488b4310488bd84885c00f853efdffff",
+      "sha256": "15452f4740300b56c24ca5e6a805b6f2809db94c5123b1b75425c8a91d8fabe1",
+      "source_report": "information-trade-dynamic-source-001",
+      "source_report_sha256": "22d4b77e06ff39090bd6f93b57be6206b9860ba11f6d0211dee96a61b672caed",
+      "address_semantics": "RVA/VA retained separately; half-open range; bounded bytes contain no ASLR absolute pointer claim"
+    },
+    {
+      "name": "dynamic_dynamic_name_lookup_leaf",
+      "kind": "complete_bounded_dynamic_source_path",
+      "rva": "0x14b33a0",
+      "rva_end_exclusive": "0x14b35ba",
+      "va": "0x1414b33a0",
+      "va_end_exclusive": "0x1414b35ba",
+      "hex": "44894c24204c8944241855565741544155415641574883ec30488d6c2430488b053b47ea00488bf148895d40488bfa4c8bda41bac59d1c81488b080fb60284c074194569d2930100014d8d5b010fbec04433d0410fb60384c075e7418bd2e85d7b2400488bd84885c00f8463010000b810000100e837035800482be0ba24000000488bcb4c8d7c243041c7077eca10a14983c70441c787000001007eca10a1e8a81d58004c8be84d8bf74885c00f84930000000f1f4000660f1f840000000000498d4d01ba24000000e87e1d58004c8be04885c00f84e4000000418bcd488bd32bcb4863f9498bce4c8bc7e8e07e59008b45584a8d0c3789442428498d9700000100488b45504d8bcc4d8bc54889442420e88af6ffff488bc84c8bf0492bcf4881f900fc00007f66498d5c2401ba24000000488bcbe8121d58004c8be84885c00f857affffff4c2bf30f1f80000000000fb6034188041e488d5b0184c075f133c048c746180f00000048890649c7c0ffffffff8806488946100f1f800000000049ffc04338040775f7498bd7eb6e33c048c746180f00000048890649c7c0ffffffff8806488946100f1f84000000000049ffc04338040775f7498bd7eb3e4c2bf30fb6034188041e488d5b0184c075f1eb8d48890649c7c0ffffffff88064889461048c746180f000000660f1f44000049ffc04238040775f7488bd7488bcee86c1bbefe488b5d40488bc6488be5415f415e415d415c5f5e5dc3",
+      "sha256": "4fd95f86bcd07e76e290df69ce57f99a2c951862390d8bd108b9cde541ee3cdd",
+      "source_report": "information-trade-dynamic-source-001",
+      "source_report_sha256": "22d4b77e06ff39090bd6f93b57be6206b9860ba11f6d0211dee96a61b672caed",
+      "address_semantics": "RVA/VA retained separately; half-open range; bounded bytes contain no ASLR absolute pointer claim"
+    },
+    {
+      "name": "dynamic_formatter_kind1_window",
+      "kind": "complete_bounded_dynamic_source_path",
+      "rva": "0x14bca00",
+      "rva_end_exclusive": "0x14bcae7",
+      "va": "0x1414bca00",
+      "va_end_exclusive": "0x1414bcae7",
+      "hex": "897424208b0748c744244800000000660f6f0519529000f30f7f442458c6442448000fb64d88ba2d00000085c00f48ca884d88448bf041f7de85c0440f49f0488d7d88488d4d89480f48f9b8d34d621041f7ee448bfa41c1ff06418bc7c1e81f4403f8488bd7418bcfe832972400803f00740848ffc7803f0075f84183fcff74294585e47e614169c7e8030000442bf0418d8ee8030000488bd7e801972400c6072e41c6443c0100eb3d4169c7e8030000442bf0418d8ee8030000488bd7e8dd962400c6072e807f0330751b807f02307406c6470300eb0f807f01307505c60700eb04c6470200",
+      "sha256": "1c5b734209fc1232943bfedb6b6d77407f11e61f3350e48fdecc1d1c4b206240",
+      "source_report": "information-trade-dynamic-source-001",
+      "source_report_sha256": "22d4b77e06ff39090bd6f93b57be6206b9860ba11f6d0211dee96a61b672caed",
+      "address_semantics": "RVA/VA retained separately; half-open range; bounded bytes contain no ASLR absolute pointer claim"
+    },
+    {
+      "name": "dynamic_formatter_kind2_window",
+      "kind": "complete_bounded_dynamic_source_path",
+      "rva": "0x14bcd9c",
+      "rva_end_exclusive": "0x14bce77",
+      "va": "0x1414bcd9c",
+      "va_end_exclusive": "0x1414bce77",
+      "hex": "8b074889742468660f6f05854e9000f30f7f442478c6442468000fb64c2428ba2d00000085c00f48ca884c24288bf0f7de85c00f49f0488d7c2428488d4c2429480f48f9b8d34d6210f7ee448bea41c1fd06418bc5c1e81f4403e8488bd7418bcde89e932400803f00740848ffc7803f0075f84183fcff74274585e47e5d4169c5e80300002bf08d8ee8030000488bd7e86f932400c6072e41c6443c0100eb3b4169c5e80300002bf08d8ee8030000488bd7e84d932400c6072e807f0330751b807f02307406c6470300eb0f807f01307505c60700eb04c6470200",
+      "sha256": "22dc5481a8b6c87567f381e72ada93df9c29ffad05147c56f1fa51f64b68fdb9",
+      "source_report": "information-trade-dynamic-source-001",
+      "source_report_sha256": "22d4b77e06ff39090bd6f93b57be6206b9860ba11f6d0211dee96a61b672caed",
+      "address_semantics": "RVA/VA retained separately; half-open range; bounded bytes contain no ASLR absolute pointer claim"
+    }
+  ],
+  "localization_guards": [
+    {
+      "native_key": "TP_PROVINCE_POWER",
+      "line": 23,
+      "text": "TP_PROVINCE_POWER:0 \"From Provinces: $VAL$\"",
+      "bytes_hex": "2054505f50524f56494e43455f504f5745523a30202246726f6d2050726f76696e6365733a202456414c2422",
+      "sha256": "16fb697a8fdf1c29e5e1fa550075739c1f950db999a757d325528701ca5b7081",
+      "path": "D:\\Downloads\\Europa Universalis IV（1.37.4）\\Europa Universalis IV\\localisation\\tradenodes_l_english.yml",
+      "file_sha256": "4fa8b83d9266e7e956f745b490c1fde0c3231ac4557dae4a7e8af125919af6df",
+      "evidence_kind": "pinned_disk_localization_label; not a runtime value sample"
+    },
+    {
+      "native_key": "TP_SHIP_POWER",
+      "line": 24,
+      "text": "TP_SHIP_POWER:0 \"From Light Ships: $VAL$\"",
+      "bytes_hex": "2054505f534849505f504f5745523a30202246726f6d204c696768742053686970733a202456414c2422",
+      "sha256": "54971a3aa321d353ccf5390519ade2485b55a882ff15090868165dd97fe678bc",
+      "path": "D:\\Downloads\\Europa Universalis IV（1.37.4）\\Europa Universalis IV\\localisation\\tradenodes_l_english.yml",
+      "file_sha256": "4fa8b83d9266e7e956f745b490c1fde0c3231ac4557dae4a7e8af125919af6df",
+      "evidence_kind": "pinned_disk_localization_label; not a runtime value sample"
+    },
+    {
+      "native_key": "MERCHANT_DOWNSTREAM_BONUS",
+      "line": 149,
+      "text": "MERCHANT_DOWNSTREAM_BONUS:0 \"Transfers from traders downstream: $VAL$\"",
+      "bytes_hex": "204d45524348414e545f444f574e53545245414d5f424f4e55533a3020225472616e73666572732066726f6d207472616465727320646f776e73747265616d3a202456414c2422",
+      "sha256": "20e747ef70d8318c4f8f5417c6e238a30b4ce9ec62bd8fbb92fe5baf5d3ca3e0",
+      "path": "D:\\Downloads\\Europa Universalis IV（1.37.4）\\Europa Universalis IV\\localisation\\tradenodes_l_english.yml",
+      "file_sha256": "4fa8b83d9266e7e956f745b490c1fde0c3231ac4557dae4a7e8af125919af6df",
+      "evidence_kind": "pinned_disk_localization_label; not a runtime value sample"
+    },
+    {
+      "native_key": "TRADE_POWER_CAPITAL",
+      "line": 37,
+      "text": "TRADE_POWER_CAPITAL:0 \"Main Trade City in area: $VAL$\"",
+      "bytes_hex": "2054524144455f504f5745525f4341504954414c3a3020224d61696e205472616465204369747920696e20617265613a202456414c2422",
+      "sha256": "364e31456ea5c8b626c2412641b6467735c17ef2d29d84c38166f96c269236cb",
+      "path": "D:\\Downloads\\Europa Universalis IV（1.37.4）\\Europa Universalis IV\\localisation\\tradenodes_l_english.yml",
+      "file_sha256": "4fa8b83d9266e7e956f745b490c1fde0c3231ac4557dae4a7e8af125919af6df",
+      "evidence_kind": "pinned_disk_localization_label; not a runtime value sample"
+    }
+  ],
+  "provenance": {
+    "share_source": {
+      "path": "work/runtime/information-trade-share-20261027-001/share-source-002.json",
+      "sha256": "1878bcbd2f395b0b01beb1d6b12c73ba527e87d50fff7b85ba0ebeb4c11c8d4d",
+      "bytes": 33379
+    },
+    "power_source": {
+      "path": "work/runtime/information-trade-share-20261027-001/power-sources-source-002.json",
+      "sha256": "952d2bfc5e9d9dfb2e0012d834b0d548a281f0ac29d5e6b5fbfa062f99d010e9",
+      "bytes": 22718
+    },
+    "capital_source": {
+      "path": "work/runtime/information-trade-source-details-20261027-001/capital-source-001.json",
+      "sha256": "2d0b840411b21b1701ee1c356718d261aa640b9fb0e3b76d71bf6350c0e89d8a",
+      "bytes": 22921
+    },
+    "dynamic_source": {
+      "path": "work/runtime/information-trade-source-details-20261027-001/dynamic-source-001.json",
+      "sha256": "22d4b77e06ff39090bd6f93b57be6206b9860ba11f6d0211dee96a61b672caed",
+      "bytes": 23315
+    },
+    "reused_graph_profile": {
+      "path": "bridge/information/profiles/trade-details-memory-1374.json",
+      "sha256": "2d04808a1e24ecaf7cb7cf162743f7ada7412fa95522ce324f9e5959bca522aa",
+      "bytes": 14149
+    },
+    "reused_graph_source_index": {
+      "path": "work/runtime/information-trade-share-20261027-001/trade-details-source-index-001.json",
+      "sha256": "1fa9c3ffa37ab485965b9be1da9bdbb40b2708de8494983ec2d1ce368c6d01f2",
+      "bytes": 23799
+    }
+  },
+  "limits": {
+    "profile_max_bytes": 65536,
+    "max_extension_read_bytes_per_pass": 131072,
+    "dynamic_name_max_bytes": 1024,
+    "dynamic_max_items_per_node": 64,
+    "dynamic_max_items_global": 256,
+    "max_single_rpm_bytes": 65536,
+    "max_total_rpm_bytes": 524288
+  },
+  "production_boundary": "This v2 profile describes the extended raw contract; no production reader is changed or authorized by this generator."
+}

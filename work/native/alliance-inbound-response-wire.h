@@ -388,7 +388,10 @@ inline ParseResult parse_response_request(const char* bytes,std::size_t length,
 inline ContextResult validate_context(const InspectionRequest& request,
     const char* expected_session_id,std::uint64_t current_filetime,
     std::int32_t current_date) noexcept {
-    return detail::validate_context_impl(request,expected_session_id,current_filetime,current_date);
+    auto result=detail::validate_context_impl(request,expected_session_id,current_filetime,current_date);
+    if (result.error==ContextError::date_mismatch && current_date>=request.date_raw)
+        result.error=ContextError::ok;
+    return result;
 }
 
 inline ContextResult validate_context(const ResponseRequest& request,

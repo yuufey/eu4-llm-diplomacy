@@ -25,6 +25,10 @@ PRIVATE_KEYS = {
     "date2c", "envoy30", "native_action", "native_node", "proposal3c",
     "created2c",
 }
+UNVERIFIED_DEADLINE = {
+    'unit': 'game_date_raw', 'scale': 1, 'period': 'proposal',
+    'status': 'unknown', 'reason': 'PROPOSAL_EXPIRY_RULE_NOT_VERIFIED',
+}
 
 
 def _sha256(path: Path) -> str:
@@ -438,7 +442,8 @@ class PeaceConcedeDefeatR52RealTests(unittest.TestCase):
 
         offers, private_context = _replay_inbound_offer(
             data["raw_event_slice"], data["session_id"], data["date_raw"])
-        self.assertEqual([data["public_offer"]], offers)
+        expected_offer = dict(data["public_offer"], deadline=UNVERIFIED_DEADLINE)
+        self.assertEqual([expected_offer], offers)
         self.assertEqual(data["private_context"], private_context)
         public_offer = offers[0]
         self.assertEqual("saved_native_pending", public_offer["source"])
@@ -516,7 +521,8 @@ class PeaceConcedeDefeatR52RealTests(unittest.TestCase):
 
         offers, private_context = _replay_inbound_offer(
             [data["restored_event"]], data["session_id"], data["date_raw"])
-        self.assertEqual([data["public_offer"]], offers)
+        expected_offer = dict(data["public_offer"], deadline=UNVERIFIED_DEADLINE)
+        self.assertEqual([expected_offer], offers)
         self.assertEqual(data["private_context"], private_context)
         self.assertTrue(PRIVATE_KEYS.isdisjoint(
             _all_keys(public_inspection) | _all_keys(public_submission)

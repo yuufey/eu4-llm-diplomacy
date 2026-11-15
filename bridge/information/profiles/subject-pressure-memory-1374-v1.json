@@ -1,0 +1,37 @@
+{
+  "profile_id": "subject-pressure-memory-1374",
+  "profile_version": 1,
+  "support_independence": {
+    "vector_offset": 5736,
+    "count_offset": 5748,
+    "element_stride": 16,
+    "max_entries": 4096
+  },
+  "code_guards": [
+    {
+      "name": "support_actor_owner",
+      "rva": "0x50e1b4",
+      "end_rva_exclusive": "0x50e1f7",
+      "bytes": "498b4f10488b05f1f6e201488b901801000048c1e920480fbfc14c8b34c24983c720498b0f48c1e920480fbfc14c8b2cc24d8da6f81400000fbfc1488b4d6740387138",
+      "sha256": "83fd858fab5e6c0ed2527ab9b363f445b2ba8db5a4dbd9d8e0d942fec6b05b36"
+    },
+    {
+      "name": "support_stop_membership",
+      "rva": "0x50ece8",
+      "end_rva_exclusive": "0x50ed15",
+      "bytes": "498b9424700100004d6384247c01000049c1e0044c03c2493bd0741139020f84d10000004883c210493bd075ef",
+      "sha256": "d40c183b29f888f75e3688c9f0ed23be61f037b46b750f42eb4bfe2dd7f5a832"
+    },
+    {
+      "name": "support_stop_success",
+      "rva": "0x50eddd",
+      "end_rva_exclusive": "0x50ede2",
+      "bytes": "0fb6c3eb02",
+      "sha256": "2fc669672ca07ab81812296772094a740658d6c6b7db65f354de02b81a3663e5"
+    }
+  ],
+  "source_evidence": {
+    "path": "work/runtime/information-subject-support-20261112-001/native-source.json",
+    "sha256": "5d6f16ac39929c71db41defb8d1ae3c047080157f40a1b64a5af75f4ed9ebf9c"
+  }
+}

@@ -1,0 +1,47 @@
+{
+  "profile_id": "war-preparation-memory-1374",
+  "game_version": "1.37.4",
+  "executable": {
+    "sha256": "b23fa0e1f698d31b01cdd1c3817a675805d8c6286cb66f9c231e6e2a42544d77"
+  },
+  "code_guards": [
+    {
+      "name": "war_preparation_token_getter",
+      "rva": "0x4ffe40",
+      "end_rva_exclusive": "0x4ffe46",
+      "bytes": "b8d43b0000c3",
+      "sha256": "2bb3b73a53662ef64ff5104a28642ac150c9e691117d7b01f94979695c0245d9"
+    },
+    {
+      "name": "war_preparation_acceptance",
+      "rva": "0x4ff13b",
+      "end_rva_exclusive": "0x4ff1c9",
+      "bytes": "418b453483f8020f8539050000498bcde840d0feff498b4d20488b0555e7e30148c1e920480fbfc9488b8018010000488b14c8498b451048c1e82098488d0cc0488b8210150000488d0cc869055cf3e301e8030000898590000000488d9590000000e89e655600498b4d20488b0503e7e30148c1e920480fbfc9488b8018010000498b5510488b0cc8e83729eeff",
+      "sha256": "8c314efba8c8a93fdcb1e37c321cd267c1ae69a5e8c3c33607b5c961b7b974c0"
+    },
+    {
+      "name": "war_preparation_setter",
+      "rva": "0x3e1b00",
+      "end_rva_exclusive": "0x3e1b43",
+      "bytes": "48895c2408574883ec20488b0547e3f501488bda488bf94881c1282700008b90d01d000089118b15c4c1f501e8ff630e0148899f2c270000488b5c24304883c4205fc3",
+      "sha256": "6c95fad0c050b9cfe2534b73237a8d193b5344c7287ff3c921ef6c122f741348"
+    },
+    {
+      "name": "war_preparation_current_condition",
+      "rva": "0x4ffa3b",
+      "end_rva_exclusive": "0x4ffa8e",
+      "bytes": "498d8f28270000e82903bdff69f86d010000498d8f28270000e8b703bdff03f84c8b15f603e401498d8ad01d0000e80203bdff69d86d010000498d8ad01d0000e89003bdff8d0c03488d1d2e8873013bf97e54",
+      "sha256": "dc1a3bdfcd083a5bf7da6cd3dfa1b7ace21cc5637cb1721e9d4671fb953d4ae8"
+    }
+  ],
+  "layout": {
+    "deadline_offset": "0x2728",
+    "requester_reference_offset": "0x272c",
+    "active_condition": "deadline_day > current_day"
+  },
+  "evidence": {
+    "directory": "work/runtime/information-war-preparation-20261115-001",
+    "action_token": "0x3bd4",
+    "action_vtable_rva": "0x1c80ec0"
+  }
+}

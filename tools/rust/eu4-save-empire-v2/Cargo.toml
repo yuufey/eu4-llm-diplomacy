@@ -1,0 +1,17 @@
+[package]
+name = "eu4-save-empire-v2"
+version = "0.1.0"
+edition = "2021"
+publish = false
+
+[dependencies]
+eu4save = { path = "../../../third_party/jomini/crates/eu4save" }
+jomini = { path = "../../../third_party/jomini/crates/jomini" }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+
+[profile.release]
+opt-level = 1
+codegen-units = 1
+debug = 0
+lto = false

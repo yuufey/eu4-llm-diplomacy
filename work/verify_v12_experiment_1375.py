@@ -10,8 +10,10 @@ import argparse
 from datetime import datetime, timezone
 import hashlib
 import json
+import os
 from pathlib import Path, PurePosixPath
 import re
+import stat
 import sys
 import tempfile
 
@@ -48,6 +50,9 @@ EFFECTS = {
     "cancel_independence_support": ("support_independence_action", "cancel"),
 }
 
+_IS_WINDOWS = os.name == "nt"
+_REPARSE_POINT_ATTRIBUTE = getattr(stat, "FILE_ATTRIBUTE_REPARSE_POINT", 0x400)
+
 
 def exact_int(value, minimum=0, maximum=2**63 - 1):
     return type(value) is int and minimum <= value <= maximum
@@ -64,6 +69,39 @@ def bounded(path, limit=lab.MAX_LOG):
     return data
 
 
+def _metadata_has_reparse_point(info):
+    """Return whether lstat metadata marks a reparse point; fail closed on Windows."""
+    attributes = getattr(info, "st_file_attributes", None)
+    if attributes is None:
+        require(not _IS_WINDOWS, "Cannot verify Windows reparse-point attributes")
+        return False
+    require(type(attributes) is int and attributes >= 0, "Invalid file attribute metadata")
+    return bool(attributes & _REPARSE_POINT_ATTRIBUTE)
+
+
+def _path_has_link_or_reparse(path):
+    """Reject symlinks and all Windows reparse points, including junctions."""
+    try:
+        info = os.lstat(path)
+    except FileNotFoundError:
+        # Preserve the verifier's later missing-file diagnostics. Existing
+        # ancestors are still checked as relative_path walks toward root.
+        return False
+    except OSError as exc:
+        raise ValueError("Cannot inspect input path metadata") from exc
+
+    if stat.S_ISLNK(info.st_mode):
+        return True
+    junction_check = getattr(path, "is_junction", None)
+    if callable(junction_check):
+        try:
+            if junction_check():
+                return True
+        except (OSError, NotImplementedError, AttributeError) as exc:
+            raise ValueError("Cannot verify junction status") from exc
+    return _metadata_has_reparse_point(info)
+
+
 def relative_path(root, name):
     require(isinstance(name, str) and "\\" not in name and ":" not in name,
             "Expected canonical repository-relative path")
@@ -75,7 +113,7 @@ def relative_path(root, name):
     require(path.resolve().is_relative_to(root), "Input escaped repository")
     cursor = path
     while cursor != root:
-        require(not cursor.is_symlink() and not cursor.is_junction(), "Linked input path forbidden")
+        require(not _path_has_link_or_reparse(cursor), "Linked input path forbidden")
         cursor = cursor.parent
     return path
 

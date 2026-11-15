@@ -26,10 +26,17 @@ MAPPING_FIELDS = ("native_mapping", "native_subject_mapping", "native_special_ma
 
 class ContractError(APIError):
     def __init__(self, code, message):
-        status = 404 if code == "unknown_action" else (413 if code == "request_budget" else
-                 (500 if code in {"source_mismatch", "input_budget", "invalid_contract"} else
-                  (422 if code in {"invalid_parameters", "unsupported_schema"} else 400)))
-        super().__init__(code, message, status)
+        statuses = {
+            "source_unavailable": 503,
+            "unknown_action": 404,
+            "request_budget": 413,
+            "source_mismatch": 500,
+            "input_budget": 500,
+            "invalid_contract": 500,
+            "invalid_parameters": 422,
+            "unsupported_schema": 422,
+        }
+        super().__init__(code, message, statuses.get(code, 400))
 
 
 def require(condition, message, code="invalid_contract"):
@@ -38,8 +45,11 @@ def require(condition, message, code="invalid_contract"):
 
 
 def read_bounded(path: Path, limit: int) -> bytes:
-    with path.open("rb") as stream:
-        data = stream.read(limit + 1)
+    try:
+        with path.open("rb") as stream:
+            data = stream.read(limit + 1)
+    except OSError as exc:
+        raise ContractError("source_unavailable", f"Pinned source {path.name} is unavailable") from exc
     require(len(data) <= limit, f"File exceeds {limit} byte budget: {path.name}", "input_budget")
     return data
 

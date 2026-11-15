@@ -1,0 +1,111 @@
+{
+  "profile_id": "fleet-basing-memory-1374",
+  "profile_version": 1,
+  "source_evidence_kind": "bounded_static_source_plus_accepted_read_only_relation_contract",
+  "game_version": "1.37.4",
+  "executable": {
+    "sha256": "b23fa0e1f698d31b01cdd1c3817a675805d8c6286cb66f9c231e6e2a42544d77",
+    "image_base": "0x140000000"
+  },
+  "globals": {
+    "database_rva": "0x233d8b0",
+    "game_rva": "0x233fe58",
+    "game_date_offset": "0x1dd0"
+  },
+  "country": {
+    "table_offset": "0x118",
+    "count_offset": "0x124",
+    "fullref_offset": "0x20",
+    "max_entries": 4096,
+    "supported_actor": "FRA"
+  },
+  "relation": {
+    "table_offset": "0x1510",
+    "row_stride": "0x48",
+    "row_owner_offset": "0x0",
+    "row_recipient_fullref_offset": "0x10",
+    "element_stride": "0x10"
+  },
+  "families": {
+    "received": {
+      "vector_begin_offset": "0xe0",
+      "vector_count_offset": "0xec",
+      "predicate_rva": "0x52fc20",
+      "agreement_pointer_offset": "0x8",
+      "agreement_ref_offset": "0x18",
+      "role_semantics": "actor_receives_basing_from_relation_owner",
+      "rea_evidence_id": "ev_3418777a0d84a54104eb52ca9b805d7464cd51a5d719199b3f1cb1b6b4c6423c"
+    },
+    "granted": {
+      "vector_begin_offset": "0xf8",
+      "vector_count_offset": "0x104",
+      "predicate_rva": "0x533fd0",
+      "role_semantics": "actor_grants_basing_to_relation_owner",
+      "rea_evidence_id": "ev_ae3b0ebc5d0ad925ef7550866b0fb7c81d645d184fb3485a399709d14eb662dc"
+    }
+  },
+  "semantics": {
+    "basis": "native_current_fleet_basing_predicate",
+    "value_origin": "derived_from_copied_native_relation_row_and_owner_vectors",
+    "unit": "relation_state",
+    "scale": 1,
+    "period": "current",
+    "partial": true,
+    "complete": false,
+    "role_semantics": "received_E0_actor_gets_partner_basing; granted_F8_actor_grants_partner_basing",
+    "expiry_semantics": "unknown_native_expiry_unread",
+    "runtime_observation": "NO_ACTIVE_RUNTIME_SAMPLE",
+    "native_call": false,
+    "unread_element_tail": "+0x4..+0xf",
+    "received_agreement": "first_matching_element_plus_0x8_pointer_then_agreement_plus_0x18_slot",
+    "granted_predicate": "first_dword_slot_comparison_only"
+  },
+  "limits": {
+    "max_total_rpm": 524288,
+    "network_max_total_rpm": 2097152,
+    "max_single_rpm": 65536,
+    "max_country_entries": 4096,
+    "max_vector_count": 4096,
+    "max_requested_families": 2
+  },
+  "code_guards": [
+    {
+      "name": "fleet_access_token_leaf",
+      "rva": "0x5302b0",
+      "end_rva_exclusive": "0x5302b6",
+      "bytes": "b8d62d0000c3",
+      "sha256": "15a52b93009b5e0d6b341eb2cba558465e4db2542e948c1c576d707dc408d93a"
+    },
+    {
+      "name": "offer_fleet_access_token_leaf",
+      "rva": "0x534690",
+      "end_rva_exclusive": "0x534696",
+      "bytes": "b8d72d0000c3",
+      "sha256": "ddea2ad3221fe5b0a778b4e207202b4dcb283a9096e055dbfe6244889380c713"
+    }
+  ],
+  "source_evidence": [
+    {
+      "path": "work/runtime/information-relation-remaining-20261027-001/fleet-basing-current-source-002.json",
+      "sha256": "90dc23321e41458e13875d5a74ba85f0845214897da77ce546aed96ab1a7ce04",
+      "role": "bounded source layout and raw predicate contract"
+    },
+    {
+      "path": "work/runtime/information-relation-remaining-20261027-001/relation-remaining-contract-005.json",
+      "sha256": "12d58a680bf26ad4c4abcdb3195349fcc7b81b54d694eed0d384539c3199cc79",
+      "role": "combined role, AL-only and expiry-unknown contract"
+    }
+  ],
+  "accepted_rea": {
+    "validity_leaf": {
+      "rva": "0xa69370",
+      "evidence_id": "ev_0a6e0435ea758ec98fbb069e4e3576d4f2cb0fdc52c2c06e141a093965a250bf"
+    }
+  },
+  "unknown_conditions": [
+    "No accepted positive active runtime sample exists",
+    "Relation expiry and date semantics are not read",
+    "Element bytes +0x4..+0xf remain uninterpreted",
+    "Static role labels do not prove an active runtime row"
+  ]
+}

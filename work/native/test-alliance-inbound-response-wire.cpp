@@ -240,7 +240,19 @@ static void test_context() {
     check(result.error==wire::ContextError::expiry_window_exceeded,"context window");
     request.expires_filetime=now+100;
     result=wire::validate_context(request,"6248-1dd5bcf4df44308",now,56459881);
-    check(result.error==wire::ContextError::date_mismatch,"context date");
+    check(result.ok(),"inspection accepts advancing game clock");
+    result=wire::validate_context(request,"6248-1dd5bcf4df44308",now,56459879);
+    check(result.error==wire::ContextError::date_mismatch,"inspection rejects earlier game clock");
+    result=wire::validate_context(request,"6248-aaaaaaaaaaaaaaaa",now,56459881);
+    check(result.error==wire::ContextError::session_mismatch,"advancing inspection retains session binding");
+    request.expires_filetime=now;
+    result=wire::validate_context(request,"6248-1dd5bcf4df44308",now,56459881);
+    check(result.error==wire::ContextError::expired,"advancing inspection retains expiry");
+    wire::ResponseRequest response{};
+    check(wire::parse_response_request(valid_wire(),std::strlen(valid_wire()),response).ok(),
+        "response clock setup");
+    result=wire::validate_context(response,"6248-1dd5bcf4df44308",now,56459881);
+    check(result.error==wire::ContextError::date_mismatch,"response requires selected execution date");
 }
 
 int main() {

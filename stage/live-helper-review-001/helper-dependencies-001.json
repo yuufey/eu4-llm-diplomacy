@@ -1,0 +1,104 @@
+{
+  "dependencies": [
+    {
+      "bytes": 220971,
+      "path": "work/runtime/information-diplomacy-state-20261028-001/rivals-source-001/report-002.json",
+      "sha256": "6d1af31e9e9630b3de57edf22ae495dc93eab2ee336e819df1604e967533d4d5"
+    },
+    {
+      "bytes": 11927,
+      "path": "work/runtime/diplomacy-observer-20261028-information-resources-v30-005/rival-query.inc",
+      "sha256": "0922452c8eff6b74416754feffa1928aa51b2be045b391f2dcd8582f8aec53d9"
+    },
+    {
+      "bytes": 6513,
+      "path": "bridge/information/country_rivals.py",
+      "sha256": "4aa564ff4df2fc97dc1275bce1f0e685069927dab85cbc2f049000ff61eb41e0"
+    },
+    {
+      "bytes": 71931,
+      "path": "bridge/information/country_rivals_memory.py",
+      "sha256": "59030a8a24d651ed34f94e5effce075156fa353633957815652bca5aba5deaa6"
+    },
+    {
+      "bytes": 3890,
+      "path": "bridge/information/profiles/country-rivals-memory-1374.json",
+      "sha256": "a40515fd3e19d59dd73bde7bde442f155c04fd91ef6c3cd786ddaa481690708c"
+    },
+    {
+      "bytes": 6465,
+      "path": "bridge/tests/test_information_country_rivals.py",
+      "sha256": "bba95bc4d65a96c35e049cb8751683c1068686e7c16ab177ad9b0a90c06d6725"
+    },
+    {
+      "bytes": 15274,
+      "path": "bridge/tests/test_information_country_rivals_memory.py",
+      "sha256": "68448c67500fe7bd9e58a49b5e0d0af766fc53ae2c187c688782906d663731f7"
+    },
+    {
+      "bytes": 45947,
+      "path": "bridge/information/catalog.py",
+      "sha256": "32be92d4026b08f3ff59852d3f041e557a8fa2094e3b760e51ea492b55a3f0fb"
+    },
+    {
+      "bytes": 12478,
+      "path": "bridge/information/composite.py",
+      "sha256": "902d3d7c7ecf4396a1e8c70d73dddaf9803a7e8844c6fab11e575b94b6917f0e"
+    },
+    {
+      "bytes": 49227,
+      "path": "bridge/information/service.py",
+      "sha256": "52a52e465b5c91a9cadd2c871fd81fa3497ceee928eba2d446caa39e5b9e3c29"
+    },
+    {
+      "bytes": 21129,
+      "path": "bridge/information/tools.py",
+      "sha256": "743c85798a9d38b2bef91e1f09e235061bffa0737b338c3d8d09c193aa2fed3b"
+    },
+    {
+      "bytes": 1437103,
+      "path": "bridge/diplomacy.py",
+      "sha256": "c65e36cb6443cd34394cf12b2da471c688bafac5456a6773ba136e8db195205e"
+    },
+    {
+      "bytes": 91247,
+      "path": "bridge/diplomacy_journal.py",
+      "sha256": "0caa09ba065cfd2d544bf268cf664032cb28bb9a2359e0ae0101512ce0cc0c7f"
+    },
+    {
+      "bytes": 18972,
+      "path": "tools/serve_information.py",
+      "sha256": "f8b85063127826e4a8d4e44abfe8357adf3e0b73a35798c1e84865f8b8243ea5"
+    },
+    {
+      "bytes": 12832,
+      "path": "work/validate_information_live.py",
+      "sha256": "478938d2f709445ccf8f2b7228e1665659f0b75a82dea4944efed37974373b00"
+    },
+    {
+      "bytes": 21665,
+      "path": "work/run_alliance_inbound_response.py",
+      "sha256": "75cbe9f41460413c8f3aeb7116da32b51e54966419b19601ceff9920dd6bf48e"
+    },
+    {
+      "bytes": 2818,
+      "path": "work/local_config.py",
+      "sha256": "55a3bce5a2bf98f83c58e27884699c780456ea40b84d11bcac5fe78082262001"
+    }
+  ],
+  "helper": {
+    "bytes": 63372,
+    "explicit_live_guard": "--run",
+    "live_cli": "python work/live_information_country_rivals.py --installation work/runtime/diplomacy-observer-20261028-information-resources-v30-005/installation.json --source-audit work/runtime/information-diplomacy-state-20261028-001/rivals-source-001/report-002.json --preflight-receipt stage/live-helper-review-001/preflight-001.json --output work/runtime/information-diplomacy-state-20261028-001/live-acceptance-001 --run",
+    "path": "work/live_information_country_rivals.py",
+    "sha256": "26f950f01ea57f980af8fac8ba364cd1a5db01868c333bfd6e4b853e85785db0"
+  },
+  "preflight": {
+    "bytes": 10958,
+    "path": "C:\\Users\\wangyufei\\Documents\\ChatGPT\\欧陆风云4\\stage\\live-helper-review-001\\preflight-001.json",
+    "sha256": "0bb8494be5af734e5994fab986d23fe49159d7e868999d3168aa891f1889bb1a"
+  },
+  "runtime_freeze_included": false,
+  "schema": "information.country_rivals.live_helper_dependencies.v1",
+  "status": "passed"
+}

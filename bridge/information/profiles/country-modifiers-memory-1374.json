@@ -1,0 +1,147 @@
+{
+  "profile_id": "country-modifiers-memory-1374",
+  "profile_version": 1,
+  "game_version": "1.37.4",
+  "executable": {
+    "sha256": "b23fa0e1f698d31b01cdd1c3817a675805d8c6286cb66f9c231e6e2a42544d77",
+    "image_base": "0x140000000"
+  },
+  "source_evidence": [
+    {
+      "path": "work/runtime/information-country-records-20261027-001/country-modifiers-source-contract-001.json",
+      "sha256": "096e2b00c6481d2f7b6d85daa653ceea7c829e5358494576b7c577e2c27a2dc7",
+      "bytes": 7741,
+      "role": "final bounded country-modifier storage contract"
+    },
+    {
+      "path": "work/runtime/information-military-modifiers-20261027-001/active-military-modifiers-source-005.json",
+      "sha256": "3d71f52a3c60415c95d5b976000879275a5646a44616d4e358cf13d618f236ec",
+      "bytes": 78409,
+      "role": "bounded instance definition/effect layout evidence"
+    }
+  ],
+  "layout": {
+    "field_key": "modifiers",
+    "country_list_header_offset": "0x1d8",
+    "country_list_head_offset": "0x1f0",
+    "header_width": "0x38",
+    "header_head_offset": "0x18",
+    "header_tail_offset": "0x20",
+    "header_count_offset": "0x28",
+    "node_item_offset": "0x0",
+    "node_previous_offset": "0x8",
+    "node_next_offset": "0x10",
+    "node_width": 24,
+    "item_vtable_offset": "0x0",
+    "item_definition_offset": "0x30",
+    "item_width": 80,
+    "vtable_entries_width": 24,
+    "definition_vtable_rva": "0x1c42ae0",
+    "definition_prefix_width": "0x178",
+    "definition_start_date_offset": "0x40",
+    "definition_date_offset": "0x44",
+    "definition_flag_offsets": {
+      "ruler_modifier": "0x48",
+      "parliament_modifier": "0x49",
+      "permanent": "0x4a",
+      "hidden": "0x4b"
+    },
+    "definition_effects_pointer_offset": "0x58",
+    "definition_effect_count_offset": "0x64",
+    "definition_key_offset": "0x158",
+    "definition_key_length_offset": "0x168",
+    "definition_key_capacity_offset": "0x170",
+    "effect_pair_width": 8,
+    "effect_index_offset": "0x0",
+    "effect_raw_offset": "0x4",
+    "modifier_database_global_rva": "0x2358060",
+    "modifier_record_stride": "0x60",
+    "modifier_selector_offset": "0x50",
+    "expected_vtable_rva": "0x1ce7f08",
+    "expected_vtable_methods": {
+      "0x0": "0xb355e0",
+      "0x8": "0xd2f280",
+      "0x10": "0xb359e0"
+    },
+    "max_instances": 128,
+    "max_effects": 256,
+    "max_key_bytes": 255,
+    "read_budget_bytes": 131072,
+    "pointer_min": "0x10000",
+    "pointer_max": "0x7fffffffffff"
+  },
+  "static_property": {
+    "field_key": "modifiers",
+    "list_writer_rva": "0x2e0076",
+    "content_writer_rva": "0xb359e0",
+    "definition_vtable_rva": "0x1c42ae0",
+    "vtable_rva": "0x1ce7f08",
+    "selector_global_rva": "0x2358060",
+    "instance_width": 80,
+    "sso_inline_capacity": 15
+  },
+  "semantics": {
+    "field": "modifiers",
+    "basis": "native_country_modifier_instances",
+    "value_origin": "copied_native_country_modifier_instances",
+    "unit": "native_modifier",
+    "scale": 1,
+    "period": "current",
+    "complete": true,
+    "population": "ordered direct country modifier-instance list only",
+    "key": "stable ASCII script identifier; localized display names are not read",
+    "date": "raw signed native date bytes only; expiry/end-date meaning remains unresolved",
+    "effects": "raw signed definition values paired with native selector IDs"
+  },
+  "code_guards": [
+    {
+      "name": "country_list_writer",
+      "rva": "0x2e0076",
+      "rva_end_exclusive": "0x2e00d9",
+      "hex": "498b87f0010000488945f04885c0745366660f1f8400000000004533c0488d9500110000488d4df0e8cd00deff488bc8e8659fdbff488b38488bcfe84a4ae3ff488bc8e8e2f1150084c075104c8bc7ba68290000488bcee84e78420148837df00075b7",
+      "sha256": "d5643919981f4cad12e6be565672b4ce746eb8e80b9d0315584845d5bc3d169d",
+      "aslr_invariant": true
+    },
+    {
+      "name": "list_iterator",
+      "rva": "0xc0170",
+      "rva_end_exclusive": "0xc0181",
+      "hex": "488b01488902488b4010488901488bc2c3",
+      "sha256": "ab1ad72591cceadb55bdaf10ec15371abb3f62bda00899c18f634898e705e969",
+      "aslr_invariant": true
+    },
+    {
+      "name": "instance_fields_writer",
+      "rva": "0xb359e0",
+      "rva_end_exclusive": "0xb35c1a",
+      "hex": "48895c2418574883ec204883791000488bfa4889742438488bf17437488b5910e82bf9ffff483bd87429ba47350000488bcfe89937bd0048837b2810488d53107203488b124533c94533c0488bcfe88d22bd00488b5e304885db742cba68290000488bcfe86737bd00488d935801000048837a18107203488b124533c94533c0488bcfe85822bd00488b4620483946187468bab02a000048896c2430488bcfe82c37bd00488bcfe8f42bbd00488bcfe8fc29bd00488b6e20488b5e180f1f4000483bdd7420488b03488bd7488bcbff5008807f18007508488bcfe89128bd004883c318ebdb488bcfe80329bd00488bcfe83b2cbd00488b6c2430817e44f8779c02488d4e447422e8b46462ffba4d280000488bcf488bd8e8b436bd004c8b03488bd7488bcb41ff5008817e40f8779c02488d4e407422e8856462ffbae4280000488bcf488bd8e88536bd004c8b03488bd7488bcb41ff50080fb65e4884db7420bae32d0000488bcfe86336bd000fb6d3488bcfe8b86a8fff488bcfe87028bd000fb65e4984db7420ba79320000488bcfe83b36bd000fb6d3488bcfe8906a8fff488bcfe84828bd000fb65e4a84db7420ba0c2b0000488bcfe81336bd000fb6d3488bcfe8686a8fff488bcfe82028bd000fb65e4b84db7420ba902d0000488bcfe8eb35bd000fb6d3488bcfe8406a8fff488bcfe8f827bd00488b5e38488b7424384885db7429baf2300000488bcfe8bd35bd0048837b3010488d53187203488b124533c94533c0488bcfe8b120bd00488b5c24404883c4205fc3",
+      "sha256": "446089a460f9ef4dd1906eb44e2c4c503e668479ec70ef7c00c8f9a3acac6ac8",
+      "aslr_invariant": true
+    },
+    {
+      "name": "definition_effects_writer",
+      "rva": "0x8e67c0",
+      "rva_end_exclusive": "0x8e6855",
+      "hex": "48895c2410488974241848897c2420554154415541564157488d6c24d04881ec30010000488bf24c8bf14533ed458be544896d604c6379644d85ff0f8ee3010000418bfd0f1f40000f1f840000000000498b4658488d0cf88b01488d044048c1e0054803053718a701742a8b59048b5050488bcee87729e200895d60488d5560488bcee8a80396ff488bcee8801be200e983010000",
+      "sha256": "ce8a5d6eb95152a055552e5eefd45362ce777648e07f96256f12eb150b066d6b",
+      "aslr_invariant": true
+    }
+  ],
+  "read_constraints": {
+    "guard_order": "all pinned RVA-relative code guards before target list reads",
+    "predebit": true,
+    "max_instances": 128,
+    "max_effects_total_per_record": 256,
+    "max_key_bytes": 255,
+    "max_read_budget_bytes": 131072,
+    "cycle_policy": "exact count plus previous/next/tail consistency; cycles remain unknown",
+    "failure": "profile, guard, pointer, topology, SSO, effect, selector or budget failure remains unknown"
+  },
+  "unknown_conditions": [
+    "No display localization, expiry consumer, or aggregate effective attribute is synthesized.",
+    "The parent owns FRA identity, lifecycle, two-pass comparison and cleanup/retraction.",
+    "The direct country list is complete only for the observed native list scope; other modifier populations are not included."
+  ],
+  "contract_digest": "096e2b00c6481d2f7b6d85daa653ceea7c829e5358494576b7c577e2c27a2dc7",
+  "contract_schema": "information_country_modifier_storage_contract.v1"
+}

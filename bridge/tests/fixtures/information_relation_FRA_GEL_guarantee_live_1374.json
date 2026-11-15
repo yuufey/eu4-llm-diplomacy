@@ -1,0 +1,45 @@
+{
+  "evidence_kind": "actual_runtime_native_relation_record_return",
+  "source": "work/runtime/diplomacy-observer-20261112-territorial-interest-v61-002/control-probe.jsonl",
+  "game_sha256": "b23fa0e1f698d31b01cdd1c3817a675805d8c6286cb66f9c231e6e2a42544d77",
+  "dll_sha256": "968ee8e84e0426c86bd8e1e59b4b944cada8f06c90d01540a3c09846a2f14646",
+  "offset": 51053884,
+  "line_bytes": 694,
+  "line_sha256": "ea0213c953731eefb6ebec9150ae513fd22e2d78356a54b04092406907164503",
+  "event": {
+    "event": "native_relation_changed",
+    "schema_version": 5,
+    "session_id": "36136-1dd72b7c17e6fb7",
+    "sequence": 8,
+    "country": "FRA",
+    "actor": "FRA",
+    "recipient": "GEL",
+    "actor_fullref": "0x100007a00415246",
+    "recipient_fullref": "0x10000df004c4547",
+    "date_raw": 56683512,
+    "relation_kind": "guarantee",
+    "command_state": null,
+    "command_mode": null,
+    "before": {
+      "active": false,
+      "guarantee": {
+        "actor_grants": false,
+        "recipient_grants": false
+      },
+      "support_roles": null,
+      "subject": null
+    },
+    "after": {
+      "active": true,
+      "guarantee": {
+        "actor_grants": true,
+        "recipient_grants": false
+      },
+      "support_roles": null,
+      "subject": null
+    },
+    "observation_path": "guarantee_record_enable",
+    "source": "relation_command_or_six_family_record_return_actual_pair_state",
+    "complete": true
+  }
+}

@@ -1,0 +1,143 @@
+{
+  "profile_id": "relation-memory-1374",
+  "profile_version": 2,
+  "source_evidence_kind": "ordinary_bounded_static_source_plus_read_only_rpm_contract",
+  "game_version": "1.37.4",
+  "executable": {
+    "sha256": "b23fa0e1f698d31b01cdd1c3817a675805d8c6286cb66f9c231e6e2a42544d77",
+    "image_base": "0x140000000"
+  },
+  "globals": {
+    "database_rva": "0x233d8b0",
+    "game_rva": "0x233fe58",
+    "game_date_offset": "0x1dd0"
+  },
+  "country": {
+    "table_offset": "0x118",
+    "count_offset": "0x124",
+    "fullref_offset": "0x20",
+    "handle_offset": "0x20",
+    "max_entries": 4096,
+    "supported_actor": "FRA"
+  },
+  "relation": {
+    "table_offset": "0x1510",
+    "row_stride": "0x48",
+    "row_owner_offset": "0x0",
+    "row_recipient_fullref_offset": "0x10",
+    "element_stride": "0x10"
+  },
+  "families": {
+    "alliance": {
+      "selector": "0x293d",
+      "selector_case_rva": "0x35a9e3",
+      "call_rva": "0x35a9e6",
+      "leaf_rva": "0xa68bc0",
+      "vector_begin_offset": "0x80",
+      "vector_count_offset": "0x8c",
+      "leaf_sha256": "0f52d0daf2ba34c455681c7012ef07b0069d6e86b472bd05747bf0432d220959",
+      "leaf_hex": "488b01488b511048c1ea20488b88800000004c63808c00000049c1e0044c03c10fbfc2493bc87410390174094883c110493bc875f3493bc80f95c0c3"
+    },
+    "royal_marriage": {
+      "selector": "0x28df",
+      "selector_case_rva": "0x35ac11",
+      "call_rva": "0x35ac14",
+      "leaf_rva": "0xa68a10",
+      "vector_begin_offset": "0x68",
+      "vector_count_offset": "0x74",
+      "leaf_sha256": "6ea466ebc393445fc8edf59662449bbc5b0cd5ccc5ee892e3ccef3c75144a6ce",
+      "leaf_hex": "488b01488b511048c1ea20488b48684c63407449c1e0044c03c10fbfc2493bc87410390174094883c110493bc875f3493bc80f95c0c3"
+    }
+  },
+  "semantics": {
+    "basis": "native_current_selected_pair_relation_predicate",
+    "value_origin": "derived_from_copied_relation_row_and_owner_vector",
+    "unit": "relation_state",
+    "scale": 1,
+    "period": "current",
+    "partial": true,
+    "complete": false,
+    "role_semantics": "symmetric_relation_roles_not_applicable",
+    "expiry_semantics": "unknown_native_expiry_unread",
+    "native_call": false,
+    "offer_argument": 0
+  },
+  "limits": {
+    "max_total_rpm": 524288,
+    "max_single_rpm": 65536,
+    "network_max_total_rpm": 2097152,
+    "network_max_candidates": 4096,
+    "max_vector_count": 4096,
+    "max_requested_families": 2,
+    "max_element_tail_bytes": 12
+  },
+  "code_guards": [
+    {
+      "name": "alliance_selector_case",
+      "rva": "0x35a9e3",
+      "end_rva_exclusive": "0x35a9f6",
+      "bytes": "488bcee8d5e170000fb6f84032fde96d140000",
+      "sha256": "76ea1c944a8b6560d3724b6642c00819fe51be2cae951e10f71142a802d112c4"
+    },
+    {
+      "name": "royal_marriage_selector_case",
+      "rva": "0x35ac11",
+      "end_rva_exclusive": "0x35ac24",
+      "bytes": "488bcee8f7dd70000fb6f84032fde93f120000",
+      "sha256": "a2d5eff9696f2f9e514a4633e7fc630ce840bf5a35c4703ca90f70d83adafa74"
+    },
+    {
+      "name": "alliance_membership_leaf",
+      "rva": "0xa68bc0",
+      "end_rva_exclusive": "0xa68bfc",
+      "bytes": "488b01488b511048c1ea20488b88800000004c63808c00000049c1e0044c03c10fbfc2493bc87410390174094883c110493bc875f3493bc80f95c0c3",
+      "sha256": "0f52d0daf2ba34c455681c7012ef07b0069d6e86b472bd05747bf0432d220959"
+    },
+    {
+      "name": "royal_marriage_membership_leaf",
+      "rva": "0xa68a10",
+      "end_rva_exclusive": "0xa68a46",
+      "bytes": "488b01488b511048c1ea20488b48684c63407449c1e0044c03c10fbfc2493bc87410390174094883c110493bc875f3493bc80f95c0c3",
+      "sha256": "6ea466ebc393445fc8edf59662449bbc5b0cd5ccc5ee892e3ccef3c75144a6ce"
+    }
+  ],
+  "source_evidence": [
+    {
+      "path": "work/runtime/information-relation-current-20261027-001/relation-current-source-002.json",
+      "sha256": "31b786d242753f8849e0f2efee483d429a4a801eae0b6ef25d17245d5a5d3d41",
+      "role": "bounded direct selector and membership leaf evidence"
+    },
+    {
+      "path": "work/runtime/information-relation-current-20261027-001/relation-current-source-001.json",
+      "sha256": "1ab5c0a33da96cade7df50eeea4f97279d470407b6435273930d387fb64add1b",
+      "role": "country table, relation row and offer=false producer contract"
+    },
+    {
+      "path": "work/runtime/diplomacy-observer-20261108-flag-input-v43-282-004/alliance-query.inc",
+      "sha256": "eea57aab848003a97e63138e093b9146a100e6cf9dd86ae7adaddbc3fc636380",
+      "role": "prior bounded selector contract"
+    },
+    {
+      "path": "work/native/alliance-execution.inc",
+      "sha256": "7bcb7c36199e1b0ea88b768a502a38f1d02287f9159b3f9a7c05e6ca859f0ce6",
+      "role": "offer=false current read producer"
+    },
+    {
+      "path": "work/runtime/information-relation-current-20261027-001/relation-current-contract-003.json",
+      "sha256": "3f95459d1be842cd8ed2c8e200c9ca2d1de4605a2c093484737c976290cccb73",
+      "role": "accepted bounded REA leaf corroboration and row-owner/AL corrections"
+    }
+  ],
+  "unknown_conditions": [
+    "relation start and expiry dates are not read",
+    "element bytes +0x4..+0xf are preserved raw and have no inferred meaning",
+    "relation serializer and network enumeration remain outside this selected-pair reader"
+  ],
+  "compatibility": {
+    "supersedes_profile": "relation-memory-1374.json",
+    "supersedes_sha256": "156cdfc92c96694189544ed99a1e15028236cee0d40460e326a0106597a77ba6",
+    "reason": "The pinned alliance-query source now includes the isolated Query22 read-only debt-quote route. A bounded old/new diff confirms that existing relation-family helpers and the preexisting relation-family byte guards are unchanged.",
+    "relation_read_contract_changed": false,
+    "binary_guard_contract_changed": false
+  }
+}

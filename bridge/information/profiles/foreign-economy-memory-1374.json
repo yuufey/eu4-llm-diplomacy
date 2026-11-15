@@ -1,0 +1,530 @@
+{
+  "profile_id": "foreign-economy-memory-1374",
+  "profile_version": 1,
+  "game_version": "1.37.4",
+  "executable": {
+    "path_from_game_exe": "D:\\Downloads\\Europa Universalis IV（1.37.4）\\Europa Universalis IV\\eu4.exe",
+    "bytes": 38463016,
+    "sha256": "b23fa0e1f698d31b01cdd1c3817a675805d8c6286cb66f9c231e6e2a42544d77",
+    "image_base": "0x140000000",
+    "runtime_aslr_va_observed": false
+  },
+  "observer": {
+    "tag": "FRA",
+    "role": "logical_nonplayer_observer"
+  },
+  "target_scope": {
+    "kind": "foreign_country",
+    "target_must_differ_from_observer": true
+  },
+  "public_fields": [
+    "F03.income",
+    "F03.debt",
+    "F03.bankruptcy_risk",
+    "F03.reparations",
+    "F03.subsidies"
+  ],
+  "source_evidence": [
+    {
+      "path": "bridge/information/profiles/foreign-quality-memory-1374-v2.json",
+      "bytes": 37710,
+      "sha256": "97866049085cd687f5d66c46a8884526ea6efc3897d99be1fe7234610439d7f6",
+      "role": "Inherited fixed-B23 observer identity and country-view guard profile; only selected guards are copied."
+    },
+    {
+      "path": "work/runtime/information-foreign-economy-20261029-001/economy-core-ordinary-review-004.json",
+      "bytes": 24424,
+      "sha256": "365213a5438681176ab7529f7bbc7fe3bec9ae287292762acd40c98f533ef5ab",
+      "role": "Bounded ordinary-PE analysis for current income cell, total components, category keys, and local income predicate."
+    },
+    {
+      "path": "work/runtime/information-foreign-economy-20261029-001/ordinary-economy-loans-001/economy-loans-ordinary-review-003.json",
+      "bytes": 36209,
+      "sha256": "515520482debf3c42b166f990f5f98e136012d922c2d1f41c52baedca81d94e1",
+      "role": "Bounded ordinary-PE analysis for loan rows, loan scalar reads, and local page registration guards."
+    },
+    {
+      "path": "work/runtime/information-foreign-economy-20261029-001/economy-existing-leaf-inventory-001.json",
+      "bytes": 16763,
+      "sha256": "81ae43328ec11690a535df9cb4a2f7adc68f22d37a19bb15c1c0d86f4995885d",
+      "role": "Existing leaf inventory and previously established reader boundaries."
+    },
+    {
+      "path": "work/runtime/information-foreign-economy-20261029-001/rea-country-income-cell-001/evidence.json",
+      "bytes": 10586,
+      "sha256": "bbad356cdb10c4004ca8e4eb5b03760d9fe97a2a3f1aa0e150275f7e8b3472e3",
+      "role": "REA evidence for the income cell path; static REA evidence, not runtime observation."
+    },
+    {
+      "path": "work/runtime/information-foreign-economy-20261029-001/rea-country-income-total-components-001/evidence.json",
+      "bytes": 11171,
+      "sha256": "726ec98f00f009e15ba9578098eeb9dde4c5bcc4a31c665a549816e8382a3279",
+      "role": "REA evidence for income total component construction; static REA evidence, not runtime observation."
+    },
+    {
+      "path": "work/runtime/information-foreign-economy-20261029-001/rea-income-category-keys-001/evidence.json",
+      "bytes": 6845,
+      "sha256": "8d6b48c67844581123007e23e703c94c49895fff530f1aad77b9a7944783a74e",
+      "role": "REA evidence for income category key registration; static REA evidence, not runtime observation."
+    },
+    {
+      "path": "work/runtime/information-foreign-economy-20261029-001/rea-income-category-labels-001/evidence.json",
+      "bytes": 4395,
+      "sha256": "b440ecdba1a28d7a211f8c3ebc615b4271cec895fd1e3bc0f1b44eaa3ea86788",
+      "role": "REA evidence for category label selection; text does not establish current UI rendering."
+    },
+    {
+      "path": "work/runtime/information-foreign-economy-20261029-001/rea-ledger-loan-row-enumerator-001/evidence.json",
+      "bytes": 7627,
+      "sha256": "5e081547bef3796a8f397e0fb0a09bfe2bc2543cfa1ea9c388734ca42991d98e",
+      "role": "REA evidence for loan row enumeration; static REA evidence, not runtime observation."
+    },
+    {
+      "path": "work/runtime/information-foreign-economy-20261029-001/rea-ledger-loan-cell-001/evidence.json",
+      "bytes": 33704,
+      "sha256": "e34b9d268d7a3a732821dd4254f226b9386228090b6413cdc75a07ca1a8c7208",
+      "role": "REA evidence for loan row scalar fields; static REA evidence, not runtime observation."
+    },
+    {
+      "path": "work/runtime/information-foreign-economy-20261029-001/rea-daily-update-loans-001/evidence.json",
+      "bytes": 34478,
+      "sha256": "0687deb3b179996db513e3c2f436f563c278963054f993711ab2ffe76f31b8c7",
+      "role": "Static loan update evidence; does not make a foreign risk forecast available."
+    },
+    {
+      "path": "work/runtime/information-foreign-economy-20261029-001/rea-bankrupt-label-function-001/evidence.json",
+      "bytes": 69888,
+      "sha256": "30c9891bbb9b3632e7290514ed42ea8ee00e41052d87d83851efdebbe4a9725e",
+      "role": "REA evidence for bankruptcy label construction; not a foreign bankruptcy risk formula."
+    },
+    {
+      "path": "work/runtime/information-foreign-economy-20261029-001/rea-go-bankrupt-callers-001/evidence.json",
+      "bytes": 4038,
+      "sha256": "70f9cf8b00be96fe441e793d5b168af97c3bc0d9faf0205de60de454dac70840",
+      "role": "REA evidence for bankruptcy action callers; not a read-only risk forecast."
+    },
+    {
+      "path": "work/runtime/information-foreign-military-quality-20261029-001/quality-core-ordinary-review-001.json",
+      "bytes": 124009,
+      "sha256": "42164443f3aeb5b4f4271db2fd6e66e3456fca3a6cc7d10d336e01ec70bd33e3",
+      "role": "Retained batch-88 ordinary evidence for observer country selection and country enumeration guards."
+    },
+    {
+      "path": "work/runtime/information-foreign-military-quality-20261029-001/quality-registration-ordinary-001.json",
+      "bytes": 20144,
+      "sha256": "a91c25d680d9e1cec12dde49409e532ab0a8a7720fa51d636411f2959ea40e2e",
+      "role": "Retained batch-88 ordinary registration evidence; inherited guards remain separate from income-page gates."
+    },
+    {
+      "path": "work/runtime/information-foreign-military-quality-20261029-001/quality-page-registration-review-001.json",
+      "bytes": 22357,
+      "sha256": "ec2d0db17cc61c1652c8c6df4b1f9cee16602551d713cb197f901556aedf95f6",
+      "role": "Retained batch-88 page registration evidence; does not establish economy-page runtime visibility."
+    },
+    {
+      "path": "work/runtime/information-foreign-economy-20261029-001/economy-financial-string-context-001.json",
+      "bytes": 261082,
+      "sha256": "0e56a0c1c60cfcc1b6b9ee8f85203c9d7180d0b3a784c7f3e59060e0eece6f1a",
+      "role": "Bounded static financial-string context; strings are not a value formula or proof of rendered UI."
+    }
+  ],
+  "layout_dependencies": [
+    {
+      "path": "bridge/information/profiles/monthly-economy-memory-1374.json",
+      "bytes": 6252,
+      "sha256": "bd5e3ee39b02e4b5f183790d4550f394c6248eaa4dc4c68e9c17d9ec3254d831",
+      "role": "Existing previous-month ledger layout and units; not substituted for the current income comparison cache."
+    },
+    {
+      "path": "work/runtime/information-economy-20261027-001/monthly-ledger-source-001.json",
+      "bytes": 10349,
+      "sha256": "7fd7af774a6c75731b3f54874ef179444c19b28ddf58845e867cac32462468ac",
+      "role": "Pinned source index for the prior monthly-ledger profile."
+    },
+    {
+      "path": "bridge/information/profiles/country-loans-memory-1374-v2.json",
+      "bytes": 9901,
+      "sha256": "686d88ef6b2dd02e12067d3fc2e7a942c39b131cf504bbe7bcf4f130d706cf69",
+      "role": "Existing bounded loan-list layout and lender/date interpretation; total debt remains out of scope."
+    },
+    {
+      "path": "work/runtime/information-loans-20261027-001/loans-source-001.json",
+      "bytes": 18855,
+      "sha256": "309e4e26895a5e74d6c2733b4e333f09aebdbdadd710d6ce90bb9f1d27463091",
+      "role": "Pinned source for loan row scalar layout."
+    },
+    {
+      "path": "work/runtime/information-country-records-localization-20261027-001/loan-lender-date-source-001.json",
+      "bytes": 17402,
+      "sha256": "a43a2bc9bd258670ff3e9531b13b66388fc72cb84434b4967ec9a93b83d7d62a",
+      "role": "Pinned source for strict lender identity and loan date interpretation."
+    },
+    {
+      "path": "work/runtime/information-country-records-localization-20261027-001/date-calendar-source-002.json",
+      "bytes": 32231,
+      "sha256": "fd851ea9a6869e61b2ae05dbb251136ff281fe3801907568900a60a8fa800957",
+      "role": "Pinned engine-date calendar contract used by the existing loan reader."
+    }
+  ],
+  "code_guards": [
+    {
+      "name": "foreign-technology-memory-1374.diplomacy_country_selection",
+      "rva": "0xf016e0",
+      "end_rva_exclusive": "0xf01c2e",
+      "bytes": "488954241053574883ec58488bf9488bda488b0d907d4401488b01ff50284c8b1553e74301f20f1187080e00004180ba661e00000775134180ba6f1e00000074094d8b92681e0000eb074d8b92601e0000807c247f004c8997480100000f84df040000807c247e070f84d40400000fbf44247c3b052bc143010f84c30400003b0553c143010f84b70400003b054bc143010f84ab040000488b0d32c14301498bc248c1e8204c0fbfd8488bc348c1e8204889b42480000000480fbff08bc64c89b424880000004c8bb1180100004c8d0cc04b8b0cde4c8b81101500004b8b44c81048c1e820480fbfc0488d14404b8b04c8488b4838837cd114007f4a498b0cf6488b91b0140000f68259090000107436498bc248c1e83884c0742b49c1ea304180fa077421488b92e0050000418bcb458bc383e11f49c1e805428b04820fa3c80f83ec0300004533f6413bf3746a83bfb8090000010f850c010000e84037a7ff488bcf4489b7b8090000e8d1c20000488b8fa0000000488d15e3c1e300c687be09000001488b01ff5068418d5601488b084c8b81a8000000488bc841ffd0488b8fa0000000488d15dcc1e300488b01ff5068418d5602eb6d4439b7b80900000f85a2000000e8d636a7ff488bcfc787b809000001000000e864c20000488b8fa0000000488d1576c1e300c687be09000001488b01ff5068ba02000000488b084c8b81a8000000488bc841ffd0488b8fa0000000488d156ec1e300488b01ff5068ba01000000488b084c8b81a8000000488bc841ffd0e86636a7ff84c07429488b8fa0000000488d1524c1e300488b01ff5068ba01000000488b084c8b81a8000000488bc841ffd0488b873801000048c1e8200fbfc848896c24703bce0f84160100004c89742430488d54243048899f38010000bd0f000000c687e80d00000141b0018b05f048db00894424300fb605e948db0088442434488b0592a5520148896c244848c7442440050000004488742435488b8848030000488b09e840187a00488b542448488bd84883fa107232488b4c243048ffc2488bc14881fa001000007219488b49f84883c227482bc14883c0f84883f81f0f872e020000e8207a8300488bcb4c8974244048896c24484488742430e889166cff84c0752d488b050ea552010f57c0f30f101d6ffbeb004533c0488bd3f30f11442420488b8848030000488b09e8e8617a00488b0561be4301488bcf488b8018010000488b1cf0488d9348220000e867adffff488d9318220000488bcfe898b3ffff488b8fb00000008b412c83f805740c83c0f883f8010f876b010000ba05000000e843867eff488b8fb0000000ba06000000e842a17eff488b8fb0000000ba08000000e821867eff488b8fb0000000ba09000000e810867eff488b8fb0000000ba07000000e80fa17eff488b8fb0000000ba1e000000e8fea07eff488b05b7bd4301488b8018010000488b0cf0488bb1b01400004885f60f84ea0000004883c6100f84e0000000488b87b00000004c897c24504c8bb8801b0000498b5728488bc24885d274140f1f004839307411488b4810488bc14885c975ef4885c074244885d274160f1f440000483932740c488b4210488bd04885c075ef498d4f28e826d61dffb920000000453977387437498b6f28e8a216b3004889304c8970084889681044887018418b5738498947288d4a0141894f3885d2740648894508eb3b49894730eb35498b6f30e86b16b300488930488968084c89701044887018418b5738498947308d4a0141894f3885d2740648894510eb0449894728498bcfe8b7ae26004c8b7c2450488bcfe81abf0000488b6c2470c687be09000001488bb424800000004c8bb424880000004883c4585f5bc3e89effb300",
+      "sha256": "f2fc1747a0a6bd54e3bdcb6d395843b0bec1904e27be10d9117ab8a190aaec79",
+      "relocation_sites": [],
+      "source_report": {
+        "path": "bridge/information/profiles/foreign-quality-memory-1374-v2.json",
+        "guard_name": "foreign-technology-memory-1374.diplomacy_country_selection"
+      }
+    },
+    {
+      "name": "quality.descriptor_constructor",
+      "rva": "0x117ada0",
+      "end_rva_exclusive": "0x117ae70",
+      "bytes": "48895c2408574883ec2048895108488d058b46f1fe488b54246833ff48894120488bd98939488d0594d60100488941284c8949104c8941184883c13048837a18107203488b1248893949c7c0ffffffff4088394889791048c741180f0000009049ffc042383c0275f7e802a3f1fe488b44246048897b5048897b5848897b6048897b6848897b7048897b78488983800000008b44247089bb880000004889bb900000004889bb980000004889bba00000008983a80000000fb64424788883ac000000488bc3488b5c24304883c4205fc3",
+      "sha256": "ed45d4a8cba6f6fb067c5eec2b8f02a900a935b02f1662e0eeae6d4c8ec32265",
+      "relocation_sites": [],
+      "source_report": {
+        "path": "bridge/information/profiles/foreign-quality-memory-1374-v2.json",
+        "guard_name": "quality.descriptor_constructor"
+      }
+    },
+    {
+      "name": "quality.country_enumeration",
+      "rva": "0x1198960",
+      "end_rva_exclusive": "0x1198a9a",
+      "bytes": "48896c2418565741564883ec20488b35e4741a01488be9488bbe081d0000486386141d00004c8d34c7493bfe0f84fa00000048895c2440660f1f840000000000488b1f488b432048c1e8200fbfc83b0dd04e1a010f84c00000003b0df84e1a010f84b40000003b0df04e1a010f84a800000080be661e0000074c8b83b0140000751280be6f1e0000007409488b86681e0000eb07488b86601e0000488bc8488bd048c1e93848c1ea3048c1e82041f6805909000010742484c9742080fa07741b0fbfc8498b80e00500008bd183e11f48c1ea058b04900fa3c8733f488bd3488bcde82afaffff84c07530488b95b8000000488d8db000000048895c2448483b95c0000000740a48891a4883410808eb0a4c8d442448e8a637f3fe4883c708493bfe0f8519ffffff488b5c2440488b6c24504883c420415e5f5ec3",
+      "sha256": "3dc347444cbb5c02e8ca945a751decd8574bf01951ad2918809e9a20b9094578",
+      "relocation_sites": [],
+      "source_report": {
+        "path": "bridge/information/profiles/foreign-quality-memory-1374-v2.json",
+        "guard_name": "quality.country_enumeration"
+      }
+    },
+    {
+      "name": "quality.helper_095740",
+      "rva": "0x95740",
+      "end_rva_exclusive": "0x95748",
+      "bytes": "488d8140210000c3",
+      "sha256": "006bb36d34e7c2ee9ac8c40ea5bf2de1082d558e971080a1cb6e748c4200a780",
+      "relocation_sites": [],
+      "source_report": {
+        "path": "bridge/information/profiles/foreign-quality-memory-1374-v2.json",
+        "guard_name": "quality.helper_095740"
+      }
+    },
+    {
+      "name": "quality.helper_095760",
+      "rva": "0x95760",
+      "end_rva_exclusive": "0x95768",
+      "bytes": "488b05f1a62a02c3",
+      "sha256": "5968a425a83e805c530442b533d319a91f0ac53a71a37983b7628caf6ffa7610",
+      "relocation_sites": [],
+      "source_report": {
+        "path": "bridge/information/profiles/foreign-quality-memory-1374-v2.json",
+        "guard_name": "quality.helper_095760"
+      }
+    },
+    {
+      "name": "quality.helper_0985d0",
+      "rva": "0x985d0",
+      "end_rva_exclusive": "0x985d8",
+      "bytes": "807906070f94c0c3",
+      "sha256": "4932ab853f6119311eb7be6724887a7bfd73c60d4f1da9678452f63012278ed0",
+      "relocation_sites": [],
+      "source_report": {
+        "path": "bridge/information/profiles/foreign-quality-memory-1374-v2.json",
+        "guard_name": "quality.helper_0985d0"
+      }
+    },
+    {
+      "name": "quality.option_array_reader_0747050",
+      "rva": "0x747050",
+      "end_rva_exclusive": "0x74705a",
+      "bytes": "488b41108bd28b0490c3",
+      "sha256": "65a1f8be4827a92fca0c93b5ec571c13fe632f2f4f05ee627098379efafffe36",
+      "relocation_sites": [],
+      "source_report": {
+        "path": "bridge/information/profiles/foreign-quality-memory-1374-v2.json",
+        "guard_name": "quality.option_array_reader_0747050"
+      }
+    },
+    {
+      "name": "quality.physical_ref_selector_0763840",
+      "rva": "0x763840",
+      "end_rva_exclusive": "0x76386e",
+      "bytes": "80b9661e000007751780b96f1e000000740e488b81681e0000488902488bc2c3488b81601e0000488902488bc2c3",
+      "sha256": "c65e4ee4d2e23ba5039cd6f7071cffe030ad92f14666532684490f47e48509b7",
+      "relocation_sites": [],
+      "source_report": {
+        "path": "bridge/information/profiles/foreign-quality-memory-1374-v2.json",
+        "guard_name": "quality.physical_ref_selector_0763840"
+      }
+    },
+    {
+      "name": "economy.income_cell",
+      "rva": "0x119c850",
+      "end_rva_exclusive": "0x119ca95",
+      "bytes": "48895c2418564881ecb0000000498bd9488bf24585c00f84c00100004183f8010f84d100000033c9448d51020f1f40008bc183e809741c83e801741783e801741283e802740d83f8017408453bd0747941ffc2ffc183f9137cd6488d542460488bcee8f9d91cff4c8bc08b480803080348108b501803d18b481c03ca8b50248b402803d1418b483003c24103402c03c8418b403403c1418b483803c8418b403c03c1418b484003c8c7030a000000894b40c7430402000000488b9c24d00000004881c4b00000005ec34863c18b84827007000041c7010a0000004189414041c7410402000000488b9c24d00000004881c4b00000005ec34533c94c89b424c80000004533c0488d4e2033d2e870c90effc7030700000048837818107203488b0049c7c0ffffffff660f1f84000000000049ffc042803c000075f6488d8bc0000000488bd0e87787effe4883bc24e000000000746f488b86b0140000488bce4889bc24c0000000488bb8600500004883c748e8cab017ff4533c9488d4e204533c033d2488bd8e8f6c80eff4c8bc848897c2438488d4c244048895c2428e8df880100488b8c24e0000000488bd0e82f85effe488d4c2440e8558ceffe488bbc24c00000004c8bb424c8000000488b9c24d00000004881c4b00000005ec3488b4220488d4a20488b9c24e000000048c1e820984189414441c701170000004885db74ca4533c94533c033d2e872c80eff48837818107203488b0049c7c0ffffffff9049ffc042803c000075f6488bd0488bcb488b9c24d00000004881c4b00000005ee97b86effe",
+      "sha256": "ab294dc717016e4cfeb4e80f2e27fbb597b4d34557e874a12f903ff65aa8f63a",
+      "relocation_sites": [],
+      "source_report": {
+        "path": "work/runtime/information-foreign-economy-20261029-001/economy-core-ordinary-review-004.json",
+        "guard_name": "income_cell"
+      }
+    },
+    {
+      "name": "economy.income_total_components",
+      "rva": "0x36a2b0",
+      "end_rva_exclusive": "0x36a4cb",
+      "bytes": "48895c241848896c2420565741564883ec30488bf2488be933ff48893a48897a0848897a1048897a1848897a2048897a2848897a3048897a38897a408b817007000089024881c1c0280000e8c0325d004c8d400841387810740c498b40588b80d4000000eb23496350644885d27e18488bcf498b405883381a747548ffc14883c008483bca7cef8bc789442450488b0d1cddfe01488b89000a00004885c97414488b014c8d4c2450488d542458ff50088b4424586bc0648946048b8574070000894608488d8dc0280000e841325d004c8d4008488b85402400008b582441807810007411498b40588bb894000000eb2b8b4004eb94496350644885d27e1d488bcf498b4058833812740e48ffc14883c008483bca7cefeb038b7804897c2450488b058adcfe01488b88000700004885c97414488b014c8d4c2450488d542458ff50088b7c245803df83fb0a7d07bb0a000000eb0ab8d00700003bd80f4fd86bc36489460c8b8578070000894610488d8dc0280000e897315d004c8d40084533c9488d542450488bcde8638cfcff6b442450648946148b857c0700008946188b858007000089461c6b85d0240000648946208b85840700008946248b85880700008946288b858c07000089462c8b95b40700000395a00700000395b80700008956308b85900700008946348b85a80700008946388b85ac07000089463c8b85b0070000894640488bc6488b5c2460488b6c24684883c430415e5f5ec3",
+      "sha256": "61855c83d3ac3bd537c08cdeed5bd797941e8e5db0e44829b1754cc42fe24105",
+      "relocation_sites": [],
+      "source_report": {
+        "path": "work/runtime/information-foreign-economy-20261029-001/economy-core-ordinary-review-004.json",
+        "guard_name": "income_total_components"
+      }
+    },
+    {
+      "name": "economy.income_column_key",
+      "rva": "0xaf2710",
+      "end_rva_exclusive": "0xaf285c",
+      "bytes": "40534883ec20488bd983fa120f87d00000004863c2488d0dd4d850ff8b94811028af004803d1ffe2488d1511181f01e9b5000000488d15f5171f01e9a9000000488d15d9171f01e99d000000488d15bd171f01e991000000488d1521181f01e985000000488d1505181f01eb7c488d15ec171f01eb73488d15d3171f01eb6a488d15b2151f01eb61488d1599151f01eb58488d1580151f01eb4f488d155f151f01eb46488d15de151f01eb3d488d15bd151f01eb34488d15a4151f01eb2b488d158b151f01eb22488d15da291901eb19488d15f9151f01eb10488d15e0151f01eb07488d1507321b014533c94533c0488bcbe8990b9c00488bc34883c4205bc33827af009827af005027af005c27af004427af006827af00aa27af00a127af00b327af007427af007d27af008627af008f27af00bc27af00c527af00ce27af00d727af00e027af00e927af00",
+      "sha256": "569b3d136c002bf31cc72361a10aa899bc5f16245a75236a3b7ca70a288193ca",
+      "relocation_sites": [],
+      "source_report": {
+        "path": "work/runtime/information-foreign-economy-20261029-001/economy-core-ordinary-review-004.json",
+        "guard_name": "income_column_key"
+      }
+    },
+    {
+      "name": "economy.income_column_predicate_local_cfg",
+      "rva": "0xaf26a0",
+      "end_rva_exclusive": "0xaf26bf",
+      "bytes": "83e909741783e901741283e901740d83e902740883f9017403b001c332c0c3",
+      "sha256": "dfe2e1af9aee4d209d4c8bc7a6b03c514ae51f6f8b054d172a642d30d71711ee",
+      "relocation_sites": [],
+      "source_report": {
+        "path": "work/runtime/information-foreign-economy-20261029-001/economy-core-ordinary-review-004.json",
+        "guard_name": "income_column_predicate_local_cfg"
+      }
+    },
+    {
+      "name": "economy.loan_row_enumerator",
+      "rva": "0x11ae510",
+      "end_rva_exclusive": "0x11ae658",
+      "bytes": "48895c241048896c2418565741564883ec20488b152f191901488bf180ba661e000007751280ba6f1e0000007409488bba681e0000eb07488bba601e0000488b055bf3180148c1ef20480fbfdf488b8818010000488b1cd9488b9be80d00004885db74520f1f40000f1f840000000000488b0b488b96b8000000488b5b1048894c2440483b96c0000000740d48890a488386b800000008eb114c8d442440488d8eb0000000e866dcf1fe4885db75c1488b15921819014c8bb2081d0000486382141d0000498d2cc64c3bf574680f1f00498b1e488b9be80d00004885db744d90488b0b488b5b10488b412048c1e820663bc77533488b96b800000048894c2440483b96c0000000740d48890a488386b800000008eb114c8d442440488d8eb0000000e8e9dbf1fe4885db75b44983c6084c3bf5759b488b5c2448488b6c24504883c420415e5f5ec3",
+      "sha256": "9cfec1be4890a00c8ae19dcf4eea353b991715abeea944676bf8eeab61a5cd02",
+      "relocation_sites": [],
+      "source_report": {
+        "path": "work/runtime/information-foreign-economy-20261029-001/ordinary-economy-loans-001/economy-loans-ordinary-review-003.json",
+        "guard_name": "loan_row_enumerator"
+      }
+    },
+    {
+      "name": "economy.loan_cell",
+      "rva": "0x11ae660",
+      "end_rva_exclusive": "0x11aeff4",
+      "bytes": "4183f8050f873a09000048895c2408488974242055574157488d6c24c14881ecc0000000498bf9488bda4533ff44897d6f4963c0488d156519e5fe8b8c82dcef1a014803caffe1488b4b20488bc148c1e83884c00f84d308000048894d674533c94533c033d2488d4d67e801ac0dff488bd0488bcfe836c1fcff488b7d7f4885ff0f84a6080000488b4320488945674533c94533c033d2488d4d67e8d0ab0dff48837818107203488b0048c7c3ffffffff48ffc344383c1875f74c8bc3488bd0488bcfe8e869eefee960080000488b0524171901488b88081d0000486380141d00004c8d04c1493bc80f843e080000488b11488b82e80d00004885c074106690483918740f488b40104885c075f24883c108ebd2488d72204533c94533c033d2488bcee848ab0dffc7070500000048837818107203488b0048c7c3ffffffff4c8bc349ffc046383c0075f7488d8fc0000000488bd0e85669eefe488b7d7f4885ff0f84c60700004533c94533c033d2488bcee8f9aa0dff48837818107203488b0048ffc344383c1875f74c8bc3488bd0488bcfe81869eefee9900700008b433089456f488d559f488d4d6fe8406453ff90488bd0488bcfe8f4bffcff90488d4d9fe83a6eeefe488b7d7f4885ff0f845a0700008b433089456f488d559f488d4d6fe80a6453ff488bd0488bcfe8df66eefe488d4d9fe8066eeefee92e0700008b4b2c69c1e803000041c7010a0000004189414041c7410402000000488b7d7f4885ff0f84050700004c897dbf660f6f059c33c100f30f7f45cf44887dbf488d55dfe8fa78550048c7c3ffffffff0f1f0048ffc3803c180075f74c8bc3488bd0488d4dbfe84868eefe904533c94533c0488d15329db900488d4d9fe8c14a3000900f10459f0f1145df0f104daf0f114def660f6f053833c100f30f7f45afc6459f00c7456f0300000041b804000000488d15a3bfaa00488d4ddfe8d249eefe4c8d45bf488d55df488d4d1fe81154f3fe900f10000f1145ff0f1048100f114d0f4c89781048c740180f000000c60000c7456f0700000041b803000000488d15f6a6b200488d4dffe88549eefe488d55ff488bcfe8b965eefe90488b55174883fa10723248ffc2488b4dff488bc14881fa0010000072194883c227488b49f8482bc14883c0f84883f81f0f8709060000e86daa580090488d4d1fe8a36ceefe90488b55f74883fa10723248ffc2488b4ddf488bc14881fa0010000072194883c227488b49f8482bc14883c0f84883f81f0f87c9050000e827aa580090488d4d9fe85d6ceefe90488b55d74883fa100f827b05000048ffc2488b4dbf488bc14881fa001000000f825f0500004883c227488b49f8482bc14883c0f84883f81f0f8769050000e94105000048634b288d81739318003d0d583900771969c9e8030000b889b5f814f7e9c1fa0d8bc2c1e81f03d0eb224869c9e803000048b809e1d1c6116bf12948f7e948c1fa0e488bc248c1e83f4803d041c7010b000000418951404c397d7f0f84e50400006bc2644c897dbf660f6f057931c100f30f7f45cf44887dbf0fb64d9f41b82d00000085c0410f48c8884d9f8bf8f7df85c00f49f8488d5d9f488d4da0480f48d9b8d34d6210f7ef8bf2c1fe068bc6c1e81f03f0488bd38bcee89b765500803b00740e660f1f44000048ffc3803b0075f869c6e80300002bf88d8fe8030000488bd3e872765500c6032ec6430200488d459f48c7c3ffffffff48ffc3803c180075f74c8bc3488d559f488d4dbfe8b765eefe904533c94533c0488d15b959bb00488d4dffe830483000900f1045ff0f1145df0f104d0f0f114def660f6f05a730c100f30f7f450fc645ff00c7456f1800000041b804000000488d1512bdaa00488d4ddfe84147eefe4c8d45bf488d55df488d4d1fe88051f3fe900f10000f11459f0f1048100f114daf4c89781048c740180f000000c60000c7456f3800000041b803000000488d1541b2a900488d4d9fe8f446eefe488d559f488b4d7fe82763eefe90488b55b74883fa10723248ffc2488b4d9f488bc14881fa0010000072194883c227488b49f8482bc14883c0f84883f81f0f8783030000e8dba7580090488d4d1fe8116aeefe90488b55f74883fa10723248ffc2488b4ddf488bc14881fa0010000072194883c227488b49f8482bc14883c0f84883f81f0f8743030000e895a7580090488d4dffe8cb69eefe90488b55d74883fa100f82e902000048ffc2488b4dbf488bc14881fa001000000f82cd0200004883c227488b49f8482bc14883c0f84883f81f0f87dd020000e9af02000048634b288d81739318003d0d583900771969c9e8030000b889b5f814f7e9c1fa0d8bc2c1e81f03d0eb224869c9e803000048b809e1d1c6116bf12948f7e948c1fa0e488bc248c1e83f4803d069432ce80300004863c84863c2480fafc848b8cff753e3a59bc42048f7e948c1fa07488bc248c1e83f4803d041c7010a0000004189514041c74104020000004c397d7f0f841f0200004c897dbf660f6f05b62ec100f30f7f45cf44887dbf0fb6459f41b82d00000085d2410f48c088459f8bfaf7df85d20f49fa488d5d9f488d45a0480f48d8b8d34d6210f7ef8bf2c1fe068bc6c1e81f03f0488bd38bcee8d8735500803b00740b0f1f0048ffc3803b0075f869c6e80300002bf88d8fe8030000488bd3e8b2735500c6032ec6430300488d459f48c7c3ffffffff48ffc3803c180075f74c8bc3488d559f488d4dbfe8f762eefe904533c94533c0488d150957bb00488d4dffe870453000900f1045ff0f1145df0f104d0f0f114def660f6f05e72dc100f30f7f450fc645ff00c7456fc000000041b804000000488d1552baaa00488d4ddfe88144eefe4c8d45bf488d55df488d4d1fe8c04ef3fe900f10000f11459f0f1048100f114daf4c89781048c740180f000000c60000c7456fc001000041b803000000488d15a5a1b200488d4d9fe83444eefe488d559f488b4d7fe86760eefe90488b55b74883fa10723248ffc2488b4d9f488bc14881fa0010000072194883c227488b49f8482bc14883c0f84883f81f0f87cf000000e81ba5580090488d4d1fe85167eefe90488b55f74883fa10723248ffc2488b4ddf488bc14881fa0010000072194883c227488b49f8482bc14883c0f84883f81f0f878f000000e8d5a4580090488d4dffe80b67eefe90488b55d74883fa10722d48ffc2488b4dbf488bc14881fa0010000072154883c227488b49f8482bc14883c0f84883f81f771de893a458004c8d9c24c0000000498b5b20498b7338498be3415f5f5dc3e8222c8900cce81c2c8900cce8162c890090e8102c890090e80a2c890090e8042c890090e8fe2b890090e8f82b890090e8f22b8900cc90a7e61a012de71a01fde71a015fe81a0147ea1a01d9ec1a01",
+      "sha256": "9584fe6b13e025ea4cf6ea9b5a98578713bfa58d4c0dbdd1c6cc741ab57e0e78",
+      "relocation_sites": [],
+      "source_report": {
+        "path": "work/runtime/information-foreign-economy-20261029-001/ordinary-economy-loans-001/economy-loans-ordinary-review-003.json",
+        "guard_name": "loan_cell"
+      }
+    },
+    {
+      "name": "economy.registration.income_local_option_gate_and_descriptor",
+      "rva": "0x1185c94",
+      "end_rva_exclusive": "0x1185d1e",
+      "bytes": "4584ff7521488b0db8a11b01e89bfaf0feba17000000488bc8e89e135cff85c00f8516030000488d151fe4bd00488d8db03b0000e8b3d7570090c644244801c744244001000000488d85b03b000048894424384c896c24304c89742428488d054897f0fe48894424204c8d0d6c4301004c8d05552c0100488d153e6b0100488d8d50d40000e88250ffff",
+      "sha256": "79fdc09598d161c35ada082fe2dcc0a2fa44d8f450ab41c4a30bf1cb1bf1bd0a",
+      "relocation_sites": [],
+      "source_report": {
+        "path": "work/runtime/information-foreign-economy-20261029-001/ordinary-economy-loans-001/economy-loans-ordinary-review-003.json",
+        "guard_name": "income_local_option_gate_and_descriptor"
+      }
+    },
+    {
+      "name": "economy.registration.ledger_loans_title_and_descriptor",
+      "rva": "0x1186a9d",
+      "end_rva_exclusive": "0x1186afd",
+      "bytes": "488d1524d5bd00488d8d70400000e8d0c9570090c644244800c744244001000000488d857040000048894424384c896c24304c89742428488d056589f0fe48894424204533c94c8d05267a0200488d156f7b0200488d8d20d90000e8a342ffff",
+      "sha256": "e0f00c07919567752f994e841bbb827644b377863954cf876290c960490521ac",
+      "relocation_sites": [],
+      "source_report": {
+        "path": "work/runtime/information-foreign-economy-20261029-001/ordinary-economy-loans-001/economy-loans-ordinary-review-003.json",
+        "guard_name": "ledger_loans_title_and_descriptor"
+      }
+    }
+  ],
+  "income_layout": {
+    "schema": "information.foreign_income_memory.v1",
+    "country_income_cache_offset": "0x770",
+    "category_count": 19,
+    "native_total_cache_component_indices": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      12,
+      14,
+      15,
+      16,
+      17,
+      18
+    ],
+    "native_total_cell_output_slots": [
+      0,
+      2,
+      4,
+      6,
+      7,
+      9,
+      10,
+      11,
+      12,
+      13,
+      14,
+      15,
+      16
+    ],
+    "output_slots_and_cache_indices_are_separate_layers": true,
+    "display_category_keys": [
+      {
+        "index": 0,
+        "key": "INCOMETAX"
+      },
+      {
+        "index": 1,
+        "key": "INCOMEPROD"
+      },
+      {
+        "index": 2,
+        "key": "INCOMETRADE"
+      },
+      {
+        "index": 3,
+        "key": "INCOMEGOLD"
+      },
+      {
+        "index": 4,
+        "key": "INCOMETARRIFFS"
+      },
+      {
+        "index": 5,
+        "key": "INCOMEVASSAL"
+      },
+      {
+        "index": 6,
+        "key": "INCOMEHARBORFEES"
+      },
+      {
+        "index": 7,
+        "key": "INCOMESUBS"
+      },
+      {
+        "index": 8,
+        "key": "INCOME_WAR_REPARATION"
+      },
+      {
+        "index": 12,
+        "key": "SPOILS_OF_WAR_ECOVIEW"
+      },
+      {
+        "index": 15,
+        "key": "CONDOTTIERI"
+      },
+      {
+        "index": 16,
+        "key": "KNOWLEDGE_SHARING"
+      },
+      {
+        "index": 17,
+        "key": "INC_BLOCKADES"
+      },
+      {
+        "index": 18,
+        "key": "INC_LOOTING"
+      }
+    ],
+    "unit": "ducats",
+    "scale": 1000,
+    "period": "month",
+    "reference_period": "previous_month",
+    "subsidies_cache_index": 7,
+    "reparations_cache_index": 8,
+    "current_contract_or_outgoing_payment_status_proven": false,
+    "current_ui_rendering_observed": false
+  },
+  "loan_layout": {
+    "schema": "information.foreign_loans_memory.v1",
+    "target_list_head_offset": "0xde8",
+    "maximum_nodes": 64,
+    "node_size": 24,
+    "node_record_pointer_offset": "0x0",
+    "node_next_pointer_offset": "0x10",
+    "lender_fullref_offset": "0x20",
+    "interest_offset": "0x28",
+    "principal_offset": "0x2c",
+    "due_date_offset": "0x30",
+    "observer_lender_fullref_must_match_exactly": true,
+    "principal": {
+      "unit": "ducats",
+      "scale": 1,
+      "signed_width_bits": 32
+    },
+    "interest": {
+      "unit": "percent",
+      "scale": 1000,
+      "signed_width_bits": 32
+    },
+    "due_date": {
+      "unit": "eu4_hour_tick",
+      "calendar_contract": "date-calendar-source-002"
+    },
+    "reported_scope": "loans_from_logical_observer_to_target_only",
+    "total_debt_supported": false,
+    "current_ui_rendering_observed": false
+  },
+  "bankruptcy_risk": {
+    "status": "planned",
+    "reason": "No verified read-only foreign risk formula or visibility route is established.",
+    "public_field_remains_unknown": true
+  },
+  "page_gates": {
+    "country_view_and_observer_nonplayer_role_required": true,
+    "income_page_local_predicate": {
+      "observer_fullref_byte_offset": "0x6",
+      "observer_fullref_byte_value": 7,
+      "or_world_option_index": 17,
+      "option_value": 0
+    },
+    "income_page_does_not_inherit_quality_cfc70_or_tls_gate": true,
+    "loans_page_local_income_option_gate_bypass_is_not_global_gate_bypass": true,
+    "foreign_view_and_all_outer_gates_runtime_verified_by_this_profile": false
+  },
+  "semantics": {
+    "capture_schema": "information.foreign_economy_capture.v1",
+    "observer": "FRA logical nonplayer; physical player country may differ.",
+    "all_fields_partial": true,
+    "all_fields_complete": false,
+    "bankruptcy_risk": "planned; retain unknown until a separate read-only formula and permission source is proven.",
+    "loan_amounts": "observer-lent subset only; not total target debt.",
+    "income_and_payments": "prior-month cache projection; not current contracts, outgoing obligations, or a guarantee of UI display."
+  },
+  "limitations": [
+    "This static profile build did not observe a process or read runtime memory.",
+    "It does not call native functions or prove current cache freshness, UI rendering, or an atomic frame snapshot.",
+    "Bankruptcy risk remains planned and unknown; static action/caller evidence is not a forecast formula.",
+    "Income cache entries for subsidies and reparations describe prior-month received values, not proof of active contracts or zero outgoing amounts.",
+    "The loan reader observes only exact observer-lender matches; it does not establish total debt."
+  ]
+}

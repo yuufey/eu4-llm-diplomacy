@@ -1,0 +1,39 @@
+{
+  "evidence_kind": "actual_runtime_native_relation_change",
+  "source": "work\\runtime\\diplomacy-observer-20261113-direct-support-v61-001\\control-probe.jsonl",
+  "game_sha256": "b23fa0e1f698d31b01cdd1c3817a675805d8c6286cb66f9c231e6e2a42544d77",
+  "dll_sha256": "b5cfbc0544ab0b6573504e4df13041ed6d1dcaf2ba32ecc345790c510f4addca",
+  "offset": 2436202,
+  "line_bytes": 616,
+  "line_sha256": "c1621565d96f9f69701a6adc77fd5bbc31053668f322e453e114524c48483387",
+  "event": {
+    "event": "native_relation_changed",
+    "schema_version": 5,
+    "session_id": "35732-1dd7365c1942200",
+    "sequence": 10,
+    "country": "FRA",
+    "actor": "FRA",
+    "recipient": "HES",
+    "actor_fullref": "0x100007a00415246",
+    "recipient_fullref": "0x100009400534548",
+    "date_raw": 56692752,
+    "relation_kind": "military_access",
+    "command_state": null,
+    "command_mode": null,
+    "before": {
+      "active": true,
+      "guarantee": null,
+      "support_roles": null,
+      "subject": null
+    },
+    "after": {
+      "active": false,
+      "guarantee": null,
+      "support_roles": null,
+      "subject": null
+    },
+    "observation_path": "military_record_disable",
+    "source": "relation_command_or_six_family_record_return_actual_pair_state",
+    "complete": true
+  }
+}
