@@ -7,7 +7,7 @@
 - [开发范围、验证与子代理分工规则](../05-历史记录/2026-11-07开发范围与验证及委派复盘.md)
 - [diplomacy-corrective-validation-20261014.md](diplomacy-corrective-validation-20261014.md)
 - [diplomacy-test-lab.md](diplomacy-test-lab.md)
-- [DLL安装与更新.md](../DLL安装与更新.md)（原路径保留）
+- [DLL安装与更新.md](DLL安装与更新.md)
 - [Ghidra完整分析与缓存查询.md](Ghidra完整分析与缓存查询.md)
 - [HTTP拒绝请求的连接处理.md](HTTP拒绝请求的连接处理.md)
 - [rea-workflow-1375.md](../rea-workflow-1375.md)（原路径保留）
@@ -27,6 +27,6 @@
 - [信息服务合同.md](信息服务合同.md)
 - [信息计划验收清单.md](信息计划验收清单.md)
 - [信息采集与调度并发.md](信息采集与调度并发.md)
-- [外交运行工作流.md](../外交运行工作流.md)（原路径保留）
-- [开发与发布.md](../开发与发布.md)（原路径保留）
+- [外交运行工作流.md](外交运行工作流.md)
+- [开发与发布.md](开发与发布.md)
 - [路径配置.md](路径配置.md)
