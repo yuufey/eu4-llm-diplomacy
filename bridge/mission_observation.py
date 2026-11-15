@@ -4,6 +4,7 @@ import hashlib
 import re
 
 from . import relation_observation
+from .country_control_ack import supports_observer_version
 from .native_change_observation import NativeChangeCollector
 
 GAME_SHA256 = relation_observation.GAME_SHA256
@@ -113,14 +114,14 @@ def supported_ack(ack, game_sha256):
     if version in (51, 52):
         return (ack.get(SET_CAPABILITY) is not True and type(wire) is int and wire == 1
                 and ack.get('native_mission_completion_scope') == SCOPE)
-    if version in (53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64):
+    if supports_observer_version(ack, (53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64)):
         return (ack.get(SET_CAPABILITY) is True and type(wire) is int and wire == 2
                 and ack.get('native_mission_completion_scope') == SET_SCOPE)
     return False
 
 
 def supported_set_ack(ack, game_sha256):
-    return (supported_ack(ack, game_sha256) and ack['version'] in (53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64)
+    return (supported_ack(ack, game_sha256) and supports_observer_version(ack, (53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64))
             and ack.get(SET_CAPABILITY) is True)
 
 

@@ -94,35 +94,37 @@ def _reference(value):
     return number, tag
 
 
-def _is_end_observation(event, session_id, return_rvas):
+def _is_end_observation(event, session_id, return_rvas, controlled_country):
     if (not isinstance(event, dict) or event.get('event') != 'native_alliance_lifecycle'
             or event.get('session_id') != session_id or event.get('kind') != 'destructor_return'
             or event.get('caller_return_rva') not in return_rvas):
         return False
     source = event.get('source')
     recipient = _reference(source.get('recipient20')) if isinstance(source, dict) else None
-    return recipient is None or recipient[1] == 'FRA'
+    return recipient is None or recipient[1] == controlled_country
 
 
-def is_expiry_observation(event, session_id):
-    return _is_end_observation(event, session_id, (EXPIRY_RETURN_RVA,))
+def is_expiry_observation(event, session_id, *, controlled_country='FRA'):
+    return _is_end_observation(event, session_id, (EXPIRY_RETURN_RVA,), controlled_country)
 
 
-def is_inactivation_observation(event, session_id):
-    return _is_end_observation(event, session_id, INACTIVE_RETURN_RVAS)
+def is_inactivation_observation(event, session_id, *, controlled_country='FRA'):
+    return _is_end_observation(event, session_id, INACTIVE_RETURN_RVAS, controlled_country)
 
 
-def validate_expiry(event, session_id):
+def validate_expiry(event, session_id, *, controlled_country='FRA'):
     """Require the observed native expiry call, its return and its copied shape."""
-    return _validate_end(event, session_id, (EXPIRY_RETURN_RVA,), expired=True)
+    return _validate_end(event, session_id, (EXPIRY_RETURN_RVA,), expired=True,
+                         controlled_country=controlled_country)
 
 
-def validate_inactivation(event, session_id):
+def validate_inactivation(event, session_id, *, controlled_country='FRA'):
     """Recognize pending token, recheck or bulk removal with an unspecified cause."""
-    return _validate_end(event, session_id, INACTIVE_RETURN_RVAS, expired=False)
+    return _validate_end(event, session_id, INACTIVE_RETURN_RVAS, expired=False,
+                         controlled_country=controlled_country)
 
 
-def _validate_end(event, session_id, return_rvas, *, expired):
+def _validate_end(event, session_id, return_rvas, *, expired, controlled_country):
     if not isinstance(event, dict):
         return None
     source = event.get('source')
@@ -155,7 +157,7 @@ def _validate_end(event, session_id, return_rvas, *, expired):
         return None
     actor, mirror, recipient = (_reference(source.get(key)) for key in ('actor10', 'mirror18', 'recipient20'))
     if (actor is None or mirror != actor or recipient is None
-            or recipient[1] != 'FRA' or actor[1] == 'FRA'):
+            or recipient[1] != controlled_country or actor[1] == controlled_country):
         return None
     vtable = source.get('vtable_rva')
     if (not isinstance(vtable, str) or re.fullmatch(r'0x[0-9a-f]{1,8}', vtable) is None

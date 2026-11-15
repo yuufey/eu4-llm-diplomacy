@@ -5,6 +5,8 @@ import hashlib
 import json
 import re
 
+from .country_control_ack import supports_observer_version
+
 GAME_SHA256 = 'b23fa0e1f698d31b01cdd1c3817a675805d8c6286cb66f9c231e6e2a42544d77'
 CAPABILITY = 'native_country_modifier_add_observation'
 REMOVE_CAPABILITY = 'native_country_modifier_remove_observation'
@@ -57,28 +59,28 @@ def _event_id(session_id, sequence, change='added'):
 
 def supported_ack(ack, game_sha256):
     return (isinstance(ack, dict) and game_sha256 == GAME_SHA256
-            and type(ack.get('version')) is int and ack['version'] in (44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64)
-            and (ack['version'] not in (57, 58, 59, 60, 61, 62, 63, 64) or (
+            and supports_observer_version(ack, (44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64))
+            and (not supports_observer_version(ack, (57, 58, 59, 60, 61, 62, 63, 64)) or (
                 ack.get('native_mission_condition_observation') is True
                 and type(ack.get('native_mission_condition_wire')) is int
                 and ack['native_mission_condition_wire'] == 2
                 and ack.get('native_mission_condition_scope') == 'FRA_root_and_direct_area_province_holding_returns'))
-            and (ack['version'] not in (58, 59, 60, 61, 62, 63, 64) or (
+            and (not supports_observer_version(ack, (58, 59, 60, 61, 62, 63, 64)) or (
                 ack.get('native_mission_province_condition_observation') is True
                 and ack.get('native_relation_change_observation') is True
                 and ack.get('native_alliance_record_observation') is True
                 and ack.get('native_royal_record_observation') is True
                 and type(ack.get('native_relation_change_wire')) is int
-                and ack['native_relation_change_wire'] == (5 if ack['version'] in (60, 61, 62, 63, 64) else 4 if ack['version'] == 59 else 3)
+                and ack['native_relation_change_wire'] == (5 if supports_observer_version(ack, (60, 61, 62, 63, 64)) else 4 if ack['version'] == 59 else 3)
                 and ack.get('native_relation_change_scope')
                 == ('FRA_pair_at_six_relation_command_or_six_family_record_returns'
-                    if ack['version'] in (60, 61, 62, 63, 64) else
+                    if supports_observer_version(ack, (60, 61, 62, 63, 64)) else
                     'FRA_pair_at_six_relation_command_or_alliance_or_royal_or_directed_record_returns'
                     if ack['version'] == 59 else
                     'FRA_pair_at_six_relation_command_or_alliance_or_royal_record_returns')))
-            and (ack['version'] not in (59, 60, 61, 62, 63, 64) or ack.get('native_directed_record_observation') is True)
-            and (ack['version'] not in (60, 61, 62, 63, 64) or ack.get('native_support_subject_record_observation') is True)
-            and (ack['version'] not in (61, 62, 63, 64) or (
+            and (not supports_observer_version(ack, (59, 60, 61, 62, 63, 64)) or ack.get('native_directed_record_observation') is True)
+            and (not supports_observer_version(ack, (60, 61, 62, 63, 64)) or ack.get('native_support_subject_record_observation') is True)
+            and (not supports_observer_version(ack, (61, 62, 63, 64)) or (
                 ack.get('native_rival_record_observation') is True
                 and type(ack.get('native_rival_change_wire')) is int
                 and ack['native_rival_change_wire'] == 2
@@ -92,14 +94,14 @@ def supported_ack(ack, game_sha256):
 
 
 def supported_remove_ack(ack, game_sha256):
-    return (supported_ack(ack, game_sha256) and ack['version'] in (46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64)
+    return (supported_ack(ack, game_sha256) and supports_observer_version(ack, (46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64))
             and ack.get(REMOVE_CAPABILITY) is True
             and type(ack.get('native_country_modifier_remove_wire')) is int
             and ack['native_country_modifier_remove_wire'] == 1)
 
 
 def supported_expiry_ack(ack, game_sha256):
-    return (supported_remove_ack(ack, game_sha256) and ack['version'] in (47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64)
+    return (supported_remove_ack(ack, game_sha256) and supports_observer_version(ack, (47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64))
             and ack.get(EXPIRY_CAPABILITY) is True
             and type(ack.get('native_country_modifier_expiry_wire')) is int
             and ack['native_country_modifier_expiry_wire'] == 1)

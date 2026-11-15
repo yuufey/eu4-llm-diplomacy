@@ -685,7 +685,7 @@ class DiplomacyToolsTests(unittest.TestCase):
             self.assertFalse(list(directory.glob("*.pending")))
             self.assertEqual(
                 "NATIVE_SUBMISSION_WIRE_INVALID",
-                session.submit_offer_alliance("wire_bad_recipient", "FRA", "E2G", "initiate", 42)["reason_code"],
+                session.submit_offer_alliance("wire_bad_recipient", "FRA", "E!G", "initiate", 42)["reason_code"],
             )
             self.assertEqual(
                 "NATIVE_SUBMISSION_DATE_INVALID",

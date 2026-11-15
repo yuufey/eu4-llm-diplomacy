@@ -116,7 +116,7 @@ UNIT_REMOVAL_RETREAT_ENTRY_SPEC = {
 }
 RETREAT_UNIT_REMOVAL_KEY = "information_battle_retreat_unit_removal"
 RETREAT_MAX_EXTENSION_VERSION_KEY = "information_battle_retreat_max_extension_version"
-RETREAT_SUPPORTED_VERSIONS = (37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 51, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64)
+RETREAT_SUPPORTED_VERSIONS = (37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 51, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65)
 
 GAME_RVA = _loc.GAME_RVA
 GAME_DATE_OFFSET = _loc.GAME_DATE_OFFSET
@@ -388,7 +388,7 @@ def _manifest_static_guard(build_dir: Path = BUILD_DIR) -> dict[str, Any]:
         result["unknown_conditions"].append("manifest_unavailable")
         return result
     version = manifest.get("version")
-    if type(version) is not int or version not in (23, 34, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 51, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64):
+    if type(version) is not int or version not in (23, 34, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 51, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65):
         result["unknown_conditions"].append("unsupported_observer_build_version")
         return result
     if version == 23:
@@ -962,7 +962,7 @@ def _static_prepare(report: dict[str, Any], build_dir: Path = BUILD_DIR) -> dict
     if not isinstance(manifest_json, Mapping):
         raise V23ProbeError("battle_build_manifest_unavailable")
     version = manifest_json.get("version")
-    if type(version) is not int or version not in (23, 34, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 51, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64):
+    if type(version) is not int or version not in (23, 34, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 51, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65):
         raise V23ProbeError("unsupported_observer_build_version")
     if version in RETREAT_SUPPORTED_VERSIONS:
         retreat_specs = _retreat_specs_for_manifest(manifest_json)

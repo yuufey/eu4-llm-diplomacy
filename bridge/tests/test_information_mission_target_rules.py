@@ -1,7 +1,11 @@
 from __future__ import annotations
 
+from pathlib import Path
+import shutil
+
 import pytest
 
+from bridge.information import mission_target_rules
 from bridge.information.mission_target_rules import project_target_rules
 
 
@@ -76,6 +80,11 @@ def test_cwt_pin_and_alias_sources_are_in_result():
     assert cwt["status"] == "pinned_source_verified"
     assert cwt["commit"] == "a85622d368bbb7afca938ed70fdd5eda44aec769"
     assert cwt["license"] == "MIT"
+    assert cwt["vendor_manifest"] == {
+        "path": "third_party/cwtools-eu4-config.vendor.json",
+        "bytes": 395,
+        "sha256": "0c09c3338fa0077fcb0b904464ffa494477abcb7ed5e62cab8a537333d37864d",
+    }
     assert cwt["trigger_rules"] == {
         "path": "third_party/cwtools-eu4-config/triggers.cwt",
         "bytes": 222281,
@@ -85,6 +94,49 @@ def test_cwt_pin_and_alias_sources_are_in_result():
     assert alias["line"] == 3498
     assert alias["text"].startswith("alias[trigger:owns_core_province]")
     assert rules(result)[0]["field_classifications"] == ["provinces", "ownership", "cores"]
+
+
+def test_cwt_vendor_manifest_falls_back_to_pinned_sibling_and_reports_actual_path(
+        monkeypatch, tmp_path):
+    repository = Path(__file__).resolve().parents[2]
+    fake_root = tmp_path / "repository"
+    module_path = fake_root / "bridge" / "information" / "mission_target_rules.py"
+    module_path.parent.mkdir(parents=True)
+    vendor_dir = fake_root / "third_party" / "cwtools-eu4-config"
+    vendor_dir.mkdir(parents=True)
+    shutil.copyfile(repository / "third_party" / "cwtools-eu4-config" / "triggers.cwt",
+                    vendor_dir / "triggers.cwt")
+    fallback = fake_root / "third_party" / "cwtools-eu4-config.vendor.json"
+    shutil.copyfile(repository / "third_party" / "cwtools-eu4-config.vendor.json", fallback)
+    monkeypatch.setattr(mission_target_rules, "__file__", str(module_path))
+
+    provenance = mission_target_rules._cwt_provenance()
+    assert provenance["status"] == "pinned_source_verified"
+    assert provenance["vendor_manifest"] == {
+        "path": "third_party/cwtools-eu4-config.vendor.json",
+        "bytes": 395,
+        "sha256": "0c09c3338fa0077fcb0b904464ffa494477abcb7ed5e62cab8a537333d37864d",
+    }
+
+    canonical = vendor_dir / "VENDOR.json"
+    shutil.copyfile(fallback, canonical)
+    provenance = mission_target_rules._cwt_provenance()
+    assert provenance["status"] == "pinned_source_verified"
+    assert provenance["vendor_manifest"]["path"] == "third_party/cwtools-eu4-config/VENDOR.json"
+
+
+@pytest.mark.parametrize(
+    ("pin_name", "wrong_value"),
+    [("_VENDOR_BYTES", 394), ("_VENDOR_SHA256", "0" * 64)],
+)
+def test_cwt_vendor_sibling_still_requires_exact_size_and_sha(
+        monkeypatch, pin_name, wrong_value):
+    monkeypatch.setattr(mission_target_rules, pin_name, wrong_value)
+
+    provenance = mission_target_rules._cwt_provenance()
+
+    assert provenance["status"] == "unavailable"
+    assert provenance["reason"] == "CWT_SOURCE_PIN_MISMATCH"
 
 
 def test_explicit_literal_mappings_cover_m03_fields_without_expansion():

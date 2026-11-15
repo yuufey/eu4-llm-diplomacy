@@ -165,8 +165,8 @@ def _module_matches(module: dict[str, Any], dll_path: Path, dll_sha256: str) -> 
 
 
 def _validate_manifest(manifest: dict[str, Any], directory: Path) -> None:
-    if type(manifest.get("version")) is not int or manifest.get("version") not in (23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 51, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64):
-        raise ControlError("BUILD_MANIFEST_MISMATCH", "v23-v48, v51, or v54-v64 information-battle manifest required")
+    if type(manifest.get("version")) is not int or manifest.get("version") not in (23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 51, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65):
+        raise ControlError("BUILD_MANIFEST_MISMATCH", "v23-v48, v51, or v54-v65 information-battle manifest required")
     try:
         _validate_information_battle_manifest(manifest, directory)
     except SystemExit as exc:

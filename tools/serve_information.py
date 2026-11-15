@@ -1,9 +1,11 @@
-"""Serve the EU4 information service over MCP stdio or simple JSONL.
+"""Serve EU4 information and diplomacy over MCP stdio or simple JSONL.
 
 The default transport is MCP stdio.  ``--jsonl`` is a small diagnostic mode
 for scripts that send ``{"tool": ..., "arguments": ...}`` records; it is not
-an alternative permission boundary.  Both modes expose read-only information
-queries and subscription management only. With --battle-manage-capture,
+an alternative permission boundary. Both modes register information queries,
+subscriptions and diplomacy actions once, sharing the live operator session
+and request journal. Diplomacy execution can change the game.
+With --battle-manage-capture,
 subscriptions also manage the already-installed passive battle producer.
 """
 from __future__ import annotations
@@ -22,7 +24,7 @@ sys.path.insert(0, str(ROOT))
 
 from bridge.information.mcp import parse_json_line, serve_stdio
 from bridge.information.model import InformationError
-from bridge.information.tools import InformationTools
+from bridge.game_tools import GameTools
 
 
 DEFAULT_DATABASE = ROOT / "work" / "runtime" / "information-service" / "information.sqlite3"
@@ -60,6 +62,17 @@ def _same_database_file(left: Path | str, right: Path | str) -> bool:
 
 
 def _build_runtime(args: argparse.Namespace):
+    from bridge.diplomacy_control import DiplomacyControl
+
+    controlled_country = getattr(args, "controlled_country", None) or args.observer
+    control = DiplomacyControl(args.owner, controlled_country)
+    managed_countries = getattr(args, "managed_countries", None)
+    if managed_countries is None:
+        managed_countries = [controlled_country] if controlled_country is not None else []
+    for country in managed_countries:
+        DiplomacyControl(args.owner, country)
+    if controlled_country is not None and controlled_country not in managed_countries:
+        raise ValueError("CONTROLLED_COUNTRY_OUTSIDE_MANAGED_COUNTRIES")
     battle_only = getattr(args, "battle_only", False)
     if battle_only:
         if not args.operator_session or not args.observer or not args.battle_stream:
@@ -188,14 +201,17 @@ def _build_runtime(args: argparse.Namespace):
     diplomacy_tools = None
     session = None
     if args.operator_session:
-        # This is the same operator-only construction used by the existing
-        # diplomacy JSONL bridge.  The information source calls query methods
-        # only; it never receives an execution adapter.
+        # One session and journal serve both the read-only information source
+        # and explicit diplomacy tool calls. Sources still call query methods.
         from bridge.diplomacy import DiplomacyTools, ObserverSession
         from bridge.diplomacy_journal import DurableJournal
         from work.local_config import game_exe
 
         session = ObserverSession(args.operator_session, game_exe())
+        session.controlled_country = controlled_country
+        configure_control = getattr(session, "configure_controlled_countries", None)
+        if controlled_country is not None and callable(configure_control):
+            configure_control(managed_countries)
         if not battle_only:
             journal_path = args.journal or DEFAULT_JOURNAL
             journal_path.parent.mkdir(parents=True, exist_ok=True)
@@ -206,6 +222,8 @@ def _build_runtime(args: argparse.Namespace):
                 global_request_ids=True,
             )
             diplomacy_tools = DiplomacyTools(journal, session)
+            diplomacy_tools.control = control
+            diplomacy_tools.controlled_country = controlled_country
 
     # A recorded manifest is an explicit historical source.  Without either
     # kind of binding the default remains an unready live adapter so discover
@@ -566,11 +584,13 @@ def _build_runtime(args: argparse.Namespace):
         raise
     if battle_ingestor is not None:
         setattr(service, "battle_ingestor", battle_ingestor)
+    service.diplomacy_tools = diplomacy_tools
+    service.diplomacy_control = control
     return service, journal
 
 
-def _run_jsonl(service: Any, source: Iterable[str]) -> int:
-    tools = InformationTools(service)
+def _run_jsonl(service: Any, source: Iterable[str], *, tools: Any = None) -> int:
+    tools = tools if tools is not None else GameTools(service)
     for line in source:
         if not line.strip():
             continue
@@ -588,8 +608,8 @@ def _run_jsonl(service: Any, source: Iterable[str]) -> int:
         except Exception:
             # A bad source or one malformed model request must not terminate a
             # long-running JSONL process.  Keep details out of the wire.
-            logging.getLogger(__name__).exception("information JSONL request failed")
-            result = {"error": {"code": "internal_error", "message": "Information tool failed"}}
+            logging.getLogger(__name__).exception("game JSONL request failed")
+            result = {"error": {"code": "internal_error", "message": "Game tool failed"}}
         try:
             wire = json.dumps(result, ensure_ascii=False, allow_nan=False, separators=(",", ":"))
         except (TypeError, ValueError):
@@ -612,6 +632,10 @@ def build_parser() -> argparse.ArgumentParser:
                         help="Verified observer installation.json; omit for offline discovery")
     parser.add_argument("--observer", default=None,
                         help="Trusted operator country tag; kept distinct from the game's player tag")
+    parser.add_argument("--controlled-country", default=None,
+                        help="Country this LLM may control; defaults to --observer, omitting both leaves diplomacy read-only")
+    parser.add_argument("--managed-countries", nargs="+", default=None,
+                        help="Complete native managed-country set shared by LLM connections; defaults to the controlled country")
     parser.add_argument("--battle-only", action="store_true",
                         help="Serve session context and battles for a native-verified non-player observer")
     parser.add_argument("--static-game-data", action="store_true",
@@ -660,7 +684,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--journal", type=Path, default=None,
                         help="Operator DiplomacyTools journal (used with --operator-session)")
     parser.add_argument("--owner", default="llm",
-                        help="Owner name recorded for configuration changes")
+                        help="Operator-assigned caller identity and information namespace")
     parser.add_argument("--tick-seconds", type=_positive_seconds, default=0.0,
                         help="Run the background scheduler every N real seconds; 0 disables it")
     parser.add_argument("--jsonl", action="store_true",
@@ -676,9 +700,10 @@ def main(argv: list[str] | None = None) -> int:
     except (OSError, ValueError, RuntimeError, ImportError) as error:
         parser.error(str(error))
     try:
+        tools = GameTools(service)
         if args.jsonl:
-            return _run_jsonl(service, sys.stdin)
-        return serve_stdio(service, tick_seconds=args.tick_seconds)
+            return _run_jsonl(service, sys.stdin, tools=tools)
+        return serve_stdio(service, tick_seconds=args.tick_seconds, tools=tools)
     finally:
         # serve_stdio closes the service itself.  JSONL mode needs the same
         # lifecycle cleanup here.  The operator journal is closed after the

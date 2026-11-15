@@ -4,6 +4,7 @@ import hashlib
 import re
 
 from . import war_declaration_observation
+from .country_control_ack import supports_observer_version
 from .native_change_observation import NativeChangeCollector
 
 GAME_SHA256 = war_declaration_observation.GAME_SHA256
@@ -164,9 +165,9 @@ def supported_ack(ack, game_sha256):
         return False
     version = ack['version']
     wire = ack.get('native_relation_change_wire')
-    if version not in (60, 61, 62, 63, 64) and ack.get(SUPPORT_SUBJECT_RECORD_CAPABILITY) is True:
+    if not supports_observer_version(ack, (60, 61, 62, 63, 64)) and ack.get(SUPPORT_SUBJECT_RECORD_CAPABILITY) is True:
         return False
-    if version not in (59, 60, 61, 62, 63, 64) and ack.get(DIRECTED_RECORD_CAPABILITY) is True:
+    if not supports_observer_version(ack, (59, 60, 61, 62, 63, 64)) and ack.get(DIRECTED_RECORD_CAPABILITY) is True:
         return False
     if version in (50, 51, 52, 53):
         return (ack.get(RECORD_CAPABILITY) is not True and ack.get(ROYAL_RECORD_CAPABILITY) is not True
@@ -185,7 +186,7 @@ def supported_ack(ack, game_sha256):
                 and ack.get(DIRECTED_RECORD_CAPABILITY) is True
                 and type(wire) is int and wire == 4
                 and ack.get('native_relation_change_scope') == DIRECTED_RECORD_SCOPE)
-    if version in (60, 61, 62, 63, 64):
+    if supports_observer_version(ack, (60, 61, 62, 63, 64)):
         return (ack.get(RECORD_CAPABILITY) is True and ack.get(ROYAL_RECORD_CAPABILITY) is True
                 and ack.get(DIRECTED_RECORD_CAPABILITY) is True
                 and ack.get(SUPPORT_SUBJECT_RECORD_CAPABILITY) is True
@@ -195,22 +196,22 @@ def supported_ack(ack, game_sha256):
 
 
 def supported_record_ack(ack, game_sha256):
-    return (supported_ack(ack, game_sha256) and ack['version'] in (54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64)
+    return (supported_ack(ack, game_sha256) and supports_observer_version(ack, (54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64))
             and ack.get(RECORD_CAPABILITY) is True)
 
 
 def supported_royal_record_ack(ack, game_sha256):
-    return (supported_ack(ack, game_sha256) and ack['version'] in (58, 59, 60, 61, 62, 63, 64)
+    return (supported_ack(ack, game_sha256) and supports_observer_version(ack, (58, 59, 60, 61, 62, 63, 64))
             and ack.get(RECORD_CAPABILITY) is True and ack.get(ROYAL_RECORD_CAPABILITY) is True)
 
 
 def supported_directed_record_ack(ack, game_sha256):
-    return (supported_ack(ack, game_sha256) and ack['version'] in (59, 60, 61, 62, 63, 64)
+    return (supported_ack(ack, game_sha256) and supports_observer_version(ack, (59, 60, 61, 62, 63, 64))
             and ack.get(DIRECTED_RECORD_CAPABILITY) is True)
 
 
 def supported_support_subject_record_ack(ack, game_sha256):
-    return (supported_ack(ack, game_sha256) and ack['version'] in (60, 61, 62, 63, 64)
+    return (supported_ack(ack, game_sha256) and supports_observer_version(ack, (60, 61, 62, 63, 64))
             and ack.get(SUPPORT_SUBJECT_RECORD_CAPABILITY) is True)
 
 

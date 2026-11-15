@@ -23,6 +23,12 @@ class PeaceExecutionParameterTests(unittest.TestCase):
         self.assertIsNot(parameters, result)
         self.assertIsNot(parameters["peace_context"], result["peace_context"])
 
+    def test_other_countries_use_the_same_peace_parameter_contract(self):
+        parameters = {"peace_context": {
+            "war_id": WAR_ID, "direction": "demand", "terms": []}}
+        for actor in ("ENG", "POR", "K00"):
+            self.assertEqual(parameters, normalize("white_peace", "SAV", parameters, actor=actor))
+
     def test_mixed_terms_are_normalized_money_then_province(self):
         parameters = {"peace_context": {
             "war_id": WAR_ID,
@@ -152,7 +158,7 @@ class PeaceExecutionParameterTests(unittest.TestCase):
             "war_id": WAR_ID, "direction": "demand", "terms": []}}
         checks = (
             ("actor", lambda: normalize("white_peace", "ENG", base,
-                                         actor="ENG"),
+                                         actor="eng"),
              "PEACE_EXECUTION_ACTOR_INVALID"),
             ("recipient", lambda: normalize("white_peace", "FRA", base),
              "PEACE_EXECUTION_RECIPIENT_INVALID"),

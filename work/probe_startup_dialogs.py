@@ -55,7 +55,7 @@ body = r'''
         try:
             ui_global=qword(base+0x23494d0)
             if ui_global: roots.append((ui_global,0,'ui_global'))
-        except OSError:
+        except (OSError, RuntimeError):
             pass
         try:
             server=qword(game+0x1e00)
@@ -73,7 +73,7 @@ body = r'''
                         break
                     node=qword(node)
                     route+='+0x0'
-        except OSError:
+        except (OSError, RuntimeError):
             pass
         queue=list(roots); visited=set(); graph_matches=list(direct_matches); cursor=0
         graph_started=time.monotonic(); graph_deadline=graph_started+2.0

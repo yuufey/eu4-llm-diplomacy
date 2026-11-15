@@ -34,7 +34,7 @@ static void observe(const ProtocolWrapperShape& wrapper) noexcept {
         || !read(action+0x34,state) || state!=0
         || !observation_country_handle(event.actor)
         || !bridge_alliance_inbound_detail::inbound_read_country(event.actor,country)
-        || !bridge_alliance_inbound_detail::inbound_is_fra(event.recipient,country)
+        || !bridge_alliance_inbound_detail::inbound_is_controlled(event.recipient,country)
         || event.actor==event.recipient) return;
     uintptr_t game=0;
     if (!read(base+0x233fe58,game) || !read(game+0x1dd0,event.observed_date)

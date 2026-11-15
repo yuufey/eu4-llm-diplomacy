@@ -23,6 +23,7 @@ _SUBSIDY_ENTRY_RVA = 0xA62DF0
 # Fixed COFF subsidy_remove_observe RVA in the already admitted observer DLL.
 _SUBSIDY_OBSERVER_HOOKS = {
     'f05d9eb9209e8d35f512bd1d066cf5fc6585d66f58786527a86ef27cbddd64e6': 0xBE260,
+    '4238740233dbb3415c3151e5eace7f41b517a90d8b8843c9b6cff0e6c579dbc8': 0xBF260,
 }
 
 

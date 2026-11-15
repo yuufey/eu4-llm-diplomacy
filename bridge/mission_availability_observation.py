@@ -9,6 +9,7 @@ import hashlib
 import re
 
 from . import mission_observation, relation_observation
+from .country_control_ack import supports_observer_version
 from .native_change_observation import NativeChangeCollector
 
 GAME_SHA256 = relation_observation.GAME_SHA256
@@ -66,7 +67,7 @@ def objects(payload):
 
 def supported_ack(ack, game_sha256):
     return (mission_observation.supported_ack(ack, game_sha256)
-            and ack['version'] in (52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64) and ack.get(CAPABILITY) is True
+            and supports_observer_version(ack, (52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64)) and ack.get(CAPABILITY) is True
             and type(ack.get('native_mission_availability_wire')) is int
             and ack['native_mission_availability_wire'] == 1
             and ack.get('native_mission_availability_scope') == SCOPE)

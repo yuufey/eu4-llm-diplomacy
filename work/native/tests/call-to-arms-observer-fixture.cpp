@@ -40,7 +40,7 @@ static bool inbound_read_country(uint64_t value,uintptr_t& result) {
     result=0x400000;
     return observation_country_handle(value);
 }
-static bool inbound_is_fra(uint64_t value,uintptr_t& result) {
+static bool inbound_is_controlled(uint64_t value,uintptr_t& result) {
     return value==country("FRA") && inbound_read_country(value,result);
 }
 static void inbound_tag(char (&result)[4],uint64_t value) {

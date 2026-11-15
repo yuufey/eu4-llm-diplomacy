@@ -114,16 +114,37 @@ TOOLS = ("list_diplomatic_actions", "inspect_diplomatic_action", "execute_diplom
 
 def jsonl_main(argv: list[str]) -> int:
     from bridge.diplomacy import DiplomacyTools, ObserverSession
+    from bridge.diplomacy_control import DiplomacyControl
     from bridge.diplomacy_journal import DurableJournal
     from work.local_config import game_exe
 
     parser = argparse.ArgumentParser(description=__doc__, epilog="Research commands remain available: capabilities, describe, preview, submit, validate, request, status, audit, reconcile. Use --legacy --help for their options.")
     parser.add_argument("--operator-session", type=Path)
+    parser.add_argument("--controlled-country", default=None,
+                        help="Operator-assigned decision country; omitted means read-only")
+    parser.add_argument("--owner", default="llm", help="Operator-assigned LLM identity")
+    parser.add_argument("--managed-countries", nargs="+", default=None,
+                        help="Complete native managed-country set; defaults to --controlled-country")
     parser.add_argument("--offline-directory", type=Path, default=ROOT / "work/runtime/diplomacy-offline")
     parser.add_argument("--journal", type=Path, default=ROOT / "work/runtime/diplomacy-service/requests.sqlite3")
     parser.add_argument("--input-file", type=Path)
     args = parser.parse_args(argv)
+    try:
+        control = DiplomacyControl(args.owner, args.controlled_country)
+        managed_countries = args.managed_countries
+        if managed_countries is None:
+            managed_countries = [args.controlled_country] if args.controlled_country is not None else []
+        for country in managed_countries:
+            DiplomacyControl(args.owner, country)
+        if args.controlled_country is not None and args.controlled_country not in managed_countries:
+            raise ValueError("CONTROLLED_COUNTRY_OUTSIDE_MANAGED_COUNTRIES")
+    except ValueError as error:
+        parser.error(str(error))
     session = ObserverSession(args.operator_session, game_exe()) if args.operator_session else None
+    if session is not None:
+        session.controlled_country = args.controlled_country
+        if args.controlled_country is not None:
+            session.configure_controlled_countries(managed_countries)
     directory = session.directory if session else args.offline_directory
     directory.mkdir(parents=True, exist_ok=True)
     args.journal.parent.mkdir(parents=True, exist_ok=True)
@@ -132,6 +153,8 @@ def jsonl_main(argv: list[str]) -> int:
         global_request_ids=True)
     try:
         api = DiplomacyTools(journal, session)
+        api.control = control
+        api.controlled_country = args.controlled_country
         source = args.input_file.open(encoding="utf-8-sig") if args.input_file else sys.stdin
         try:
             for line in source:

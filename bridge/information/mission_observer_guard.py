@@ -14,6 +14,16 @@ DLL_SHA256 = "8984b4da991e079d96ef25dc6009c865fcf38176656f11921c189e0756000ea8"
 ASSET_FILE = Path(__file__).parent / "profiles/mission-observer-guard-v54.json"
 ASSET_SHA256 = "6f111e5a650f518f2b1273346876c7fc2e2b4e17b024dd3635a7932411741fa9"
 _BUILDS = {
+    "4238740233dbb3415c3151e5eace7f41b517a90d8b8843c9b6cff0e6c579dbc8": {
+        "version": 65, "dll_name": "eu4_bridge_diplomacy_observer_v65.dll",
+        "asset_file": Path(__file__).parent / "profiles/mission-observer-guard-v65-country-control.json",
+        "asset_sha256": "1e16f8538e44d5f6342cad28fcca37a730f198c47f984ae0e2ba87e8cd18e91e",
+        "manifest_sha256": "fa142d40ed7f79ab4e509d94dea5b1666eb92bc3f754760ad5340d94fbdaa9ab",
+        "manifest_path": "work/runtime/diplomacy-observer-20261116-country-control-v65-002/build-manifest.json",
+        "source_count": 207, "build_version": 65,
+        "game_sha256": "b23fa0e1f698d31b01cdd1c3817a675805d8c6286cb66f9c231e6e2a42544d77",
+        "evidence_sha256": "b9227ad43fd8c513581f786ec31e64dac9f53dec884b6cd187bf54c4176eecc8",
+    },
     "3a9308690aa611b829ad38eb9680666f20f13baa1dd494cf4251c06f2caa705d": {
         "version": 64, "dll_name": "eu4_bridge_diplomacy_observer_v64.dll",
         "asset_file": Path(__file__).parent / "profiles/mission-observer-guard-v64-land-promise.json",
@@ -305,7 +315,7 @@ def verify_entry(reader: Any, game_base: int, rva: int,
     family = "mission_availability_entry"
     if rva == PROVINCE_RVA:
         asset = asset.get("province")
-        if not isinstance(asset, dict) or contract["version"] not in (57, 58, 59, 60, 61, 64):
+        if not isinstance(asset, dict) or contract["version"] not in (57, 58, 59, 60, 61, 64, 65):
             return None
         prefix, projected_unwind, home_slot = PROVINCE_PREFIX, PROVINCE_UNWIND, 0x10
         family = "mission_province_condition_entry"

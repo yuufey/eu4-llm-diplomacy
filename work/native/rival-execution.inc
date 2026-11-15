@@ -268,7 +268,7 @@ static void rival_execution_tick() {
         current.current_tick,current.current_date);
     if (!check.ok()) { invalidate(b,wire::context_error_name(check.error)); return; }
     uint64_t actor=0,target=0; uintptr_t dispatcher=0,transport=0;
-    if (!alliance_query_country(request.actor,actor)
+    if (!observation_control_country_tag(request.actor,actor)
         || !alliance_query_country(request.recipient,target)
         || !observation_country_handle(actor) || !observation_country_handle(target)
         || actor==target || !world_transport(dispatcher,transport)) {

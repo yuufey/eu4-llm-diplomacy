@@ -12,6 +12,8 @@ We have confirmed that the diplomatic interfaces exposed by the game itself are 
 
 ## Current Status
 
+The EU4 1.37.4 backend now exposes information queries, reports, subscriptions and diplomatic actions through one MCP/JSONL service. Operators assign each LLM a caller identity and a country; the service and v65 native observer enforce diplomatic decision permissions. See the [Chinese feature guide and API examples](docs/共用开发/信息导出与统一操控接口更新说明.md) and [setup guide](docs/共用开发/统一游戏服务使用说明.md). Information visibility, event coverage and a persistent LLM decision loop retain the limitations described there; dated entries below describe their historical versions.
+
 This project is currently in **early experimental development**.
 
 2026-10-16: [EU4 1.37.5 research checkpoint](docs/历史归档/research-20261016-en.md) is now available with 120 TAG action bindings, direct runtime observers and a 60-record war/peace evidence index. The original batch contains 41 dispatches, 77 refusals and 2 unknowns; historical selected effects cover 48 actions, with 44 persistence records. Full effect validation, a callable 1.37.5 war/peace executor and LLM integration remain incomplete. Research is paused; this is a source snapshot. See the [tool catalog](docs/外交操作/数据/runtime-capability-map-1375-v8.json) and [Chinese evidence report](docs/历史归档/research-20261016.md).

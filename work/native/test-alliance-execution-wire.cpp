@@ -47,10 +47,10 @@ static std::string wire_for_v3_action(const char* action,const char* cbkey,
     std::int32_t province,const char* beneficiary,const char* recipient="SAV",
     const char* phase="initiate",std::uint64_t expiry=1100000000ull,
     std::int32_t date=42,const char* request_id="req_01",
-    const char* session_id="1234-1abc") {
+    const char* session_id="1234-1abc",const char* actor="FRA") {
     return std::string("EU4DIP_EXEC3|")+request_id+"|"+session_id+"|"
         +std::to_string(expiry)+"|"+std::to_string(date)
-        +"|"+action+"|FRA|"+recipient+"|"+phase+"|"+cbkey+"|"
+        +"|"+action+"|"+actor+"|"+recipient+"|"+phase+"|"+cbkey+"|"
         +std::to_string(province)+"|"+beneficiary+"\n";
 }
 
@@ -58,9 +58,9 @@ static std::string wire_for_declare_war(const char* cbkey="conquest",
     std::int32_t province=123,const char* beneficiary="---",
     const char* recipient="SAV",std::uint64_t expiry=1100000000ull,
     std::int32_t date=42,const char* request_id="req_01",
-    const char* session_id="1234-1abc") {
+    const char* session_id="1234-1abc",const char* actor="FRA") {
     return wire_for_v3_action("declare_war",cbkey,province,beneficiary,
-        recipient,"initiate",expiry,date,request_id,session_id);
+        recipient,"initiate",expiry,date,request_id,session_id,actor);
 }
 
 static std::string wire_for(std::uint64_t expiry=1100000000ull,
@@ -159,8 +159,17 @@ static void test_field_rejections() {
         ParseError::invalid_date,"date_negative_overflow");
     expect_error(std::string("v1|req_01|1234-1abc|1100000000|42|wrong_action|FRA|USA|initiate\n"),
         ParseError::invalid_action,"action_rejected");
-    expect_error(std::string("v1|req_01|1234-1abc|1100000000|42|offer_alliance|POR|USA|initiate\n"),
-        ParseError::invalid_actor,"actor_rejected");
+    expect_error(std::string("v1|req_01|1234-1abc|1100000000|42|offer_alliance|por|USA|initiate\n"),
+        ParseError::invalid_actor,"actor_lowercase");
+    ExecutionRequest dynamic_actor{};
+    const std::string dynamic_actor_wire=
+        "v1|req_01|1234-1abc|1100000000|42|offer_alliance|K00|E00|initiate\n";
+    const auto dynamic_actor_result=parse_request(dynamic_actor_wire.data(),
+        dynamic_actor_wire.size(),dynamic_actor);
+    check(dynamic_actor_result.ok()
+        && std::strcmp(dynamic_actor.actor,"K00")==0
+        && std::strcmp(dynamic_actor.recipient,"E00")==0,
+        "dynamic_numeric_actor_and_recipient");
     expect_error(std::string("v1|req_01|1234-1abc|1100000000|42|offer_alliance|FRA|usa|initiate\n"),
         ParseError::invalid_recipient,"recipient_lowercase");
     expect_error(std::string("v1|req_01|1234-1abc|1100000000|42|offer_alliance|FRA|US|initiate\n"),
@@ -594,6 +603,16 @@ static void test_declare_war_v3_wire() {
     check(no_cb_fra.war_goal_province==-1,
         "declare_war_no_cb_province_default");
 
+    ExecutionRequest no_cb_dynamic{};
+    const std::string no_cb_dynamic_wire=wire_for_declare_war(
+        "no_casus_belli",-1,"K00","E00",1100000000ull,42,
+        "req_dynamic","1234-1abc","K00");
+    check(parse_request(no_cb_dynamic_wire.data(),no_cb_dynamic_wire.size(),
+        no_cb_dynamic).ok()
+        && std::strcmp(no_cb_dynamic.actor,"K00")==0
+        && std::strcmp(no_cb_dynamic.war_goal_beneficiary,"K00")==0,
+        "declare_war_no_cb_actor_beneficiary_dynamic");
+
     ExecutionRequest no_cb_empty{};
     const std::string no_cb_empty_wire=wire_for_declare_war(
         "no_casus_belli",-1,"---");
@@ -627,7 +646,7 @@ static void test_declare_war_v3_wire() {
         ParseError::invalid_war_goal_province,"declare_war_province_overflow");
     expect_error(wire_for_v3_action("declare_war","conquest",123,"fra"),
         ParseError::invalid_war_goal_beneficiary,"declare_war_beneficiary_lowercase");
-    expect_error(wire_for_v3_action("declare_war","conquest",123,"FR4"),
+    expect_error(wire_for_v3_action("declare_war","conquest",123,"FR-"),
         ParseError::invalid_war_goal_beneficiary,"declare_war_beneficiary_character");
     expect_error(wire_for_v3_action("declare_war","conquest",123,"--"),
         ParseError::invalid_war_goal_beneficiary,"declare_war_beneficiary_length");

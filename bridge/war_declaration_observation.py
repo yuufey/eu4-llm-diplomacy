@@ -4,6 +4,7 @@ import hashlib
 import re
 
 from . import rival_observation
+from .country_control_ack import supports_observer_version
 from .native_change_observation import NativeChangeCollector
 from .war_participants import project_war_participants
 
@@ -86,7 +87,7 @@ def project_role_labels(payload):
 
 def supported_ack(ack, game_sha256):
     return (rival_observation.supported_ack(ack, game_sha256)
-            and ack['version'] in (49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64) and ack.get(CAPABILITY) is True
+            and supports_observer_version(ack, (49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64)) and ack.get(CAPABILITY) is True
             and type(ack.get('native_war_declaration_wire')) is int and ack['native_war_declaration_wire'] == 1
             and ack.get('native_war_declaration_scope') == SCOPE)
 

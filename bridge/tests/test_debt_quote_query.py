@@ -129,10 +129,12 @@ def _all_keys(value: object) -> set[str]:
 class DebtQuoteQueryTests(unittest.TestCase):
     def test_request_scope_and_empty_parameters_are_strict(self):
         self.assertEqual({}, normalize_request("FRA", "ENG", "initiate", {}))
+        self.assertEqual({}, normalize_request("POR", "ENG", "initiate", {}))
+        self.assertEqual({}, normalize_request("FRA", "POR", "initiate", {}))
+        self.assertEqual({}, normalize_request("K00", "SAV", "initiate", {}))
         invalid = (
-            ("POR", "ENG", "initiate", {}),
+            ("por", "ENG", "initiate", {}),
             ("FRA", "FRA", "initiate", {}),
-            ("FRA", "POR", "initiate", {}),
             ("FRA", "eng", "initiate", {}),
             ("FRA", "EN1G", "initiate", {}),
             ("FRA", "ENG", "accept", {}),

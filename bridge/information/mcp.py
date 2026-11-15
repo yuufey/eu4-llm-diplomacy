@@ -3,8 +3,8 @@
 The repository deliberately does not require an MCP SDK.  This module
 implements the legacy handshake shared by MCP ``2024-11-05`` and
 ``2025-03-26`` and the newline-delimited JSON-RPC stdio transport described by
-the official specification.  It exposes only the information tools; no
-diplomatic execution endpoint is registered here.
+the official specification. The default registry exposes information tools.
+The game host supplies its combined registry to include diplomacy tools.
 """
 from __future__ import annotations
 
@@ -123,13 +123,14 @@ class _TickLoop:
 class InformationMCPServer:
     """MCP request dispatcher backed by one information service instance."""
 
-    def __init__(self, service: "InformationService", *, tick_seconds: float = 0.0):
+    def __init__(self, service: "InformationService", *, tick_seconds: float = 0.0,
+                 tools: Any = None):
         if (type(tick_seconds) not in (int, float)
                 or not math.isfinite(float(tick_seconds))
                 or tick_seconds < 0):
             raise ValueError("tick_seconds must be a non-negative number")
         self.service = service
-        self.tools = InformationTools(service)
+        self.tools = tools if tools is not None else InformationTools(service)
         self.protocol_version: str | None = None
         self.initialized = False
         self._initialized_notification = False
@@ -178,10 +179,10 @@ class InformationMCPServer:
             "protocolVersion": negotiated,
             "capabilities": {"tools": {"listChanged": False}},
             "serverInfo": {"name": SERVER_NAME, "version": SERVER_VERSION},
-            "instructions": (
+            "instructions": getattr(self.tools, "instructions", (
                 "Information tools are read-only. They query configured game information, "
                 "manage subscriptions and write results to the SQLite outbox; they never execute diplomacy."
-            ),
+            )),
         }
 
     def _check_ready(self, method: str) -> None:
@@ -356,10 +357,11 @@ MCPServer = InformationMCPServer
 
 def serve_stdio(service: "InformationService", *, tick_seconds: float = 0.0,
                 input_stream: IO[str] | None = None,
-                output_stream: IO[str] | None = None) -> int:
+                output_stream: IO[str] | None = None,
+                tools: Any = None) -> int:
     """Serve one service over MCP stdio and return the process exit code."""
 
-    return InformationMCPServer(service, tick_seconds=tick_seconds).serve(input_stream, output_stream)
+    return InformationMCPServer(service, tick_seconds=tick_seconds, tools=tools).serve(input_stream, output_stream)
 
 
 __all__ = [

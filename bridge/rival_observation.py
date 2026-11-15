@@ -4,6 +4,7 @@ import hashlib
 import re
 
 from . import country_modifier_observation
+from .country_control_ack import supports_observer_version
 from .native_change_observation import NativeChangeCollector
 
 GAME_SHA256 = country_modifier_observation.GAME_SHA256
@@ -116,17 +117,17 @@ def objects(payload):
 
 def supported_ack(ack, game_sha256):
     return (country_modifier_observation.supported_expiry_ack(ack, game_sha256)
-            and ack['version'] in (48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64)
+            and supports_observer_version(ack, (48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64))
             and ack.get(CAPABILITY) is True
             and type(ack.get('native_rival_change_wire')) is int
-            and ack['native_rival_change_wire'] == (2 if ack['version'] in (61, 62, 63, 64) else 1)
-            and ack.get('native_rival_change_scope') == (COMBINED_SCOPE if ack['version'] in (61, 62, 63, 64) else SCOPE)
-            and (ack['version'] not in (61, 62, 63, 64) or (ack.get(RECORD_CAPABILITY) is True
+            and ack['native_rival_change_wire'] == (2 if supports_observer_version(ack, (61, 62, 63, 64)) else 1)
+            and ack.get('native_rival_change_scope') == (COMBINED_SCOPE if supports_observer_version(ack, (61, 62, 63, 64)) else SCOPE)
+            and (not supports_observer_version(ack, (61, 62, 63, 64)) or (ack.get(RECORD_CAPABILITY) is True
                  and ack.get('native_rival_record_count_basis') == COUNT_BASIS)))
 
 
 def supported_record_ack(ack, game_sha256):
-    return supported_ack(ack, game_sha256) and ack['version'] in (61, 62, 63, 64)
+    return supported_ack(ack, game_sha256) and supports_observer_version(ack, (61, 62, 63, 64))
 
 
 def public_observation(event, session_id):

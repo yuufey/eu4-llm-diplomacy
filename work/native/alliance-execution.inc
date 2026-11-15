@@ -485,8 +485,8 @@ static bool execution_target_allowed(const char* recipient,const char* action_id
         || (recipient[0]=='L' && recipient[1]=='I' && recipient[2]=='T'));
 }
 
-static bool execution_is_fra(uint64_t handle) noexcept {
-    return static_cast<uint32_t>(handle&0xffffffu)==0x415246u;
+static bool execution_is_controlled(uint64_t handle) noexcept {
+    return observation_control_country_handle_tag_only(handle);
 }
 
 static unsigned execution_free_binding() noexcept {
@@ -2079,8 +2079,8 @@ extern "C" int bridge_execution_execute(void* value) {
             && read(action,table)
             && (table==base+lifecycle_declarewar_vtable_rva || table==base+lifecycle_peace_vtable_rva)
             && read(action+0x10,actor) && read(action+0x20,recipient)
-            && (execution_is_fra(actor)
-                || (table==base+lifecycle_peace_vtable_rva && execution_is_fra(recipient)))) {
+            && (execution_is_controlled(actor)
+                || (table==base+lifecycle_peace_vtable_rva && execution_is_controlled(recipient)))) {
             execution_failure("unknown",table==base+lifecycle_peace_vtable_rva
                 ?"FRA_PEACE_PAYLOAD_UNREADABLE":"FRA_DECLARE_WAR_PAYLOAD_UNREADABLE"); return 0;
         }
@@ -2197,13 +2197,13 @@ extern "C" int bridge_execution_execute(void* value) {
     // path is integrated, keep controlled-country choices explicit here rather
     // than passing them through the Alliance pending/response interpretation.
     if (payload.family==ActionFamily::peace) {
-        if (payload.state34==0 && execution_is_fra(payload.actor10)) {
+        if (payload.state34==0 && execution_is_controlled(payload.actor10)) {
             execution_failure("unknown","UNAUTHORIZED_FRA_PEACE_OFFER"); return 0;
         }
-        if ((payload.state34==1 || payload.state34==2) && execution_is_fra(payload.recipient20)) {
+        if ((payload.state34==1 || payload.state34==2) && execution_is_controlled(payload.recipient20)) {
             execution_failure("unknown","UNAUTHORIZED_FRA_PEACE_RESPONSE"); return 0;
         }
-        if (payload.state34==0 && execution_is_fra(payload.recipient20)) {
+        if (payload.state34==0 && execution_is_controlled(payload.recipient20)) {
             bridge_inbound_scope_begin(reinterpret_cast<void*>(entry.action),payload.actor10,
                 payload.recipient20,0,payload.variant38);
             if (!bridge_inbound_scope_active()) {
@@ -2217,7 +2217,7 @@ extern "C" int bridge_execution_execute(void* value) {
         execution_call_original(value); return 1;
     }
     if ((payload.family==ActionFamily::gift || payload.family==ActionFamily::influence)
-        && execution_is_fra(payload.actor10)) {
+        && execution_is_controlled(payload.actor10)) {
         execution_failure("unknown",payload.family==ActionFamily::gift
             ?"UNAUTHORIZED_FRA_GIFT":"UNAUTHORIZED_FRA_INFLUENCE");
         return 0;
@@ -2225,7 +2225,7 @@ extern "C" int bridge_execution_execute(void* value) {
     // Diplomat tasks and Guarantee are unilateral. Other actors' native processing
     // is forwarded even when its recipient is FRA; no LLM acceptance exists.
     if (execution_unilateral_family(payload.family)) {
-        if (execution_is_fra(payload.actor10)) {
+        if (execution_is_controlled(payload.actor10)) {
             execution_failure("unknown",payload.family==ActionFamily::declare_war?"UNAUTHORIZED_FRA_DECLARE_WAR":
                 payload.family==ActionFamily::insult?"UNAUTHORIZED_FRA_INSULT":
                 payload.family==ActionFamily::guarantee?"UNAUTHORIZED_FRA_GUARANTEE":
@@ -2238,7 +2238,7 @@ extern "C" int bridge_execution_execute(void* value) {
     }
     // Only the canonical FRA state-0 offer is isolated.  Other countries,
     // other alliance phases, military and economic commands remain native.
-    if (execution_entry_is_offer(entry) && execution_is_fra(payload.actor10)) {
+    if (execution_entry_is_offer(entry) && execution_is_controlled(payload.actor10)) {
         execution_failure("unknown",payload.family==ActionFamily::vassalization
             ?"UNAUTHORIZED_FRA_VASSALIZATION_OFFER":payload.family==ActionFamily::military_access
             ?"UNAUTHORIZED_FRA_MILITARY_ACCESS_REQUEST":payload.family==ActionFamily::support_independence
@@ -2247,7 +2247,7 @@ extern "C" int bridge_execution_execute(void* value) {
             ?"UNAUTHORIZED_FRA_FAVOR_GOLD_OFFER":"UNAUTHORIZED_FRA_OFFER");
         return 0;
     }
-    if (execution_entry_is_dissolve(entry) && execution_is_fra(payload.actor10)) {
+    if (execution_entry_is_dissolve(entry) && execution_is_controlled(payload.actor10)) {
         execution_failure("unknown",payload.family==ActionFamily::vassalization
             ?"UNAUTHORIZED_FRA_VASSALIZATION_CANCEL":payload.family==ActionFamily::military_access
             ?"UNAUTHORIZED_FRA_MILITARY_ACCESS_CANCEL":payload.family==ActionFamily::support_independence
@@ -2256,7 +2256,7 @@ extern "C" int bridge_execution_execute(void* value) {
         return 0;
     }
     if (execution_entry_is_response(entry,payload)
-        && execution_is_fra(payload.recipient20)) {
+        && execution_is_controlled(payload.recipient20)) {
         execution_failure("unknown",payload.family==ActionFamily::vassalization
             ?"UNAUTHORIZED_FRA_VASSALIZATION_RESPONSE":payload.family==ActionFamily::military_access
             ?"UNAUTHORIZED_FRA_MILITARY_ACCESS_RESPONSE":payload.family==ActionFamily::support_independence
@@ -2295,11 +2295,11 @@ static bool execution_preflight(const ExecutionRequest& request,
     action_constructed=false;
     uintptr_t game=0; uint64_t player=0;
     if (!read(base+0x233fe58,game) || !read(game+0x1dd0,date)
-        || !read(game+0x1e60,player)
-        || static_cast<uint32_t>(player&0xffffffu)!=0x524f50u
-        || !alliance_query_country("FRA",actor)
+        || !read(game+0x1e60,player) || !observation_country_handle(player)
+        || !observation_control_country_tag(request.actor,actor)
         || !execution_target_allowed(request.recipient,request.action_id)
-        || !alliance_query_country(request.recipient,recipient) || actor==recipient)
+        || !alliance_query_country(request.recipient,recipient)
+        || !observation_country_handle(recipient) || actor==recipient)
         return false;
     const bool marriage=strcmp(request.action_id,"offer_royal_marriage")==0
         || strcmp(request.action_id,"break_royal_ties")==0;

@@ -38,7 +38,7 @@ static void peace_handler_observe(void* action) {
     const uintptr_t caller=reinterpret_cast<uintptr_t>(__builtin_return_address(0));
     uint64_t actor=0,recipient=0;
     const bool endpoints=read(address+0x10,actor) && read(address+0x20,recipient);
-    const bool controlled=endpoints && (execution_is_fra(actor) || execution_is_fra(recipient));
+    const bool controlled=endpoints && (execution_is_controlled(actor) || execution_is_controlled(recipient));
     bool allowed=endpoints;
     bool native_envoy_verified=false;
     ExecutionBinding* response_binding=nullptr;
@@ -48,7 +48,7 @@ static void peace_handler_observe(void* action) {
         shape=lifecycle_capture_shape(action);
         allowed=shape.matched && shape.peace_offer && shape.peace.valid();
         if (!allowed) reason="FRA_PEACE_PAYLOAD_UNREADABLE";
-        else if (shape.state34==0 && execution_is_fra(actor)) {
+        else if (shape.state34==0 && execution_is_controlled(actor)) {
             allowed=false;
             reason="UNAUTHORIZED_FRA_PEACE_OFFER";
             // A future sender can reach this handler only within the consumed
@@ -67,10 +67,10 @@ static void peace_handler_observe(void* action) {
                         binding.payload,payload,native_envoy_verified);
                 if (allowed) reason="CONSUMED_PEACE_BINDING";
             }
-        } else if (shape.state34==0 && execution_is_fra(recipient)) {
+        } else if (shape.state34==0 && execution_is_controlled(recipient)) {
             allowed=bridge_inbound_scope_matches(action);
             reason=allowed?"MATCHED_PEACE_INBOUND_SCOPE":"FRA_PEACE_INBOUND_SCOPE_UNAVAILABLE";
-        } else if ((shape.state34==1 || shape.state34==2) && execution_is_fra(recipient)) {
+        } else if ((shape.state34==1 || shape.state34==2) && execution_is_controlled(recipient)) {
             allowed=false; reason="UNAUTHORIZED_FRA_PEACE_RESPONSE";
             if (execution_response_scope.active
                 && execution_response_scope.parent_slot<kBindingCapacity) {
@@ -161,11 +161,14 @@ static void peace_handler_observe(void* action) {
         char returned[1100]{};
         snprintf(returned,sizeof(returned),
             "{\"event\":\"native_peace_handler_return\",\"family\":\"peace\",\"action_id\":\"peace_offer\","
-            "\"session_id\":\"%.27s\",\"request_id\":\"%.64s\",\"actor\":\"%.3s\",\"recipient\":\"FRA\","
+            "\"session_id\":\"%.27s\",\"request_id\":\"%.64s\",\"actor\":\"%.3s\",\"recipient\":\"%.3s\",\"decision_country\":\"%.3s\","
             "\"phase\":\"%.6s\",\"native_state\":%d,\"native_forward_count\":1,\"handler_consumed\":true,"
             "\"peace_payload_complete\":%s,\"transport_verified\":true}\n",
             response_binding->response_request.session_id,response_binding->response_request.request_id,
-            response_binding->response_request.original_actor,response_binding->response_request.decision,
+            response_binding->response_request.original_actor,
+            response_binding->response_request.decision_country,
+            response_binding->response_request.decision_country,
+            response_binding->response_request.decision,
             shape.state34,shape.peace.valid()?"true":"false");
         line(returned);
     }

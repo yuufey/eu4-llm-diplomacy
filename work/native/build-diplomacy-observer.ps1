@@ -38,9 +38,11 @@ param(
     [switch]$SubsidyExpiryObservation,
     [switch]$TruceExpiryObservation,
     [switch]$ClaimExpiryObservation,
-    [switch]$LandPromiseObservation
+    [switch]$LandPromiseObservation,
+    [switch]$NativeCountryControl
 )
 $ErrorActionPreference = 'Stop'
+if ($NativeCountryControl) { $LandPromiseObservation = $true }
 if ($LandPromiseObservation) { $ClaimExpiryObservation = $true }
 if ($ClaimExpiryObservation) {
     $SubsidyExpiryObservation = $true
@@ -103,6 +105,7 @@ if ($SubsidyExpiryObservation) { $observerVersion = 62 }
 if ($TruceExpiryObservation) { $observerVersion = 62 }
 if ($ClaimExpiryObservation) { $observerVersion = 63 }
 if ($LandPromiseObservation) { $observerVersion = 64 }
+if ($NativeCountryControl) { $observerVersion = 65 }
 $dllName = 'eu4_bridge_diplomacy_observer_v' + $observerVersion + '.dll'
 $dll = Join-Path $outputDirectory $dllName
 $rootSource = Join-Path $PSScriptRoot 'diplomacy-observer-v10.cpp'
@@ -213,6 +216,9 @@ if ($ClaimExpiryObservation) {
 }
 if ($LandPromiseObservation) {
     $arguments = @('-DBRIDGE_LAND_PROMISE_OBSERVATION=1') + $arguments
+}
+if ($NativeCountryControl) {
+    $arguments = @('-DBRIDGE_NATIVE_COUNTRY_CONTROL=1') + $arguments
 }
 & (Get-ProjectLocalValue -Name 'EU4_CXX') @arguments
 if ($LASTEXITCODE -ne 0) { throw 'Observer build failed; directory retained as failed evidence.' }
@@ -404,6 +410,9 @@ if ($ClaimExpiryObservation) {
 if ($LandPromiseObservation) {
     $sourceNames += @('information-land-promise.h', 'information-land-promise-native-guards.h',
         'information-land-promise-observer.inc')
+}
+if ($NativeCountryControl) {
+    $sourceNames += @('control-country-policy.h')
 }
 $sources = foreach ($name in $sourceNames) {
     $source = Join-Path $PSScriptRoot $name
@@ -653,6 +662,12 @@ if ($LandPromiseObservation) {
     $manifest.native_land_promise_observation = $true
     $manifest.native_land_promise_wire = 1
     $manifest.native_land_promise_scope = 'FRA_member_in_observed_promise_war'
+}
+if ($NativeCountryControl) {
+    $manifest.native_country_control_configuration = $true
+    $manifest.native_country_control_protocol = 'EU4CONTROL1'
+    $manifest.native_country_control_ack = 'native_controlled_countries_set'
+    $manifest.native_country_control_request = 'controlled-countries.req'
 }
 $manifest | ConvertTo-Json -Depth 8 | Set-Content -LiteralPath (Join-Path $outputDirectory 'build-manifest.json') -Encoding UTF8
 Get-FileHash -LiteralPath $dll -Algorithm SHA256

@@ -23,6 +23,7 @@ _VENDOR_COMMIT = "a85622d368bbb7afca938ed70fdd5eda44aec769"
 _VENDOR_LICENSE = "MIT"
 _TRIGGERS_RELATIVE = Path("third_party/cwtools-eu4-config/triggers.cwt")
 _VENDOR_RELATIVE = Path("third_party/cwtools-eu4-config/VENDOR.json")
+_VENDOR_FALLBACK_RELATIVE = Path("third_party/cwtools-eu4-config.vendor.json")
 _TRIGGERS_BYTES = 222281
 _TRIGGERS_SHA256 = "3aa0f3382ea56ca759e4d3ac0dacd79627699b486bd4ac0f6d716e377f7b2f84"
 _VENDOR_BYTES = 395
@@ -198,7 +199,10 @@ def _strict_json(raw: bytes) -> Any:
 def _cwt_provenance() -> dict[str, Any]:
     root = Path(__file__).resolve().parents[2]
     try:
-        vendor = _pin(root / _VENDOR_RELATIVE)
+        vendor_path = root / _VENDOR_RELATIVE
+        if not vendor_path.is_file():
+            vendor_path = root / _VENDOR_FALLBACK_RELATIVE
+        vendor = _pin(vendor_path)
         triggers = _pin(root / _TRIGGERS_RELATIVE)
         if (vendor["bytes"] != _VENDOR_BYTES or vendor["sha256"] != _VENDOR_SHA256
                 or triggers["bytes"] != _TRIGGERS_BYTES

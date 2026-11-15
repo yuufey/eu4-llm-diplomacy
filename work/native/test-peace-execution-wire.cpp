@@ -594,6 +594,13 @@ int main() {
         && !request.selected_concede_defeat && !request.concede_defeat);
     CHECK(std::strcmp(request.war_id,war)==0);
 
+    const char* dynamic_countries=
+        "EU4PEACE_EXEC1 123456789 r42_dynamic white_peace K00 E00 14450101 223456789 "
+        "war_0123456789abcdef_01234567 demand -1 - -\n";
+    expect_ok(dynamic_countries,request);
+    CHECK(std::strcmp(request.actor,"K00")==0);
+    CHECK(std::strcmp(request.recipient,"E00")==0);
+
     const char* money=
         "EU4PEACE_EXEC1 123 r42_money demand_ducats FRA S4V 56465000 999 "
         "war_0123456789abcdef_01234567 demand 10000 177,12,3,4 FRA\n";

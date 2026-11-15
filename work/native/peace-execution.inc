@@ -257,10 +257,12 @@ static void execution_peace_submission(const ExecutionBinding& binding,
         snprintf(message,sizeof(message),
             "{\"event\":\"native_peace_inbound_submission_result\",\"family\":\"peace\","
             "\"session_id\":\"%.27s\",\"request_id\":\"%.64s\",\"action_id\":\"peace_offer\","
-            "\"actor\":\"%.3s\",\"recipient\":\"FRA\",\"decision_country\":\"FRA\",\"phase\":\"%.6s\","
+            "\"actor\":\"%.3s\",\"recipient\":\"%.3s\",\"decision_country\":\"%.3s\",\"phase\":\"%.6s\"," 
             "\"date_raw\":%d,\"submitted\":true,\"transport_verified\":true,\"request_binding_verified\":true}\n",
             binding.response_request.session_id,binding.response_request.request_id,
-            binding.response_request.original_actor,binding.response_request.decision,binding.response_request.date_raw);
+            binding.response_request.original_actor,binding.response_request.decision_country,
+            binding.response_request.decision_country,binding.response_request.decision,
+            binding.response_request.date_raw);
         line(message); return;
     }
     execution_peace_emit_submission(binding.peace_request,true,"NATIVE_ENTRY_VERIFIED",execution_header(entry));
@@ -272,11 +274,12 @@ static void execution_peace_inbound_unknown(const ResponseRequest& request,
     snprintf(message,sizeof(message),
         "{\"event\":\"native_peace_inbound_response_result\",\"family\":\"peace\","
         "\"session_id\":\"%.27s\",\"request_id\":\"%.64s\",\"action_id\":\"peace_offer\","
-        "\"actor\":\"%.3s\",\"recipient\":\"FRA\",\"decision_country\":\"FRA\",\"phase\":\"%.6s\","
+        "\"actor\":\"%.3s\",\"recipient\":\"%.3s\",\"decision_country\":\"%.3s\",\"phase\":\"%.6s\"," 
         "\"date_raw\":%d,\"native_state\":%d,\"outcome\":\"unknown\",\"war_before\":null,\"war_after\":%s,"
         "\"war_state_verified\":false,\"response_verified\":false,\"request_binding_verified\":false,"
         "\"pending_removed\":%s,\"terms_verified\":false,\"peace_context\":null}\n",
-        request.session_id,request.request_id,request.original_actor,request.decision,request.date_raw,state,
+        request.session_id,request.request_id,request.original_actor,request.decision_country,
+        request.decision_country,request.decision,request.date_raw,state,
         war_after?"true":"false",pending_removed?"true":"false");
     line(message);
 }
@@ -303,12 +306,14 @@ static void execution_peace_response(const ExecutionBinding& binding,
         const int written=snprintf(message.text,message.capacity,
             "{\"event\":\"native_peace_inbound_response_result\",\"family\":\"peace\","
             "\"session_id\":\"%.27s\",\"request_id\":\"%.64s\",\"action_id\":\"peace_offer\","
-            "\"actor\":\"%.3s\",\"recipient\":\"FRA\",\"decision_country\":\"FRA\",\"phase\":\"%.6s\","
+            "\"actor\":\"%.3s\",\"recipient\":\"%.3s\",\"decision_country\":\"%.3s\",\"phase\":\"%.6s\"," 
             "\"date_raw\":%d,\"native_state\":%d,\"outcome\":\"%s\",\"war_before\":%s,\"war_after\":%s,"
             "\"war_state_verified\":%s,\"response_verified\":%s,\"request_binding_verified\":%s,"
             "\"execution_verified\":%s,\"pending_removed\":%s,\"terms_verified\":%s,\"peace_context\":%s,\"effects\":%s}\n",
             binding.response_request.session_id,binding.response_request.request_id,
-            binding.response_request.original_actor,binding.response_request.decision,binding.response_request.date_raw,
+            binding.response_request.original_actor,binding.response_request.decision_country,
+            binding.response_request.decision_country,binding.response_request.decision,
+            binding.response_request.date_raw,
             state,accepted?"accepted":rejected?"rejected":"unknown",baseline?"true":"false",war_after?"true":"false",
             verified && binding.alliance_before_verified?"true":"false",response?"true":"false",bound?"true":"false",
             accepted || rejected?"true":"false",pending_removed?"true":"false",
@@ -383,6 +388,10 @@ static void execution_peace_tick() noexcept {
     const uint64_t now=(ticks-epoch)/10000u;
     if (request.expiry_epoch_ms<=now) { fail("PEACE_EXECUTION_EXPIRED"); return; }
     if (request.expiry_epoch_ms-now>10000u) { fail("PEACE_EXECUTION_EXPIRY_WINDOW"); return; }
+    std::uint64_t controlled_actor=0;
+    if (!observation_control_country_tag(request.actor,controlled_actor)) {
+        fail("PEACE_EXECUTION_ACTOR_NOT_CONTROLLED"); return;
+    }
     uintptr_t game=0; int32_t date=0;
     if (!read(base+0x233fe58,game) || !read(game+0x1dd0,date)) {
         fail("PEACE_EXECUTION_GAME_CONTEXT_UNAVAILABLE"); return;

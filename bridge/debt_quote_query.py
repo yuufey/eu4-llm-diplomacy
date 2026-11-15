@@ -48,12 +48,12 @@ def _is_tag(value: object) -> bool:
 
 def normalize_request(actor: object, recipient: object, phase: object,
                       parameters: object) -> dict[str, Any]:
-    """Validate the single supported observer request and return empty params."""
-    if actor != "FRA" or type(actor) is not str:
-        raise ValueError("TAKE_ON_DEBT_ACTOR_MUST_BE_FRA")
+    """Validate the country pair; the caller enforces decision authority."""
+    if not _is_tag(actor):
+        raise ValueError("TAKE_ON_DEBT_ACTOR_MUST_BE_COUNTRY_TAG")
     if not _is_tag(recipient):
         raise ValueError("TAKE_ON_DEBT_RECIPIENT_MUST_BE_COUNTRY_TAG")
-    if recipient in {"FRA", "POR"}:
+    if recipient == actor:
         raise ValueError("TAKE_ON_DEBT_RECIPIENT_EXCLUDED")
     if phase != "initiate" or type(phase) is not str:
         raise ValueError("TAKE_ON_DEBT_INITIATE_ONLY")

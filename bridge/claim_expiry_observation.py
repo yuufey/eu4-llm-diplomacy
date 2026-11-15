@@ -2,6 +2,7 @@
 import hashlib
 import re
 
+from .country_control_ack import supports_observer_version
 from .country_modifier_observation import GAME_SHA256
 from .native_change_observation import NativeChangeCollector
 
@@ -63,7 +64,7 @@ def objects(payload):
 
 def supported_ack(ack, game_sha256):
     return (isinstance(ack, dict) and game_sha256 == GAME_SHA256
-            and type(ack.get('version')) is int and ack['version'] in (63, 64)
+            and supports_observer_version(ack, (63, 64))
             and ack.get(CAPABILITY) is True
             and type(ack.get('native_claim_expiry_wire')) is int and ack['native_claim_expiry_wire'] == 1
             and ack.get('native_claim_expiry_scope') == SCOPE)

@@ -105,8 +105,8 @@ static bool execution_peace_prepare(PeacePreparedAction& prepared,
     uintptr_t game=0,actor_country=0,recipient_country=0;
     uint64_t player=0;
     if (!read(base+0x233fe58,game) || !read(game+0x1dd0,prepared.date)
-        || !read(game+0x1e60,player) || (player&0xffffffu)!=0x524f50u
-        || !alliance_query_country(actor_tag,prepared.actor)
+        || !read(game+0x1e60,player) || !observation_country_handle(player)
+        || !observation_control_country_tag(actor_tag,prepared.actor)
         || !alliance_query_country(recipient_tag,prepared.recipient)
         || prepared.actor==prepared.recipient
         || !peace_query_country_pointer(prepared.actor,actor_country)

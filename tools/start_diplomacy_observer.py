@@ -13,12 +13,14 @@ from __future__ import annotations
 import argparse
 import ctypes as C
 from ctypes import wintypes as W
+import hashlib
 import json
 import os
 from pathlib import Path
 import re
 import subprocess
 import sys
+import tempfile
 import time
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -662,6 +664,23 @@ LAND_PROMISE_V64_VERSION_BLOCK = (
         version_marker[sizeof("\"version\":")]='4';
 #elif defined(BRIDGE_CLAIM_EXPIRY_OBSERVATION)
 ''' + CLAIM_V63_VERSION_BLOCK.split("\n", 1)[1])
+NATIVE_COUNTRY_CONTROL_V65_VERSION_PREFIX = (
+    "#ifdef BRIDGE_NATIVE_COUNTRY_CONTROL\n        version_marker")
+NATIVE_COUNTRY_CONTROL_V65_VERSION_BLOCK = (
+    r'''#ifdef BRIDGE_NATIVE_COUNTRY_CONTROL
+        version_marker[sizeof("\"version\":")-1]='6';
+        version_marker[sizeof("\"version\":")]='5';
+#elif defined(BRIDGE_LAND_PROMISE_OBSERVATION)
+''' + LAND_PROMISE_V64_VERSION_BLOCK.split("\n", 1)[1])
+NATIVE_COUNTRY_CONTROL_SOURCE = "control-country-policy.h"
+NATIVE_COUNTRY_CONTROL_DEFINE = "BRIDGE_NATIVE_COUNTRY_CONTROL"
+NATIVE_COUNTRY_CONTROL_FIELDS = (
+    r',\"native_country_control_configuration\":true,'
+    r'\"native_country_control_protocol\":\"EU4CONTROL1\",'
+    r'\"native_country_control_ack\":\"native_controlled_countries_set\",'
+    r'\"native_country_control_request\":\"controlled-countries.req\"')
+NATIVE_COUNTRY_CONTROL_ACK_EVENT = (
+    r'\"event\":\"native_controlled_countries_set\"')
 SUBSIDY_EXPIRY_ACK_BLOCK = r'''#ifdef BRIDGE_SUBSIDY_EXPIRY_OBSERVATION
     {
         char* end=strrchr(message,'}');
@@ -726,6 +745,177 @@ def _has_rival_record_features(manifest: dict) -> bool:
             or (isinstance(records, list) and any(
                 isinstance(row, dict) and isinstance(row.get("name"), str)
                 and row["name"].startswith("information-rival-record-") for row in records)))
+
+
+def _has_native_country_control_features(manifest: dict) -> bool:
+    records = manifest.get("sources", [])
+    return (
+        any(key in manifest for key in (
+            "native_country_control_configuration",
+            "native_country_control_protocol",
+            "native_country_control_ack",
+            "native_country_control_request",
+            "native_country_control_file",
+        ))
+        or bool(_compiler_define_values(
+            manifest.get("compiler_arguments"), NATIVE_COUNTRY_CONTROL_DEFINE))
+        or (isinstance(records, list) and any(
+            isinstance(row, dict) and isinstance(row.get("name"), str)
+            and row["name"].lower().startswith("control-country-policy")
+            for row in records)))
+
+
+class _ManifestSourceOverlay:
+    """Override one bounded source while reusing the candidate's other files."""
+
+    def __init__(self, baseline, overrides: dict[str, Path]):
+        self.baseline = baseline
+        self.overrides = overrides
+
+    def __truediv__(self, name: str) -> Path:
+        return self.overrides.get(name, self.baseline / name)
+
+
+def _remove_compiler_define(arguments: list, macro: str) -> list:
+    """Remove the one validated define, accepting either compiler token form."""
+    result = []
+    index = 0
+    joined = "-D" + macro + "=1"
+    separated = macro + "=1"
+    while index < len(arguments):
+        value = arguments[index]
+        if value == joined:
+            index += 1
+            continue
+        if (value == "-D" and index + 1 < len(arguments)
+                and arguments[index + 1] == separated):
+            index += 2
+            continue
+        result.append(value)
+        index += 1
+    return result
+
+
+def _project_v65_country_control_selector(text: str) -> str:
+    count = text.count(NATIVE_COUNTRY_CONTROL_V65_VERSION_BLOCK)
+    prefix_count = text.count(NATIVE_COUNTRY_CONTROL_V65_VERSION_PREFIX)
+    if count != 1 or prefix_count != count:
+        raise SystemExit("BUILD_MANIFEST_MISMATCH")
+    return text.replace(
+        NATIVE_COUNTRY_CONTROL_V65_VERSION_BLOCK,
+        LAND_PROMISE_V64_VERSION_BLOCK,
+    )
+
+
+def _validate_native_country_control_manifest(manifest: dict, directory: Path) -> None:
+    """Validate v65's country-control delta, then inherit the full v64 contract."""
+    records = manifest.get("sources")
+    arguments = manifest.get("compiler_arguments")
+    if (type(manifest.get("version")) is not int or manifest["version"] != 65
+            or not isinstance(records, list) or not isinstance(arguments, list)
+            or manifest.get("native_country_control_configuration") is not True
+            or manifest.get("native_country_control_protocol") != "EU4CONTROL1"
+            or manifest.get("native_country_control_ack")
+                != "native_controlled_countries_set"
+            or manifest.get("native_country_control_request")
+                != "controlled-countries.req"
+            or "native_country_control_file" in manifest
+            or _compiler_define_values(arguments, NATIVE_COUNTRY_CONTROL_DEFINE) != ["1"]):
+        raise SystemExit("BUILD_MANIFEST_MISMATCH")
+
+    control_rows = [row for row in records if isinstance(row, dict)
+                    and isinstance(row.get("name"), str)
+                    and row["name"].lower().startswith("control-country-policy")]
+    cpp_rows = [row for row in records if isinstance(row, dict)
+                and row.get("name") == MACRO_EVENT_ACK_SOURCE]
+    if (len(control_rows) != 1 or control_rows[0].get("name") != NATIVE_COUNTRY_CONTROL_SOURCE
+            or not _is_sha256(control_rows[0].get("sha256")) or len(cpp_rows) != 1
+            or not _is_sha256(cpp_rows[0].get("sha256"))):
+        raise SystemExit("BUILD_MANIFEST_MISMATCH")
+
+    try:
+        policy_path = directory / NATIVE_COUNTRY_CONTROL_SOURCE
+        source_path = directory / MACRO_EVENT_ACK_SOURCE
+        if (not policy_path.is_file() or policy_path.stat().st_size > 1024 * 1024
+                or file_hash(policy_path, refresh=True) != control_rows[0]["sha256"].lower()
+                or not source_path.is_file() or source_path.stat().st_size > 4 * 1024 * 1024
+                or file_hash(source_path, refresh=True) != cpp_rows[0]["sha256"].lower()):
+            raise SystemExit("BUILD_MANIFEST_MISMATCH")
+        policy_text = policy_path.read_text(encoding="utf-8")
+        source_text = source_path.read_text(encoding="utf-8")
+    except (OSError, UnicodeError):
+        raise SystemExit("BUILD_MANIFEST_MISMATCH")
+
+    capability_event = r'\"event\":\"diplomacy_observer_installed\"'
+    capability_marker = "auto append_r74_capabilities=[](char* text,size_t capacity)"
+    capability_call = "append_r74_capabilities(message,sizeof(message));"
+    capability_at = source_text.find(NATIVE_COUNTRY_CONTROL_FIELDS)
+    marker_at = source_text.find(capability_marker)
+    event_at = source_text.find(capability_event)
+    call_at = source_text.find(capability_call)
+    native_control_guard = (
+        "#ifdef BRIDGE_NATIVE_COUNTRY_CONTROL\n"
+        "static bool native_control_country_set_paths")
+    ack_function_start = source_text.find("static void native_control_country_emit_ack(")
+    tick_function_start = source_text.find("static void native_control_country_tick()")
+    ack_function = (source_text[ack_function_start:tick_function_start]
+                    if 0 <= ack_function_start < tick_function_start else "")
+    native_tick_hook = (
+        "#ifdef BRIDGE_NATIVE_COUNTRY_CONTROL\n"
+        "        if (frame_count>=100) native_control_country_tick();\n"
+        "#endif")
+    ack_wire_fields = (
+        r'\"session_id\":\"%s\"', r'\"revision\":%llu',
+        r'\"countries\":%s', r'\"accepted\":%s', r'\"reason\":\"%s\"',
+    )
+    if (source_text.count(NATIVE_COUNTRY_CONTROL_FIELDS) != 1
+            or source_text.count(capability_marker) != 1
+            or source_text.count(capability_event) != 1
+            or source_text.count(capability_call) != 1
+            or not (0 <= marker_at < capability_at < event_at < call_at)
+            or source_text.count(NATIVE_COUNTRY_CONTROL_ACK_EVENT) != 1
+            or source_text.count(native_control_guard) != 1
+            or source_text.count("static void native_control_country_emit_ack(") != 1
+            or NATIVE_COUNTRY_CONTROL_ACK_EVENT not in ack_function
+            or "line(message);" not in ack_function
+            or any(ack_function.count(field) != 1 for field in ack_wire_fields)
+            or source_text.count("native_control_country_tick()") != 2
+            or source_text.count(native_tick_hook) != 1
+            or source_text.count('#include "control-country-policy.h"') != 1
+            or source_text.count('L"%ls\\\\controlled-countries.req"') != 1
+            or policy_text.count('"EU4CONTROL1"') == 0):
+        raise SystemExit("BUILD_MANIFEST_MISMATCH")
+
+    source_text = _project_v65_country_control_selector(source_text)
+    inherited = dict(manifest, version=64)
+    inherited["sources"] = [dict(row) if isinstance(row, dict) else row
+                            for row in records
+                            if not (isinstance(row, dict)
+                                    and row.get("name") == NATIVE_COUNTRY_CONTROL_SOURCE)]
+    inherited["compiler_arguments"] = _remove_compiler_define(
+        list(arguments), NATIVE_COUNTRY_CONTROL_DEFINE)
+    for key in (
+        "native_country_control_configuration",
+        "native_country_control_protocol",
+        "native_country_control_ack",
+        "native_country_control_request",
+    ):
+        inherited.pop(key)
+
+    projected_bytes = source_text.encode("utf-8")
+    inherited_cpp = next(row for row in inherited["sources"]
+                         if isinstance(row, dict)
+                         and row.get("name") == MACRO_EVENT_ACK_SOURCE)
+    inherited_cpp["sha256"] = hashlib.sha256(projected_bytes).hexdigest()
+    try:
+        with tempfile.TemporaryDirectory(prefix="eu4-v65-country-control-") as temp_root:
+            projected_path = Path(temp_root) / MACRO_EVENT_ACK_SOURCE
+            projected_path.write_bytes(projected_bytes)
+            overlay = _ManifestSourceOverlay(
+                directory, {MACRO_EVENT_ACK_SOURCE: projected_path})
+            _validate_information_battle_manifest(inherited, overlay)
+    except OSError:
+        raise SystemExit("BUILD_MANIFEST_MISMATCH")
 
 
 def _v63_source_selector(text: str) -> str:
@@ -965,6 +1155,12 @@ def _validate_information_battle_manifest(manifest: dict, directory: Path) -> No
     by name and by hash in the manifest.  This remains a manifest/file check;
     it does not enable business capture or imply B01--B04 availability.
     """
+    version = manifest.get("version")
+    if type(version) is int and version == 65:
+        _validate_native_country_control_manifest(manifest, directory)
+        return
+    if _has_native_country_control_features(manifest):
+        raise SystemExit("BUILD_MANIFEST_MISMATCH")
     interest_source = 'territorial-interest-query.inc'
     records = manifest.get('sources', [])
     interest_rows = [row for row in records if isinstance(row, dict)
@@ -984,7 +1180,6 @@ def _validate_information_battle_manifest(manifest: dict, directory: Path) -> No
         inherited.pop('native_territorial_interest_query_wire')
         _validate_information_battle_manifest(inherited, directory)
         return
-    version = manifest.get("version")
     if type(version) is int and version == 64:
         _validate_expiry_manifest(manifest, directory)
         return
@@ -2114,6 +2309,34 @@ def _assert_same_unloaded_process(expected: dict, current: dict, manifest: dict)
         raise RuntimeError("BRIDGE_ALREADY_LOADED_NO_RETRY")
 
 
+def _v65_country_control_manifest(manifest: dict) -> bool:
+    return (
+        type(manifest.get("version")) is int
+        and manifest.get("version") == 65
+        and manifest.get("native_country_control_configuration") is True
+        and manifest.get("native_country_control_protocol") == "EU4CONTROL1"
+        and manifest.get("native_country_control_ack") == "native_controlled_countries_set"
+        and manifest.get("native_country_control_request") == "controlled-countries.req"
+    )
+
+
+def _verified_v65_player_tag(manifest: dict, state: dict) -> str | None:
+    """Return a loaded physical tag only when the v65 probe identity is complete."""
+
+    if not _v65_country_control_manifest(manifest):
+        return None
+    tag = state.get("player_tag")
+    slot = state.get("candidate_player_slot")
+    pointer = state.get("candidate_player_pointer")
+    if (not isinstance(tag, str) or re.fullmatch(r"[A-Z0-9]{3}", tag) is None
+            or type(slot) is not int or not 0 <= slot < 4096
+            or not isinstance(pointer, str)
+            or re.fullmatch(r"0x[0-9A-Fa-f]+", pointer) is None
+            or int(pointer, 16) == 0):
+        return None
+    return tag
+
+
 def _queue_load_warning_shortcut(pid: int, expected: dict, save_name: str,
                                  directory: Path) -> dict:
     """Queue one authorized C key down/up pair for the verified test window."""
@@ -2364,13 +2587,20 @@ def _wait_until_ready(pid: int, manifest: dict, directory: Path, confirm_load_wa
                 _waiting(attempt_number, evidence["reason"], started)
             else:
                 player_tag = state.get("player_tag")
-                if player_tag not in ("---", "POR"):
+                v65_tag = _verified_v65_player_tag(manifest, state)
+                if _v65_country_control_manifest(manifest):
+                    if player_tag != "---" and v65_tag is None:
+                        raise SystemExit("V65_PHYSICAL_PLAYER_IDENTITY_INVALID")
+                elif player_tag not in ("---", "POR"):
                     raise SystemExit("FIXED_CONTROL_REQUIRES_UNLOADED_OR_POR_TEST_SAVE")
                 confirmation = None
-                if player_tag == "POR":
+                loaded_player = player_tag != "---"
+                if loaded_player:
                     if shortcut is None:
-                        attempt.update({"outcome": "ready", "ready_reason": "por_already_loaded"})
-                        return ready_identity(), state, confirmation, "por_already_loaded", attempts
+                        reason = ("por_already_loaded" if player_tag == "POR"
+                                  else "physical_player_already_loaded")
+                        attempt.update({"outcome": "ready", "ready_reason": reason})
+                        return ready_identity(), state, confirmation, reason, attempts
                     date = (state.get("fra_send_date_guard") or {}).get("current_raw_date")
                     if type(date) is int and date >= 0:
                         identity = ready_identity()
@@ -2379,12 +2609,13 @@ def _wait_until_ready(pid: int, manifest: dict, directory: Path, confirm_load_wa
                             shortcut_receipt.write_text(json.dumps(shortcut, indent=2), encoding="utf-8")
                         except OSError as error:
                             shortcut["receipt_update_error"] = str(error)
-                        reason = "por_loaded_after_load_warning_shortcut"
+                        reason = ("por_loaded_after_load_warning_shortcut" if player_tag == "POR"
+                                  else "physical_player_loaded_after_load_warning_shortcut")
                         attempt.update({"outcome": "ready", "ready_reason": reason,
                                         "load_warning_shortcut": shortcut})
                         return identity, state, None, reason, attempts
                 if shortcut is not None:
-                    reason = ("LOAD_WARNING_SHORTCUT_AWAITING_WORLD_DATE" if player_tag == "POR"
+                    reason = ("LOAD_WARNING_SHORTCUT_AWAITING_WORLD_DATE" if loaded_player
                               else "LOAD_WARNING_SHORTCUT_AWAITING_WORLD")
                     attempt.update({"outcome": "not_ready",
                                     "reason": reason})
@@ -2499,7 +2730,7 @@ def main(argv: list[str] | None = None) -> None:
     manifest = json.loads(args.manifest.read_text(encoding="utf-8-sig"))
     directory = args.manifest.resolve().parent
     version = manifest.get("version")
-    if type(version) is int and version in (61, 62, 63, 64):
+    if type(version) is int and version in (61, 62, 63, 64, 65):
         _validate_information_battle_manifest(manifest, directory)
         # Remaining startup switches belong to the inherited v60 family. The
         # original manifest still binds readiness, ACKs and installation.

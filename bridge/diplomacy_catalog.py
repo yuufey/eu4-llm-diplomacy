@@ -139,7 +139,7 @@ class Action:
                             "terms": [],
                         },
                     },
-                    "purpose": "检查法国向目标国家提出的空白和平对象。",
+                    "purpose": "检查受控国家向目标国家提出的空白和平对象。",
                 },
             ]
         elif self.id == "demand_ducats":
@@ -257,7 +257,7 @@ class Action:
                             }],
                         },
                     },
-                    "purpose": "检查法国向目标国家支付金钱的和平条款。",
+                    "purpose": "检查受控国家向目标国家支付金钱的和平条款。",
                 },
                 {
                     "name": "selected_reparations",
@@ -435,7 +435,7 @@ class Action:
                             }],
                         },
                     },
-                    "purpose": "检查法国提出的省份条款及原生选择结果。",
+                    "purpose": "检查受控国家提出的省份条款及原生选择结果。",
                 },
                 {
                     "name": "selected_combined",
@@ -576,7 +576,7 @@ class Action:
                             }],
                         },
                     },
-                    "purpose": "检查法国支付战争赔款的和平条款。",
+                    "purpose": "检查受控国家支付战争赔款的和平条款。",
                 },
                 {
                     "name": "selected_combined",
@@ -729,7 +729,7 @@ class Action:
                             }],
                         },
                     },
-                    "purpose": "检查法国向目标国家转移贸易竞争力的和平条款。",
+                    "purpose": "检查受控国家向目标国家转移贸易竞争力的和平条款。",
                 },
                 {
                     "name": "selected_combined",
@@ -999,7 +999,7 @@ class Action:
                                    "country": "<actor>",
                                    "beneficiary": "<recipient>"}],
                     }},
-                    "purpose": f"检查法国提出的{special_names[self.id]}和平条款。",
+                    "purpose": f"检查受控国家提出的{special_names[self.id]}和平条款。",
                 },
             ]
         elif self.id == "concede_defeat":
@@ -1109,7 +1109,7 @@ class Action:
                             }],
                         },
                     },
-                    "purpose": "检查法国承认战败的和平条款。",
+                    "purpose": "检查受控国家承认战败的和平条款。",
                 },
                 {
                     "name": "selected_combined",
