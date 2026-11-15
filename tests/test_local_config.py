@@ -3,6 +3,7 @@ import os
 from pathlib import Path
 import subprocess
 import shutil
+import sys
 
 import pytest
 
@@ -43,3 +44,16 @@ def test_powershell_uses_same_precedence_and_relative_base(tmp_path):
     result = subprocess.run([shell, "-NoProfile", "-Command", command], env=environment,
                             cwd=tmp_path, capture_output=True, text=True, encoding="utf-8", check=True)
     assert result.stdout.splitlines() == ["environment", str(project / "tools/本地 python.exe")]
+
+
+def test_native_recorder_uses_configured_python_and_preserves_failure_code(tmp_path):
+    shell = shutil.which("pwsh") or shutil.which("powershell")
+    if shell is None:
+        pytest.skip("PowerShell is required for its configuration reader")
+    script = tmp_path / "recorder with spaces.py"
+    script.write_text("raise SystemExit(7)\n", encoding="utf-8")
+    importer = Path(local_config.__file__).parent / "native/import-local-env.ps1"
+    result = subprocess.run([shell, "-NoProfile", "-File", str(importer), "-PythonScript", str(script)],
+                            env=dict(os.environ, EU4_PYTHON=sys.executable), cwd=tmp_path,
+                            capture_output=True, text=True)
+    assert result.returncode == 7

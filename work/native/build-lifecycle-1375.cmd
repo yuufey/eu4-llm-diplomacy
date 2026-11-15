@@ -17,7 +17,7 @@ ml64 /nologo /c /Fo"..\runtime\native1375-v4\frame.obj" research-frame-1375.asm
 if errorlevel 1 (popd & exit /b 1)
 link /nologo /DLL /DYNAMICBASE /NXCOMPAT /OUT:"..\runtime\native1375-v4\eu4_pair_lifecycle_1375.dll" "..\runtime\native1375-v4\research-frame-1375.obj" "..\runtime\native1375-v4\pair-probe-1375.obj" "..\runtime\native1375-v4\pair-preview-1375.obj" "..\runtime\native1375-v4\frame.obj" kernel32.lib user32.lib
 if errorlevel 1 (popd & exit /b 1)
-python -B record_lifecycle_build.py
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File "%~dp0import-local-env.ps1" -PythonScript "%~dp0record_lifecycle_build.py"
 if errorlevel 1 (popd & exit /b 1)
 popd
 endlocal

@@ -1,3 +1,5 @@
+param([string]$PythonScript)
+
 function Import-ProjectLocalEnv {
     [CmdletBinding()]
     param(
@@ -47,4 +49,12 @@ function Get-ProjectLocalValue {
         return Join-Path $script:ProjectLocalRoot $value
     }
     return $value
+}
+
+if ($PythonScript) {
+    $projectRoot = (Resolve-Path (Join-Path $PSScriptRoot '..\..')).Path
+    Import-ProjectLocalEnv -ProjectRoot $projectRoot
+    $python = Get-ProjectLocalValue -Name 'EU4_PYTHON'
+    & $python -B $PythonScript
+    exit $LASTEXITCODE
 }
