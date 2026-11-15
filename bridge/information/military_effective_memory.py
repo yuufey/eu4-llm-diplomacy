@@ -12,6 +12,8 @@ import json
 from pathlib import Path
 from typing import Any, Mapping
 
+from work.document_paths import resolve_repo_path
+
 
 PROFILE_FILE = Path(__file__).resolve().parent / "profiles" / "military-effective-memory-1374-v2.json"
 PROFILE_MAX_BYTES = 64 * 1024
@@ -120,8 +122,7 @@ def _source_path(raw_path: Any) -> Path:
     if not isinstance(raw_path, str) or not raw_path:
         raise ProfileError("source_evidence_path_invalid")
     root = _workspace_root()
-    path = Path(raw_path)
-    resolved = path.resolve() if path.is_absolute() else (root / path).resolve()
+    resolved = resolve_repo_path(root, raw_path).resolve()
     if resolved != root and root not in resolved.parents:
         raise ProfileError("source_evidence_outside_workspace")
     return resolved

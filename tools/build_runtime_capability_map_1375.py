@@ -4,11 +4,11 @@ import json
 from pathlib import Path
 
 ROOT=Path(__file__).resolve().parents[1]
-OUTPUT=ROOT/'docs/runtime-capability-map-1375.json'
+OUTPUT=ROOT/'docs/外交操作/数据/runtime-capability-map-1375.json'
 TOOLS=[
  dict(id='original_effects_and_current_relations_wars',entry='tools/eu4_observer.py',
     manifest='bridge/eu4_observer_manifest_1375.json',manifest_sha='23c6831a861425c5f3012b583c93c6c1ccf7d10c769f9a23389474d389c9b361',
-    guide='docs/runtime-observer-1375.md',scope='15 original-request effect profiles; current alliance, marriage, guarantee and complete current war graph',
+    guide='docs/外交操作/实现研究/原生外交/runtime-observer-1375.md',scope='15 original-request effect profiles; current alliance, marriage, guarantee and complete current war graph',
     request_effect_profile_count=15,original_receipt_and_prebaseline_required_for_effects=True,request_causality_from_current_state_alone=False),
  dict(id='integration_current_task',entry='work/candidates/integration-task-observer-1375-v1/integration_task_observer.py',
     manifest='work/candidates/integration-task-observer-1375-v1/source-manifest.json',manifest_sha='4b17a5862dbe4461497c6d187d6cb9dc0efb16a489fbb7048f6658ca5794cb9e',

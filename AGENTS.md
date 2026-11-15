@@ -23,7 +23,7 @@
   must be identified before artifact cleanup.
 - For native reverse engineering, use the installed REA skill at
   `${USERPROFILE}/.agents/skills/reverse-engineer-anything/SKILL.md` and
-  `docs/rea-workflow-1375.md`. Local REA source is `${USERPROFILE}/rea`.
+  `docs/共用开发/rea-workflow-1375.md`. Local REA source is `${USERPROFILE}/rea`.
   `python tools/rea.py ...` reuses the Codex REA registration for CLI access.
 - REA evidence, ordinary disassembly, static inference, and observed runtime
   effects must remain distinct. Keep binary SHA-256, RVA/VA distinction,

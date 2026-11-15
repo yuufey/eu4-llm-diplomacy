@@ -13,6 +13,8 @@ import json
 from pathlib import Path
 from typing import Any
 
+from work.document_paths import resolve_repo_path
+
 from . import foreign_country_memory as _backend
 from . import foreign_quality_memory as _quality
 from . import foreign_quality_visibility_memory as _visibility
@@ -52,7 +54,7 @@ def _load_profile() -> dict[str, Any]:
             or not profile.get("code_guards")):
         raise ValueError("FOREIGN_QUALITY_PROFILE_CONTRACT")
     for item in profile.get("source_evidence", []) + profile.get("layout_dependencies", []):
-        path = (ROOT / item["path"]).resolve()
+        path = resolve_repo_path(ROOT, item["path"]).resolve()
         path.relative_to(ROOT)
         if path.stat().st_size != item["bytes"] or _sha(path) != item["sha256"]:
             raise ValueError("FOREIGN_QUALITY_PROFILE_DEPENDENCY")

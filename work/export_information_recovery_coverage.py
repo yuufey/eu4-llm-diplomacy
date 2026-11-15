@@ -74,7 +74,7 @@ def main() -> None:
     with args.output.open("xb") as stream:
         stream.write(raw)
     if args.sync_docs:
-        (ROOT / "docs/信息字段覆盖.json").write_bytes(raw)
+        (ROOT / "docs/信息导出/数据/信息字段覆盖.json").write_bytes(raw)
     print(json.dumps({"path": str(args.output), "sha256": hashlib.sha256(raw).hexdigest(),
                       "counts": report["counts"], "docs_synced": args.sync_docs}, ensure_ascii=False))
 

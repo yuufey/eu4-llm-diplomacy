@@ -86,7 +86,7 @@ def main():
     paths = ['release/release.json', 'tools/load_release.py', 'tools/request_treaty.py',
              'local.env.example', 'work/local_config.py',
              'work/native/inject_probe.py', 'work/probe_native_state.py',
-             'docs/03-开发与验收/DLL安装与更新.md', 'docs/03-开发与验收/开发与发布.md',
+             'docs/共用开发/DLL安装与更新.md', 'docs/共用开发/开发与发布.md',
              'work/native/' + meta['dll']]
     payload = {name: (root / name).read_bytes() for name in paths}
     assert_no_machine_paths(payload)

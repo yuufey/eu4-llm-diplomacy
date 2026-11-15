@@ -1534,21 +1534,21 @@ ACTIONS["declare_war"] = Action(
 # A distinct semantic action even when the UI occupies the guarantee position.
 ACTIONS["support_independence"] = Action("support_independence", "支持独立", "Support Independence",
     "diplomatic_action", True, (), "support_independence_action",
-    "docs/01-需求与计划/外交接口开发方案.md: 本机1.37.4 static_actions只读登记")
+    "docs/外交操作/计划/外交接口开发方案.md: 本机1.37.4 static_actions只读登记")
 ACTIONS["revoke_support_independence"] = Action(
     "revoke_support_independence", "撤销支持独立", "Revoke Support Independence",
     "diplomatic_action", False, (), "support_independence_action",
-    "docs/01-需求与计划/外交接口开发方案.md: 本机1.37.4 static_actions只读登记")
+    "docs/外交操作/计划/外交接口开发方案.md: 本机1.37.4 static_actions只读登记")
 ACTIONS["offer_alliance"] = Action("offer_alliance", "提议结盟", "Offer Alliance", "diplomatic_action",
     True, (), "allianceaction", "work/runtime/alliance-static-20261013/alliance-static-audit.md；r3实测匹配Offer对象")
 ACTIONS["dissolve_alliance"] = Action("dissolve_alliance", "断绝同盟", "Dissolve Alliance", "diplomatic_action",
     False, (), "allianceaction", "work/runtime/alliance-static-20261013/alliance-static-audit.md：Cancel变体静态识别（同一原生动作家族）")
 ACTIONS["proclaim_guarantee"] = Action("proclaim_guarantee", "保证独立", "Proclaim Guarantee",
     "diplomatic_action", False, (), "guaranteeaction",
-    "docs/02-使用与接口/关系与外交/保证独立接口与运行验收.md；work/runtime/guarantee-support-identification-20261015-001/report.md")
+    "docs/外交操作/接口/关系与外交/保证独立接口与运行验收.md；work/runtime/guarantee-support-identification-20261015-001/report.md")
 ACTIONS["revoke_guarantee"] = Action("revoke_guarantee", "撤销保证独立", "Revoke Guarantee",
     "diplomatic_action", False, (), "guaranteeaction",
-    "docs/02-使用与接口/关系与外交/保证独立接口与运行验收.md；work/runtime/guarantee-support-identification-20261015-001/report.md")
+    "docs/外交操作/接口/关系与外交/保证独立接口与运行验收.md；work/runtime/guarantee-support-identification-20261015-001/report.md")
 ACTIONS["ask_military_access"] = Action(
     "ask_military_access", "请求军事通行权", "Ask for Military Access",
     "diplomatic_action", True, (), "military_access",

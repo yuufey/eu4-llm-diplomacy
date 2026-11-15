@@ -1,7 +1,7 @@
 <!-- documentation-reset-20261107:start -->
 ## 2026-11-11当前开发顺序
 
-主代理已完成独立收束检查，当前优先用现有信息完成一次非玩家国家的LLM消费及外交方案比较，按实际阻塞修复，完整战报与事件缺项独立推进。本次只更新文档。362批撤退适用性修正及197项相关测试通过已补记HANDOFF，游戏现场最后实读沿361。以[本次检查](docs/05-历史记录/2026-11-11项目开发收束检查.md)及HANDOFF顶部为准。
+主代理已完成独立收束检查，当前优先用现有信息完成一次非玩家国家的LLM消费及外交方案比较，按实际阻塞修复，完整战报与事件缺项独立推进。本次只更新文档。362批撤退适用性修正及197项相关测试通过已补记HANDOFF，游戏现场最后实读沿361。以[本次检查](docs/历史归档/2026-11-11项目开发收束检查.md)及HANDOFF顶部为准。
 
 
 
@@ -494,7 +494,7 @@ B03新增海军传统和双方厌战结果量，复用原采集数据，正常�
 
 ## 开发已恢复，按宏观战略交付推进
 
-用户已要求整理复盘并继续开发。当前范围见[开发计划](docs/信息导出与订阅开发计划.md)，执行约束见[范围、验证与委派复盘](docs/05-历史记录/2026-11-07开发范围与验证及委派复盘.md)。74主题作为历史索引，已有验收按适用条件继承。当前先复用现成接口组织宏观报告，再处理具体阻塞项。主代理负责需求、优先级和跨模块合同，子代理承担边界明确的工作。下方批次用于追溯，原no-repeat、观察方隔离及资源约束继续适用。
+用户已要求整理复盘并继续开发。当前范围见[开发计划](docs/信息导出/计划/信息导出与订阅开发计划.md)，执行约束见[范围、验证与委派复盘](docs/历史归档/2026-11-07开发范围与验证及委派复盘.md)。74主题作为历史索引，已有验收按适用条件继承。当前先复用现成接口组织宏观报告，再处理具体阻塞项。主代理负责需求、优先级和跨模块合同，子代理承担边界明确的工作。下方批次用于追溯，原no-repeat、观察方隔离及资源约束继续适用。
 <!-- documentation-reset-20261107:end -->
 
 
@@ -837,7 +837,7 @@ B04 brief输出新增items[].presentation.battle_text，段落附逐项来源路
 <!-- batch249-call-to-arms:start -->
 ## 第249批 参战召唤观察代码及v41候选已就绪
 
-新增FRA入站CallAction的原执行前只读复制，A04查询、事件和重放按各自快照投影，修复多提议都取首条。目录明示采集能力、AI held=false与观察身份，复制/队列丢失可查。210唯一相关节点通过，原生模拟夹具完成正常工具交付；真实入站召唤仍缺正例。见[接口](docs/02-使用与接口/关系与外交/参战召唤观察与订阅.md)。
+新增FRA入站CallAction的原执行前只读复制，A04查询、事件和重放按各自快照投影，修复多提议都取首条。目录明示采集能力、AI held=false与观察身份，复制/队列丢失可查。210唯一相关节点通过，原生模拟夹具完成正常工具交付；真实入站召唤仍缺正例。见[接口](docs/信息导出/接口/关系与外交/参战召唤观察与订阅.md)。
 
 候选为work/runtime/diplomacy-observer-20261107-call-to-arms-v41-249-003，继承v40的ReasonMetadata，DLL e04c7701…，145来源准入通过。CIM确认46548仍在，游戏日期/暂停/模块细节沿245，v41未安装。下一优先按自动化与完整no-repeat审计接入候选和真实采样，旧窗口/业务不得重放。AI回应控制、pending/期限/战争绑定及完整战报等继续。自有工具和限定子任务终态，目标active，详见HANDOFF顶部及249 summary。
 <!-- batch249-call-to-arms:end -->
@@ -845,7 +845,7 @@ B04 brief输出新增items[].presentation.battle_text，段落附逐项来源路
 <!-- batch248-battle-roles:start -->
 ## 第248批 战斗双方攻守角色已接通
 
-B01.sides.role按原战斗侧0=attacker、1=defender投影，严格复用既有完整国家引用匹配，结果侧换序与匹配失败分别处理。B04侧身份同步角色对应，公开projection30。固定B23普通PE键与陆海公共写出路径提供静态依据，原始字节及RVA/VA独立保留，未新增REA分析。详见[角色接口](docs/02-使用与接口/战争与战报/战报攻守角色接口.md)。
+B01.sides.role按原战斗侧0=attacker、1=defender投影，严格复用既有完整国家引用匹配，结果侧换序与匹配失败分别处理。B04侧身份同步角色对应，公开projection30。固定B23普通PE键与陆海公共写出路径提供静态依据，原始字节及RVA/VA独立保留，未新增REA分析。详见[角色接口](docs/信息导出/接口/战争与战报/战报攻守角色接口.md)。
 
 181个唯一相关测试节点通过，真实旧陆战FRA防守/HSA进攻，海战PSA防守/KEL进攻，经查询/报告/事件/重开一致。新当前会话战斗、完整原文及其它计划缺项继续保留。本批为离线读取和开发，现场沿245未新核对，全部no-repeat继续适用。自有工具和限定机械子任务终态，完整回归沿237及后续修复，目标active，详见HANDOFF顶部及248 summary。
 <!-- batch248-battle-roles:end -->
@@ -853,7 +853,7 @@ B01.sides.role按原战斗侧0=attacker、1=defender投影，严格复用既有�
 <!-- batch247-native-result-subscription:start -->
 ## 第247批 外交实际回应订阅已接通
 
-当前会话已提交请求的结果读取复用get_diplomatic_result及原生校验，A05支持请求双方视角并检查实际国家对，事件交付和恢复读取当时快照。已消费回应在journal失败后保留重试，事件报告可自动关联request_id。原生date_raw是提交绑定，回应发生日期未知。详见[回应订阅](docs/02-使用与接口/关系与外交/外交请求实际回应订阅.md)。
+当前会话已提交请求的结果读取复用get_diplomatic_result及原生校验，A05支持请求双方视角并检查实际国家对，事件交付和恢复读取当时快照。已消费回应在journal失败后保留重试，事件报告可自动关联request_id。原生date_raw是提交绑定，回应发生日期未知。详见[回应订阅](docs/信息导出/接口/关系与外交/外交请求实际回应订阅.md)。
 
 真实和平接受/拒绝旧样本完成正常工具与订阅离线交付，受影响272个唯一节点有通过结果；其中32个模拟通道节点首次因沙箱禁止硬链接失败，授权沙箱外补跑全部通过。完整回归仍沿237及后续修复。当前现场新回应、撤回/过期来源及完整战报等继续按计划推进。本批没有游戏操作，现场仅继承245，历史no-repeat不变，目标active。详见HANDOFF顶部及247 summary。
 <!-- batch247-native-result-subscription:end -->
@@ -861,19 +861,19 @@ B01.sides.role按原战斗侧0=attacker、1=defender投影，严格复用既有�
 <!-- batch246-brief-presentation:start -->
 ## 第246批 简报和完整结果读取已接通
 
-[brief呈现](docs/02-使用与接口/信息简报与完整结果.md)已用于查询、列表、tick及外部交付，业务字段值保留，取证元数据可按result_id读取完整记录。60项相关检查通过，既有实采样本JSON显著缩小，真实MCP备份回放也通过。本轮为离线源码及回放，游戏现场沿245，未新核对。下一优先P2原生业务通知与现有回执来源，fresh pending不活跃不能推断撤回/过期。详见HANDOFF最新246批与work/runtime/information-brief-presentation-20261107-246-001/summary.json，完整回归仍沿237，目标active。
+[brief呈现](docs/信息导出/接口/信息简报与完整结果.md)已用于查询、列表、tick及外部交付，业务字段值保留，取证元数据可按result_id读取完整记录。60项相关检查通过，既有实采样本JSON显著缩小，真实MCP备份回放也通过。本轮为离线源码及回放，游戏现场沿245，未新核对。下一优先P2原生业务通知与现有回执来源，fresh pending不活跃不能推断撤回/过期。详见HANDOFF最新246批与work/runtime/information-brief-presentation-20261107-246-001/summary.json，完整回归仍沿237，目标active。
 <!-- batch246-brief-presentation:end -->
 
 <!-- batch245-macro-context:start -->
 ## 第245批 任务与贸易情境、具体宣战预览已接通
 
-[情境报告](docs/02-使用与接口/宏观战略情境报告.md)已保存并实读。任务清单和完成状态改用已有轻量路径，字段与原读取一致；D01–D06 selection已接通原宣战合同，D02选定方案成本可返回物理单位，本次对英无CB为稳定度损失7/厌战7。相关65个唯一节点有通过记录，完整回归仍沿237。继续复用46548/FRA观察方/POR物理玩家，暂停日期未变，本轮未重启或推进。动态任务条件、奖励适用性及其它核心缺项继续。详见HANDOFF最新245批和work/runtime/information-macro-context-20261107-245-001/summary.json。
+[情境报告](docs/信息导出/接口/宏观战略情境报告.md)已保存并实读。任务清单和完成状态改用已有轻量路径，字段与原读取一致；D01–D06 selection已接通原宣战合同，D02选定方案成本可返回物理单位，本次对英无CB为稳定度损失7/厌战7。相关65个唯一节点有通过记录，完整回归仍沿237。继续复用46548/FRA观察方/POR物理玩家，暂停日期未变，本轮未重启或推进。动态任务条件、奖励适用性及其它核心缺项继续。详见HANDOFF最新245批和work/runtime/information-macro-context-20261107-245-001/summary.json。
 <!-- batch245-macro-context:end -->
 
 <!-- batch244-macro-report:start -->
 ## 第244批 宏观报告与贷款摘要已接通
 
-复盘已整理并恢复开发，见[范围、验证与委派复盘](docs/05-历史记录/2026-11-07开发范围与验证及委派复盘.md)。新增[宏观报告配置](docs/02-使用与接口/宏观战略报告.md)，复用既有报告接口，以FRA/ENG示例组合17组查询、最终50字段。首份实时组合已取得，整体partial；N01新增loan_summary，复用原记录，实读4笔/521ducats，原明细保持。相关78个唯一测试节点有通过记录，完整回归沿237。
+复盘已整理并恢复开发，见[范围、验证与委派复盘](docs/历史归档/2026-11-07开发范围与验证及委派复盘.md)。新增[宏观报告配置](docs/信息导出/接口/宏观战略报告.md)，复用既有报告接口，以FRA/ENG示例组合17组查询、最终50字段。首份实时组合已取得，整体partial；N01新增loan_summary，复用原记录，实读4笔/521ducats，原明细保持。相关78个唯一测试节点有通过记录，完整回归沿237。
 
 旧进程已退出，已自动载入既有1457.5.17检查点并复用v40到46548/session46548-1dd6ea4413f4f65，逻辑FRA、物理POR。主报告前后暂停与日期一致，未新建存档或推进。原no-repeat继续适用。下一步接相关任务、节点价值和具体外交方案，细节见HANDOFF最新244批及work/runtime/information-macro-report-20261107-244-001/summary.json。
 <!-- batch244-macro-report:end -->
@@ -881,13 +881,13 @@ B01.sides.role按原战斗侧0=attacker、1=defender投影，严格复用既有�
 <!-- batch243-galley-admission:start -->
 ## 第243批 桨帆船类别已准入
 
-同一类型对象的编号5已由原生格式器映射GALLEY，原生国家计数调用链也确认该编号与同一record+28路径。N02移除kind5整组拒绝，galley类别known，projection4。398项相关测试通过，正数合成内存和查询/报告/周期路径已覆盖。当前法国真实桨帆船为0，MCP主动、报告与2秒/5秒一致，正数实采继续待取得。原74/397、阶段二三四active，全套基线仍237。详见[军队接口](docs/02-使用与接口/国家与国内/本国现存军队只读接口.md)及HANDOFF顶部。
+同一类型对象的编号5已由原生格式器映射GALLEY，原生国家计数调用链也确认该编号与同一record+28路径。N02移除kind5整组拒绝，galley类别known，projection4。398项相关测试通过，正数合成内存和查询/报告/周期路径已覆盖。当前法国真实桨帆船为0，MCP主动、报告与2秒/5秒一致，正数实采继续待取得。原74/397、阶段二三四active，全套基线仍237。详见[军队接口](docs/信息导出/接口/国家与国内/本国现存军队只读接口.md)及HANDOFF顶部。
 <!-- batch243-galley-admission:end -->
 
 <!-- batch242-unit-type-delivery:start -->
 ## 第242批 具体兵种key和名称已实机交付
 
-N02组成新增按key分组的unit_types及独立name状态，projection3。原始数量/strength、旧capture及缺名称隔离均已验证。当前FRA NPC的54条记录/5种兵种返回中文literal名称，真实查询、报告和2秒/5秒周期一致，订阅取消且服务退出。最终26模块397测试全部通过。当前任务条件v14的两项漂移依赖已审计更新，其余89项匹配。字段仍partial，kind5、实际人数/就绪及widget赋值继续待验。完整74/397与阶段二三四active，全套基线仍237。详见[军队接口](docs/02-使用与接口/国家与国内/本国现存军队只读接口.md)及HANDOFF顶部。
+N02组成新增按key分组的unit_types及独立name状态，projection3。原始数量/strength、旧capture及缺名称隔离均已验证。当前FRA NPC的54条记录/5种兵种返回中文literal名称，真实查询、报告和2秒/5秒周期一致，订阅取消且服务退出。最终26模块397测试全部通过。当前任务条件v14的两项漂移依赖已审计更新，其余89项匹配。字段仍partial，kind5、实际人数/就绪及widget赋值继续待验。完整74/397与阶段二三四active，全套基线仍237。详见[军队接口](docs/信息导出/接口/国家与国内/本国现存军队只读接口.md)及HANDOFF顶部。
 <!-- batch242-unit-type-delivery:end -->
 
 <!-- batch241-type-key-source:start -->
@@ -899,7 +899,7 @@ N02组成新增按key分组的unit_types及独立name状态，projection3。原�
 <!-- batch240-force-distributions:start -->
 ## 第240批 本国单位strength分布已实机交付
 
-N02陆海军组成新增按类别排序的匿名逐条strength，保留重复值、零值及空类别，原数量与聚合语义延续，projection_version2。124个相关节点均有通过记录，60条旧实采回放一致。当前FRA NPC的41团/13艘，经真实MCP主动查询、保存报告及2秒两次/5秒一次周期交付核对一致，订阅已取消且服务退出。原生双遍确认FRA为非玩家、POR为物理玩家。类别2炮兵命名由其本国计数调用链支持，尚无实样，类别5继续拒绝。完整74/397、阶段二三四与其它缺项继续active，全套失败基线仍237。见[本国现存军队接口](docs/02-使用与接口/国家与国内/本国现存军队只读接口.md)。
+N02陆海军组成新增按类别排序的匿名逐条strength，保留重复值、零值及空类别，原数量与聚合语义延续，projection_version2。124个相关节点均有通过记录，60条旧实采回放一致。当前FRA NPC的41团/13艘，经真实MCP主动查询、保存报告及2秒两次/5秒一次周期交付核对一致，订阅已取消且服务退出。原生双遍确认FRA为非玩家、POR为物理玩家。类别2炮兵命名由其本国计数调用链支持，尚无实样，类别5继续拒绝。完整74/397、阶段二三四与其它缺项继续active，全套失败基线仍237。见[本国现存军队接口](docs/信息导出/接口/国家与国内/本国现存军队只读接口.md)。
 <!-- batch240-force-distributions:end -->
 
 <!-- save-cleanup-20261107-user-once:start -->
@@ -929,103 +929,103 @@ N02陆海军组成新增按类别排序的匿名逐条strength，保留重复值
 <!-- batch235-aggregate-loss:start -->
 ## 第235批 陆战聚合损失已接入
 
-复用既有summary两侧独立损失操作数，B02返回聚合count，结果框新增OURLOST/ENEMYLOST及紧凑布局文字候选，projection统一28。当前源码286项主回归与26项旧协议检查通过，两个原生文字对逐字节一致；42场实采离线复核通过，其中144项聚合及144项紧凑候选known。将领、标题/实际赋值、完整显示与新法国正例继续待验，原74/397及阶段二三四active。详见HANDOFF顶部和[结果框进展](docs/04-实现研究/战报/战报正文与结果框组成.md)。
+复用既有summary两侧独立损失操作数，B02返回聚合count，结果框新增OURLOST/ENEMYLOST及紧凑布局文字候选，projection统一28。当前源码286项主回归与26项旧协议检查通过，两个原生文字对逐字节一致；42场实采离线复核通过，其中144项聚合及144项紧凑候选known。将领、标题/实际赋值、完整显示与新法国正例继续待验，原74/397及阶段二三四active。详见HANDOFF顶部和[结果框进展](docs/信息导出/实现研究/战报/战报正文与结果框组成.md)。
 <!-- batch235-aggregate-loss:end -->
 
 <!-- batch234-effect-text:start -->
 ## 第234批 六项效果文字已接通
 
-威望、传统与厌战候选已进入结果框，支持原生符号、截断精度和颜色方向。修正摘要字段数后231定向节点全部通过，12项真实保留文字逐字节匹配，42场既有实采离线复核通过。wire7+ projection27。将领时点输入、聚合损失、标题/实际赋值和新法国wire13正例继续待验，完整74/397与阶段二三四active。详见HANDOFF顶部与[结果框进展](docs/04-实现研究/战报/战报正文与结果框组成.md)。
+威望、传统与厌战候选已进入结果框，支持原生符号、截断精度和颜色方向。修正摘要字段数后231定向节点全部通过，12项真实保留文字逐字节匹配，42场既有实采离线复核通过。wire7+ projection27。将领时点输入、聚合损失、标题/实际赋值和新法国wire13正例继续待验，完整74/397与阶段二三四active。详见HANDOFF顶部与[结果框进展](docs/信息导出/实现研究/战报/战报正文与结果框组成.md)。
 <!-- batch234-effect-text:end -->
 
 <!-- batch233-quantity-text:start -->
 ## 第233批 数量文字已接结果框
 
-新增陆海战START/LOST/END及CAPTURE候选，复用已有B02/B03数值和原生格式规则。42项保留原生文字逐字节匹配，198相关节点分批通过，42场既有实采离线复核通过。wire7+ projection26，聚合损失、将领与效果文字、标题/实际赋值和新法国wire13正例继续待验。首次REA误走临时导入已停止，后续两个函数通过已完成库只读查询取得。本批无游戏世界状态采集或保存，完整74/397与阶段二三四active。详见HANDOFF顶部及[结果框进展](docs/04-实现研究/战报/战报正文与结果框组成.md)。
+新增陆海战START/LOST/END及CAPTURE候选，复用已有B02/B03数值和原生格式规则。42项保留原生文字逐字节匹配，198相关节点分批通过，42场既有实采离线复核通过。wire7+ projection26，聚合损失、将领与效果文字、标题/实际赋值和新法国wire13正例继续待验。首次REA误走临时导入已停止，后续两个函数通过已完成库只读查询取得。本批无游戏世界状态采集或保存，完整74/397与阶段二三四active。详见HANDOFF顶部及[结果框进展](docs/信息导出/实现研究/战报/战报正文与结果框组成.md)。
 <!-- batch233-quantity-text:end -->
 
 <!-- batch232-partial-composition:start -->
 ## 第232批 结果框的独立输入已接通
 
-组合层现在分别返回名称行、按钮和控件缺项，缺容器场景保留完整41/42控件表。winORLose可使用同事件槽值选出的观察国模型候选，复制文字与重复键歧义保留。wire7+ projection25，136相关节点分批通过；42条既有实采离线复核通过，9条wire13的18个内部视图补齐胜负控件候选。历史法国一条查询/事件一致，新法国wire13正例与完整结果框继续待验。本批无游戏操作或存档，原74/397与阶段二三四active。详见HANDOFF顶部与[结果框进展](docs/04-实现研究/战报/战报正文与结果框组成.md)。
+组合层现在分别返回名称行、按钮和控件缺项，缺容器场景保留完整41/42控件表。winORLose可使用同事件槽值选出的观察国模型候选，复制文字与重复键歧义保留。wire7+ projection25，136相关节点分批通过；42条既有实采离线复核通过，9条wire13的18个内部视图补齐胜负控件候选。历史法国一条查询/事件一致，新法国wire13正例与完整结果框继续待验。本批无游戏操作或存档，原74/397与阶段二三四active。详见HANDOFF顶部与[结果框进展](docs/信息导出/实现研究/战报/战报正文与结果框组成.md)。
 <!-- batch232-partial-composition:end -->
 
 <!-- batch231-v40-live:start -->
 ## 第231批：v40已实机取得同事件分支输入
 
-55516/v40新会话、POR玩家/FRA NPC已核对；唯一新35天窗口取得9真实wire13（8陆1海），槽值/四模板全部成功，18个内部双方视图的胜负文字模型候选known。FRA未直接参战，实际MCP范围负例通过，法国正向交付仍缺。采集已关闭、钩子保留，Jun21暂停未存；升级只新增一个May17恢复点。继续标题/Line1和完整结果框，完整74/397与阶段二三四active。详见HANDOFF顶部和[结果框进展](docs/04-实现研究/战报/战报正文与结果框组成.md)。
+55516/v40新会话、POR玩家/FRA NPC已核对；唯一新35天窗口取得9真实wire13（8陆1海），槽值/四模板全部成功，18个内部双方视图的胜负文字模型候选known。FRA未直接参战，实际MCP范围负例通过，法国正向交付仍缺。采集已关闭、钩子保留，Jun21暂停未存；升级只新增一个May17恢复点。继续标题/Line1和完整结果框，完整74/397与阶段二三四active。详见HANDOFF顶部和[结果框进展](docs/信息导出/实现研究/战报/战报正文与结果框组成.md)。
 <!-- batch231-v40-live:end -->
 
 <!-- batch230-outcome-tail:start -->
 ## 第230批：同事件分数条件与海战文字已接v40
 
-三项特殊国家槽、海战四模板和语言已接只读采集、wire13及B04候选组合；新投影24，旧wire12/11保持23/20。144源v40构建、13项复制检查、6转接场景、17协议节点、17准入节点及41公开相关节点通过，旧20场实采与40派生视图逐值兼容。新DLL未安装，无真实wire13；下一一次必要升级及新NPC实采。原生赋值、标题/Line1、完整结果和法国正例继续待验，完整74/397与阶段二三四不缩减。本批无游戏操作或存档。见HANDOFF顶部及[结果框进展](docs/04-实现研究/战报/战报正文与结果框组成.md)。
+三项特殊国家槽、海战四模板和语言已接只读采集、wire13及B04候选组合；新投影24，旧wire12/11保持23/20。144源v40构建、13项复制检查、6转接场景、17协议节点、17准入节点及41公开相关节点通过，旧20场实采与40派生视图逐值兼容。新DLL未安装，无真实wire13；下一一次必要升级及新NPC实采。原生赋值、标题/Line1、完整结果和法国正例继续待验，完整74/397与阶段二三四不缩减。本批无游戏操作或存档。见HANDOFF顶部及[结果框进展](docs/信息导出/实现研究/战报/战报正文与结果框组成.md)。
 <!-- batch230-outcome-tail:end -->
 
 <!-- batch229-score-messenger:start -->
 ## 第229批：消息头与战争分数条件文字已接入
 
-MESSAGE_HEAD零参数候选及VAL|=+定点数模型已接B04，v12 projection23；92定向节点一次通过，20场既有数据离线复核通过。三项同事件special slots缺失，最终WINORLOSE仍未知，保留追加/不追加两种候选；法国新正例仍缺。无游戏操作、存档或DLL升级，完整74/397与阶段二三四继续。详见HANDOFF顶部与[当前结果框](docs/04-实现研究/战报/战报正文与结果框组成.md)。
+MESSAGE_HEAD零参数候选及VAL|=+定点数模型已接B04，v12 projection23；92定向节点一次通过，20场既有数据离线复核通过。三项同事件special slots缺失，最终WINORLOSE仍未知，保留追加/不追加两种候选；法国新正例仍缺。无游戏操作、存档或DLL升级，完整74/397与阶段二三四继续。详见HANDOFF顶部与[当前结果框](docs/信息导出/实现研究/战报/战报正文与结果框组成.md)。
 <!-- batch229-score-messenger:end -->
 
 <!-- batch228-outcome-composition:start -->
 ## 第228批：观察国基础胜负短语已接B04
 
-纠正OTHERRESULT/MESSENGER是参数名的分类；新组合器按已核对赢家选择观察国YOU_WON/LOST基础短语，陆战RESULT/OTHERRESULT保持战斗侧0/1。最终WINORLOSE后缀、消息头及海战额外模板仍未知。v12 projection22，旧v11不变；34相关节点分批通过，20条实采离线复核通过，法国公开仍0且无新正例。本批无游戏操作或存档，原74/397与阶段二三四继续。详见HANDOFF顶部与[组合边界](docs/04-实现研究/战报/战报正文与结果框组成.md)。
+纠正OTHERRESULT/MESSENGER是参数名的分类；新组合器按已核对赢家选择观察国YOU_WON/LOST基础短语，陆战RESULT/OTHERRESULT保持战斗侧0/1。最终WINORLOSE后缀、消息头及海战额外模板仍未知。v12 projection22，旧v11不变；34相关节点分批通过，20条实采离线复核通过，法国公开仍0且无新正例。本批无游戏操作或存档，原74/397与阶段二三四继续。详见HANDOFF顶部与[组合边界](docs/信息导出/实现研究/战报/战报正文与结果框组成.md)。
 <!-- batch228-outcome-composition:end -->
 
 <!-- batch227-v39-live:start -->
 ## 第227批：v39已有真实wire12，法国范围负例通过
 
-新51508/v39会话、POR玩家/FRA NPC已实证。两个新35天窗口取得20真实wire12，结果文字组20次成功；八键和语言有原文，OTHERRESULT/MESSENGER absent。法国直接参战0，实际MCP查询/报告拒绝其他国家战报、事件零误发；正向验收仍缺。capture已关闭但钩子保留，May17暂停未存；升级只保存Mar8一次。原74/397、阶段二三四保持active。详见HANDOFF顶部与[结果框输入](docs/04-实现研究/战报/战报正文与结果框组成.md)。
+新51508/v39会话、POR玩家/FRA NPC已实证。两个新35天窗口取得20真实wire12，结果文字组20次成功；八键和语言有原文，OTHERRESULT/MESSENGER absent。法国直接参战0，实际MCP查询/报告拒绝其他国家战报、事件零误发；正向验收仍缺。capture已关闭但钩子保留，May17暂停未存；升级只保存Mar8一次。原74/397、阶段二三四保持active。详见HANDOFF顶部与[结果框输入](docs/信息导出/实现研究/战报/战报正文与结果框组成.md)。
 <!-- batch227-v39-live:end -->
 
 <!-- batch226-outcome-wireup:start -->
 ## 第226批：v39已构建，等待新NPC实采
 
-十键文字和语言已接门槛前采集/退出核对/wire12，转接失败保持未知。v39-002构建成功且141源一致，17项准入测试、C++转接、实际启动39/12与旧38/11及统计格式检查通过。新DLL未安装，无真实wire12；下一成熟升级及新NPC窗口验证，最终胜负/标题/Line1仍缺。本批无游戏操作或存档，完整74/397与阶段二三四保持active。详见HANDOFF顶部和[结果框输入](docs/04-实现研究/战报/战报正文与结果框组成.md)。
+十键文字和语言已接门槛前采集/退出核对/wire12，转接失败保持未知。v39-002构建成功且141源一致，17项准入测试、C++转接、实际启动39/12与旧38/11及统计格式检查通过。新DLL未安装，无真实wire12；下一成熟升级及新NPC窗口验证，最终胜负/标题/Line1仍缺。本批无游戏操作或存档，完整74/397与阶段二三四保持active。详见HANDOFF顶部和[结果框输入](docs/信息导出/实现研究/战报/战报正文与结果框组成.md)。
 <!-- batch226-outcome-wireup:end -->
 
 <!-- batch225-outcome-text:start -->
 ## 第225批：胜负文字缓存组件与v12接收已交付
 
-新增language+十键同事件只读组件、IBOW12/OCTX和B04缓存输入投影；不选WINORLOSE或认定窗口标题。24项C++检查、23协议节点及26公开/API节点有通过证据，早期构建/fixture失败保留；原13条真实wire11/FRA事件回放不变。尚未接observer/build或构建新DLL，无真实wire12；下一接门槛前统一生命周期及版本合同后验收。当前v38/3548/Mar8暂停只沿224历史，本批无游戏操作、存档或新健康证明。完整74/397、阶段二三四保持active。见HANDOFF顶部与[结果框来源](docs/04-实现研究/战报/战报正文与结果框组成.md)。
+新增language+十键同事件只读组件、IBOW12/OCTX和B04缓存输入投影；不选WINORLOSE或认定窗口标题。24项C++检查、23协议节点及26公开/API节点有通过证据，早期构建/fixture失败保留；原13条真实wire11/FRA事件回放不变。尚未接observer/build或构建新DLL，无真实wire12；下一接门槛前统一生命周期及版本合同后验收。当前v38/3548/Mar8暂停只沿224历史，本批无游戏操作、存档或新健康证明。完整74/397、阶段二三四保持active。见HANDOFF顶部与[结果框来源](docs/信息导出/实现研究/战报/战报正文与结果框组成.md)。
 <!-- batch225-outcome-text:end -->
 
 <!-- batch224-v38-live:start -->
 ## 第224批：v38已安装，法国NPC真实记录通过MCP验收
 
-新3548/creation134384855258026915/session3548-1dd6e5058d8d3a3，v38-002/aaf647dd…/wire11，POR物理玩家189、FRA NPC122双遍实证。为升级仅保存Feb1一次并恢复轮换档；唯一新35天窗口结束Mar8暂停，13私有记录/1条FRA公开，名称候选“讷韦尔战役”，query/report/event真实MCP一致。候选非原生NAME/Line1/raw_text；覆盖不升级。capture唯一disable，钩子/资源按合同保留，不称卸载；初original探针预期错后只补installed只读核对，未重发。当前Mar8未保存，不载入Feb1重放224窗口。完整74/397、阶段二三四active，全套失败基线保持。详见HANDOFF顶部与[名称实机结果](docs/04-实现研究/战报/战报名称原料只读采集.md)。
+新3548/creation134384855258026915/session3548-1dd6e5058d8d3a3，v38-002/aaf647dd…/wire11，POR物理玩家189、FRA NPC122双遍实证。为升级仅保存Feb1一次并恢复轮换档；唯一新35天窗口结束Mar8暂停，13私有记录/1条FRA公开，名称候选“讷韦尔战役”，query/report/event真实MCP一致。候选非原生NAME/Line1/raw_text；覆盖不升级。capture唯一disable，钩子/资源按合同保留，不称卸载；初original探针预期错后只补installed只读核对，未重发。当前Mar8未保存，不载入Feb1重放224窗口。完整74/397、阶段二三四active，全套失败基线保持。详见HANDOFF顶部与[名称实机结果](docs/信息导出/实现研究/战报/战报名称原料只读采集.md)。
 <!-- batch224-v38-live:end -->
 
 <!-- batch223-v38-control-readiness:start -->
 ## 第223批：v38控制器兼容与旧会话实机健康
 
-补齐控制器38白名单，严格manifest、唯一模块与session绑定保持；23个相关节点最终通过，旧v23沙箱TEMP失败只补该case。当前30744/v37模块身份及两次成熟帧health ready已新核对，Feb1不变。新v38-002未安装；旧checkpoint包装器仅适配23..33且要求disabled，不能直接用于当前ready场景。下一给成熟autosave入口一次reservation保留未存Feb1，再唯一升级及NPC战报实采。完整74/397、阶段二三四保持active，无保存/推进/重启注入/清理。见HANDOFF顶部与[战报接口](docs/04-实现研究/战报/战报名称原料只读采集.md)。
+补齐控制器38白名单，严格manifest、唯一模块与session绑定保持；23个相关节点最终通过，旧v23沙箱TEMP失败只补该case。当前30744/v37模块身份及两次成熟帧health ready已新核对，Feb1不变。新v38-002未安装；旧checkpoint包装器仅适配23..33且要求disabled，不能直接用于当前ready场景。下一给成熟autosave入口一次reservation保留未存Feb1，再唯一升级及NPC战报实采。完整74/397、阶段二三四保持active，无保存/推进/重启注入/清理。见HANDOFF顶部与[战报接口](docs/信息导出/实现研究/战报/战报名称原料只读采集.md)。
 <!-- batch223-v38-control-readiness:end -->
 
 <!-- batch222-plugin-transform:start -->
 ## 第222批：固定插件名称候选已支持
 
-固定散列插件的字节转换已接名称及正文派生，v11 projection20；保留完整赋值前文字，并标明原生赋值未验证及255字节请求限制。58相关Python测试一次通过，均为合成NSRC。v38-002和138源未变、尚未安装；只读确认旧PID创建身份、EXE、Feb1暂停/slot189，模块/tag/NPC/心跳未新证。下一成熟自动化升级及新NPC实采。完整74/397、阶段二三四保持active，覆盖与全套失败基线不升级，无保存/推进/重启注入/清理。详见[名称合同](docs/04-实现研究/战报/战报名称原料只读采集.md)与HANDOFF顶部。
+固定散列插件的字节转换已接名称及正文派生，v11 projection20；保留完整赋值前文字，并标明原生赋值未验证及255字节请求限制。58相关Python测试一次通过，均为合成NSRC。v38-002和138源未变、尚未安装；只读确认旧PID创建身份、EXE、Feb1暂停/slot189，模块/tag/NPC/心跳未新证。下一成熟自动化升级及新NPC实采。完整74/397、阶段二三四保持active，覆盖与全套失败基线不升级，无保存/推进/重启注入/清理。详见[名称合同](docs/信息导出/实现研究/战报/战报名称原料只读采集.md)与HANDOFF顶部。
 <!-- batch222-plugin-transform:end -->
 
 <!-- batch221-name-source-wire:start -->
 ## 第221批：名称原料全链已接线，等待实机验收
 
-门槛前原料+同事件BATTLE_OF/语言已接IBOW11、接收器与B04.details；插件转换未建模则保持unknown，派生候选不冒充NAME/Line1。最终v38-002为138源构建，启动38/11及旧37/10格式化验证通过，未安装；首构建版本声明遗漏已修正并保留退役。91相关Python节点、53C++协议检查、17prefix检查有通过证据，失败及选择性补测均留账。完整74/397、阶段二三四保持active，无游戏操作/保存/清理；详细边界见[接口说明](docs/04-实现研究/战报/战报名称原料只读采集.md)与HANDOFF顶部。
+门槛前原料+同事件BATTLE_OF/语言已接IBOW11、接收器与B04.details；插件转换未建模则保持unknown，派生候选不冒充NAME/Line1。最终v38-002为138源构建，启动38/11及旧37/10格式化验证通过，未安装；首构建版本声明遗漏已修正并保留退役。91相关Python节点、53C++协议检查、17prefix检查有通过证据，失败及选择性补测均留账。完整74/397、阶段二三四保持active，无游戏操作/保存/清理；详细边界见[接口说明](docs/信息导出/实现研究/战报/战报名称原料只读采集.md)与HANDOFF顶部。
 <!-- batch221-name-source-wire:end -->
 
 <!-- batch220-name-sources:start -->
 ## 第220批：非玩家战报名称来源
 
-新增无游戏函数调用的名称原料复制组件，27场景/84检查离线通过；尚未接observer，仍缺同事件前缀、插件转换和新NPC实采，不提高覆盖。下一继续门槛前采集与传输，完整74/397和阶段二三四保持active。详见[原料说明](docs/04-实现研究/战报/战报名称原料只读采集.md)与HANDOFF顶部。没有游戏操作或新增存档。
+新增无游戏函数调用的名称原料复制组件，27场景/84检查离线通过；尚未接observer，仍缺同事件前缀、插件转换和新NPC实采，不提高覆盖。下一继续门槛前采集与传输，完整74/397和阶段二三四保持active。详见[原料说明](docs/信息导出/实现研究/战报/战报名称原料只读采集.md)与HANDOFF顶部。没有游戏操作或新增存档。
 <!-- batch220-name-sources:end -->
 
 <!-- batch219-production-sources:start -->
 ## 第219批：N09省份来源版本2已交付
 
-默认服务已接一次采集的23缓存+4直接条件模型，去掉荒废存在门槛；局部未知保留、相关合计None，繁荣通过必要阈值仍未知。目录和结果标projection_version2，v1校验与country路径保留。三省实采/独立字节/篡改拒绝及实际MCP查询、报告、2s5s交付通过；里斯本无荒废也正常返回。profile7be2cc78…v2-r2/82guards，原始prepared版本保留未实采。见[当前接口](docs/02-使用与接口/贸易与省份/省份产出修正来源接口.md)。
+默认服务已接一次采集的23缓存+4直接条件模型，去掉荒废存在门槛；局部未知保留、相关合计None，繁荣通过必要阈值仍未知。目录和结果标projection_version2，v1校验与country路径保留。三省实采/独立字节/篡改拒绝及实际MCP查询、报告、2s5s交付通过；里斯本无荒废也正常返回。profile7be2cc78…v2-r2/82guards，原始prepared版本保留未实采。见[当前接口](docs/信息导出/接口/贸易与省份/省份产出修正来源接口.md)。
 
 本批修heap空名payload别名和public空reason边界，定向正反例通过。首次测试fixture/cwd错误及0测试旧session已终态留账，只补相关项；不再按嵌套层数猜ROOT。无新REA、保存、推进、业务、CUA或清理。游戏仍30744、POR玩家/FRA NPC、1457.2.1暂停；74/397、阶段二三四/B01–B04与61/264/72、63可调用保持active。full suite仍200失败，其他来源、实际换属与全网收益继续未完成。
 <!-- batch219-production-sources:end -->
@@ -1033,7 +1033,7 @@ MESSAGE_HEAD零参数候选及VAL|=+定点数模型已接B04，v12 projection23�
 <!-- batch218-source-components:start -->
 ## 第218批：当前省份产出修正的匹配分解
 
-省份187已独立读全23个构造器缓存槽，非零项为荒废-18和商业共和国加成+10。批量加载定义后再核原生门控，确认under_siege定义-250、province+388非空且常量kind=true；三项合计-258与当前聚合相符。+330实际blockaded/+310实际in_state，候选名称猜测已由实采排除；繁荣必要阈值失败。零残差不代表全部来源已覆盖，也没有上次刷新trace或215历史输入。见[重建记录](docs/04-实现研究/贸易与省份/省份修正来源重建记录.md)。
+省份187已独立读全23个构造器缓存槽，非零项为荒废-18和商业共和国加成+10。批量加载定义后再核原生门控，确认under_siege定义-250、province+388非空且常量kind=true；三项合计-258与当前聚合相符。+330实际blockaded/+310实际in_state，候选名称猜测已由实采排除；繁荣必要阈值失败。零残差不代表全部来源已覆盖，也没有上次刷新trace或215历史输入。见[重建记录](docs/信息导出/实现研究/贸易与省份/省份修正来源重建记录.md)。
 
 这是内部研究读取器，N09公开仍为217单分量；生产/profile与61/264/72、63可调用不变。下一直接提炼共享reader一次采集接N09，不把临时四层链导入产品，不让devastation不存在阻断其它来源。四份实采及独立字节/反例通过；本批不重跑MCP/pytest，没有保存/推进/业务/函数调用/CUA/清理，游戏仍30744、1457.2.1暂停。完整74/397、阶段二三四/B01–B04 active，完整suite仍200失败基线。
 <!-- batch218-source-components:end -->
@@ -1041,7 +1041,7 @@ MESSAGE_HEAD零参数候选及VAL|=+定点数模型已接B04，v12 projection23�
 <!-- batch217-province-goods-source:start -->
 ## 第217批：省份产出修正缓存来源
 
-N09.source_breakdown已支持省份对象，仍只有一个N09 owner；country旧路径保留。新只读profile a29f7394…继承210并加4383B守卫，FRA NPC准入/发现、state2、descriptor21精确键/NULL、36回调表、叶复读/父双遍/strict replay共同限定。三省实采均读到devastation：183聚合-416/分量-176，187与94聚合-258/分量-18；各自残差-240尚未归因。正式MCP查询、报告、2s5s独立交付通过并全部取消关闭；无保存或推进。细节见[省份来源接口](docs/02-使用与接口/贸易与省份/省份产出修正来源接口.md)。
+N09.source_breakdown已支持省份对象，仍只有一个N09 owner；country旧路径保留。新只读profile a29f7394…继承210并加4383B守卫，FRA NPC准入/发现、state2、descriptor21精确键/NULL、36回调表、叶复读/父双遍/strict replay共同限定。三省实采均读到devastation：183聚合-416/分量-176，187与94聚合-258/分量-18；各自残差-240尚未归因。正式MCP查询、报告、2s5s独立交付通过并全部取消关闭；无保存或推进。细节见[省份来源接口](docs/信息导出/接口/贸易与省份/省份产出修正来源接口.md)。
 
 仅一个缓存分量，非完整来源拆分，也未解释旧raw49或重建215历史输入。普通有界PE证据非新REA/运行调用trace。叶/capture/public/factory定向证据见217，首次失败及选择器错误保留。另CLI旧pin25缺23，未恢复；HTTP一case通过不代表旧完整基线已修。完整suite仍200失败，whole_suite_passed=false。74/397、阶段二三四/B01–B04与61/264/72、63可调用保持active。下一继续剩余来源、实际领土变化和完整网络收益；游戏仍30744、POR玩家/FRA NPC、1457.2.1暂停，旧窗口/request不重放。
 <!-- batch217-province-goods-source:end -->
@@ -1055,7 +1055,7 @@ N09.source_breakdown已支持省份对象，仍只有一个N09 owner；country�
 
 新REA直接函数查询即使开放本机通信仍触900m树监测（采样929284096B，单进程峰值428232704B），已停owned树，无有效EvidenceID、不重试。10原cache文件流式核验未变，只归档owned scratch/锁后恢复8eec1cad…；新分析不冒充REA。可调用叶函数无pdata首提取失败，改为128B上限至ret/jmp后成功，原件保留。所有owned监测已终态；1 cap和1前置提取失败如实记录，采样非绝对峰值。
 
-本批无游戏内存读取、游戏函数、保存、推进、业务、重启注入、CUA或存档清理。215最后PID30744/creation134384666040719484/session30744-1dd6e244a9dd87c、POR玩家189/FRA NPC、1457.2.1暂停仅历史留存，非本批新健康状态。生产/profile/覆盖61/264/72、63可调用不变；不重跑pytest/MCP，whole_suite_passed=false仍200基线。完整74/397、阶段二三四/B01–B04 active。见docs/04-实现研究/贸易与省份/节点贸易金额刷新条件.md、216/monthly-update-contract-001.json和summary.json。
+本批无游戏内存读取、游戏函数、保存、推进、业务、重启注入、CUA或存档清理。215最后PID30744/creation134384666040719484/session30744-1dd6e244a9dd87c、POR玩家189/FRA NPC、1457.2.1暂停仅历史留存，非本批新健康状态。生产/profile/覆盖61/264/72、63可调用不变；不重跑pytest/MCP，whole_suite_passed=false仍200基线。完整74/397、阶段二三四/B01–B04 active。见docs/信息导出/实现研究/贸易与省份/节点贸易金额刷新条件.md、216/monthly-update-contract-001.json和summary.json。
 <!-- batch216-update-types:end -->
 
 <!-- batch215-refresh-observation:start -->
@@ -1067,7 +1067,7 @@ N09.source_breakdown已支持省份对象，仍只有一个N09 owner；country�
 
 六段5天和一段1天全部单派发、精确目标/暂停/health及后读闭合，结束1457.2.1/raw56564064。无保存请求、业务派发、强刷、battle启停/清空、CUA或新编译；仅既有原生时间控制4/0与载入确认。三个阶段各一次group+T03采集、严格回放，紧凑输入算术核对通过，非两份原子快照。新wrapper审查修复3处控制边界并加-O拒绝负例。首比较器计数器误累加列表，002只离线修正计数，未重采/重推进/重算。owned监测均终态无cap/timeout；启动为已授权长期游戏，另记录进程身份，不纳入分析内存限额。
 
-生产/profile/覆盖不改：61available/264partial/72planned、63可调用，完整74/397、阶段二三四/B01–B04 active。未重跑MCP/完整pytest，whole_suite_passed=false仍200基线。下一直接复用215当前暂停2月1日，沿2f36f0及省份产出修正生产继续，继而实际领土变化/全网络收益和其他原缺项；不要重新载入或重放215七段。见docs/04-实现研究/贸易与省份/节点贸易金额刷新条件.md、215/summary.json和phase-comparison-002.json。
+生产/profile/覆盖不改：61available/264partial/72planned、63可调用，完整74/397、阶段二三四/B01–B04 active。未重跑MCP/完整pytest，whole_suite_passed=false仍200基线。下一直接复用215当前暂停2月1日，沿2f36f0及省份产出修正生产继续，继而实际领土变化/全网络收益和其他原缺项；不要重新载入或重放215七段。见docs/信息导出/实现研究/贸易与省份/节点贸易金额刷新条件.md、215/summary.json和phase-comparison-002.json。
 <!-- batch215-refresh-observation:end -->
 
 <!-- batch214-province-fort:start -->
@@ -1079,7 +1079,7 @@ G03.fort 新增独立只读来源，与原静态海峡字段分别路由。复�
 
 REA 的 has_fort 搜索成功空集；fort_level 字符串查询触cap，函数查询先Node堆耗尽、后provider失败，无有效函数Evidence ID，不冒称REA闭合。原10缓存文件均未变，仅本次scratch/锁归档后恢复8eec1cad…；owned monitors均终态，首次cap已停止，未继续重试。正式实采首轮在控制读取前遇沙箱权限拒绝，取只读权限后的002完成。无新存档、推进、业务、重启注入、CUA或再次存档清理。
 
-第213批只读基线仍为香槟重算6625/local6674；当前场景的新推进提案因重复181窗口而在派发前拒绝。保留old_autosave候选与181的SHA/campaign/date不同，但尚未载入或推进；旧59B记录仅能证明成功leaf，不能凭缺失日期编造时间窗口。跨刷新因果仍未完成。完整74主题397字段、阶段二三四/B01–B04保持active；覆盖61available/264partial/72planned、63可调用，goal_complete=false。下一继续贸易刷新与真实领土变化、完整网络收益，以及其他计划缺项。见docs/02-使用与接口/贸易与省份/省份当前要塞等级接口.md、214/summary.json和213/summary.json。
+第213批只读基线仍为香槟重算6625/local6674；当前场景的新推进提案因重复181窗口而在派发前拒绝。保留old_autosave候选与181的SHA/campaign/date不同，但尚未载入或推进；旧59B记录仅能证明成功leaf，不能凭缺失日期编造时间窗口。跨刷新因果仍未完成。完整74主题397字段、阶段二三四/B01–B04保持active；覆盖61available/264partial/72planned、63可调用，goal_complete=false。下一继续贸易刷新与真实领土变化、完整网络收益，以及其他计划缺项。见docs/信息导出/接口/贸易与省份/省份当前要塞等级接口.md、214/summary.json和213/summary.json。
 <!-- batch214-province-fort:end -->
 
 <!-- batch212-refresh-paths:start -->
@@ -1089,7 +1089,7 @@ REA 的 has_fort 搜索成功空集；fort_level 字符串查询触cap，函数�
 
 T06发现信息增加6项范围说明：省份汇总不含网络流动、对比当前节点总缓存、同轮未验证、已识别月变更/初始化路径及其静态依据。数值/读取布局/profile不改，b01c83a8…依赖核对通过；只补1个受影响发现集成case通过。211的212用例/实采/MCP仅保留，非212新执行；完整suite仍200失败，whole_suite_passed=false。四REA只读库8eec1cad…均未改；两处普通call窗口共846B。首提取脚本字段名与汇总器receipt schema失败原件留存，修正仅处理原证据，成功REA未重跑。6个owned monitors已终态，无cap/timeout，最高采样876072960B，非绝对峰值。
 
-本批无游戏内存/存档读取、保存、推进、清理、原生游戏函数、重启注入/编译/CUA/业务；211最后54608与FRA NPC/POR暂停身份仅历史留存，未冒称212新健康状态。原120/旧request/旧窗口/no-repeat及新业务完整audit/--test-only保持。完整74/397、阶段二三四/B01-B04 active，覆盖61/263/73、63可调用保持。下一先按已有自动化/保留检查点审计新独立跨刷新观察，确认输入与缓存相位；不得凭静态发现强刷或重放旧窗口。见docs/04-实现研究/贸易与省份/节点贸易金额刷新条件.md和212/summary.json。
+本批无游戏内存/存档读取、保存、推进、清理、原生游戏函数、重启注入/编译/CUA/业务；211最后54608与FRA NPC/POR暂停身份仅历史留存，未冒称212新健康状态。原120/旧request/旧窗口/no-repeat及新业务完整audit/--test-only保持。完整74/397、阶段二三四/B01-B04 active，覆盖61/263/73、63可调用保持。下一先按已有自动化/保留检查点审计新独立跨刷新观察，确认输入与缓存相位；不得凭静态发现强刷或重放旧窗口。见docs/信息导出/实现研究/贸易与省份/节点贸易金额刷新条件.md和212/summary.json。
 <!-- batch212-refresh-paths:end -->
 
 <!-- batch211-node-cash:start -->
@@ -1101,7 +1101,7 @@ T06目标页新增current_trade_power.node_cash_aggregate，与旧力量/省份�
 
 香槟33/33成员可算：sum79511→6625，B0缓存9221，matches_cache=false；不能据此称缓存陈旧或完整节点金额来源已闭合。另复用T03一次只读实采：local6674/incoming6946/outgoing4399/total9221；差额2596算术分为net2547与local49，不证明引擎生产先后。塞维利亚50/53，1293 owner无法绑定、367/368未发现，sum/matches均null，cache8602；未发现成员不读私有输入。两节点各一次raw、严格回放与独立算术/字节/篡改拒绝、正式投影和真实MCP查询/报告/2s5s交付通过；短取消保留长，最后全cancel/server0/reader终态。expected_benefit仍未知。定向用例与失败后仅补受影响项见211/summary.json，不把通过记录外推全suite；最新完整基线仍200失败，whole_suite_passed=false。全部owned monitors已终态，无cap/timeout；采样峰值非绝对峰值。
 
-覆盖仍61available/263partial/73planned、63可调用；完整74/397、阶段二三四/B01-B04 active。下一追香槟local49差额与净流入的原生生产，继续真实换属、份额/刷新与全网络收益。见docs/02-使用与接口/贸易与省份/节点贸易金额汇总接口.md及211/summary.json。
+覆盖仍61available/263partial/73planned、63可调用；完整74/397、阶段二三四/B01-B04 active。下一追香槟local49差额与净流入的原生生产，继续真实换属、份额/刷新与全网络收益。见docs/信息导出/接口/贸易与省份/节点贸易金额汇总接口.md及211/summary.json。
 <!-- batch211-node-cash:end -->
 
 <!-- batch210-province-value:start -->
@@ -1115,7 +1115,7 @@ T06目标页新增current_trade_power.value_calculation，与现有力量共用�
 
 新REA ev_e2865d1e…(a13e40)与ev_c6e0be01…(a11110)及有界普通指令闭合支持路径的产出→当前价格→加项/倍率，输入额外参数均零、description NULL；原生不同阶段分别trunc0/低i32。复用205/207审计确认node B0复位、每member金额call/add和sum后trunc0(/12)，不能把owner/controller的力量分支当金额skip。首REA provider失败/null与临时scratch整体校验变化保留，逐文件核原payload不变后仅归档本次scratch/锁，8eec1cad…恢复；允许本机通信/延长等待后成功两次，各自DB不变，不冒称首轮成功。G02原有development/resource与T03节点缓存不能代替单省金额，复用审计已留档。
 
-覆盖仍61available/263partial/73planned、63可调用；完整74/397、阶段二三四/B01-B04 active。下一用已验证的省份输入与加载成员闭合节点B0当前重建及刷新，继续实际归属变化、D0份额与全网络收益，不能把当前单省输入当完整收益方案。见docs/02-使用与接口/贸易与省份/省份贸易金额输入接口.md与210/summary.json。
+覆盖仍61available/263partial/73planned、63可调用；完整74/397、阶段二三四/B01-B04 active。下一用已验证的省份输入与加载成员闭合节点B0当前重建及刷新，继续实际归属变化、D0份额与全网络收益，不能把当前单省输入当完整收益方案。见docs/信息导出/接口/贸易与省份/省份贸易金额输入接口.md与210/summary.json。
 <!-- batch210-province-value:end -->
 
 <!-- batch209-current-income:start -->
@@ -1129,7 +1129,7 @@ T06自动总量模式的assumptions新增native_income_calculation，普通与�
 
 新REA ev_8fadfc1c…确认b58a80倍率；普通有界依赖证明基础+modifier夹限。B0种子扫描仅[b40000,b62000)139264B、最多5个≤8192B函数，其中b51370与205保留件重叠；复用205与栈槽关系确认节点在b516d0累加省份getter结果、b51753换算写回。该getter=a13e40等依赖、所有其它writer/刷新、D0参与条件及真实领土变化仍未闭合，下一沿此来源继续，不能以当前重算宣称完整未来收益。
 
-覆盖61available/263partial/73planned、63可调用及完整74/397、阶段二三四/B01-B04 active不变。见docs/04-实现研究/贸易与省份/当前节点贸易收入重算.md与209/summary.json。
+覆盖61available/263partial/73planned、63可调用及完整74/397、阶段二三四/B01-B04 active不变。见docs/信息导出/实现研究/贸易与省份/当前节点贸易收入重算.md与209/summary.json。
 <!-- batch209-current-income:end -->
 
 <!-- batch208-total-power-membership:start -->
@@ -1141,7 +1141,7 @@ T06省份来源情景新增total_power_input_model=fixed_other_country_power，�
 
 165唯一相关case最终有通过记录（83兼容/33auto纯模型/21leaf/7parent/21集成）；首次命令参数错误及fixture/断言失败保留，修正只补受影响节点，原实际输出目录不搬/补件重跑。leaf stable顶层与private指针anchor命名在profile pin前修正。完整suite仍200失败基线，whole_suite_passed=false；不把定向与真实交付外推为全套通过。父两遍真正漂移仍全撤回；稳定unknown child仅auto未知，manual/explicit有有效基线则保留。所有owned监测/执行均终态，无新保存/推进/再次清理/业务/游戏函数/重启注入/CUA/REA；原no-repeat与新业务audit/--test-only继续。
 
-覆盖61available/263partial/73planned、63可调用及完整74/397、阶段二三四/B01-B04 active。计算固定列表/其它国家贡献，把现有总量当sum阶段基线；不证明刷新时点、后置callee或真实换属/网络/完整未来收益。下一继续b58a80原生收入依赖与真实领土效应等原缺项，不能用条件估算宣称扩张方案完成。见docs/02-使用与接口/贸易与省份/节点总力量自动情景接口.md及208/summary.json。
+覆盖61available/263partial/73planned、63可调用及完整74/397、阶段二三四/B01-B04 active。计算固定列表/其它国家贡献，把现有总量当sum阶段基线；不证明刷新时点、后置callee或真实换属/网络/完整未来收益。下一继续b58a80原生收入依赖与真实领土效应等原缺项，不能用条件估算宣称扩张方案完成。见docs/信息导出/接口/贸易与省份/节点总力量自动情景接口.md及208/summary.json。
 <!-- batch208-total-power-membership:end -->
 
 <!-- batch207-node-total-power:start -->
@@ -1153,7 +1153,7 @@ T06省份来源情景新增total_power_input_model=fixed_other_country_power，�
 
 两次REA复用原cache/noanalysis/readOnly，DB承诺8eec1cad…前后保持；查询51.05s/41.0s，根owned monitors全终态且无cap/timeout，最高采样893394944B低于900MB，不冒称绝对峰值。原生正文/普通pdata片段与REA非连续body间隙分开，不把全部pdata字节称有效指令。生产源码/profile与206 pins保持，无新生产tests；55定向仅继承206，最新全范围仍200失败基线，whole_suite_passed=false。无本批游戏内存/存档读取、保存/推进/再次清理/业务/原生游戏函数/重启注入/CUA；不把206的37508/FRA NPC/POR暂停记录当207新状态。全部no-repeat及新业务audit/--test-only保持。
 
-覆盖61available/263partial/73planned、63可调用与原74/397、阶段二三四/B01-B04继续active。本批为真实生产来源研究进展，不是新公开字段或完整目标完成。详见docs/04-实现研究/贸易与省份/节点总贸易力量更新依据.md与207/summary.json。
+覆盖61available/263partial/73planned、63可调用与原74/397、阶段二三四/B01-B04继续active。本批为真实生产来源研究进展，不是新公开字段或完整目标完成。详见docs/信息导出/实现研究/贸易与省份/节点总贸易力量更新依据.md与207/summary.json。
 <!-- batch207-node-total-power:end -->
 
 <!-- batch206-native-power-scenarios:start -->
@@ -1163,7 +1163,7 @@ T06.expected_trade/assumptions支持province_source_fixed_other_inputs，保留�
 
 静态复用205保留的B23普通有界指令，不新增REA/守卫/profile；本轮同37508/creation134384086783026355/session37508-1dd6d9d6c2ae4b3、v37，实读前后1456.7.26 paused1/speed0/物理POR189，逻辑FRA NPC。正式首轮因模式schema缺type在capture前失败，修后另formal002一次新联合采集，第二节点严格复用；原件保留。香槟基础121672/倍率1178/cap143329/加55991/减0，当前country199320；来源+1000受cap保持country不变，+50000条件country258220，-1000变198142；不是实际取得省份的效果。波尔多收入未知仍有力量转换。独立原始字节/整数/精确金额核对及真实MCP发现/查询/报告/2s5s通过，短cancel保留long，最终全cancel/server0/reader终态；55唯一相关case最终通过，初始失败与修正保留。最新全范围仍200失败基线，whole_suite_passed=false。
 
-无保存/推进/再次清理/业务/游戏函数/重启注入/CUA，新老no-repeat及新业务audit/--test-only保持。覆盖61available/263partial/73planned、63可调用与完整74/397、阶段二三四/B01-B04 active。原生总量更新、实际换属导致的输入变化、刷新时点与完整未来收益仍缺；下一从实际依赖补齐这些来源，不能将当前力量或条件模型冒称完整方案。见docs/04-实现研究/贸易与省份/省份来源与国家贸易力量情景.md及206/summary.json。
+无保存/推进/再次清理/业务/游戏函数/重启注入/CUA，新老no-repeat及新业务audit/--test-only保持。覆盖61available/263partial/73planned、63可调用与完整74/397、阶段二三四/B01-B04 active。原生总量更新、实际换属导致的输入变化、刷新时点与完整未来收益仍缺；下一从实际依赖补齐这些来源，不能将当前力量或条件模型冒称完整方案。见docs/信息导出/实现研究/贸易与省份/省份来源与国家贸易力量情景.md及206/summary.json。
 <!-- batch206-native-power-scenarios:end -->
 
 <!-- batch205-province-node-allocation:start -->
@@ -1175,7 +1175,7 @@ T06.targets 的 current_trade_power.node_allocation 新增loaded node/center/mem
 
 实机同37508/creation134384086783026355/session37508-1dd6d9d6c2ae4b3、原199 installation/v37/B23，前后1456.7.26 speed0/paused1/物理POR189，逻辑FRA NPC。Paris183属champagne center186，33/33可判定、FRA subtotal64672==cache；Lisboa227属sevilla center1293，贡献34104给POR/FRA0，53中51可判定，367/368未发现不读ownership，sum incomplete/matchesnull。海省1293已发现owner0由unknown修为knownzero，v2数据/原leaf留档。v1首采集在guard缺end_rva_exclusive格式阶段停于backend前unknown/closed，v2补格式字段保持原守卫bytes/RVA，再以ownerzero修正升v3，旧件不覆盖。独立字节复核/篡改负例、formal、actualMCP discovery/query/report/2s5s通过，全cancel/server0/reader终态；144定向case最终通过。叶子初2失败属fixture，修2后另full20保留；extension初2预期错误只补2，owner新分支另2tests；不虚增重复case。最新全范围仍200失败基线，whole_suite_passed=false。
 
-无保存/推进/再次清理/业务/原生游戏函数/编译/重启注入/battle/CUA/新REA，全部原120/旧窗口/request/no-repeat与新业务audit/--test-only继续。覆盖61 available/263 partial/73 planned、63可调用保持，完整74/397、阶段二三四/B01–B04 active。当前分配≠换属收益，country_power完整分量/变化与未来收入、刷新时点仍缺，expected_benefit未知；下一接通国家力量算术与明确状态假设，不把外省当前值直接加FRA。见docs/02-使用与接口/贸易与省份/省份贸易力量节点分配接口.md、205/summary.json。
+无保存/推进/再次清理/业务/原生游戏函数/编译/重启注入/battle/CUA/新REA，全部原120/旧窗口/request/no-repeat与新业务audit/--test-only继续。覆盖61 available/263 partial/73 planned、63可调用保持，完整74/397、阶段二三四/B01–B04 active。当前分配≠换属收益，country_power完整分量/变化与未来收入、刷新时点仍缺，expected_benefit未知；下一接通国家力量算术与明确状态假设，不把外省当前值直接加FRA。见docs/信息导出/接口/贸易与省份/省份贸易力量节点分配接口.md、205/summary.json。
 <!-- batch205-province-node-allocation:end -->
 
 <!-- batch204-province-calculation:start -->
@@ -1185,7 +1185,7 @@ T06.targets 的 current_trade_power.calculation 新增当前cache-writer重建�
 
 实机同37508/creation134384086783026355/session37508-1dd6d9d6c2ae4b3，原199 installation/v37/B23；新control前后1456.7.26 speed0/paused1/物理POR189，逻辑FRA NPC。227重算34104、18317520与cache相符，两样本owner bonus均inactive；4组独立字节/算术复核+4篡改负例通过。formal与actualMCP discover/query/report/2s5s语义一致，短取消长仍active，最终全cancel/server0/reader终态。167定向case最终通过(55算术/58兼容/30public/24gate组合，随机768组在单case内)，11新fixture/断言失败保留且只补失败节点；算术JUnit误在numeric-modifiers-204目录保留原件。review修复owner拒绝早返跳过after身份复核，发生于profile/实采前。首private研究拒绝空vector0/0失败，保留unknown/closed后修正；首次pdata lookup无entry，改为有界66B leaf证明，普通静态不冒充REA。5根owned monitors全终态，无cap/timeout，最高166883328B。
 
-无保存/推进/再次清理/业务派发/原生游戏函数/编译/重启注入/battle/CUA/新REA。全部原120/旧窗口/request/no-repeat与新业务audit/--test-only继续。61 available/263 partial/73 planned、63可调用不变；完整74/397、阶段二三四/B01–B04继续active，最新全范围仍200失败基线、whole_suite_passed=false。只重建当前支持条件下的数值，刷新/逐省国家节点分配及换属收益未闭合，expected_benefit仍未知；下一复用T04和+e8 loaded-node锚点闭合分配。见docs/02-使用与接口/贸易与省份/当前省份贸易力量重算接口.md、204/summary.json。
+无保存/推进/再次清理/业务派发/原生游戏函数/编译/重启注入/battle/CUA/新REA。全部原120/旧窗口/request/no-repeat与新业务audit/--test-only继续。61 available/263 partial/73 planned、63可调用不变；完整74/397、阶段二三四/B01–B04继续active，最新全范围仍200失败基线、whole_suite_passed=false。只重建当前支持条件下的数值，刷新/逐省国家节点分配及换属收益未闭合，expected_benefit仍未知；下一复用T04和+e8 loaded-node锚点闭合分配。见docs/信息导出/接口/贸易与省份/当前省份贸易力量重算接口.md、204/summary.json。
 <!-- batch204-province-calculation:end -->
 
 <!-- batch203-country-province-power:start -->
@@ -1195,7 +1195,7 @@ T06.targets 的 current_trade_power.country_modifiers 新增 controller/observer
 
 实机同37508/creation134384086783026355/session37508-1dd6d9d6c2ae4b3，原199 installation/v37/B23；新control前后1456.7.26 speed0/paused1/物理POR189，逻辑FRA NPC。227 controllerPOR raw220、observerFRA200，183两角色FRA200；现有power34104/17520及省份3项保持。独立8角色原始字节核对、4篡改回放负例通过；formal保留采集投影和actualMCP discovery/query/report/2s5s语义一致，短取消长仍active，最终全cancel/server0/reader终态。首普通权限probe被拒绝且未取得数值；授权只读后完成，无重启。4根monitors全部终态无cap/timeout，最大194367488B。91唯一相关测试通过，首新fixture/期望失败保留，仅补失败节点；最新全量仍200失败基线、whole_suite_passed=false。
 
-无保存/推进/再次清理/业务派发/原生游戏函数/编译/重启注入/battle/CUA/新REA。不重放原120、旧窗口、request与未闭合所有权；新业务仍须完整audit/--test-only。仅扩既有T06字段，61 available/263 partial/73 planned、63可调用保持，完整74/397、阶段二三四/B01–B04继续active。完整原生计算、刷新条件、逐省→国家节点分配及换属收益仍未完成，expected_benefit未知。下一复用201有界证据闭合算术与分配；见docs/02-使用与接口/贸易与省份/省份贸易力量国家修正接口.md及203/summary.json。
+无保存/推进/再次清理/业务派发/原生游戏函数/编译/重启注入/battle/CUA/新REA。不重放原120、旧窗口、request与未闭合所有权；新业务仍须完整audit/--test-only。仅扩既有T06字段，61 available/263 partial/73 planned、63可调用保持，完整74/397、阶段二三四/B01–B04继续active。完整原生计算、刷新条件、逐省→国家节点分配及换属收益仍未完成，expected_benefit未知。下一复用201有界证据闭合算术与分配；见docs/信息导出/接口/贸易与省份/省份贸易力量国家修正接口.md及203/summary.json。
 <!-- batch203-country-province-power:end -->
 
 <!-- batch202-province-numeric-inputs:start -->
@@ -1209,13 +1209,13 @@ T06.targets 的 rows[].current_trade_power 新增 numeric_modifiers：province+9
 
 实机同37508/creation134384086783026355/session37508-1dd6d9d6c2ae4b3、199原installation/v37 DLL/B23 EXE。新控制核raw56559504=1456.7.26、speed0/paused1/POR189，逻辑FRA NPC。202研究先核index15/16/17 processor均NULL，独立原始字节复核6组；正式两省新采集227 power34104/数值23200/比例250/进一步0，183 power17520/数值14600/比例0/进一步0。独立非生产解析器核两省三项两遍12组，键/NULL处理器/dense/sparse首次匹配全部一致，进一步0本次为实际sparse匹配index4。公开投影复用保留采集，实际MCP discover/查询/报告/2s5s一致，短取消长仍active，最终全取消/server0/reader终态；2s5s是配置，主动9.20s/报告8.83s非延迟保证。4根live monitors全终态无cap/timeout，最大采样199655424B；短pytest另有退出记录，非都专门监测。
 
-无保存/推进/重复清理/业务/原生游戏函数/编译/重启注入/battle/CUA/新REA查询。原120/旧窗口/request/no-repeat及新业务audit/--test-only继续，一次性清理不重复。覆盖61 available/263 partial/73 planned、63可调用与完整74/397、阶段二三四/B01–B04原缺项active。控制国/观察国index17、完整计算、逐省→国家节点合计及取得省份后的收益仍未完成；下一在规范国家绑定/准入后复用该核心读取17，再闭合国家分配，不将当前省份数值当征服收益。见docs/02-使用与接口/贸易与省份/省份贸易力量数值修正接口.md与202/summary.json。
+无保存/推进/重复清理/业务/原生游戏函数/编译/重启注入/battle/CUA/新REA查询。原120/旧窗口/request/no-repeat及新业务audit/--test-only继续，一次性清理不重复。覆盖61 available/263 partial/73 planned、63可调用与完整74/397、阶段二三四/B01–B04原缺项active。控制国/观察国index17、完整计算、逐省→国家节点合计及取得省份后的收益仍未完成；下一在规范国家绑定/准入后复用该核心读取17，再闭合国家分配，不将当前省份数值当征服收益。见docs/信息导出/接口/贸易与省份/省份贸易力量数值修正接口.md与202/summary.json。
 <!-- batch202-province-numeric-inputs:end -->
 
 <!-- batch201-trade-calculator:start -->
 ## 第201批：省份贸易力量计算器及缓存写入点已确认
 
-本批为静态来源研究及测试环境复核，没有新增公开字段/profile/生产代码。B23普通有界反汇编确认UI tradepower_value更新函数[1371d10,1372773)读取province+890；同名tooltip分支137e912→a21510→完整计算器[a20b10,a214b2)2466B。短包装[a214c0,a2150b)调用后a214ff写同省份+890，节点相关[b0b190,b0b2dc)亦在b0b2bb写回；后者切换匹配条目+40再遍历节点省份，但业务名称未确认，不得执行。计算同时取controller+470和owner+468，province+998索引f/10、controller国家相关索引11、province+2438索引10；两次有符号整数乘除/低32位夹限，不能拿当前值当征服收益或替成无限精度公式。数值getter[8e6a10,8e6aae)还可能调用每索引虚拟调整，布尔modifier predicates或原数值数组都不能直接替代最终数值。完整范围/字节/SHA与未决项见docs/04-实现研究/贸易与省份/省份贸易力量计算与写入路径.md和201/native-calculator-contract-001.json。
+本批为静态来源研究及测试环境复核，没有新增公开字段/profile/生产代码。B23普通有界反汇编确认UI tradepower_value更新函数[1371d10,1372773)读取province+890；同名tooltip分支137e912→a21510→完整计算器[a20b10,a214b2)2466B。短包装[a214c0,a2150b)调用后a214ff写同省份+890，节点相关[b0b190,b0b2dc)亦在b0b2bb写回；后者切换匹配条目+40再遍历节点省份，但业务名称未确认，不得执行。计算同时取controller+470和owner+468，province+998索引f/10、controller国家相关索引11、province+2438索引10；两次有符号整数乘除/低32位夹限，不能拿当前值当征服收益或替成无限精度公式。数值getter[8e6a10,8e6aae)还可能调用每索引虚拟调整，布尔modifier predicates或原数值数组都不能直接替代最终数值。完整范围/字节/SHA与未决项见docs/信息导出/实现研究/贸易与省份/省份贸易力量计算与写入路径.md和201/native-calculator-contract-001.json。
 
 本批无成功REA证据：首xrefs因临时文件准入ACL失败（原RVA参数未进入分析），改workspace TMP/TEMP与静态VA后provider超时，允许本机分析通信权限的一次请求触树限终止。3根monitors全部终态，未继续重试；002本次scratch/锁在逐文件核原payload不变后归档，003只留死owner cache.lock，核终态/原payload后归档。原cache承诺8eec1cad93cce37d2f958c100570550bc7212c5aa86b92b7cf03950f85a83161恢复，未改原DB/重导入/终止无关服务。普通证据不冒充REA或运行效果。
 
@@ -1229,7 +1229,7 @@ T06.targets 的 rows[].current_trade_power 新增 numeric_modifiers：province+9
 <!-- batch200-province-power:start -->
 ## 第200批：候选省份的当前贸易力量已接通
 
-T06.targets 每行新增 current_trade_power，复用新省份cache leaf、独立profile、既有FRA NPC准入/发现/双遍/strict replay；不注册新G02字段。原生条件province_trade_power的实际signed i32缓存为record+0x890/scale1000；两种管理器入口必须计算到同一规范记录并核ID。REA成功证据仅eval ev_372f397e43cef666551917e9eae0ecb8200724728cc04a13f22f593369c41abf；ctor wrapper失败、lookup启动超树限失败分别保留，普通反汇编与REA/实机分开。新增临时DB与锁隔离后复现原cache payload，未重写原DB或终止无关服务。完整依据与地址范围见 docs/04-实现研究/贸易与省份/省份贸易力量读取依据.md。
+T06.targets 每行新增 current_trade_power，复用新省份cache leaf、独立profile、既有FRA NPC准入/发现/双遍/strict replay；不注册新G02字段。原生条件province_trade_power的实际signed i32缓存为record+0x890/scale1000；两种管理器入口必须计算到同一规范记录并核ID。REA成功证据仅eval ev_372f397e43cef666551917e9eae0ecb8200724728cc04a13f22f593369c41abf；ctor wrapper失败、lookup启动超树限失败分别保留，普通反汇编与REA/实机分开。新增临时DB与锁隔离后复现原cache payload，未重写原DB或终止无关服务。完整依据与地址范围见 docs/信息导出/实现研究/贸易与省份/省份贸易力量读取依据.md。
 
 实机227 raw34104、183 raw17520，各两遍稳定；独立原始字节复核4组相符。公开投影复用两份原始采集，真实MCP查询/报告/2s5s一致，短取消长仍active，最终全取消/server0/reader终态。当前值不等于取得省份后的FRA收益；acquisition_delta_evaluated/cache_refresh_timing_verified均false，expected_benefit仍unknown，同页去重/不跨请求cache/非原子。新profile SHA675bfbed893d2747fc5a1c4e8abad2f216ba5b0f0e45a7c3840c72f240990840，原G02v4/512KiB父额度不改。109唯一相关case通过；首leaf测试断言和首target命令文件名错误保留，未补造证据。
 
@@ -1245,7 +1245,7 @@ T06.targets 每行新增 current_trade_power，复用新省份cache leaf、独�
 <!-- batch199-estuary:start -->
 ## 第199批：贸易候选页接通当前河口修正
 
-第199批T06.targets已增加classification.estuary：FRA发现正位省份的当前原生修正，按有效磁盘has_river_estuary_trigger的63键OR分类，保留规则AST/配置/来源与未知；game_fact=false/complete=false/engine_loaded_rule_verified=false，不冒称引擎已加载同脚本。两类定义查找保留同名遮蔽，父级代码/会话/角色/准入/发现/双遍/strict replay全部绑定，规则前后及与节点图的输入身份一致才交付。页内省份去重，不跨请求cache；失败独立，旧G02/port/估算各自保留，非原子。实机227/tagus真、183全63键假；独立原始字节复核126键，实际MCP主动/报告/2s5s语义一致，短取消长仍active，最后全取消/server0/reader终态。2s5s是调度配置，不承诺采集耗时；本次主动约10.68s、报告11.06s。 首v1 capture因全376B定义前缀耗尽512KiB额度而未完成、保留unknown/closed；新compact leaf只读8B虚表+32B键及必要heap，不补造padding。v2 profile SHA99c1120de1d16020a1cb55c0bd2ed1dcb8f8ee87fa7c4a2d796d4997eaf4e1f2，15新守卫2525B，原父512KiB/G02v4/港口profile不改；正式两省请求299920/299888B，旧v1及修改前源归档。85唯一相关case有通过记录（70保留JUnit，15 reader首测只有日志/代理观察，原JUnit被并行同名输出覆盖，未伪造或为补件重跑）；whole_suite_passed=false/full132继承126坏ID保持，不称当前仅这些失败。 当前37508/creation134384086783026355/session37508-1dd6d9d6c2ae4b3，installation=work/runtime/diplomacy-observer-20261106-estuary-v37-001/installation.json；旧31428已结束，按成熟自动化从保留retreat_v37恢复，一次启动/原v37同字节DLL新目录安装，135源/EXE B23不改。原安装器第30次就绪观察原生确认载入提示，未另发快捷键；新context/control与MCP后核1456.7.26 raw56559504、speed0/paused1/POR189，逻辑FRA NPC不对齐物理POR。无新保存/推进/编译/业务/battle窗口/CUA/REA或真实.eu4研究读取；旧181 battle数量仅历史。9根owned monitors含health/首raw失败均终态、无cap/timeout，最大采样约231MiB，非绝对峰值；短代理测试另有退出记录。全部原120/旧窗口/request/no-repeat及新业务audit/--test-only保持，一次性存档清理不重复。 覆盖61 available/263 partial/73 planned、63可调用不变；仅扩既有T06.targets。完整74/397、阶段二三四/B01–B04与全体缺项继续active。下一继续真实领土竞争力变化/完整收益等来源盘点与实现，不能靠已知港口河口分类宣称完整扩张方案；本页多来源读取耗时仍为限制。见[接口](docs/04-实现研究/贸易与省份/贸易候选河口注释.md)、199/summary.json。
+第199批T06.targets已增加classification.estuary：FRA发现正位省份的当前原生修正，按有效磁盘has_river_estuary_trigger的63键OR分类，保留规则AST/配置/来源与未知；game_fact=false/complete=false/engine_loaded_rule_verified=false，不冒称引擎已加载同脚本。两类定义查找保留同名遮蔽，父级代码/会话/角色/准入/发现/双遍/strict replay全部绑定，规则前后及与节点图的输入身份一致才交付。页内省份去重，不跨请求cache；失败独立，旧G02/port/估算各自保留，非原子。实机227/tagus真、183全63键假；独立原始字节复核126键，实际MCP主动/报告/2s5s语义一致，短取消长仍active，最后全取消/server0/reader终态。2s5s是调度配置，不承诺采集耗时；本次主动约10.68s、报告11.06s。 首v1 capture因全376B定义前缀耗尽512KiB额度而未完成、保留unknown/closed；新compact leaf只读8B虚表+32B键及必要heap，不补造padding。v2 profile SHA99c1120de1d16020a1cb55c0bd2ed1dcb8f8ee87fa7c4a2d796d4997eaf4e1f2，15新守卫2525B，原父512KiB/G02v4/港口profile不改；正式两省请求299920/299888B，旧v1及修改前源归档。85唯一相关case有通过记录（70保留JUnit，15 reader首测只有日志/代理观察，原JUnit被并行同名输出覆盖，未伪造或为补件重跑）；whole_suite_passed=false/full132继承126坏ID保持，不称当前仅这些失败。 当前37508/creation134384086783026355/session37508-1dd6d9d6c2ae4b3，installation=work/runtime/diplomacy-observer-20261106-estuary-v37-001/installation.json；旧31428已结束，按成熟自动化从保留retreat_v37恢复，一次启动/原v37同字节DLL新目录安装，135源/EXE B23不改。原安装器第30次就绪观察原生确认载入提示，未另发快捷键；新context/control与MCP后核1456.7.26 raw56559504、speed0/paused1/POR189，逻辑FRA NPC不对齐物理POR。无新保存/推进/编译/业务/battle窗口/CUA/REA或真实.eu4研究读取；旧181 battle数量仅历史。9根owned monitors含health/首raw失败均终态、无cap/timeout，最大采样约231MiB，非绝对峰值；短代理测试另有退出记录。全部原120/旧窗口/request/no-repeat及新业务audit/--test-only保持，一次性存档清理不重复。 覆盖61 available/263 partial/73 planned、63可调用不变；仅扩既有T06.targets。完整74/397、阶段二三四/B01–B04与全体缺项继续active。下一继续真实领土竞争力变化/完整收益等来源盘点与实现，不能靠已知港口河口分类宣称完整扩张方案；本页多来源读取耗时仍为限制。见[接口](docs/信息导出/实现研究/贸易与省份/贸易候选河口注释.md)、199/summary.json。
 <!-- batch199-estuary:end -->
 
 <!-- batch199-runtime-restored:start -->
@@ -1255,25 +1255,25 @@ T06.targets 每行新增 current_trade_power，复用新省份cache leaf、独�
 <!-- batch198-province-modifiers:start -->
 ## 第198批：省份修正读取依据与内部模块
 
-第198批已确认原生省份修正的双管理器、稳定脚本键、类型分支和同名遮蔽规则，5份REA函数证据及2525字节候选守卫已归档。新增内部province_modifiers_memory和BoundEstuaryDefinition，复用规范省份绑定、有效mod栈和CWTools解析器；实际磁盘启用配置绑定63个河口修正键、前后身份一致，这不证明游戏已加载该配置或省份当前激活状态；34个唯一离线相关case通过。仍未注册live或验证当前河口：独立profile、owner双遍/strict replay、有效规则与原生结果组合、实机正反例和MCP闭环继续。字段覆盖保持61 available/263 partial/73 planned、63可调用，完整74/397及阶段二三四/B01–B04 active，whole_suite_passed=false。本批未读取游戏进程、推进、保存、清理、注入或执行业务；沿用197历史会话记录，不冒称新状态。一次性清理及全部no-repeat规则保持。首个parse查询进程树超限后终止并归档本次残留锁；128MiB Node堆不足的第二次失败保留，调整启动资源后成功，9根monitors含两次失败均终态。见[读取依据](docs/04-实现研究/贸易与省份/省份修正与河口读取依据.md)与198/summary.json。
+第198批已确认原生省份修正的双管理器、稳定脚本键、类型分支和同名遮蔽规则，5份REA函数证据及2525字节候选守卫已归档。新增内部province_modifiers_memory和BoundEstuaryDefinition，复用规范省份绑定、有效mod栈和CWTools解析器；实际磁盘启用配置绑定63个河口修正键、前后身份一致，这不证明游戏已加载该配置或省份当前激活状态；34个唯一离线相关case通过。仍未注册live或验证当前河口：独立profile、owner双遍/strict replay、有效规则与原生结果组合、实机正反例和MCP闭环继续。字段覆盖保持61 available/263 partial/73 planned、63可调用，完整74/397及阶段二三四/B01–B04 active，whole_suite_passed=false。本批未读取游戏进程、推进、保存、清理、注入或执行业务；沿用197历史会话记录，不冒称新状态。一次性清理及全部no-repeat规则保持。首个parse查询进程树超限后终止并归档本次残留锁；128MiB Node堆不足的第二次失败保留，调整启动资源后成功，9根monitors含两次失败均终态。见[读取依据](docs/信息导出/实现研究/贸易与省份/省份修正与河口读取依据.md)与198/summary.json。
 <!-- batch198-province-modifiers:end -->
 
 <!-- batch197-province-port:start -->
 ## 第197批：当前原生港口谓词接通
 
-G04.ports新增partial（明确province/FRA发现正位），T06目标页共享同一source；record+550 qword!=0，完全独立于CoT/静态位置。REA已核factory/ctor/eval，profile1084B新守卫+原省份准入/双遍/strict replay；原G02及DLL不改。145唯一相关case通过；实机227真、182/183/187假与原始qword核对，MCP主动/报告/2s5s通过并关闭。首次脚本误认187沿海导致assert，原三捕获正确保留，只新采227、不重采旧三省。现31428/v37/1456.7.26暂停/POR，逻辑FRA，无保存/推进/业务/注入/CUA。覆盖61/263/73、63可调用；完整74/397及原阶段active，whole_suite_passed=false，全部no-repeat保持。下一从已有trigger factory映射has_province_modifier读取当前河口修正；基础脚本与键集合只是seed，见HANDOFF、197/estuary-seeds-001.json及[来源说明](docs/04-实现研究/贸易与省份/港口与河口判定来源.md)。
+G04.ports新增partial（明确province/FRA发现正位），T06目标页共享同一source；record+550 qword!=0，完全独立于CoT/静态位置。REA已核factory/ctor/eval，profile1084B新守卫+原省份准入/双遍/strict replay；原G02及DLL不改。145唯一相关case通过；实机227真、182/183/187假与原始qword核对，MCP主动/报告/2s5s通过并关闭。首次脚本误认187沿海导致assert，原三捕获正确保留，只新采227、不重采旧三省。现31428/v37/1456.7.26暂停/POR，逻辑FRA，无保存/推进/业务/注入/CUA。覆盖61/263/73、63可调用；完整74/397及原阶段active，whole_suite_passed=false，全部no-repeat保持。下一从已有trigger factory映射has_province_modifier读取当前河口修正；基础脚本与键集合只是seed，见HANDOFF、197/estuary-seeds-001.json及[来源说明](docs/信息导出/实现研究/贸易与省份/港口与河口判定来源.md)。
 <!-- batch197-province-port:end -->
 
 <!-- batch196-trade-targets:start -->
 ## 第196批：贸易候选分页关联当前省份属性
 
---static-game-data/live时T06.targets新增partial，静态members有序候选+分页G02归属/控制者/CoT，复用同一实例与FRA发现准入；path/control不推断领土分类。targets-only不需scenarios、0baseline，混合旧字段一次baseline；未知总收益/关键优先级/港口河口/资格继续。46当前相关唯一case有通过JUnit记录，实机成员33、页[182, 183]与G02逐项核；MCP主动/报告/2s5s及独立下一页通过并关闭。覆盖61/262/74、63可调用；完整74/397/阶段二三四/B01–B04 active，whole_suite_passed=false。现31428/v37/1456.7.26暂停/POR，逻辑FRA；无新保存或清理/推进/业务/注入/REA/CUA，旧no-repeat保持。详见HANDOFF和[接口](docs/02-使用与接口/贸易与省份/贸易竞争力条件情景接口.md)。
+--static-game-data/live时T06.targets新增partial，静态members有序候选+分页G02归属/控制者/CoT，复用同一实例与FRA发现准入；path/control不推断领土分类。targets-only不需scenarios、0baseline，混合旧字段一次baseline；未知总收益/关键优先级/港口河口/资格继续。46当前相关唯一case有通过JUnit记录，实机成员33、页[182, 183]与G02逐项核；MCP主动/报告/2s5s及独立下一页通过并关闭。覆盖61/262/74、63可调用；完整74/397/阶段二三四/B01–B04 active，whole_suite_passed=false。现31428/v37/1456.7.26暂停/POR，逻辑FRA；无新保存或清理/推进/业务/注入/REA/CUA，旧no-repeat保持。详见HANDOFF和[接口](docs/信息导出/接口/贸易与省份/贸易竞争力条件情景接口.md)。
 <!-- batch196-trade-targets:end -->
 
 <!-- batch195-trade-costs:start -->
 ## 第195批：情景行动成本复用已交付
 
-T06.costs新增partial/query/periodic，显式scenario.actions复用共用只读宣战/领土和约核心；M05默认输出保持。当前独立预览按情景ID关联，未知总成本和行动→竞争力效果保留。79唯一当前相关case有通过记录（42仅代理观察、37有JUnit），实机一次联合基线/一次检查供两情景共享，主动/报告/2s5s一致并全部关闭。FRA NPC对BUR无CB当前规则稳定度损失/厌战各7.000，未执行。现31428/v37/1456.7.26暂停/POR，逻辑FRA；无存档、推进、重启/注入/业务/REA或CUA，已完成的一次性清理不重跑。覆盖61/261/75、63可调用；完整74/397及原阶段active，whole_suite_passed=false，全部旧no-repeat保持。下一targets复用审查见HANDOFF，[接口](docs/02-使用与接口/贸易与省份/贸易竞争力条件情景接口.md)，195/summary.json。
+T06.costs新增partial/query/periodic，显式scenario.actions复用共用只读宣战/领土和约核心；M05默认输出保持。当前独立预览按情景ID关联，未知总成本和行动→竞争力效果保留。79唯一当前相关case有通过记录（42仅代理观察、37有JUnit），实机一次联合基线/一次检查供两情景共享，主动/报告/2s5s一致并全部关闭。FRA NPC对BUR无CB当前规则稳定度损失/厌战各7.000，未执行。现31428/v37/1456.7.26暂停/POR，逻辑FRA；无存档、推进、重启/注入/业务/REA或CUA，已完成的一次性清理不重跑。覆盖61/261/75、63可调用；完整74/397及原阶段active，whole_suite_passed=false，全部旧no-repeat保持。下一targets复用审查见HANDOFF，[接口](docs/信息导出/接口/贸易与省份/贸易竞争力条件情景接口.md)，195/summary.json。
 <!-- batch195-trade-costs:end -->
 
 <!-- save-cleanup-20261105-once:start -->
@@ -1286,55 +1286,55 @@ T06.costs新增partial/query/periodic，显式scenario.actions复用共用只读
 
 T06.expected_trade/assumptions新增partial/query/periodic：同次严格parent的I/P/T/collection，固定环境与显式power deltas的Fraction模型，不是引擎forecast。香槟基线4.589，条件结果4.589000/4.605636/4.582645，真实MCP主动/报告/2s5s一致并全部关闭；38唯一相关case通过，whole_suite_passed=false。覆盖61/260/76、63可调用，原74/397及阶段active，targets/costs和全领土分析仍缺。
 
-旧PID6472退出后自主恢复，当前31428/31428-1dd6d219bf82880、原v37同字节DLL、新独立请求目录，installation见HANDOFF；1456.7.26暂停/POR，逻辑FRA NPC。单次安装，无编译/REA/CUA/业务/保存/推进/battle启停，未重放181窗口。下一costs需提取共用只读检查核心，不能沿用M05任务语义。见HANDOFF顶部与[接口](docs/02-使用与接口/贸易与省份/贸易竞争力条件情景接口.md)。
+旧PID6472退出后自主恢复，当前31428/31428-1dd6d219bf82880、原v37同字节DLL、新独立请求目录，installation见HANDOFF；1456.7.26暂停/POR，逻辑FRA NPC。单次安装，无编译/REA/CUA/业务/保存/推进/battle启停，未重放181窗口。下一costs需提取共用只读检查核心，不能沿用M05任务语义。见HANDOFF顶部与[接口](docs/信息导出/接口/贸易与省份/贸易竞争力条件情景接口.md)。
 <!-- batch194-trade-scenarios:end -->
 
 <!-- batch193-strategic-targets:start -->
 ## 第193批：自定领土目标可随报告配置管理
 
-G01.strategic_targets新增live partial/query/periodic，typed caller输入保留game_fact=false；LLM沿用query/report/subscription管理目标，不读C03文本或原生AI战略。复用CWTools静态索引，一次lookup且0任务state读取，缺声明与[]、country tag与动态属地分开；共享G01参数旧空参兼容，M05只收root/task。113唯一相关case有通过记录、真实MCP报告5→4目标更新与2s5s周期通过并全关闭；覆盖61/258/78、62可调用，完整74/397及原阶段active，whole_suite_passed=false。FRA NPC/POR暂停，无新native/REA/业务/推进/保存重启/注入/CUA。见HANDOFF顶部与[接口](docs/02-使用与接口/贸易与省份/自定领土战略目标接口.md)。
+G01.strategic_targets新增live partial/query/periodic，typed caller输入保留game_fact=false；LLM沿用query/report/subscription管理目标，不读C03文本或原生AI战略。复用CWTools静态索引，一次lookup且0任务state读取，缺声明与[]、country tag与动态属地分开；共享G01参数旧空参兼容，M05只收root/task。113唯一相关case有通过记录、真实MCP报告5→4目标更新与2s5s周期通过并全关闭；覆盖61/258/78、62可调用，完整74/397及原阶段active，whole_suite_passed=false。FRA NPC/POR暂停，无新native/REA/业务/推进/保存重启/注入/CUA。见HANDOFF顶部与[接口](docs/信息导出/接口/贸易与省份/自定领土战略目标接口.md)。
 <!-- batch193-strategic-targets:end -->
 
 <!-- batch192-province-task-targets:start -->
 ## 第192批：G01任务规则已关联静态省份
 
-G01.task_targets新增live partial/query/periodic，复用同一M05/M03/CWTools/静态索引，一次rule state；保留任务角色、完整条件AST和静态成员证据，动态条件/实际完整目标仍unknown。实机FRA NPC/POR暂停：11任务、14条静态关联、22未决引用；66省份只是静态并集。主动/报告/2s5s订阅一致并全关闭，94唯一相关case有通过记录，whole_suite_passed=false。覆盖61/257/79、62可调用，完整74/397与原阶段active。无新native/REA/业务/推进/保存重启/注入/CUA；旧no-repeat保持。下一结构化G01自定目标审查已有，不能从C03文本猜领土目标。见HANDOFF顶部、[接口](docs/02-使用与接口/任务/任务规则关联省份接口.md)和192/summary.json。
+G01.task_targets新增live partial/query/periodic，复用同一M05/M03/CWTools/静态索引，一次rule state；保留任务角色、完整条件AST和静态成员证据，动态条件/实际完整目标仍unknown。实机FRA NPC/POR暂停：11任务、14条静态关联、22未决引用；66省份只是静态并集。主动/报告/2s5s订阅一致并全关闭，94唯一相关case有通过记录，whole_suite_passed=false。覆盖61/257/79、62可调用，完整74/397与原阶段active。无新native/REA/业务/推进/保存重启/注入/CUA；旧no-repeat保持。下一结构化G01自定目标审查已有，不能从C03文本猜领土目标。见HANDOFF顶部、[接口](docs/信息导出/接口/任务/任务规则关联省份接口.md)和192/summary.json。
 <!-- batch192-province-task-targets:end -->
 
 <!-- batch191-event-queue:start -->
 ## 第191批：事件队列已支持锁外读取和逐目标恢复
 
-poll/read_event移出配置事务，完整batch/cursor/目标版本先持久化；取消/更新旧目标不发布，disable缓存prepared，late sub不接旧batch，temporary unready保留队列。仅显式durable replay hook可重建中断投影，无hook未知通知、不重查live状态；committed目标不重读。143唯一相关case通过，3组recorded fixture真实MCP验证通过；完全离线，不称新实机/战报状态。全部field/topic与61/256/80、62可调用保持，完整74/397与原阶段active，whole_suite_passed=false。producer控制仍旧边界。下一项G01.task_targets已有复用设计，无需新native；N06当前证据不足保持unknown。见HANDOFF顶部、[说明](docs/03-开发与验收/信息事件持久队列与恢复.md)、191/summary.json。
+poll/read_event移出配置事务，完整batch/cursor/目标版本先持久化；取消/更新旧目标不发布，disable缓存prepared，late sub不接旧batch，temporary unready保留队列。仅显式durable replay hook可重建中断投影，无hook未知通知、不重查live状态；committed目标不重读。143唯一相关case通过，3组recorded fixture真实MCP验证通过；完全离线，不称新实机/战报状态。全部field/topic与61/256/80、62可调用保持，完整74/397与原阶段active，whole_suite_passed=false。producer控制仍旧边界。下一项G01.task_targets已有复用设计，无需新native；N06当前证据不足保持unknown。见HANDOFF顶部、[说明](docs/信息导出/开发与验收/信息事件持久队列与恢复.md)、191/summary.json。
 <!-- batch191-event-queue:end -->
 
 <!-- batch190-scheduler-collection:start -->
 ## 第190批：后台采集中的状态查询与取消已改善
 
-manual/periodic/change耗时读移出配置锁/写事务，同库CollectionLock保持采集串行；短事务claim/CAS commit防cancel/update后的旧结果发布和baseline覆盖。实际短2s首读在途取消无result、长5s仍交付原costs，status最慢0.875秒/取消低于计时分辨率、重叠tick立即busy，最终服务/reader终态。125相关case有通过记录，whole_suite_passed=false；post-live仅_deliver外部ready guard补4测试，默认outbox分支不变。事件/producer控制路径仍旧锁、普通MCP RPC仍串行，下一步处理事件路径。覆盖61/256/80与完整74/397及原阶段active保持；游戏暂停/FRA NPC/物理POR，无业务/推进/保存重启/注入/CUA。见HANDOFF顶部、[说明](docs/03-开发与验收/信息采集与调度并发.md)、190/summary.json。
+manual/periodic/change耗时读移出配置锁/写事务，同库CollectionLock保持采集串行；短事务claim/CAS commit防cancel/update后的旧结果发布和baseline覆盖。实际短2s首读在途取消无result、长5s仍交付原costs，status最慢0.875秒/取消低于计时分辨率、重叠tick立即busy，最终服务/reader终态。125相关case有通过记录，whole_suite_passed=false；post-live仅_deliver外部ready guard补4测试，默认outbox分支不变。事件/producer控制路径仍旧锁、普通MCP RPC仍串行，下一步处理事件路径。覆盖61/256/80与完整74/397及原阶段active保持；游戏暂停/FRA NPC/物理POR，无业务/推进/保存重启/注入/CUA。见HANDOFF顶部、[说明](docs/信息导出/开发与验收/信息采集与调度并发.md)、190/summary.json。
 <!-- batch190-scheduler-collection:end -->
 
 <!-- batch189-mission-candidate-costs:start -->
 ## 第189批：任务候选行动成本已接通
 
-M05.costs新增live partial/query/periodic，显式candidate_plans复用既有精确宣战/当前和约检查器。默认M05统一owner和一份任务state，原chain/timing值保持；候选关联与未来多步效果未求值，不跨单位合计。当前FRA NPC对BUR无CB预览，稳定度损失/厌战各7.000，submitted=false。MCP四字段query/report/2s5s/取消通过，150相关回归+1能力测试通过；只改catalog撤回无comparison hook的change声明，并补新discovery/读取前拒绝验证。覆盖61/256/80、62可调用，完整74/397及原阶段active，whole_suite_passed=false。游戏暂停/POR，未业务派发或推进/重启/注入/CUA；只复用原生只读查询。状态/取消曾等约20秒，调度锁待改。见HANDOFF顶部、[接口](docs/02-使用与接口/任务/任务链候选成本接口.md)、189/summary.json。
+M05.costs新增live partial/query/periodic，显式candidate_plans复用既有精确宣战/当前和约检查器。默认M05统一owner和一份任务state，原chain/timing值保持；候选关联与未来多步效果未求值，不跨单位合计。当前FRA NPC对BUR无CB预览，稳定度损失/厌战各7.000，submitted=false。MCP四字段query/report/2s5s/取消通过，150相关回归+1能力测试通过；只改catalog撤回无comparison hook的change声明，并补新discovery/读取前拒绝验证。覆盖61/256/80、62可调用，完整74/397及原阶段active，whole_suite_passed=false。游戏暂停/POR，未业务派发或推进/重启/注入/CUA；只复用原生只读查询。状态/取消曾等约20秒，调度锁待改。见HANDOFF顶部、[接口](docs/信息导出/接口/任务/任务链候选成本接口.md)、189/summary.json。
 <!-- batch189-mission-candidate-costs:end -->
 
 <!-- batch188-opinion-end-dates:start -->
 ## 第188批：双向好感计划结束日期已可查询与订阅
 
-R04.end_date新增partial/query/periodic，支持四字段混合opinion/records/decay/end_date；当前8条中2条保存计划日期（1503.9.2、1465.9.10），6条非固定期限/not_applicable，不等于永久有效。实际失效/移除仍未证。decay默认v4，绝对值不足1点的提示贡献已证为0，其余分支和8条当前投影保持。实际MCP正反/四字段/报告/2s5s及取消通过，176相关测试通过，whole_suite_passed=false。覆盖61/255/81、62可调用，完整74/397及阶段二三四/B01–B04继续active。最终6472/v37原session、raw56560344=1456.8.30/暂停/POR，逻辑FRA NPC，无业务/推进/保存重启/注入/CUA。见HANDOFF顶部、[计划结束日期接口](docs/02-使用与接口/关系与外交/双向好感计划到期接口.md)与188/summary.json。
+R04.end_date新增partial/query/periodic，支持四字段混合opinion/records/decay/end_date；当前8条中2条保存计划日期（1503.9.2、1465.9.10），6条非固定期限/not_applicable，不等于永久有效。实际失效/移除仍未证。decay默认v4，绝对值不足1点的提示贡献已证为0，其余分支和8条当前投影保持。实际MCP正反/四字段/报告/2s5s及取消通过，176相关测试通过，whole_suite_passed=false。覆盖61/255/81、62可调用，完整74/397及阶段二三四/B01–B04继续active。最终6472/v37原session、raw56560344=1456.8.30/暂停/POR，逻辑FRA NPC，无业务/推进/保存重启/注入/CUA。见HANDOFF顶部、[计划结束日期接口](docs/信息导出/接口/关系与外交/双向好感计划到期接口.md)与188/summary.json。
 <!-- batch188-opinion-end-dates:end -->
 
 <!-- batch187-opinion-decay:start -->
 ## 第187批：双向好感年度变化已可查询与订阅
 
-R04.decay新增partial/query/periodic，按原生提示路径推导逐记录年度变化，8条实采均known；单位点/年、scale1000，不解释expiry/实际结算。负面target属性、已识别处理器的零次级分支和pair缓存零值路径已接；其它处理器、非零次级/关系条件、小值调用门仍unknown。最终profile v3；共享storage文件恢复旧pin，原外交官profile不改。实际MCP正反、三字段混合、报告、2s5s与独立取消通过，152定向测试通过，whole_suite_passed=false。最终6472/v37原session、56560344/暂停/POR，逻辑FRA NPC，无业务/推进/保存重启/注入/CUA。覆盖61/254/82、62可调用，完整目标active，end_date及原缺项继续。见HANDOFF顶部、[年度变化接口](docs/02-使用与接口/关系与外交/双向好感年度变化接口.md)与187/summary.json。
+R04.decay新增partial/query/periodic，按原生提示路径推导逐记录年度变化，8条实采均known；单位点/年、scale1000，不解释expiry/实际结算。负面target属性、已识别处理器的零次级分支和pair缓存零值路径已接；其它处理器、非零次级/关系条件、小值调用门仍unknown。最终profile v3；共享storage文件恢复旧pin，原外交官profile不改。实际MCP正反、三字段混合、报告、2s5s与独立取消通过，152定向测试通过，whole_suite_passed=false。最终6472/v37原session、56560344/暂停/POR，逻辑FRA NPC，无业务/推进/保存重启/注入/CUA。覆盖61/254/82、62可调用，完整目标active，end_date及原缺项继续。见HANDOFF顶部、[年度变化接口](docs/信息导出/接口/关系与外交/双向好感年度变化接口.md)与187/summary.json。
 <!-- batch187-opinion-decay:end -->
 
 <!-- batch186-opinion-expiry:start -->
 ## 第186批：好感年度变化证据已补，期限仍待实现
 
-新948cd0提示计算证据确认+25跳过年度贡献、loaded definition+58基础量及负面国家/国家对因子，不能把disk声明直接当实际decay。新vtable引用9处已离线重验；a65790仍是反序列化，日期消费者未闭合。修复cache_query对真实CLI直接list的误拒；25测试/26subtests通过。185遗留两份project锁已核死generation/原DB后归档，缓存准入恢复，未重建或重查成功结果。无游戏访问；状态沿185历史实读。字段61/253/83不变，完整目标active，R04 decay/end_date仍待开发。详见HANDOFF顶部、[研究](docs/04-实现研究/关系与外交/好感修正衰减与期限研究.md)与186/summary.json。
+新948cd0提示计算证据确认+25跳过年度贡献、loaded definition+58基础量及负面国家/国家对因子，不能把disk声明直接当实际decay。新vtable引用9处已离线重验；a65790仍是反序列化，日期消费者未闭合。修复cache_query对真实CLI直接list的误拒；25测试/26subtests通过。185遗留两份project锁已核死generation/原DB后归档，缓存准入恢复，未重建或重查成功结果。无游戏访问；状态沿185历史实读。字段61/253/83不变，完整目标active，R04 decay/end_date仍待开发。详见HANDOFF顶部、[研究](docs/信息导出/实现研究/关系与外交/好感修正衰减与期限研究.md)与186/summary.json。
 <!-- batch186-opinion-expiry:end -->
 
 <!-- batch185-opinion-modifiers:start -->
@@ -1346,7 +1346,7 @@ R04.opinion_modifiers新增live partial/query/periodic，与opinion可混合；�
 
 新REA3839e0/9494a0已接受；256M+局部JVM Xms16m/codecache64m支持小查询。大3d32e0 filtered query cap137/空证据，勿原样重试；新增577MB scratch已核原文件未变后保留移出project，锁归档，DB/manifest/loader原值。185/stopped-query-scratch-001.ps不得整文件加载；详见HANDOFF顶部。Root canonical summary包含task A归档引用，别覆盖根summary。
 
-覆盖61/253/83、62可调用不变（字段原已有历史partial）。PID6472/session6472-1dd6caf31db41bd/v37原installation，最终56560344/暂停/POR，逻辑FRA；DLL/native135源不变，无游戏函数/业务/推进/保存重启/注入/采集控制/CUA。完整74/397、阶段二/三/四/B01–B04 active，no-repeat/checkpoint禁读保持。[实时修正接口](docs/02-使用与接口/关系与外交/双向好感修正实时接口.md)，证据`work/runtime/information-opinion-modifiers-20261105-185-001/summary.json`。
+覆盖61/253/83、62可调用不变（字段原已有历史partial）。PID6472/session6472-1dd6caf31db41bd/v37原installation，最终56560344/暂停/POR，逻辑FRA；DLL/native135源不变，无游戏函数/业务/推进/保存重启/注入/采集控制/CUA。完整74/397、阶段二/三/四/B01–B04 active，no-repeat/checkpoint禁读保持。[实时修正接口](docs/信息导出/接口/关系与外交/双向好感修正实时接口.md)，证据`work/runtime/information-opinion-modifiers-20261105-185-001/summary.json`。
 <!-- batch185-opinion-modifiers:end -->
 
 <!-- batch184-opinion-live:start -->
@@ -1356,7 +1356,7 @@ R04.opinion partial，NativeOpinionSource默认live注册；FRA参与的country_
 
 当前PID6472/session6472-1dd6caf31db41bd/v37原installation不变，实机FRA/ENG两向-200，MCP查询约0.4秒/报告/2s5s周期通过且最终全cancelled/server0/reader终态。后补scoped change hook只在两向known时比较，离线基线/同值/改值/unknown通过；AST证明已成功MCP的read/投影等路径未变，不重采成功结果。133当前相关测试有通过记录；wrapper漏__main__导致1个并发测试失败已仅补该项，其他首败留账，whole_suite_passed=false保持。
 
-覆盖61/253/83、矩阵62可调用（R04先前已有历史模式），完整74/397、阶段二/三/四及B01–B04继续active。最终raw56560344/speed0/paused1/POR槽189；DLL/native135源未改，无游戏函数/业务/写入/推进/保存重启/注入/采集控制/CUA，no-repeat/checkpoint禁读保持。见HANDOFF顶部、`work/runtime/information-live-opinion-20261105-184-001/summary.json`及[接口](docs/02-使用与接口/关系与外交/双向好感接口.md)。
+覆盖61/253/83、矩阵62可调用（R04先前已有历史模式），完整74/397、阶段二/三/四及B01–B04继续active。最终raw56560344/speed0/paused1/POR槽189；DLL/native135源未改，无游戏函数/业务/写入/推进/保存重启/注入/采集控制/CUA，no-repeat/checkpoint禁读保持。见HANDOFF顶部、`work/runtime/information-live-opinion-20261105-184-001/summary.json`及[接口](docs/信息导出/接口/关系与外交/双向好感接口.md)。
 <!-- batch184-opinion-live:end -->
 
 <!-- batch183-opinion-research:start -->
@@ -1366,7 +1366,7 @@ R04.opinion partial，NativeOpinionSource默认live注册；FRA参与的country_
 
 cache_query扩展search_strings/xrefs并核operation/params，默认function不变；26定向用例/17subtests通过，full132/whole_suite_passed=false继承问题不变。xrefs触tree cap137/证据空，DB/manifest/loader不变且死锁已归档；ef3be0限Node128M又OOM134/证据空，不原样重试。普通PE仅定位ef3be0/ef43d0 UI键LEA；Capstone未装，不冒称数值反汇编。成功私采文件带`-002`，初版resolver字段错、夹具/测试导入和summary形状错误均保留，未重采成功结果。
 
-PID6472/session6472-1dd6caf31db41bd/v37/原installation不变，最终raw56560344/speed0/paused1/POR槽189，逻辑FRA。无游戏函数/业务/写入/推进/保存重启/注入/采集控制/CUA；原no-repeat与checkpoint禁读保持。详见HANDOFF顶部、`work/runtime/information-live-opinion-20261105-183-001/summary.json`和[研究](docs/04-实现研究/关系与外交/双向好感实时采集研究.md)。
+PID6472/session6472-1dd6caf31db41bd/v37/原installation不变，最终raw56560344/speed0/paused1/POR槽189，逻辑FRA。无游戏函数/业务/写入/推进/保存重启/注入/采集控制/CUA；原no-repeat与checkpoint禁读保持。详见HANDOFF顶部、`work/runtime/information-live-opinion-20261105-183-001/summary.json`和[研究](docs/信息导出/实现研究/关系与外交/双向好感实时采集研究.md)。
 <!-- batch183-opinion-research:end -->
 
 <!-- batch182-geographic-transfer:start -->
@@ -1376,7 +1376,7 @@ PID6472/session6472-1dd6caf31db41bd/v37/原installation不变，最终raw5656034
 
 当前仍v37/PID6472/session6472-1dd6caf31db41bd，installation=`work/runtime/diplomacy-observer-20261105-retreat-v37-001/installation.json`，DLL SHA `f1b89ac2fcb63b9feeab0daf5e288e827b422fd3df69620a20ebd2f0511dcb14`。逻辑FRA NPC/物理POR，raw56560344、speed0/paused1/玩家槽189、战报source disabled/captured15；native135源pin不变。本批没有游戏控制/业务/保存/重启/注入/推进/REA/CUA，不重做181窗口。
 
-覆盖61 available/252 partial/84 planned、62可调用；完整74主题397字段、阶段二/三/四和B01–B04继续active。其余字段继续，审计候选不能当作已实现值，原no-repeat/checkpoint禁读保持。见HANDOFF顶部、`work/runtime/information-reuse-geography-20261105-182-001/summary.json`及[接口](docs/02-使用与接口/贸易与省份/领土贸易权转移接口.md)。
+覆盖61 available/252 partial/84 planned、62可调用；完整74主题397字段、阶段二/三/四和B01–B04继续active。其余字段继续，审计候选不能当作已实现值，原no-repeat/checkpoint禁读保持。见HANDOFF顶部、`work/runtime/information-reuse-geography-20261105-182-001/summary.json`及[接口](docs/信息导出/接口/贸易与省份/领土贸易权转移接口.md)。
 <!-- batch182-geographic-transfer:end -->
 
 <!-- batch181-retreat:start -->
@@ -1388,7 +1388,7 @@ v37唯一安装，135源pin，DLL SHA `f1b89ac2fcb63b9feeab0daf5e288e827b422fd3d
 
 最终source disabled/captured15、open scopes0/drop0、raw56560344、speed0/paused1、玩家槽189，发布资源保留至进程退出。无外交业务/CUA，无重复安装/窗口；正确历史bindings带`-002`，初版字节序错仅保留作失败证据。172当前Python用例有通过记录，native owned63/lifecycle53/entry148检查通过，full132继承126坏ID/whole_suite_passed=false。
 
-覆盖61 available/251 partial/85 planned、62可调用，完整74主题397字段与阶段二/三/四、B01–B04继续active；其他退却路径/目的到达、完整战报正文、M05成本及剩余原要求继续。原no-repeat/checkpoint禁读保持，勿重跑本窗口。详情见HANDOFF顶部、`work/runtime/information-battle-retreat-20261105-181-001/summary.json`与[接口](docs/02-使用与接口/战争与战报/战报退却接口.md)。
+覆盖61 available/251 partial/85 planned、62可调用，完整74主题397字段与阶段二/三/四、B01–B04继续active；其他退却路径/目的到达、完整战报正文、M05成本及剩余原要求继续。原no-repeat/checkpoint禁读保持，勿重跑本窗口。详情见HANDOFF顶部、`work/runtime/information-battle-retreat-20261105-181-001/summary.json`与[接口](docs/信息导出/接口/战争与战报/战报退却接口.md)。
 <!-- batch181-retreat:end -->
 
 <!-- batch180-mission-read-scope:start -->
@@ -1400,7 +1400,7 @@ M03/M04/M05按所需输入复用原capture，不再读取未使用的完整trigg
 
 当前v36安装与PID20732/session20732-1dd6c9759b9f85a不变，逻辑FRA/物理POR沿178，实读raw56559504、暂停、玩家槽189不变；战报source disabled。无业务、推进、保存重载、注入、战报采集控制或CUA。覆盖61 available/250 partial/86 planned、62可调用；74主题397字段及阶段二/三/四、B01–B04继续active。M05完整分析/costs、剩余延迟、B03.retreat/完整B04等仍未完成；no-repeat/checkpoint禁读保持。
 
-证据`work/runtime/information-mission-read-batch-20261105-180-001/summary.json`；[接口](docs/02-使用与接口/任务/任务链关联目标接口.md)。
+证据`work/runtime/information-mission-read-batch-20261105-180-001/summary.json`；[接口](docs/信息导出/接口/任务/任务链关联目标接口.md)。
 <!-- batch180-mission-read-scope:end -->
 
 <!-- batch179-mission-chain-targets:start -->
@@ -1412,7 +1412,7 @@ M05新增linked_targets/basis，复用M02原生前置关系和M03七字段的CWT
 
 当前installation仍为178的`work/runtime/diplomacy-observer-20261105-end-state-v36-001/installation.json`，PID20732/session20732-1dd6c9759b9f85a；最终实读raw56559504、speed0/paused1、玩家槽189与物理POR保持，逻辑FRA。战报source disabled，原patch/DLL保留至进程退出。本批无外交业务、推进、保存重载、注入、战报采集启停或CUA。覆盖61 available/250 partial/86 planned、62可调用；74主题397字段及阶段二/三/四、B01–B04继续active，M05.costs/完整分析、B03.retreat与完整B04等未完成。no-repeat及checkpoint禁读保持。
 
-[任务链关联目标接口](docs/02-使用与接口/任务/任务链关联目标接口.md)，证据`work/runtime/information-mission-chain-targets-20261105-179-001/summary.json`。
+[任务链关联目标接口](docs/信息导出/接口/任务/任务链关联目标接口.md)，证据`work/runtime/information-mission-chain-targets-20261105-179-001/summary.json`。
 <!-- batch179-mission-chain-targets:end -->
 
 <!-- batch178-land-end-state:start -->
@@ -1426,7 +1426,7 @@ v36新增陆/海战通用combat-side+169原始标志复制，wire9完整包住�
 
 101个当前Python定向用例均有通过记录（先collect-only确认当前ID），C++复制44检查/codec72检查及跨语言两帧核对通过。夹具失败、检查器状态/字段名修正和首次未派发窗口均保留，不重做成功窗口。覆盖仍61 available/248 partial/88 planned，62可调用主题；完整74主题397字段、阶段二/三/四及B01–B04继续active，whole_suite_passed=false/full132仍126继承坏ID。B03.retreat、完整B04及其他原要求继续开发；原120/旧窗口/原请求/checkpoint禁读等no-repeat保持。证据：`work/runtime/information-battle-end-state-20261105-178-001/summary.json`。
 
-[战报全歼标志接口](docs/02-使用与接口/战争与战报/战报全歼标志接口.md)。
+[战报全歼标志接口](docs/信息导出/接口/战争与战报/战报全歼标志接口.md)。
 
 <!-- batch178-land-end-state:end -->
 
@@ -1439,7 +1439,7 @@ v36新增陆/海战通用combat-side+169原始标志复制，wire9完整包住�
 
 覆盖61 available/248 partial/88 planned，62可调用主题；完整74主题397字段、阶段二/三/四及B01–B04继续active。B03.retreat、陆战全歼及B04完整正文仍未完成。现有客户端消息门槛涉及物理当前国参战或战斗UI覆盖，逻辑observer不参与该原生判断；不能泛称所有NPC都没有消息。当前live会话沿176记录（45688-1dd6b3ed674d8d0，逻辑FRA NPC/物理POR），本批未新读暂停。无外交业务、日期推进、保存重载、重启注入、采集启停或CUA；no-repeat及checkpoint禁用保持。
 
-[战报全歼标志接口](docs/02-使用与接口/战争与战报/战报全歼标志接口.md)。
+[战报全歼标志接口](docs/信息导出/接口/战争与战报/战报全歼标志接口.md)。
 
 <!-- batch177-battle-annihilation:end -->
 
@@ -1452,7 +1452,7 @@ v36新增陆/海战通用combat-side+169原始标志复制，wire9完整包住�
 
 逻辑观察国FRA NPC，物理玩家POR；当前会话及raw日期以summary.runtime_context为准，暂停未新读。无游戏函数、外交业务、推进、保存重载、重启注入、采集启停或CUA；no-repeat和checkpoint禁用保持。第175批的外国学者可见范围修复继续有效；邀请历史等附加未知项不作为原S02新增硬性完成条件。
 
-[任务链奖励期限接口](docs/02-使用与接口/任务/任务链奖励期限接口.md)。
+[任务链奖励期限接口](docs/信息导出/接口/任务/任务链奖励期限接口.md)。
 
 <!-- batch176-mission-chain-timing:end -->
 
@@ -1470,7 +1470,7 @@ v36新增陆/海战通用combat-side+169原始标志复制，wire9完整包住�
 <!-- batch174-school-relations:start -->
 ## 第174批：当前学派的原生关系
 
-S02.schools.relations 新增当前学派到同组其他学派的原生signed32关系值：NPC FRA视角实机TUR当前hanafi_school，对zaidi_school=-1、对其余五校=0；FRA无当前学派返回not_applicable，不填中立值。native匹配两校任一顺序，因此symmetric=true；重复行取首匹配、缺pair单项unknown，自己不输出。两国首次私采strict/组件篡改拒绝、独立raw审计及实际query/report/2秒5秒一致，订阅cancelled/server0/reader终态；173学者/冷却信息保持。覆盖仍61 available/246 partial/90 planned，61可调用；完整74主题397字段、阶段二/三/四及B01–B04继续active。见[学派接口](docs/02-使用与接口/机制与宗教/宗教学派只读接口.md)及 `work/runtime/information-school-relations-20261105-174-001/summary.json`。
+S02.schools.relations 新增当前学派到同组其他学派的原生signed32关系值：NPC FRA视角实机TUR当前hanafi_school，对zaidi_school=-1、对其余五校=0；FRA无当前学派返回not_applicable，不填中立值。native匹配两校任一顺序，因此symmetric=true；重复行取首匹配、缺pair单项unknown，自己不输出。两国首次私采strict/组件篡改拒绝、独立raw审计及实际query/report/2秒5秒一致，订阅cancelled/server0/reader终态；173学者/冷却信息保持。覆盖仍61 available/246 partial/90 planned，61可调用；完整74主题397字段、阶段二/三/四及B01–B04继续active。见[学派接口](docs/信息导出/接口/机制与宗教/宗教学派只读接口.md)及 `work/runtime/information-school-relations-20261105-174-001/summary.json`。
 
 新接受cached REA d063d0 `ev_7d525d6a5666df37bcb5802375dc3e2b69281d0184eb4ea23bc89c27a1168020`、dafbd0 `ev_f64d0680cd8d8d21e26f8e6361d542066a0939702369dc46b0d380efcb582b32`、dac840 `ev_6f39bb56e812dea9dfc62905c1c71060b84cfe17792cb698b64b891db2db5d11`。group58 ID→world25a8 manager→manager18[id-1] state；state20 pair ptr数组/count2c，row18/20两校ptr、28值。96B lookup返回首个无序匹配，未找到为-1，读者不索引负值。加载学校的vptr/owner/ordinal/String32 key精确绑定；64 schools/256 groupID/2048 pair rows软件上限，依赖前后复读，关系变化只撤子组件、父变化撤全field，预算向owner传播。RVA加实际module base才是VA。
 
@@ -1483,7 +1483,7 @@ S02.schools.relations 新增当前学派到同组其他学派的原生signed32�
 <!-- batch173-scholar-membership:start -->
 ## 第173批：受邀学者修正与邀请冷却
 
-S02.schools.invited_scholars 新增两份原生国家修正列表的key成员关系，按有效CWTools映射报告七种学者修正，并单列has_invited_scholar_recently邀请冷却。NPC FRA视角实机已知学者修正：{"FRA": [], "TUR": ["hanbali_school"]}；这是当前修正存在状态，不冒充邀请历史、邀请者身份或到期移除证明。FRA/TUR首次私采strict/完整性篡改拒绝、独立raw核对及实际query/report/2秒5秒一致，订阅cancelled/server0/reader终态。覆盖仍61 available/246 partial/90 planned，61可调用；完整74主题397字段、阶段二/三/四与B01–B04继续active。见[学派接口](docs/02-使用与接口/机制与宗教/宗教学派只读接口.md)及 `work/runtime/information-religious-scholars-20261105-173-001/summary.json`。
+S02.schools.invited_scholars 新增两份原生国家修正列表的key成员关系，按有效CWTools映射报告七种学者修正，并单列has_invited_scholar_recently邀请冷却。NPC FRA视角实机已知学者修正：{"FRA": [], "TUR": ["hanbali_school"]}；这是当前修正存在状态，不冒充邀请历史、邀请者身份或到期移除证明。FRA/TUR首次私采strict/完整性篡改拒绝、独立raw核对及实际query/report/2秒5秒一致，订阅cancelled/server0/reader终态。覆盖仍61 available/246 partial/90 planned，61可调用；完整74主题397字段、阶段二/三/四与B01–B04继续active。见[学派接口](docs/信息导出/接口/机制与宗教/宗教学派只读接口.md)及 `work/runtime/information-religious-scholars-20261105-173-001/summary.json`。
 
 新接受cached REA c4e7d0 `ev_5e4544b0e6903c8e976b4e387cae3f27d0b0b76efe369616385116bda21d7cb1` 证明通用country1f0链的instance30定义指针或country220链的直接定义指针成员关系，next均10；谓词不看日期。复用冻结country_modifiers_memory直接实例读取和validate_record，第二列表有界读取已知definition vtable/key158；双链null终止/无cycle/各最多128，key最多255B。直接实例40/44日期及48..4b原始flag字节不改义，secondary无实例日期/flags。旧FRA-only N08公开capture不调用，TUR通过共享owner目标身份/准入后读取。RVA加实际module base才是VA。modifier失败/变化只撤回该组件，父学派身份变化撤回全field；预算错误向owner传播。
 
@@ -1498,7 +1498,7 @@ S02.schools.invited_scholars 新增两份原生国家修正列表的key成员关
 <!-- batch172-school-activation:start -->
 ## 第172批：宗教学派机制启用状态
 
-S02.schools 的 uses_schools 新增已验证原生布尔结果：NPC FRA视角实机FRA=false、TUR=true；当前学校key及CWTools配置声明保持。FRA读取默认定义对象的false虚函数；TUR全局flag1=1/flag2=0，走native count7!=0分支。其他标志组合依赖线程TLS，明确unknown，不读GS/TLS或调用初始化。两国首次私采strict/布尔篡改拒绝、独立raw核对及实际query/report/2秒5秒一致，订阅cancelled/server0/reader终态。覆盖仍61 available/246 partial/90 planned、61可调用；完整74主题397字段、阶段二/三/四、B01–B04继续active。见[学派接口](docs/02-使用与接口/机制与宗教/宗教学派只读接口.md)及 `work/runtime/information-religious-schools-state-20261105-172-001/summary.json`。
+S02.schools 的 uses_schools 新增已验证原生布尔结果：NPC FRA视角实机FRA=false、TUR=true；当前学校key及CWTools配置声明保持。FRA读取默认定义对象的false虚函数；TUR全局flag1=1/flag2=0，走native count7!=0分支。其他标志组合依赖线程TLS，明确unknown，不读GS/TLS或调用初始化。两国首次私采strict/布尔篡改拒绝、独立raw核对及实际query/report/2秒5秒一致，订阅cancelled/server0/reader终态。覆盖仍61 available/246 partial/90 planned、61可调用；完整74主题397字段、阶段二/三/四、B01–B04继续active。见[学派接口](docs/信息导出/接口/机制与宗教/宗教学派只读接口.md)及 `work/runtime/information-religious-schools-state-20261105-172-001/summary.json`。
 
 新接受cached REA dacbc0 `ev_152dae881d0f47e050e8593c08aed1408c3bc5429d4b46e0198fcec34e174dd5`：RVA233ff04非零且233feb6为零时返回definition+2c!=0；否则有TLS门控，未冒充可知。定义选择复用普通d04c80谓词的group+A0/null fallback2458cc8/virtual40。RVA加实际module base才是VA。171冻结identity/values/profile保留，新扩展分别复读activation与全部父依赖；activation变化只撤回该组件，父依赖变化撤回全field。profile SHA `3fca561b26ed1316157ded3e9726a517fae6cdb31a40054c40f5051944e3a763`，16 ROM guards；每leaf最多384calls/16384B。53个当前相关用例均有通过记录；完整full132仍126继承坏ID、whole_suite_passed=false。
 
@@ -1509,7 +1509,7 @@ S02.schools 的 uses_schools 新增已验证原生布尔结果：NPC FRA视角�
 <!-- batch171-religious-schools:start -->
 ## 第171批：当前宗教学派与配置声明
 
-新增 S02.schools 查询、报告及2秒/5秒周期订阅。NPC FRA视角实机：TUR原生学派key为 `hanafi_school`，精确对应CWTools有效配置；FRA为原生空学派对象，不读取真实学派布局。7个学派配置AST均已实际解析，条件与效果未执行。当前学派、机制是否启用、受邀学者与学派关系分别处理，后三仍unknown。两国首次私采strict/改值拒绝、独立原字节核对与实际交付一致；订阅取消、server0/reader终态。覆盖61 available/246 partial/90 planned，61可调用；完整74主题397字段、阶段二/三/四及B01–B04继续active。见[学派接口](docs/02-使用与接口/机制与宗教/宗教学派只读接口.md)及 `work/runtime/information-religious-schools-20261104-171-001/summary.json`。
+新增 S02.schools 查询、报告及2秒/5秒周期订阅。NPC FRA视角实机：TUR原生学派key为 `hanafi_school`，精确对应CWTools有效配置；FRA为原生空学派对象，不读取真实学派布局。7个学派配置AST均已实际解析，条件与效果未执行。当前学派、机制是否启用、受邀学者与学派关系分别处理，后三仍unknown。两国首次私采strict/改值拒绝、独立原字节核对与实际交付一致；订阅取消、server0/reader终态。覆盖61 available/246 partial/90 planned，61可调用；完整74主题397字段、阶段二/三/四及B01–B04继续active。见[学派接口](docs/信息导出/接口/机制与宗教/宗教学派只读接口.md)及 `work/runtime/information-religious-schools-20261104-171-001/summary.json`。
 
 新接受cached REA：dad040 `ev_da68d1352a93fdad30527e21c19343e18badf5f00fb72e3c693f8d4e5c5f49dc` 证明原始key保存在school+150，本地化名另存18；dacc30 `ev_f16aec130bc321ae101c37cd7f15c1d04b6843b4c44f296934f09df7d5eaa87c` 证明配置子块名传入构造器、容器数组20/cap28/count2c及school170所属组/178序号。旧efd2c0/f0ed60接受证据与getter36e4c0普通8B复用；has_school只接受已知real/default vtable及虚函数88的true/false方法。RVA需加实际module base。前后重读所有依赖，含父宗教身份，拒同日期拼接；64学校/128capacity/8192B/128calls软件上限。机制启用函数dacbc0另有全局/线程条件，不从非空定义推断启用。
 
@@ -1520,7 +1520,7 @@ profile SHA `26fd01512c526305e9f2d245527cbd710dc21416d37e144127ec7ed57a1ea7fd`�
 <!-- batch170-country-papacy:start -->
 ## 第170批：教廷影响力、控制者与金库
 
-新增S02.papacy查询、报告和2秒/5秒周期。NPC FRA视角实机：FRA影响力48.666、ENG43.041、PAP0；三者控制者均PAP、金库2288.989，PAP的self-controller=true。TUR教廷定义为空，uses_papacy=false且3组件明确not_applicable，不读其复用资源槽。四国首次私采strict/适用性篡改拒绝、独立raw重算与实际交付一致；订阅cancelled/server0/reader终态。字段partial；覆盖61 available/245 partial/91 planned、61可调用，完整74主题397字段及阶段二/三/四、B01–B04继续active。见[教廷接口](docs/02-使用与接口/机制与宗教/教廷状态只读接口.md)和work/runtime/information-papacy-20261104-170-001/summary.json。
+新增S02.papacy查询、报告和2秒/5秒周期。NPC FRA视角实机：FRA影响力48.666、ENG43.041、PAP0；三者控制者均PAP、金库2288.989，PAP的self-controller=true。TUR教廷定义为空，uses_papacy=false且3组件明确not_applicable，不读其复用资源槽。四国首次私采strict/适用性篡改拒绝、独立raw重算与实际交付一致；订阅cancelled/server0/reader终态。字段partial；覆盖61 available/245 partial/91 planned、61可调用，完整74主题397字段及阶段二/三/四、B01–B04继续active。见[教廷接口](docs/信息导出/接口/机制与宗教/教廷状态只读接口.md)和work/runtime/information-papacy-20261104-170-001/summary.json。
 
 接受新cached REA 361e40 ev_2afcef0732559c52c0d3300ccd0ab485fd568de606b633043c320d2a1c67087b、c88c90 ev_e676dcc70019377fdd1a645059af34d7c4be6130774f15d0f9d054193ddd154c、d22fb0 ev_ec312d655a666120556139290de672a9a6e5ee51e31695d6705208593ab2b96e。country F30→religion+578 papacy definition→definition+60 owner CReligion→owner70 ID→world25a8/manager30、stride50、record10 owner一致→record40 papacy state；F50影响力/state24 controller完整引用/state100金库。不能把definition直接当CReligion。普通a47c20完整83B复用168证据；type7 wrapper244db0与1703780千分格式器复用旧接受Evidence，未重查。RVA加实际module base才是VA。未知controller引用不解释none；scalars signed32/value=raw/scale1000，无配置范围钳制。
 
@@ -1533,7 +1533,7 @@ papacy profile v1 SHAc11771f7ae38ee944180b04516011a373ac803eb938ad2f5e540d5a66a5
 <!-- batch169-defender-loaded-tier:start -->
 ## 第169批：信仰守护者运行时等级
 
-S02.defender增加tier：NPC FRA视角查询FRA/ENG的宗教守护者均为FRA、当前等级5，同信仰国家数127/世界列表590，区间[50,无上限)。来自运行时加载的tier表和原生整数选择规则；未用磁盘配置推断当前等级。两国首次私采strict/等级篡改拒绝、独立raw重算与actual query/report/2秒5秒一致，订阅cancelled/server0/reader终态。字段仍partial；覆盖保持61 available/244 partial/92 planned、61可调用，完整74主题397字段及阶段二/三/四、B01–B04继续active。见[守护者接口](docs/02-使用与接口/机制与宗教/信仰守护者只读接口.md)和work/runtime/information-religion-defender-tier-20261104-169-001/summary.json。
+S02.defender增加tier：NPC FRA视角查询FRA/ENG的宗教守护者均为FRA、当前等级5，同信仰国家数127/世界列表590，区间[50,无上限)。来自运行时加载的tier表和原生整数选择规则；未用磁盘配置推断当前等级。两国首次私采strict/等级篡改拒绝、独立raw重算与actual query/report/2秒5秒一致，订阅cancelled/server0/reader终态。字段仍partial；覆盖保持61 available/244 partial/92 planned、61可调用，完整74主题397字段及阶段二/三/四、B01–B04继续active。见[守护者接口](docs/信息导出/接口/机制与宗教/信仰守护者只读接口.md)和work/runtime/information-religion-defender-tier-20261104-169-001/summary.json。
 
 接受cached REA 5c1d30 ev_c3908b4a7a72639371d90267cac334be5fe8e313784fbddc69d76cc4359eaa09：world+1d08/+1d14遍历country F30==state+10，global RVA1fd1d08/+1fd1d14、stride358、min20/max24（0无上限）取首个匹配。d25000 ev_340d5a633b55402956fdb5a5bc11c9eb0d7292d919b07e635a61edf2d5ca4443另证先核holder slot、再比tier+28>=触发器整数。RVA需加实际module base才是VA。两查询384M、原DB/manifest未变、root tree峰值约760MB。range_from/to普通字节种子无RIP refs，不冒充配置加载器证据；旧92dcc0仅130B primary fragment的high-byte检查不证明空值含义，未据此宣称none。
 
@@ -1546,7 +1546,7 @@ S02.defender增加tier：NPC FRA视角查询FRA/ENG的宗教守护者均为FRA�
 <!-- batch168-religion-defender:start -->
 ## 第168批：信仰守护者国家与规则缓存上限
 
-新增S02.defender的查询、报告与2秒/5秒周期订阅。NPC FRA视角实机读取FRA/ENG当前主宗教的守护者均为FRA；本国是否为守护者分别true/false。完整holder引用经country DB精确验证，记录+10宗教对象与当前F30相同；零值或无效引用保持unknown，不冒称没有守护者。字段partial，tier/资格/完整tooltip仍缺。覆盖61 available/244 partial/92 planned、61可调用，完整74主题397字段及阶段二/三/四、B01–B04继续active。见[接口说明](docs/02-使用与接口/机制与宗教/信仰守护者只读接口.md)、work/runtime/information-religion-defender-20261104-168-001/summary.json。
+新增S02.defender的查询、报告与2秒/5秒周期订阅。NPC FRA视角实机读取FRA/ENG当前主宗教的守护者均为FRA；本国是否为守护者分别true/false。完整holder引用经country DB精确验证，记录+10宗教对象与当前F30相同；零值或无效引用保持unknown，不冒称没有守护者。字段partial，tier/资格/完整tooltip仍缺。覆盖61 available/244 partial/92 planned、61可调用，完整74主题397字段及阶段二/三/四、B01–B04继续active。见[接口说明](docs/信息导出/接口/机制与宗教/信仰守护者只读接口.md)、work/runtime/information-religion-defender-20261104-168-001/summary.json。
 
 新接受cached REA bfcf80 ev_e0a97d5d4dc5a59d296a5dc2ec481aa8e21aeb84582f86a4c3e3b0aa26c6c706：religion+70减1、world+25a8→manager+30、步长0x50、record+34 holder fullref；原生predicate只比较slot。普通5c1d30另证record+10用于country F30匹配，并提供按同信仰国家数选min/max区间的新研究点；不冒充REA/运行时等级。软件id上限4096、地址/预算/记录身份/所有依赖前后与两遍校验；未证明manager+38/+3c的capacity/count，未使用其猜测。profile v1 SHA9f3aff770cd6228a8a40e24624c9fc6cf7a92a448d5290d9250109ff4b3569ae、10 ROM guards。FRA/ENG首次私采各5648 RPM/52360B，strict/tamper拒绝与独立raw审计通过；actual mixed defender/mechanics query/report/两周期一致，订阅cancelled、server0/reader终态、前后源码pins一致。
 
@@ -1559,7 +1559,7 @@ CWTools及有效game/MOD resolver确认守护者5级静态配置：range_from/ra
 <!-- batch167-religion-identity-rules:start -->
 ## 第167批：准确宗教key与配置机制声明
 
-FRA/ENG当前native key均为catholic/christian。S02.faith及religion_group保留旧名称/icon并添加已验证identity；新增S02.mechanics导出该key对应的配置宗教/组AST，conditions/effects未执行、runtime_state仍unknown。直接复用CWTools/shared overlay与既有AST serializer，实际28宗教/7组；精确key/source pins/唯一性、输入变化和AST预算均核。字段仍partial。覆盖61 available/243 partial/93 planned、61可调用，完整74主题397字段及阶段二/三/四、B01–B04继续active。见[接口说明](docs/02-使用与接口/机制与宗教/宗教身份与机制声明接口.md)及work/runtime/information-religion-identity-20261104-167-001/summary.json。
+FRA/ENG当前native key均为catholic/christian。S02.faith及religion_group保留旧名称/icon并添加已验证identity；新增S02.mechanics导出该key对应的配置宗教/组AST，conditions/effects未执行、runtime_state仍unknown。直接复用CWTools/shared overlay与既有AST serializer，实际28宗教/7组；精确key/source pins/唯一性、输入变化和AST预算均核。字段仍partial。覆盖61 available/243 partial/93 planned、61可调用，完整74主题397字段及阶段二/三/四、B01–B04继续active。见[接口说明](docs/信息导出/接口/机制与宗教/宗教身份与机制声明接口.md)及work/runtime/information-religion-identity-20261104-167-001/summary.json。
 
 新接受cached REA：a7a940宗教key lookup ev_81cae88e3736e9744fb153eed2f61375409dd1d4c08f56241d97d60046f40aff，a7aa10组key lookup ev_dee4d93d8ca3a098a47d9e2667bf44bd456da9e8883837293e9e3eb1d8d8a460；均384M、DB/manifest仍原8eec1c…/de1c73…、无cache修复。RVA须加实际module base才是VA。country F30→religion、D8→group沿166；religion+90/A0/A8与group+18/28/30为key String32，B0/38为显示名，不反查。普通6fd2f0主pdata仅27B，补[6fd2f0,6fd550)窄窗口核literal/country路径，普通PE与REA分开。旧v22/v34 peace-special-state.inc已有religion+90 key reader，只复用布局，不把旧unknown和约执行当成功、不重跑任何业务。
 
@@ -1586,14 +1586,14 @@ S02.religion_group新增当前主宗教所属组的显示名，逻辑NPC FRA读�
 
 定向当前88唯一通过：旧faith27、静态7、leaf32、source/Composite/factory22。leaf3与source3失败均修正夹具后仅复查失败，静态后续仅变更相关项复查；不是单次全绿。actual CWTools与实际RPM/MCP另行验证，mock不冒充实机。full132仍126旧坏ID/whole_suite_passed=false。覆盖61 available/242 partial/94 planned、61可调用，完整74主题397字段与阶段二/三/四及B01–B04继续active。
 
-当前session45688-1dd6b3ed674d8d0/raw56558664，B23/v34原会话。无游戏函数/外交业务、日期推进、保存重载、重启注入、采集启停或CUA；暂停未新读（沿159）。所有根监控终态、无cap/timeout；未重复本批成功采集、旧59B、159窗口、162失败处理器或原120；禁用checkpoint和no-repeat保持。见[接口说明](docs/02-使用与接口/机制与宗教/宗教组与定义复用接口.md)、work/runtime/information-religion-identity-20261104-166-001/summary.json。继续准确宗教身份/其他宗教机制、容量具名贡献及其余完整原计划。
+当前session45688-1dd6b3ed674d8d0/raw56558664，B23/v34原会话。无游戏函数/外交业务、日期推进、保存重载、重启注入、采集启停或CUA；暂停未新读（沿159）。所有根监控终态、无cap/timeout；未重复本批成功采集、旧59B、159窗口、162失败处理器或原120；禁用checkpoint和no-repeat保持。见[接口说明](docs/信息导出/接口/机制与宗教/宗教组与定义复用接口.md)、work/runtime/information-religion-identity-20261104-166-001/summary.json。继续准确宗教身份/其他宗教机制、容量具名贡献及其余完整原计划。
 
 <!-- batch166-religion-group-reuse:end -->
 
 <!-- batch165-governance-capacity:start -->
 ## 第165批：治理容量用量与上限
 
-新增 N06.governance_capacity，NPC FRA实机used204.540/limit500.000，原生千分比例0.409（40.9%），明确派生headroom295.460。实际query/report/2秒5秒与独立私采一致，两个订阅cancelled/server exit0/reader终态、源码pins前后一致。103当前唯一相关测试经仅失败项修复归并通过，字段partial。覆盖61 available/241 partial/95 planned、61可调用、74主题397字段；完整阶段二/三/四及B01–B04继续active。见[治理容量接口](docs/02-使用与接口/国家与国内/治理容量只读接口.md)及 work/runtime/information-governing-capacity-20261104-165-001/summary.json。
+新增 N06.governance_capacity，NPC FRA实机used204.540/limit500.000，原生千分比例0.409（40.9%），明确派生headroom295.460。实际query/report/2秒5秒与独立私采一致，两个订阅cancelled/server exit0/reader终态、源码pins前后一致。103当前唯一相关测试经仅失败项修复归并通过，字段partial。覆盖61 available/241 partial/95 planned、61可调用、74主题397字段；完整阶段二/三/四及B01–B04继续active。见[治理容量接口](docs/信息导出/接口/国家与国内/治理容量只读接口.md)及 work/runtime/information-governing-capacity-20261104-165-001/summary.json。
 
 用量/上限/比例保留原生有符号定点，headroom是明确派生的signed64差值，不能当作已读原生remaining UI。新profile35守卫，strict/独立原字节与actual MCP均通过。复用旧cache/owner/formatter；两次新cached REA用可选384M heap完成且数据库/manifest未变，原默认512M及严格资源/只读约束保留。宗教显示名不能识别key/group，S02.religion_group仍planned。full132仍126旧坏ID；无游戏函数、业务、推进、保存重载、启停采集、重启注入或CUA，完整目标继续。
 
@@ -1602,7 +1602,7 @@ S02.religion_group新增当前主宗教所属组的显示名，逻辑NPC FRA读�
 <!-- batch164-scoped-final-attribute-changes:start -->
 ## 第164批：最终属性变化比较基线
 
-已修复163批N09.final_value的partial变化基线缺口。仅对全部已知的受支持六项属性建立比较基线，complete仍false；unknown/缺项/坏单位/上下文或证据失败保留旧baseline，范围/profile变化只rebaseline不发布数值变化。实际2秒/5秒change均建立baseline并进入unchanged，与163冻结六项值独立重算的摘要一致、无last_result。短cancel时长仍active，最后全部cancelled，server exit0/reader终态、源码前后pin一致。177当前唯一相关测试归并通过。覆盖仍61 available/240 partial/96 planned、61可调用、74主题397字段；完整阶段二/三/四与B01–B04继续active。见[最终属性接口](docs/02-使用与接口/关系与外交/特殊外交机制与最终属性接口.md)及 work/runtime/information-final-attribute-changes-20261104-164-001/summary.json。
+已修复163批N09.final_value的partial变化基线缺口。仅对全部已知的受支持六项属性建立比较基线，complete仍false；unknown/缺项/坏单位/上下文或证据失败保留旧baseline，范围/profile变化只rebaseline不发布数值变化。实际2秒/5秒change均建立baseline并进入unchanged，与163冻结六项值独立重算的摘要一致、无last_result。短cancel时长仍active，最后全部cancelled，server exit0/reader终态、源码前后pin一致。177当前唯一相关测试归并通过。覆盖仍61 available/240 partial/96 planned、61可调用、74主题397字段；完整阶段二/三/四与B01–B04继续active。见[最终属性接口](docs/信息导出/接口/关系与外交/特殊外交机制与最终属性接口.md)及 work/runtime/information-final-attribute-changes-20261104-164-001/summary.json。
 
 服务保留原完整样本比较；partial由实际owner提供明确的完整受支持范围，不全局放行partial。N09仅final_value变化比较，混入source_breakdown/modifier_effects会在创建时拒绝；后两者查询/周期仍保留。实际数值变化和未知恢复用离线真实service验证，实机只证明baseline/unchanged静默，不制造游戏变化。原profile/偏移/REA均未新增；full132仍126旧坏ID。无游戏函数/业务/推进/保存重载/重启注入/采集启停/CUA。163缺口说明已被本批修复状态取代，其他字段及完整目标继续。
 
@@ -1611,7 +1611,7 @@ S02.religion_group新增当前主宗教所属组的显示名，逻辑NPC FRA读�
 <!-- batch163-final-attributes-reuse:start -->
 ## 第163批：最终属性汇总复用三个外交来源
 
-N09.final_value新增diplomatic_reputation、diplomats_total、relations_limit，工厂复用N06/N05同一来源实例；不新增内存布局、profile或REA。当前受支持标量从纪律/陆海士气3项扩为6项。实机NPC FRA：纪律1000/1000、陆海士气2488/1000与1712/1000、外交声誉3000/1000、外交官总容量4000/1000、外交关系容量7/1。实际query/report/2秒5秒一致，订阅取消/server exit0/reader终态、源码前后pin一致。75当前唯一相关测试按ID归并通过；覆盖仍61 available/240 partial/96 planned、61可调用、74主题397字段，不将扩展已partial字段记作新增完成数。完整阶段二/三/四及B01–B04继续active。见[最终属性接口](docs/02-使用与接口/关系与外交/特殊外交机制与最终属性接口.md)及 work/runtime/information-final-attributes-reuse-20261104-163-001/summary.json。
+N09.final_value新增diplomatic_reputation、diplomats_total、relations_limit，工厂复用N06/N05同一来源实例；不新增内存布局、profile或REA。当前受支持标量从纪律/陆海士气3项扩为6项。实机NPC FRA：纪律1000/1000、陆海士气2488/1000与1712/1000、外交声誉3000/1000、外交官总容量4000/1000、外交关系容量7/1。实际query/report/2秒5秒一致，订阅取消/server exit0/reader终态、源码前后pin一致。75当前唯一相关测试按ID归并通过；覆盖仍61 available/240 partial/96 planned、61可调用、74主题397字段，不将扩展已partial字段记作新增完成数。完整阶段二/三/四及B01–B04继续active。见[最终属性接口](docs/信息导出/接口/关系与外交/特殊外交机制与最终属性接口.md)及 work/runtime/information-final-attributes-reuse-20261104-163-001/summary.json。
 
 每项独立保留unit/scale及unknown；已知值核原profile/采集摘要及精确DTO，单项失败隔离，跨来源context变化撤回选中结果，独立采集不宣称原子性。原有N09 change声明存在实际基线缺口：service完整性门槛会阻止partial汇总建基线，163已离线复现并登记为下一优先修复，不能称已验证变化订阅；query/report/periodic已通过。F04外国压力无现成专属准入，仍planned。full132仍126旧坏ID。本批无游戏函数、业务、推进、保存重载、重启注入、采集启停、CUA或REA查询，完整目标继续。
 
@@ -1620,7 +1620,7 @@ N09.final_value新增diplomatic_reputation、diplomats_total、relations_limit�
 <!-- batch162-diplomats-total:start -->
 ## 第162批：外交官总容量
 
-新增 N05.diplomats_total 的查询、报告和 periodic，NPC FRA 实机总容量4（raw4000/scale1000），两遍严格重放、摘要篡改拒绝、独立原始字节核算与实际 MCP 查询/报告/2秒5秒一致。订阅 cancelled、server exit0/reader退出，源码前后摘要一致。字段partial，覆盖61 available/240 partial/96 planned、61可调用、74主题397字段；完整阶段二/三/四与B01–B04继续active。见[外交官总量只读接口](docs/02-使用与接口/关系与外交/外交官总量只读接口.md)及 work/runtime/information-country-capacity-20261104-162-001/summary.json。
+新增 N05.diplomats_total 的查询、报告和 periodic，NPC FRA 实机总容量4（raw4000/scale1000），两遍严格重放、摘要篡改拒绝、独立原始字节核算与实际 MCP 查询/报告/2秒5秒一致。订阅 cancelled、server exit0/reader退出，源码前后摘要一致。字段partial，覆盖61 available/240 partial/96 planned、61可调用、74主题397字段；完整阶段二/三/四与B01–B04继续active。见[外交官总量只读接口](docs/信息导出/接口/关系与外交/外交官总量只读接口.md)及 work/runtime/information-country-capacity-20261104-162-001/summary.json。
 
 复用现有缓存、只读owner和标量公开边界，新增精确外交官processor旁路及可复用原始字典读取组件；其他TLS分支保持未知。81唯一相关测试经4项夹具断言修正归并通过，full132仍126旧坏ID。处理器REA超内存停止、证据拒收；普通固定PE窄窗与实机绑定分别支撑新分支。当前v2 profile，v1未知结果和失败均保留。无游戏函数/外交业务/日期推进/保存重载/重启注入/采集启停/CUA。其他分支、具名贡献和完整计划继续。
 
@@ -1629,25 +1629,25 @@ N09.final_value新增diplomatic_reputation、diplomats_total、relations_limit�
 <!-- batch161-diplomatic-reputation:start -->
 ## 第161批：本国外交声誉
 
-N06.diplomatic_reputation新增query/report/periodic，NPC FRA raw3000/scale1000=3.000，独立原始字节与实际MCP直接/报告/2秒5秒一致。87唯一相关测试经夹具单项修正归并通过；full132仍126旧坏ID。字段partial，覆盖61/239/97、61可调用、74/397，完整目标active。当前profile v2 SHA9449d3f…29b4，v1 ROM guard键错误原件保留，不再使用。两次新cached REA证明id133/1000及dense/sparse+可选processor；实际仅支持非计算态/空processor，复用旧quality/cache/read-only owner。旧项目锁经OS/进程核对后可逆隔离，原DB/manifest/完整保存证明未变，不弱化检查。session45688-1dd6b3ed674d8d0/raw56558664，FRA NPC/物理POR新trace核对；暂停沿159，未推进或保存重启。全部服务/订阅/监控终态，峰值约992MB。见HANDOFF、docs/02-使用与接口/关系与外交/外交声誉只读接口.md及161 summary；完整战报与剩余字段继续。
+N06.diplomatic_reputation新增query/report/periodic，NPC FRA raw3000/scale1000=3.000，独立原始字节与实际MCP直接/报告/2秒5秒一致。87唯一相关测试经夹具单项修正归并通过；full132仍126旧坏ID。字段partial，覆盖61/239/97、61可调用、74/397，完整目标active。当前profile v2 SHA9449d3f…29b4，v1 ROM guard键错误原件保留，不再使用。两次新cached REA证明id133/1000及dense/sparse+可选processor；实际仅支持非计算态/空processor，复用旧quality/cache/read-only owner。旧项目锁经OS/进程核对后可逆隔离，原DB/manifest/完整保存证明未变，不弱化检查。session45688-1dd6b3ed674d8d0/raw56558664，FRA NPC/物理POR新trace核对；暂停沿159，未推进或保存重启。全部服务/订阅/监控终态，峰值约992MB。见HANDOFF、docs/信息导出/接口/关系与外交/外交声誉只读接口.md及161 summary；完整战报与剩余字段继续。
 <!-- batch161-diplomatic-reputation:end -->
 
 <!-- batch160-display-composition:start -->
 ## 第160批：结果组合与留存战报周期重读
 
-B04.details.display_composition组合复制文字、名称/compact候选、按钮零参数文字与配置布局分支；wire7/8投影15，原生raw_text及完整UI不升级。新增明确event_id的B04周期重读，无ID配置拒绝，不取得采集所有权。120唯一相关测试经仅失败负例夹具修正归并通过，2秒/5秒同源一致；full132仍126旧坏ID。离线重放159的14真实记录，14名称/42按钮/370配置分支文字及26非当前布局候选；无法国公开正例，0原生Line1。无新实机采集/推进/函数调用，当前v34/FRA NPC/物理POR/session45688-1dd6b3ed674d8d0/raw56558664及暂停disabled沿159。覆盖61/238/98、61可调用、74/397不变，完整目标active。见HANDOFF、docs/02-使用与接口/战争与战报/战报结果组合接口.md及160 summary；勿重复159窗口/启停或将候选当真实显示。
+B04.details.display_composition组合复制文字、名称/compact候选、按钮零参数文字与配置布局分支；wire7/8投影15，原生raw_text及完整UI不升级。新增明确event_id的B04周期重读，无ID配置拒绝，不取得采集所有权。120唯一相关测试经仅失败负例夹具修正归并通过，2秒/5秒同源一致；full132仍126旧坏ID。离线重放159的14真实记录，14名称/42按钮/370配置分支文字及26非当前布局候选；无法国公开正例，0原生Line1。无新实机采集/推进/函数调用，当前v34/FRA NPC/物理POR/session45688-1dd6b3ed674d8d0/raw56558664及暂停disabled沿159。覆盖61/238/98、61可调用、74/397不变，完整目标active。见HANDOFF、docs/信息导出/接口/战争与战报/战报结果组合接口.md及160 summary；勿重复159窗口/启停或将候选当真实显示。
 <!-- batch160-display-composition:end -->
 
 <!-- batch159-independent-format:start -->
 ## 第159批：战报派生文字候选
 
-B04.details新增名称行及陆战紧凑损失候选，复用v34同场已采输入，wire7/8投影14；原生raw_text、完整UI及可见性不升级。113唯一相关测试按最新结果归并通过，非单次全绿；full132仍126旧坏ID。实际一次35天窗口raw56557824→56558664后暂停，新7场派生7名称/14损失候选，但无法国直接参战，公开交付无正例。逻辑NPC FRA/物理POR重新核对；当前v34/session45688-1dd6b3ed674d8d0保持，订阅取消、采集disabled、所有权释放、服务终态。新REA缓存变化拒收，独立普通PE字节配合既有已接受证据支撑派生；缓存单临时文件可逆隔离后恢复原摘要，失败不转成功。覆盖仍61/238/98、61可调用、74/397，完整目标active。详见HANDOFF、docs/04-实现研究/战报/非玩家战报文字候选.md与159 summary；勿重复已完成窗口或以旧ledger重做已完成结构字段。
+B04.details新增名称行及陆战紧凑损失候选，复用v34同场已采输入，wire7/8投影14；原生raw_text、完整UI及可见性不升级。113唯一相关测试按最新结果归并通过，非单次全绿；full132仍126旧坏ID。实际一次35天窗口raw56557824→56558664后暂停，新7场派生7名称/14损失候选，但无法国直接参战，公开交付无正例。逻辑NPC FRA/物理POR重新核对；当前v34/session45688-1dd6b3ed674d8d0保持，订阅取消、采集disabled、所有权释放、服务终态。新REA缓存变化拒收，独立普通PE字节配合既有已接受证据支撑派生；缓存单临时文件可逆隔离后恢复原摘要，失败不转成功。覆盖仍61/238/98、61可调用、74/397，完整目标active。详见HANDOFF、docs/信息导出/实现研究/战报/非玩家战报文字候选.md与159 summary；勿重复已完成窗口或以旧ledger重做已完成结构字段。
 <!-- batch159-independent-format:end -->
 
 <!-- batch158-name-handoff:start -->
 ## 第158批：NAME 输入接线与客户端门槛复查
 
-NAME 移动前复制已接入 v35 观察器、IBOW v8、原始摄入与 B04.details；实际 DLL 构建和132项来源清单核验通过，尚未安装。128个当前相关 Python 用例、71项原生协议检查、82项观察器模拟检查及9份正式解码通过。NAME 仍受客户端消息门槛约束，不能据此称 NPC 正文可用；后续转向门槛前数据与独立格式化路径，不仅等待自然窗口。覆盖仍61 available/238 partial/98 planned，61可调用主题、74/397；完整目标active。详见HANDOFF、docs/04-实现研究/战报/战报NAME交接采集.md及158 summary。
+NAME 移动前复制已接入 v35 观察器、IBOW v8、原始摄入与 B04.details；实际 DLL 构建和132项来源清单核验通过，尚未安装。128个当前相关 Python 用例、71项原生协议检查、82项观察器模拟检查及9份正式解码通过。NAME 仍受客户端消息门槛约束，不能据此称 NPC 正文可用；后续转向门槛前数据与独立格式化路径，不仅等待自然窗口。覆盖仍61 available/238 partial/98 planned，61可调用主题、74/397；完整目标active。详见HANDOFF、docs/信息导出/实现研究/战报/战报NAME交接采集.md及158 summary。
 <!-- batch158-name-handoff:end -->
 
 <!-- batch157-relations-capacity:start -->
@@ -1827,7 +1827,7 @@ M02.prerequisites实时源直接读取游戏内required_missions，保留CWTools
 
 --mission-game-data复用CWTools与现有任务来源，法国61任务有三条解锁/任务变更声明。实际解锁、重建后的任务及条件未知；政府改革命令无固定CWT规则，只保留语法。当前151定向全过，实际direct/报告/2秒5秒经两阶段采集及离线审计一致，成功查询不因checker错误重发。
 
-覆盖62/220/115、56 callable、74/397；full126不覆盖新树，完整目标active。没有新REA或游戏状态修改；失败原件、资源及边界见HANDOFF、131 summary和[任务奖励规则接口](docs/02-使用与接口/任务/任务奖励规则接口.md)。
+覆盖62/220/115、56 callable、74/397；full126不覆盖新树，完整目标active。没有新REA或游戏状态修改；失败原件、资源及边界见HANDOFF、131 summary和[任务奖励规则接口](docs/信息导出/接口/任务/任务奖励规则接口.md)。
 <!-- batch131-mission-unlock-requests:end -->
 
 <!-- batch130-live-country-discovery:start -->
@@ -1835,7 +1835,7 @@ M02.prerequisites实时源直接读取游戏内required_missions，保留CWTools
 
 C02.discovered_countries默认live接查询、手动报告与独立2秒/5秒周期：1369普通候选中588通过原生exists、168被法国知晓。逐目标先存在过滤再知识判断；读取失败或双遍漂移撤回全表，complete/domain_complete=false。物理POR、逻辑非玩家FRA身份由当前采集核对，不切国。混合国家/省份查询、POR拒绝、取消及server/reader终态均通过，212项定向全过。
 
-覆盖62/219/116、56 callable、74/397；完整回归仍126不覆盖新树，完整目标active。exists是198B普通静态证据，cached REA超内存失败原件保留，遗留outer锁已验证保留清理，DB不变；详见HANDOFF和[实时接口](docs/02-使用与接口/国家与国内/实时已发现国家接口.md)。
+覆盖62/219/116、56 callable、74/397；完整回归仍126不覆盖新树，完整目标active。exists是198B普通静态证据，cached REA超内存失败原件保留，遗留outer锁已验证保留清理，DB不变；详见HANDOFF和[实时接口](docs/信息导出/接口/国家与国内/实时已发现国家接口.md)。
 <!-- batch130-live-country-discovery:end -->
 
 <!-- batch129-country-knowledge:start -->
@@ -1843,7 +1843,7 @@ C02.discovered_countries默认live接查询、手动报告与独立2秒/5秒周�
 
 复用CWTools语义并沿builtin trigger factory追到c78900，排除了同名war通知serializer。新增私有单目标/双遍读器：1369 ordinary候选中320个谓词正值，19344reads/286396B、严格保存重放/源码稳定/关闭句柄通过，当前74项定向全过。
 
-这些标签尚未筛选当前国家存在性，不公开冒称现存国家；discovered_countries仍planned，省份实时接口不改，覆盖62/218/117不变。下一步定位native exists过滤再接Source；勿拿num_of_cities缓存或省份数启发式替代证明。full126不覆盖新树，完整目标active。缓存遗留锁已按OS/进程/DB验证保留恢复，DB不变；详见HANDOFF及[来源研究](docs/04-实现研究/国家与国内/已发现国家来源研究.md)。
+这些标签尚未筛选当前国家存在性，不公开冒称现存国家；discovered_countries仍planned，省份实时接口不改，覆盖62/218/117不变。下一步定位native exists过滤再接Source；勿拿num_of_cities缓存或省份数启发式替代证明。full126不覆盖新树，完整目标active。缓存遗留锁已按OS/进程/DB验证保留恢复，DB不变；详见HANDOFF及[来源研究](docs/信息导出/实现研究/国家与国内/已发现国家来源研究.md)。
 <!-- batch129-country-knowledge:end -->
 
 <!-- batch128-live-discovery:start -->
@@ -1851,7 +1851,7 @@ C02.discovered_countries默认live接查询、手动报告与独立2秒/5秒周�
 
 默认live新增NativeProvinceDiscoverySource，session/FRA查询、手动报告、独立2秒/5秒周期均返回当前正索引中已发现的1067省份；4941候选/domain_complete=false，POR视角拒绝，取消及server/reader终态通过。历史Jomini来源独立。新profile SHA615cfc68…641；首次生产实采35296 reads/488188B及严格保存重放通过。
 
-183个当前定向ID经182首次pass+1个修runner后单项补跑全部通过，不称单次全绿；MCP检查器的两处形状错误只离线修正，没重发成功查询。覆盖62/218/117不变，新增的是实时能力；完整回归仍126、不覆盖127/128。编号0/完整域、其它C02字段及共享离线replay R128-001限制仍保留，完整目标active。详见HANDOFF及[接口](docs/02-使用与接口/贸易与省份/实时已发现省份接口.md)。
+183个当前定向ID经182首次pass+1个修runner后单项补跑全部通过，不称单次全绿；MCP检查器的两处形状错误只离线修正，没重发成功查询。覆盖62/218/117不变，新增的是实时能力；完整回归仍126、不覆盖127/128。编号0/完整域、其它C02字段及共享离线replay R128-001限制仍保留，完整目标active。详见HANDOFF及[接口](docs/信息导出/接口/贸易与省份/实时已发现省份接口.md)。
 <!-- batch128-live-discovery:end -->
 
 <!-- batch127-live-discovery-reader:start -->
@@ -1859,7 +1859,7 @@ C02.discovered_countries默认live接查询、手动报告与独立2秒/5秒周�
 
 新私有位图读器按原生word长度/容量限制读取，复用既有观察国与双遍框架；当前4941个正编号省份每遍得到法国1067个已发现。35288 reads/485400B、严格保存重放、独立9882样本审计与句柄关闭通过，45项定向全过。观察国仍非玩家FRA，物理POR，不切国。
 
-公共C02查询/周期尚未接入，编号0语义与完整域仍未知，覆盖62/218/117不变；full126不覆盖新代码，矩阵已标漂移。下一步固定新profile并接Source，勿重复已完成静态研究/实采。全部进程终态；详见HANDOFF及[来源研究](docs/04-实现研究/贸易与省份/实时已发现省份来源研究.md)。
+公共C02查询/周期尚未接入，编号0语义与完整域仍未知，覆盖62/218/117不变；full126不覆盖新代码，矩阵已标漂移。下一步固定新profile并接Source，勿重复已完成静态研究/实采。全部进程终态；详见HANDOFF及[来源研究](docs/信息导出/实现研究/贸易与省份/实时已发现省份来源研究.md)。
 <!-- batch127-live-discovery-reader:end -->
 
 <!-- batch126-current-regression:start -->
@@ -1875,13 +1875,13 @@ C02.discovered_countries默认live接查询、手动报告与独立2秒/5秒周�
 
 默认live的R03.truce_until支持FRA参与的国家对，按actor→recipient方向返回当前直接记录期限。实际FRA→ENG为1463.1.1/raw56615880，query/report/2秒5秒周期一致；两sub取消，change正确拒绝。205项定向全过，另62个自有进程原生日历重放样例与纯模型一致；未在EU4中调用函数。
 
-字段仍partial/complete=false，关联停战和完整枚举未完成。覆盖62/218/117、56 callable、74/397。FRA非玩家/物理POR与当前会话原始输入重新核对，UI未渲染验收，公共paused为null。最新full仍121，不能称当前全量通过。详见HANDOFF及[接口](docs/02-使用与接口/关系与外交/停战截止日期接口.md)。
+字段仍partial/complete=false，关联停战和完整枚举未完成。覆盖62/218/117、56 callable、74/397。FRA非玩家/物理POR与当前会话原始输入重新核对，UI未渲染验收，公共paused为null。最新full仍121，不能称当前全量通过。详见HANDOFF及[接口](docs/信息导出/接口/关系与外交/停战截止日期接口.md)。
 <!-- batch125-direct-truce-date:end -->
 
 <!-- batch124-truce-expiry-research:start -->
 ## 第124批：停战日期已定位计算路径，尚未发布
 
-当前B23静态分析确认期限由关系记录+24/+34与两处运行时配置计算，不能直接读一个日期字段。已核对取值叶、日期格式化及中间整数公式，67140组纯算术输入通过；配置当前值、完整日历语义及实机样本仍缺。本批无游戏/存档访问，无新增公开字段，覆盖仍62/217/118、74/397。下一步与纠正原件见HANDOFF及[来源研究](docs/04-实现研究/关系与外交/停战截止日期来源研究.md)。
+当前B23静态分析确认期限由关系记录+24/+34与两处运行时配置计算，不能直接读一个日期字段。已核对取值叶、日期格式化及中间整数公式，67140组纯算术输入通过；配置当前值、完整日历语义及实机样本仍缺。本批无游戏/存档访问，无新增公开字段，覆盖仍62/217/118、74/397。下一步与纠正原件见HANDOFF及[来源研究](docs/信息导出/实现研究/关系与外交/停战截止日期来源研究.md)。
 <!-- batch124-truce-expiry-research:end -->
 
 <!-- batch123-war-relations:start -->
@@ -1889,7 +1889,7 @@ C02.discovered_countries默认live接查询、手动报告与独立2秒/5秒周�
 
 R03.wars与F01共用同一读器，宿敌仍由原来源处理。实际query/report/2秒5秒周期一致返回当前空索引，保留partial/complete=false，change正确拒绝。211项定向通过；验收器误判业务错误码的原failed收据保留，随后只审计保存响应通过，没有重发。两sub取消、server0、reader终态。
 
-覆盖62/217/118、56 callable、74主题397字段。完整战争枚举/生命周期、R03停战与包围网仍缺；完整目标继续。最新完整回归121不覆盖本批。角色沿用122同进程核验，未新采/控游戏；详见HANDOFF和[接口](docs/02-使用与接口/战争与战报/国家战争关系索引接口.md)。
+覆盖62/217/118、56 callable、74主题397字段。完整战争枚举/生命周期、R03停战与包围网仍缺；完整目标继续。最新完整回归121不覆盖本批。角色沿用122同进程核验，未新采/控游戏；详见HANDOFF和[接口](docs/信息导出/接口/战争与战报/国家战争关系索引接口.md)。
 <!-- batch123-war-relations:end -->
 
 <!-- batch122-war-exhaustion:start -->
@@ -1897,7 +1897,7 @@ R03.wars与F01共用同一读器，宿敌仍由原来源处理。实际query/rep
 
 live W04.war_exhaustion与N04共用一个成熟读器，实际FRA厌战raw4349/1000，query/report/2s5s一致，change baseline已建且unchanged，三sub取消/server0。country单字段完整可complete=true；catalog partial保留war参与方视图和其他W04缺项。修复service不完整change样本仍导出的错误，失败状态可查且旧baseline/result保持；116项定向通过，121完整5673是前版基线。
 
-当前角色重新核对FRA122非玩家/physicalPOR、同PID/session/B23/v34，5570RPM严格重放；成功receipt在runtime-health-001/attempt-002。首个0RPM callback错误及review误引路径原件均保留，由report-002更正。覆盖62/216/119、56 callable、74/397，完整目标继续。N05 counts不足以推总量，仍planned；见HANDOFF及[国家厌战接口](docs/02-使用与接口/国家与国内/国家厌战信息接口.md)。
+当前角色重新核对FRA122非玩家/physicalPOR、同PID/session/B23/v34，5570RPM严格重放；成功receipt在runtime-health-001/attempt-002。首个0RPM callback错误及review误引路径原件均保留，由report-002更正。覆盖62/216/119、56 callable、74/397，完整目标继续。N05 counts不足以推总量，仍planned；见HANDOFF及[国家厌战接口](docs/信息导出/接口/国家与国内/国家厌战信息接口.md)。
 <!-- batch122-war-exhaustion:end -->
 
 <!-- batch121-current-regression:start -->
@@ -1913,7 +1913,7 @@ CWTools41部署文件未入原before-freeze；full有一次真实CLI fixture通�
 
 --opinion-save启用独立SavedOpinionSource，R04仅opinion_modifiers有partial来源：FRA→ENG两条、ENG→FRA六条，与原始保存子块及实际MCP查询/报告一致。日期/decimal/expiry布尔原样保留，不当最终好感、到期日或衰减；玩家观察国和无关pair拒绝。r2 Jomini流式省略无opinion的关系，省略方向仍unknown，不补空集合；historical query-only，实际周期因缺session_id拒绝且未创建订阅。
 
-Rust9项+release通过、Python当前新文件36项通过，调整前108项含旧四文件回归另记。三个MCP helper失败范围原样保留，保留响应/DB/源码审计通过，不重发成功查询。矩阵62/215/120、55 callable、74/397，默认live不升级，完整目标继续；完整基线仍117批5592/126继承坏项。下一步复用成熟runner做当前正式回归。见[接口](docs/02-使用与接口/关系与外交/双向好感修正快照接口.md)与HANDOFF顶部。
+Rust9项+release通过、Python当前新文件36项通过，调整前108项含旧四文件回归另记。三个MCP helper失败范围原样保留，保留响应/DB/源码审计通过，不重发成功查询。矩阵62/215/120、55 callable、74/397，默认live不升级，完整目标继续；完整基线仍117批5592/126继承坏项。下一步复用成熟runner做当前正式回归。见[接口](docs/信息导出/接口/关系与外交/双向好感修正快照接口.md)与HANDOFF顶部。
 <!-- batch120-opinion-records:end -->
 
 <!-- batch119-saved-discovery:start -->
@@ -1921,7 +1921,7 @@ Rust9项+release通过、Python当前新文件36项通过，调整前108项含�
 
 --province-interest-save新增C02.discovered_provinces，与既有G01共用同一Jomini解析快照。session/FRA返回保存时FRA明确已发现的1067省份；玩家POR参考为1074，POR选择器不切换视角而返回不适用。缺失记录和空集合分开，period=saved_snapshot、complete=false；其余C02字段、实时状态和完整可知范围继续未完成，历史来源query-only。
 
-新C02与旧G01共53项定向通过；私有实时leaf另9项通过且未公开/未实采。实际MCP查询与手动报告结果已通过保留原件离线审计；两个helper失败原件保留（元数据精确比较错误、周期probe漏MCP必填参数），不称有效周期拒绝实测或全流程通过。两server0/reader终态，无game操作；覆盖62/214/121、54 callable、74/397，默认live C02仍planned。完整基线仍117批5592/126继承坏项，完整目标继续。详见[接口说明](docs/02-使用与接口/贸易与省份/已发现省份快照接口.md)与HANDOFF顶部。
+新C02与旧G01共53项定向通过；私有实时leaf另9项通过且未公开/未实采。实际MCP查询与手动报告结果已通过保留原件离线审计；两个helper失败原件保留（元数据精确比较错误、周期probe漏MCP必填参数），不称有效周期拒绝实测或全流程通过。两server0/reader终态，无game操作；覆盖62/214/121、54 callable、74/397，默认live C02仍planned。完整基线仍117批5592/126继承坏项，完整目标继续。详见[接口说明](docs/信息导出/接口/贸易与省份/已发现省份快照接口.md)与HANDOFF顶部。
 <!-- batch119-saved-discovery:end -->
 
 <!-- batch118-current-reforms:start -->
@@ -1929,7 +1929,7 @@ Rust9项+release通过、Python当前新文件36项通过，调整前108项含�
 
 默认live新增单字段NativeEmpirePassedReformsSource，读取全局passed IDs（current/reform_id/partial），旧皇帝/选侯独立。显式--empire-game-data继续选择静态定义，历史来源不改。新v3配置/GUI/进程根目录绑定、15 guards/2018B；旧v1/v2及profile不变。新会话实采5634读/48760B两遍count0，严格保存重放和独立raw审计通过；实际MCP查询/报告/2秒5秒周期一致并取消、server/reader终态。7/35/9项定向分别通过，未重跑全bridge；117完整5592/126继承坏项是前版基线。当前非空路径/实际绘制/完整可知范围/效果未完成，覆盖62/213/122、53 callable、74/397不变，完整目标继续。
 
-当前安装work/runtime/diplomacy-observer-20261103-runtime-recovery-001/installation.json，PID45688/creation134381481521109200/session45688-1dd6b3ed674d8d0，B23/v34，fresh捕获FRA非玩家/物理POR/raw56556984，公共paused仍null。本批无游戏控制或原动作重放。接口与未完成范围见[当前改革记录](docs/02-使用与接口/机制与宗教/神罗当前改革记录接口.md)及HANDOFF顶部。下一步优先首批可知地图等缺项，保留所有S01剩余项。
+当前安装work/runtime/diplomacy-observer-20261103-runtime-recovery-001/installation.json，PID45688/creation134381481521109200/session45688-1dd6b3ed674d8d0，B23/v34，fresh捕获FRA非玩家/物理POR/raw56556984，公共paused仍null。本批无游戏控制或原动作重放。接口与未完成范围见[当前改革记录](docs/信息导出/接口/机制与宗教/神罗当前改革记录接口.md)及HANDOFF顶部。下一步优先首批可知地图等缺项，保留所有S01剩余项。
 <!-- batch118-current-reforms:end -->
 
 <!-- batch117-current-regression:start -->
@@ -1945,13 +1945,13 @@ Rust9项+release通过、Python当前新文件36项通过，调整前108项含�
 
 --empire-game-data复用CWTools/现有mod resolver，3文件解析HRE25/China21，S01.reforms明确为静态声明，不判断当前通过或效果。索引7/Source13/工厂新旧9项分别通过；实际MCP查询、报告、2秒5秒周期通过并取消，server/reader终态。覆盖62/213/122、53 callable、74/397不变，完整目标继续。
 
-旧R76已结束。新安装work/runtime/diplomacy-observer-20261103-runtime-recovery-001/installation.json，PID45688/creation134381481521109200/session45688-1dd6b3ed674d8d0，B23/v34；fresh health/角色确认FRA非玩家、物理POR、raw56556984，原生speed0/paused_flag1，公共paused仍null。必要载入提示已由脚本确认一次，无Computer Use或历史业务重放。runtime_verified字段仍false，运行态另有实证。当前改革通过表未在新进程实采，UI可知与效果未完成，不能继承115旧进程空表。详情见HANDOFF顶部和[接口](docs/02-使用与接口/机制与宗教/神罗改革定义接口.md)。
+旧R76已结束。新安装work/runtime/diplomacy-observer-20261103-runtime-recovery-001/installation.json，PID45688/creation134381481521109200/session45688-1dd6b3ed674d8d0，B23/v34；fresh health/角色确认FRA非玩家、物理POR、raw56556984，原生speed0/paused_flag1，公共paused仍null。必要载入提示已由脚本确认一次，无Computer Use或历史业务重放。runtime_verified字段仍false，运行态另有实证。当前改革通过表未在新进程实采，UI可知与效果未完成，不能继承115旧进程空表。详情见HANDOFF顶部和[接口](docs/信息导出/接口/机制与宗教/神罗改革定义接口.md)。
 <!-- batch116-static-reforms-current:end -->
 
 <!-- batch115-private-reforms-current:start -->
 ## 第115批：改革表私有实采通过，公开尚未接入
 
-新增有界改革读取/私有profile及v2 Source原型。R76一次私采5628读/48108B，明确两遍count0；保存重放和独立raw审计通过、FRA非玩家/物理POR分别核验、句柄关闭。非空String32实机及外国可知未闭合，工厂仍v1，reforms实时unsupported。当前Source23项及profile/capture6项定向通过，v1兼容23项另记；未重跑全bridge。CWTools已实际解析一个2743B有效改革定义样本得到8个定义，尚非完整定义索引。覆盖62/213/122、53 callable、74/397不变，完整目标继续。详情及失败原件边界见HANDOFF顶部与[研究记录](docs/04-实现研究/机制与宗教/神罗改革实时采集研究.md)。
+新增有界改革读取/私有profile及v2 Source原型。R76一次私采5628读/48108B，明确两遍count0；保存重放和独立raw审计通过、FRA非玩家/物理POR分别核验、句柄关闭。非空String32实机及外国可知未闭合，工厂仍v1，reforms实时unsupported。当前Source23项及profile/capture6项定向通过，v1兼容23项另记；未重跑全bridge。CWTools已实际解析一个2743B有效改革定义样本得到8个定义，尚非完整定义索引。覆盖62/213/122、53 callable、74/397不变，完整目标继续。详情及失败原件边界见HANDOFF顶部与[研究记录](docs/信息导出/实现研究/机制与宗教/神罗改革实时采集研究.md)。
 <!-- batch115-private-reforms-current:end -->
 
 <!-- batch114-full-regression-current:start -->
@@ -1963,19 +1963,19 @@ Rust9项+release通过、Python当前新文件36项通过，调整前108项含�
 <!-- batch113-live-empire-current:start -->
 ## 第113批：S01新增实时来源
 
-S01皇帝/选侯已接入实时查询、报告、2秒及5秒周期，FRA非玩家与物理POR分开核验；HAB/7选侯一致，订阅均取消、server0。生产严格重放及独立原始区间审计通过，只读两个字段；实际UI和非原子限制保留。定向18/23/12项分别通过。正式全量命令约46%时单进程PeakPagefile1001533440B触及1e9线，原attempt137且无完整JUnit。后续旧冻结源码实际收集5525IDs/111片（此前口头5543误报已更正），前52片2600IDs完整、26failure/19error子项；part53及其单独localization目标均因聚合1e9线停止，无JUnit/不计完成。修复后该目标单项passed且未skip，25项相关离线回归通过，但新源码完整回归尚未完成，旧52片不能追认为新源验收。whole_suite_passed=false，最后完整基线仍100批5200IDs/141坏项；当前部分失败未作完整新增/解决比对。 已修本地化配置读取重复任务AST，默认任务索引行为不变；修复版25项及真实122-key单项通过、树峰875569152B。配置62/213/122、53 callable、74/397，完整目标继续。详情见HANDOFF顶部及[实时接口](docs/02-使用与接口/机制与宗教/神罗实时皇帝与选侯接口.md)。
+S01皇帝/选侯已接入实时查询、报告、2秒及5秒周期，FRA非玩家与物理POR分开核验；HAB/7选侯一致，订阅均取消、server0。生产严格重放及独立原始区间审计通过，只读两个字段；实际UI和非原子限制保留。定向18/23/12项分别通过。正式全量命令约46%时单进程PeakPagefile1001533440B触及1e9线，原attempt137且无完整JUnit。后续旧冻结源码实际收集5525IDs/111片（此前口头5543误报已更正），前52片2600IDs完整、26failure/19error子项；part53及其单独localization目标均因聚合1e9线停止，无JUnit/不计完成。修复后该目标单项passed且未skip，25项相关离线回归通过，但新源码完整回归尚未完成，旧52片不能追认为新源验收。whole_suite_passed=false，最后完整基线仍100批5200IDs/141坏项；当前部分失败未作完整新增/解决比对。 已修本地化配置读取重复任务AST，默认任务索引行为不变；修复版25项及真实122-key单项通过、树峰875569152B。配置62/213/122、53 callable、74/397，完整目标继续。详情见HANDOFF顶部及[实时接口](docs/信息导出/接口/机制与宗教/神罗实时皇帝与选侯接口.md)。
 <!-- batch113-live-empire-current:end -->
 
 <!-- batch112-empire-status-current:start -->
 ## 第112批：S01帝国状态部分支持
 
-empire_status新增7项保存状态与有限皇帝/选侯身份，成员未知；influence保留17.869十进制文本，false与缺失分开。原3字段保持，旧v1显式兼容。实际MCP四字段与报告通过、三国角色核对、周期拒绝/订阅空、finaldiscover和server0。outer context混合字段撤回问题已修正并有3项回归；此前22项与修复后3项分开记。配置62/213/122、53 callable、74/397，完整目标继续；最后full仍141既有坏项。详情见HANDOFF顶部及[神罗机制快照](docs/02-使用与接口/机制与宗教/神罗机制快照接口.md)。无游戏读取/操作或Computer Use，原政策保持。
+empire_status新增7项保存状态与有限皇帝/选侯身份，成员未知；influence保留17.869十进制文本，false与缺失分开。原3字段保持，旧v1显式兼容。实际MCP四字段与报告通过、三国角色核对、周期拒绝/订阅空、finaldiscover和server0。outer context混合字段撤回问题已修正并有3项回归；此前22项与修复后3项分开记。配置62/213/122、53 callable、74/397，完整目标继续；最后full仍141既有坏项。详情见HANDOFF顶部及[神罗机制快照](docs/信息导出/接口/机制与宗教/神罗机制快照接口.md)。无游戏读取/操作或Computer Use，原政策保持。
 <!-- batch112-empire-status-current:end -->
 
 <!-- batch111-empire-snapshot-current:start -->
 ## 第111批：S01历史神罗查询已接入
 
---empire-save复用Jomini及受信parser runner，查询/报告返回保存时皇帝HAB、7选侯，改革缺失保持unknown；FRA观察方与POR玩家分开，query-only、无live session。配置62/212/123、53 callable、74/397，完整目标继续。MCP原checker错误收据保留，同原件离线核对通过；server0/无订阅/内存未触限，不称原整轮passed。Rust5、factory11及组件受影响4项通过，最后full仍141既有坏项。详情见HANDOFF顶部和[神罗机制快照](docs/02-使用与接口/机制与宗教/神罗机制快照接口.md)。本批无游戏操作、live读取或Computer Use，原政策保持。
+--empire-save复用Jomini及受信parser runner，查询/报告返回保存时皇帝HAB、7选侯，改革缺失保持unknown；FRA观察方与POR玩家分开，query-only、无live session。配置62/212/123、53 callable、74/397，完整目标继续。MCP原checker错误收据保留，同原件离线核对通过；server0/无订阅/内存未触限，不称原整轮passed。Rust5、factory11及组件受影响4项通过，最后full仍141既有坏项。详情见HANDOFF顶部和[神罗机制快照](docs/信息导出/接口/机制与宗教/神罗机制快照接口.md)。本批无游戏操作、live读取或Computer Use，原政策保持。
 <!-- batch111-empire-snapshot-current:end -->
 
 <!-- batch109-mission-duration-current:start -->
@@ -1983,7 +1983,7 @@ empire_status新增7项保存状态与有限皇帝/选侯身份，成员未知�
 
 M04.duration从planned改为partial，复用真正CWTools AST和固定effects.cwt，按命令保留显式期限与单位，不执行奖励或计算实际到期。法国61任务共115个期限参数：53个已知数值项（51天单位、2月单位）、62个未知项；另列24条永久宣称声明，不计作数值期限。未知项包括58个未闭合负值语义和4个单位未闭合项；普通modifier的-1不推成永久。complete/evaluated均false，applied/start/expiry未知，unlocks仍planned。
 
-direct/报告及2秒/5秒周期字段已核对，全部订阅已取消；原轮询取历史结果过多触发内存停止线，原MCP exit1，按保存结果离线核对，不追认整轮资源通过。配置62/209/126、52 callable、74/397；完整目标继续。检查器与初始失败均保留，最后全回归仍141既有坏项。详情见HANDOFF顶部、[任务奖励规则](docs/02-使用与接口/任务/任务奖励规则接口.md)和109批summary。无游戏状态修改、业务派发或Computer Use，原政策保持。
+direct/报告及2秒/5秒周期字段已核对，全部订阅已取消；原轮询取历史结果过多触发内存停止线，原MCP exit1，按保存结果离线核对，不追认整轮资源通过。配置62/209/126、52 callable、74/397；完整目标继续。检查器与初始失败均保留，最后全回归仍141既有坏项。详情见HANDOFF顶部、[任务奖励规则](docs/信息导出/接口/任务/任务奖励规则接口.md)和109批summary。无游戏状态修改、业务派发或Computer Use，原政策保持。
 <!-- batch109-mission-duration-current:end -->
 
 <!-- batch108-mission-scopes-current:start -->
@@ -1991,7 +1991,7 @@ direct/报告及2秒/5秒周期字段已核对，全部订阅已取消；原轮�
 
 新增有界静态地图/国家标签索引与v2投影；M03直接返回省份scope27、区域引用52、国家34、拥有70、属国78、控制ROOT符号2，分类重叠；core仍unknown，所有字段仍partial、不求值。ROOT不代入FRA，静态成员不当当前目标；配置绑定和变化撤回已测试。实际七字段查询/报告、2秒省份与5秒区域周期一致，订阅取消、server0。前后R76/FRA/物理POR/raw56556984保持。
 
-配置仍62/208/127、52 callable、74/397，完整目标继续；最后全回归仍141既有坏项。新hooks4/map7/v2 8/Source13和旧base10定向通过，失败原件/收据更正保留。MCP启动.NET没有逐份内存监控，独立map实测另列，不外推。更多边界及下一步见HANDOFF顶部和[任务目标条件](docs/02-使用与接口/任务/任务目标条件只读接口.md)；无业务派发、日期推进、保存/重载或Computer Use，原政策保持。
+配置仍62/208/127、52 callable、74/397，完整目标继续；最后全回归仍141既有坏项。新hooks4/map7/v2 8/Source13和旧base10定向通过，失败原件/收据更正保留。MCP启动.NET没有逐份内存监控，独立map实测另列，不外推。更多边界及下一步见HANDOFF顶部和[任务目标条件](docs/信息导出/接口/任务/任务目标条件只读接口.md)；无业务派发、日期推进、保存/重载或Computer Use，原政策保持。
 <!-- batch108-mission-scopes-current:end -->
 
 <!-- batch107-cwtools-current:start -->
@@ -1999,13 +1999,13 @@ direct/报告及2秒/5秒周期字段已核对，全部订阅已取消；原轮�
 
 任务服务默认使用固定CWTools CLI解析有效文件；228文件/1422根/4813任务实读，根/任务ID顺序及前置规则语义与旧index一致。M03七字段新增partial静态字面条件引用：当前FRA61任务的区域12、国家/拥有/属国各14条，其他形式仍unknown；不是完整目标或条件求值。实际direct/报告/2秒和5秒周期通过、订阅取消及server0。配置62/208/127、52 callable、74/397；完整目标继续，下一步补常见scope头和动态引用。
 
-CLI兼容警告、decoder与consumer修复、旧116测试执行跨源码变化及MCP子进程监控范围均在HANDOFF顶部与本批summary明确记录，不把局部结果称全套完成。旧全回归仍141坏项，无游戏状态修改、业务派发、日期推进、保存/重载或Computer Use。no-repeat及禁用checkpoint政策保持；接口见[任务目标条件](docs/02-使用与接口/任务/任务目标条件只读接口.md)。
+CLI兼容警告、decoder与consumer修复、旧116测试执行跨源码变化及MCP子进程监控范围均在HANDOFF顶部与本批summary明确记录，不把局部结果称全套完成。旧全回归仍141坏项，无游戏状态修改、业务派发、日期推进、保存/重载或Computer Use。no-repeat及禁用checkpoint政策保持；接口见[任务目标条件](docs/信息导出/接口/任务/任务目标条件只读接口.md)。
 <!-- batch107-cwtools-current:end -->
 
 <!-- batch106-live-interests-current:start -->
 ## 第106批：实时省份核心与宣称
 
-NativeProvinceInterestsSource 已接入 live 服务，province cores/claims保持partial/current；FRA非玩家、物理POR。186实读核心[CHP,FRA]、宣称[BUR,NEV,ORL]，私采严格重放与独立字节审计通过；leaf22、source/capture/service/factory20项定向通过。公开MCP结果与2秒/5秒周期见本批summary，失败检查器用原结果离线处理。country反向仍unknown，永久宣称、期限及完整可知范围等未完成，snapshot来源独立保留。配置仍62/201/134、51 callable、74/397；完整目标/no-repeat/禁用checkpoint政策继续。没有游戏操作或Computer Use，未重跑完整bridge。最新事实与证据限制见HANDOFF顶部及[实时接口](docs/02-使用与接口/贸易与省份/省份核心与宣称实时接口.md)。
+NativeProvinceInterestsSource 已接入 live 服务，province cores/claims保持partial/current；FRA非玩家、物理POR。186实读核心[CHP,FRA]、宣称[BUR,NEV,ORL]，私采严格重放与独立字节审计通过；leaf22、source/capture/service/factory20项定向通过。公开MCP结果与2秒/5秒周期见本批summary，失败检查器用原结果离线处理。country反向仍unknown，永久宣称、期限及完整可知范围等未完成，snapshot来源独立保留。配置仍62/201/134、51 callable、74/397；完整目标/no-repeat/禁用checkpoint政策继续。没有游戏操作或Computer Use，未重跑完整bridge。最新事实与证据限制见HANDOFF顶部及[实时接口](docs/信息导出/接口/贸易与省份/省份核心与宣称实时接口.md)。
 <!-- batch106-live-interests-current:end -->
 
 <!-- batch105-core-type-current:start -->
@@ -2015,13 +2015,13 @@ G01.cores保留原value列表，v2新增显式territorial_core_membership；缺�
 
 FRS/v2正例、FRA/v2隐藏与缺标记、FRA/v1兼容三组实际MCP已核对；FRS报告与direct相同，旧未知不回填，未进行游戏切国。原排序检查器失败与离线修正保留，没有重发查询；14项定向测试通过（新13＋旧factory1）。没有完整bridge重跑，最后仍100批5078p/106f/35e及141既有坏项。
 
-对原存档的省份/有界keyword检查仍没取得永久宣称与期限的直接依据，modifier.permanent不是claim。它们继续未完成，不新增覆盖或伪造空集。本批未操作游戏或RPM，R76身份仅沿用103最后验证记录。完整目标及no-repeat/禁用checkpoint政策继续；下一步优先实时G01来源，详见HANDOFF顶部和[核心与宣称快照接口](docs/02-使用与接口/贸易与省份/省份核心与宣称快照接口.md)。
+对原存档的省份/有界keyword检查仍没取得永久宣称与期限的直接依据，modifier.permanent不是claim。它们继续未完成，不新增覆盖或伪造空集。本批未操作游戏或RPM，R76身份仅沿用103最后验证记录。完整目标及no-repeat/禁用checkpoint政策继续；下一步优先实时G01来源，详见HANDOFF顶部和[核心与宣称快照接口](docs/信息导出/接口/贸易与省份/省份核心与宣称快照接口.md)。
 <!-- batch105-core-type-current:end -->
 
 <!-- batch104-save-interests-current:start -->
 ## 第104批：核心与宣称快照已通过实际Jomini/MCP验证
 
-G01.cores/claims 已为partial，使用固定Jomini源码编译的CLI读取明确存档，按province或country查询；只公开同快照FRA discovered_by正向命中的省份，国家反向列表是可知subset，完整性仍false。历史日期、playerPOR/observerFRA、文件哈希及parser身份单独标注，不伪造live session。永久宣称、期限、任务及战略目标仍未实现。接口见[核心与宣称快照](docs/02-使用与接口/贸易与省份/省份核心与宣称快照接口.md)。
+G01.cores/claims 已为partial，使用固定Jomini源码编译的CLI读取明确存档，按province或country查询；只公开同快照FRA discovered_by正向命中的省份，国家反向列表是可知subset，完整性仍false。历史日期、playerPOR/observerFRA、文件哈希及parser身份单独标注，不伪造live session。永久宣称、期限、任务及战略目标仍未实现。接口见[核心与宣称快照](docs/信息导出/接口/贸易与省份/省份核心与宣称快照接口.md)。
 
 真实CLI读取4941省份，MCP002完成6个对象查询和一份6项报告；known空集、未建立发现证据和不存在的ID分别核对。目录保留5字段，query-only，周期创建缺少session_id而被拒绝。19项接口、4个新增边界及15项旧兼容测试通过；没有完整bridge重跑，最后仍100批5078p/106f/35e及141既有坏项。失败尝试与离线检查器修正保留，MCP未完整采样短命Rust子进程的边界明确记录。
 
@@ -2031,7 +2031,7 @@ G01.cores/claims 已为partial，使用固定Jomini源码编译的CLI读取明�
 <!-- batch103-static-straits-current:start -->
 ## 第103批：静态海峡连接交付
 
-G03.straits 已以 partial 接入查询、报告和2秒/5秒周期，复用有效静态地图及模组配置；全部106条sea边经独立CSV核对，227次省份查询、318次端点/Through观察差异0。只保留连接定义，country_pair未知、其余7字段planned，当前通行条件仍未读取。接口见[静态海峡连接](docs/02-使用与接口/贸易与省份/静态海峡连接只读接口.md)。
+G03.straits 已以 partial 接入查询、报告和2秒/5秒周期，复用有效静态地图及模组配置；全部106条sea边经独立CSV核对，227次省份查询、318次端点/Through观察差异0。只保留连接定义，country_pair未知、其余7字段planned，当前通行条件仍未读取。接口见[静态海峡连接](docs/信息导出/接口/贸易与省份/静态海峡连接只读接口.md)。
 
 MCP的5条直接值与R76报告/两周期分属不同尝试，没有重发直接查询；订阅均取消、server/client exit0，原检查器失败与离线修正保留。共同14条来源pin前后一致，另3个helper只有运行前及稍后的补查匹配，退出瞬间记录缺口保留。G03测试10项通过，旧fixture修正后5项定向测试通过；没有完整bridge重跑，最后仍100批5078p/106f/35e及141既有坏项。
 
@@ -2045,7 +2045,7 @@ T03五字段现均partial，新增collected_value采用原生TRADE_RETENTION货�
 
 一次私采严格重放通过；真实MCP单项/五字段/报告/2秒/5秒交付均返回9.201，订阅取消、服务退出0。MCP没有逐份私有归档/独立重放，不把公开hash数称为backend capture总数。adapter18项、v2 leaf/capture16项通过；未重跑全bridge，最后仍是100批5078p/106f/35e、5200IDs及141既有坏项。
 
-配置62/198/137、49 callable，仍74主题397字段；102未重跑完整discovery统计。当前FRA非玩家、物理POR、R75/raw56556984；本批只有只读RPM，无游戏函数调用、业务派发、推进日期、保存/重载或Computer Use。完整目标和no-repeat/禁用checkpoint政策继续，下一步优先G03静态海峡等可复用来源，仍需完整可知范围、缓存新鲜度与B01–B04。接口见[贸易节点价值](docs/02-使用与接口/贸易与省份/贸易节点价值只读接口.md)，最新细节见HANDOFF顶部。
+配置62/198/137、49 callable，仍74主题397字段；102未重跑完整discovery统计。当前FRA非玩家、物理POR、R75/raw56556984；本批只有只读RPM，无游戏函数调用、业务派发、推进日期、保存/重载或Computer Use。完整目标和no-repeat/禁用checkpoint政策继续，下一步优先G03静态海峡等可复用来源，仍需完整可知范围、缓存新鲜度与B01–B04。接口见[贸易节点价值](docs/信息导出/接口/贸易与省份/贸易节点价值只读接口.md)，最新细节见HANDOFF顶部。
 <!-- batch102-trade-collected-current:end -->
 
 <!-- batch101-trade-value-current:start -->
@@ -2053,7 +2053,7 @@ T03五字段现均partial，新增collected_value采用原生TRADE_RETENTION货�
 
 T03的本地、流入、界面总值及流出方向明细已接入同一source的查询、报告和2秒/5秒周期订阅。香槟实测6.689/6.921/9.201/4.409杜卡特；总值为原生signed32本地＋流入－流出。collected_value仍planned/unknown，四项均partial。CWTools固定版本作用域配置已复用，5项测试通过；完整CWTools解析库和Jomini未接入。
 
-MCP单轮6次实际采集并完成订阅清理，server/client exit0；wrapper查错封装层级造成的原failed收据保留，reconciliation-002用同一原始记录严格重放通过，没有重发。另1次手动采集通过，独立raw审计63项通过。FRA非玩家、物理POR、日期1456.4.12与中心发现位均重新核对；完整UI可见性与缓存新鲜度仍未证明。接口见[贸易节点价值](docs/02-使用与接口/贸易与省份/贸易节点价值只读接口.md)。
+MCP单轮6次实际采集并完成订阅清理，server/client exit0；wrapper查错封装层级造成的原failed收据保留，reconciliation-002用同一原始记录严格重放通过，没有重发。另1次手动采集通过，独立raw审计63项通过。FRA非玩家、物理POR、日期1456.4.12与中心发现位均重新核对；完整UI可见性与缓存新鲜度仍未证明。接口见[贸易节点价值](docs/信息导出/接口/贸易与省份/贸易节点价值只读接口.md)。
 
 定向CWTools 5项、leaf 8项、adapter/capture 23项、注册影响22项通过，另Python3.11路径兼容3项通过。未重跑完整bridge，最后全回归仍是第100批5200IDs/104批、5078p/106f/35e、既有141坏项；不把本次定向通过当作全套已变绿。
 
@@ -2069,7 +2069,7 @@ MCP验收采用002六条加003两条，覆盖直接、报告、2秒及5秒周期
 
 完整74主题397字段及阶段2/3/4、B01–B04继续active；配置62/193/142、48 callable。破产风险仍planned/unknown；当前原生返回不代表已观察UI绘制。没有业务派发或Computer Use；R75升级实际使用了一次既有自动保存/重启/注入流程。历史成功、已派发、未知请求、原final-pass IDs和未闭合ownership均不得重试，禁用35天checkpoint政策继续。
 
-接口见[代偿债务只读报价](docs/04-实现研究/国家与国内/代偿债务只读报价.md)；收尾原件见[summary](work/runtime/information-debt-quote-query-20261101-001/summary.json)、[完整回归独立审计](work/runtime/information-debt-quote-query-20261101-001/independent-full-audit-003/report.json)。本顶部为测试后的人类交接附录，不在本轮测试源码冻结中。
+接口见[代偿债务只读报价](docs/信息导出/实现研究/国家与国内/代偿债务只读报价.md)；收尾原件见[summary](work/runtime/information-debt-quote-query-20261101-001/summary.json)、[完整回归独立审计](work/runtime/information-debt-quote-query-20261101-001/independent-full-audit-003/report.json)。本顶部为测试后的人类交接附录，不在本轮测试源码冻结中。
 <!-- batch100-debt-quote-current:end -->
 
 <!-- batch99-interest-quote-math-current:start -->
@@ -2083,7 +2083,7 @@ MCP验收采用002六条加003两条，覆盖直接、报告、2秒及5秒周期
 
 现有48注册ID和R74 dispatcher没有债务/贷款家族或别名，当前只读响应也没有+70描述、代偿报价及MXCSR。0x165是多家族共用标识，不能单独识别债务动作；family需绑定1CB3BC8等已核对虚表/方法。下一步先补只读入口与所需FP上下文，保留独立执行权限合同，再接守卫采集、公开准入和三种交付。此源码盘点不冒称当前live-query或原生UI的可见范围已验证。
 
-接口见[贷款剩余利息报价模型](docs/04-实现研究/国家与国内/贷款剩余利息报价模型.md)；原件work/runtime/information-debt-interest-quote-20261101-001/summary.json与findings-001.json。公开覆盖仍62/193/142、48 callable；97实际MCP56/157/184、43 callable本批未重测；F03 bankruptcy_risk仍planned/unknown。完整74主题397字段、阶段2/3/4及B01–B04保持active；old120、successful/dispatched/unknown、original-final-pass IDs及未闭合ownership禁重试，禁用35天checkpoint未加载/复制/改名。
+接口见[贷款剩余利息报价模型](docs/信息导出/实现研究/国家与国内/贷款剩余利息报价模型.md)；原件work/runtime/information-debt-interest-quote-20261101-001/summary.json与findings-001.json。公开覆盖仍62/193/142、48 callable；97实际MCP56/157/184、43 callable本批未重测；F03 bankruptcy_risk仍planned/unknown。完整74主题397字段、阶段2/3/4及B01–B04保持active；old120、successful/dispatched/unknown、original-final-pass IDs及未闭合ownership禁重试，禁用35天checkpoint未加载/复制/改名。
 <!-- batch99-interest-quote-math-current:end -->
 
 <!-- batch98-foreign-finance-research-current:start -->
@@ -2095,7 +2095,7 @@ MCP验收采用002六条加003两条，覆盖直接、报告、2秒及5秒周期
 
 生产接口和覆盖未变，F03 bankruptcy_risk仍planned/unknown；配置62/193/142、48 callable。97批实际MCP56/157/184、43 callable本批未重测。2008项97冻结来源与快照重新核对一致，本批没有重新运行完整回归；最后一次仍为97批4957p/106f/35e/2014subtests、5079IDs/102批、141个既有坏项、新增0、whole_suite_passed=false。
 
-研究边界见[外国财政读取后续研究](docs/04-实现研究/国家与国内/外国财政读取后续研究.md)；原件为work/runtime/information-foreign-finance-ui-20261101-001/summary.json与findings-001.json。下一步闭合剩余利息报价的精确数学、日期与独立披露条件，并继续其他计划缺项。完整74主题397字段、阶段2/3/4及B01–B04保持active；旧120、successful/dispatched/unknown、original-final-pass IDs及未闭合ownership禁重试。禁用的35天checkpoint本批未加载、复制或改名，后续禁用政策继续。
+研究边界见[外国财政读取后续研究](docs/信息导出/实现研究/国家与国内/外国财政读取后续研究.md)；原件为work/runtime/information-foreign-finance-ui-20261101-001/summary.json与findings-001.json。下一步闭合剩余利息报价的精确数学、日期与独立披露条件，并继续其他计划缺项。完整74主题397字段、阶段2/3/4及B01–B04保持active；旧120、successful/dispatched/unknown、original-final-pass IDs及未闭合ownership禁重试。禁用的35天checkpoint本批未加载、复制或改名，后续禁用政策继续。
 <!-- batch98-foreign-finance-research-current:end -->
 
 <!-- batch97-war-income-current:start -->
@@ -2111,13 +2111,13 @@ MCP 002 passed，共 8 次 capture；初始 MCP 001 的 1 次失败 capture 保�
 
 本批不重用旧 H1/controller 记录。F03 `bankruptcy_risk` 仍 planned，费用页 callback 仍取物理客户端当前国家。本批以外的成功、已派发、未知请求和未闭合 ownership 继续按 no-repeat 策略处理；禁止回载、复制或改名 35 天 checkpoint。
 
-本批复用 R74 会话 PID `30524` / creation `134379191563681453` / session `30524-1dd6929aa5b7ead`，`date_raw=56556984`（1456.4.12），逻辑观察方 FRA，只进行只读采集；安装目录 `work/runtime/diplomacy-observer-20261031-r74-economic-readonly-001/`。没有重新直接核验 H1/controller；本批未派发业务、写游戏、推进日期、保存/重载、重启/注入或使用 Computer Use。字段边界见[本国战争收入查询](docs/02-使用与接口/战争与战报/本国战争收入查询.md)，收尾材料为 `work/runtime/information-bankruptcy-visibility-20261101-001/summary.json` 与 `findings-001.json`；开发目标保持 active。
+本批复用 R74 会话 PID `30524` / creation `134379191563681453` / session `30524-1dd6929aa5b7ead`，`date_raw=56556984`（1456.4.12），逻辑观察方 FRA，只进行只读采集；安装目录 `work/runtime/diplomacy-observer-20261031-r74-economic-readonly-001/`。没有重新直接核验 H1/controller；本批未派发业务、写游戏、推进日期、保存/重载、重启/注入或使用 Computer Use。字段边界见[本国战争收入查询](docs/信息导出/接口/战争与战报/本国战争收入查询.md)，收尾材料为 `work/runtime/information-bankruptcy-visibility-20261101-001/summary.json` 与 `findings-001.json`；开发目标保持 active。
 <!-- batch97-war-income-current:end -->
 
 <!-- batch96-bankruptcy-forecast-current:start -->
 ## 第96批：破产风险私有模型已实现，外国披露仍待验证
 
-新增bankruptcy_forecast_math、bankruptcy_interest_memory与bankruptcy_forecast_memory。原生警报预测小于12时显示，0使用即将破产文案；1000哨兵与计算得到的1000分别记录。余额会重新计算贷款成本，不能用N01 monthly_balance替换。普通字节核对四个核心函数共1242B，精确保留signed32回绕、整数截零和binary32顺序；日期未建模。见[破产风险读取](docs/04-实现研究/国家与国内/破产风险读取.md)。
+新增bankruptcy_forecast_math、bankruptcy_interest_memory与bankruptcy_forecast_memory。原生警报预测小于12时显示，0使用即将破产文案；1000哨兵与计算得到的1000分别记录。余额会重新计算贷款成本，不能用N01 monthly_balance替换。普通字节核对四个核心函数共1242B，精确保留signed32回绕、整数截零和binary32顺序；日期未建模。见[破产风险读取](docs/信息导出/实现研究/国家与国内/破产风险读取.md)。
 
 私有leaf最多64贷款、1024calls/64KiB、单读1024B；helper仅空processor路径，最多256稀疏项，缓存state1或非空callback返回unknown。节点只读record/next两个8B字段。两遍比较完整输入，合计相同不能掩盖变化；仍不声称原子快照。模型明确依赖SSE RNE/屏蔽异常，未观察native MXCSR，非法float转整数时leaf撤回。publication_admitted始终false；F03 bankruptcy_risk保持planned/unknown，production capture v4/projection4/profilev6和公开字段数均不改。
 
@@ -2133,7 +2133,7 @@ MCP 002 passed，共 8 次 capture；初始 MCP 001 的 1 次失败 capture 保�
 <!-- batch95-foreign-debt-public-current:start -->
 ## 第95批：外国债务本金已接入F03查询、报告和周期订阅
 
-F03仍为五个公开字段，debt投影v4将目标总本金与FRA借给目标国的贷款子集独立准入。总本金采用原生DIPLO_LOANS的signed32逐笔乘1000再累加，公开原值/1000、溢出标记和不含剩余利息说明；不公开目标全部贷款笔数、逐笔列表、未缩放替代总额、指针或私有trace。country-view、FRA非玩家身份、DB/fullref、日期和两遍稳定性继续强制；破产风险仍planned/unknown，配置仍62 available/192 partial/143 planned、48 callable。见[外国债务本金](docs/04-实现研究/国家与国内/外国债务本金读取.md)和[外国经济接口](docs/02-使用与接口/国家与国内/外国经济承受能力查询.md)。
+F03仍为五个公开字段，debt投影v4将目标总本金与FRA借给目标国的贷款子集独立准入。总本金采用原生DIPLO_LOANS的signed32逐笔乘1000再累加，公开原值/1000、溢出标记和不含剩余利息说明；不公开目标全部贷款笔数、逐笔列表、未缩放替代总额、指针或私有trace。country-view、FRA非玩家身份、DB/fullref、日期和两遍稳定性继续强制；破产风险仍planned/unknown，配置仍62 available/192 partial/143 planned、48 callable。见[外国债务本金](docs/信息导出/实现研究/国家与国内/外国债务本金读取.md)和[外国经济接口](docs/信息导出/接口/国家与国内/外国经济承受能力查询.md)。
 
 生产capture为information.foreign_economy_capture.v4、projection4、profilev6，SHA3fbb65eadc9301765896bdde35d84e19f9e93e4b28f54a9820b30d5c2f213626，104203B；45代码守卫+1数据守卫，共16203B每boundary。原生GUI的AI接受理由独立于按钮合法性：新鲜只读selector结合已核对的GUI路径决定公开范围，宿主控制的目标与POR目标仍排除；执行合法性、人情、外交官和冷却不作为读取门槛。v5首次RPM因既有v33的+d0监听器而撤回，失败原件及223项源码快照保留；v6只接受匹配的1167B GUI转发函数、PE头、gamebase全局和保存的原函数指针，不声称验证整个loaded DLL或观察实际UI渲染。旧v1至v5未覆盖。
 
@@ -2149,7 +2149,7 @@ F03仍为五个公开字段，debt投影v4将目标总本金与FRA借给目标�
 <!-- batch94-foreign-debt-principal-current:start -->
 ## 第94批：外国贷款本金私有读取完成，英格兰实采6笔、1055杜卡特
 
-新增foreign_debt_principal_memory.read_state，完整遍历一个目标国的贷款列表，分别计算未缩放本金和外交理由所用的本金×1000整数和，保留signed32 wrap及溢出标记。只读本金，不读贷款方、利率或到期日；最多64节点、32KiB/384calls，前后复核双方fullref、head/count、节点与本金，任何漂移整体unknown。publication_admitted始终false，公开F03、capture v3、projection v3与production profile v4均未改；F03 total_debt仍unknown，法国放贷子集继续保留。见[外国债务本金](docs/04-实现研究/国家与国内/外国债务本金读取.md)。
+新增foreign_debt_principal_memory.read_state，完整遍历一个目标国的贷款列表，分别计算未缩放本金和外交理由所用的本金×1000整数和，保留signed32 wrap及溢出标记。只读本金，不读贷款方、利率或到期日；最多64节点、32KiB/384calls，前后复核双方fullref、head/count、节点与本金，任何漂移整体unknown。publication_admitted始终false，公开F03、capture v3、projection v3与production profile v4均未改；F03 total_debt仍unknown，法国放贷子集继续保留。见[外国债务本金](docs/信息导出/实现研究/国家与国内/外国债务本金读取.md)。
 
 一次新私有RPM采集取得ENG六笔本金172、173、173、179、179、179，合计1055杜卡特，外交缩放整数1055000；双遍稳定、严格saved replay和210项来源前后稳定通过，独立raw审计另存independent-private-audit-001/。研究profile77fd1f09a8e64196f26b9692e6fe307fa41edcac298a5cf9458585d4f21447ff（70791B），40guards/11540B每boundary。不是当前MCP或公开F03总债务交付；本批未启动MCP。
 
@@ -2167,7 +2167,7 @@ summary、发布收据与本顶部文档为full freeze后的附录；原件见wo
 <!-- batch93-observer-subsidies-current:start -->
 ## 第93批：双边补贴关系已接入F03查询、报告和周期交付
 
-F03仍保留原五个公开字段，subsidies投影v3新增FRA参与的双边补贴关系：与上一月实收分别准入、分别保持known/unknown/invisible，一个来源缺失或漂移不撤销另一个来源；父层country-view与FRA非玩家角色仍全局强制。非空关系可提供付款方、收款方、月度名义金额、起始日、年数和显示截止日，日期不决定实际支付或原生活跃状态。公开只保留tag、安全日历、金额/期限与派生信息，完整target active_contracts、当前支付义务、条款合法性和flag28仍unknown。见[外国经济接口](docs/02-使用与接口/国家与国内/外国经济承受能力查询.md)与[双边补贴](docs/02-使用与接口/关系与外交/双边补贴关系读取.md)。
+F03仍保留原五个公开字段，subsidies投影v3新增FRA参与的双边补贴关系：与上一月实收分别准入、分别保持known/unknown/invisible，一个来源缺失或漂移不撤销另一个来源；父层country-view与FRA非玩家角色仍全局强制。非空关系可提供付款方、收款方、月度名义金额、起始日、年数和显示截止日，日期不决定实际支付或原生活跃状态。公开只保留tag、安全日历、金额/期限与派生信息，完整target active_contracts、当前支付义务、条款合法性和flag28仍unknown。见[外国经济接口](docs/信息导出/接口/国家与国内/外国经济承受能力查询.md)与[双边补贴](docs/信息导出/接口/关系与外交/双边补贴关系读取.md)。
 
 生产capture升information.foreign_economy_capture.v3，profile v4为6c6d92a14f4db20931a31c0ff01305f7f04ce6721f600455b8d9908def386196（66917B），39guards/9664B每boundary。旧v1/v2/v3 profiles与旧归档均保留，不用新schema偷偷接纳旧capture。新增observer_subsidies_memory，严格typed permission重放、同reader fresh rebind与双行owner/fullref约束，leaf仍为92批四参接口。17项adapter、22项采集/profile、54项公开source/projection定向通过；原开发失败XML保留。
 
@@ -2185,7 +2185,7 @@ summary、发布收据和本顶部文档是full freeze后的附录，不作为�
 <!-- batch92-bilateral-subsidies-current:start -->
 ## 第92批：双边补贴私有读取与实采完成，公开F03继续接入
 
-新增bilateral_subsidies_memory，读取FRA与指定国家双方登记的同一补贴对象，取得付款方、收款方、月度名义金额、起始日、年数和原生提示所用派生截止日期。先核对双方fullref与owner==country+14f8，再按0x48行步长和owner+108向量检查唯一匹配；只读取选中pair的对象。金额signed i32/1000按月，截止日期保留signed32(start+years*8760)的原生wrap。日期推导不决定实际付款、合法性或生命周期，+28旗标继续unknown。见[双边补贴读取](docs/02-使用与接口/关系与外交/双边补贴关系读取.md)。公开F03与v3生产profile保持第91批合同，subsidies仍只有上一月收到金额；当前协议、支付义务与MCP交付尚需接入。
+新增bilateral_subsidies_memory，读取FRA与指定国家双方登记的同一补贴对象，取得付款方、收款方、月度名义金额、起始日、年数和原生提示所用派生截止日期。先核对双方fullref与owner==country+14f8，再按0x48行步长和owner+108向量检查唯一匹配；只读取选中pair的对象。金额signed i32/1000按月，截止日期保留signed32(start+years*8760)的原生wrap。日期推导不决定实际付款、合法性或生命周期，+28旗标继续unknown。见[双边补贴读取](docs/信息导出/接口/关系与外交/双边补贴关系读取.md)。公开F03与v3生产profile保持第91批合同，subsidies仍只有上一月收到金额；当前协议、支付义务与MCP交付尚需接入。
 
 21项定向测试通过。首轮20p使用了错误步长0x30与截断哨兵0x0029c77f，已在实采前改为0x48与0x029c77f8，新增独立literal字节测试；首轮XML/收据保留且不作为正确布局验收。一次新的FRA–ENG私有采集通过双遍一致性、保存后严格重放与来源稳定检查，结果仅为该pair absent；无非空补贴实采。研究profile为139418482606f6a58e8d7b238c589fc447e4b1f60e14f8efed9cc69106f6f350，39guards/9664B每boundary。原件为work/runtime/information-subsidies-contracts-20261031-001/private-live-001/ENG-receipt.json；独立raw审计另存independent-private-audit-001/，不以producer自校验替代。
 
@@ -2203,7 +2203,7 @@ summary、发布收据与本顶部文档属于full freeze后的附录，不作�
 <!-- batch91-observer-reparations-current:start -->
 ## 第91批：FRA参与的双边赔款关系已接入查询、报告与周期交付
 
-F03仍只有原五字段。reparations公开投影v2使用mixed结构：上月收到金额沿income页准入，observer_involved_contracts按逻辑FRA自身财政国家对独立准入；父层country-view与FRA非玩家角色仍须通过。两个分量分别保留已知或缺项，不互相撤销。只公开双方tag、安全日历日期和派生日期区间，完整target合同、当前支付义务与金额/比例仍unknown。参见[当前接口](docs/02-使用与接口/国家与国内/外国经济承受能力查询.md)和[双边关系](docs/02-使用与接口/战争与战报/双边战争赔款关系读取.md)。
+F03仍只有原五字段。reparations公开投影v2使用mixed结构：上月收到金额沿income页准入，observer_involved_contracts按逻辑FRA自身财政国家对独立准入；父层country-view与FRA非玩家角色仍须通过。两个分量分别保留已知或缺项，不互相撤销。只公开双方tag、安全日历日期和派生日期区间，完整target合同、当前支付义务与金额/比例仍unknown。参见[当前接口](docs/信息导出/接口/国家与国内/外国经济承受能力查询.md)和[双边关系](docs/信息导出/接口/战争与战报/双边战争赔款关系读取.md)。
 
 当前是独立只读R74场景：PID30524，creation134379191563681453，session30524-1dd6929aa5b7ead，POR玩家、FRA controller0、Human1，1456.4.12/raw56556984，保持暂停。安装目录为work/runtime/diplomacy-observer-20261031-r74-economic-readonly-001/，DLL SHA74cd03fc970b499adc5202b033add24197835a68147730e3998ee0dc94fb699e，manifest06e60f75fb9888cdee9d0613d61d5d9935d47e604a40fd999dfd8a2a27eedd7a。此场景不声称恢复了已丢失的旧raw56564448现场；禁止35天检查点未加载、复制或改名，旧PID30548只保留历史意义。
 
@@ -2221,7 +2221,7 @@ MCP receipt原schema为information.foreign_contracts.mcp_acceptance.v1、batch91
 <!-- batch90-bilateral-reparations-current:start -->
 ## 第90批：双边战争赔款私有读取已完成，公共准入继续
 
-新增 `bilateral_reparations_memory.read_state`，按FRA与目标国的完整引用核对两个方向的关系表、唯一匹配项和同一赔款对象，取得付款方、收款方与起止日期。仅观察这一对国家；没有匹配关系不代表目标没有第三国赔款。日期区间包含观察日期是派生结果，实际支付义务、金额/比例和对象+0x28旗标语义仍unknown。该模块尚未接入F03，国家对可见条件、运行时代码守卫、父层双遍采集与实机交付仍需开发。见[双边赔款读取](docs/02-使用与接口/战争与战报/双边战争赔款关系读取.md)。
+新增 `bilateral_reparations_memory.read_state`，按FRA与目标国的完整引用核对两个方向的关系表、唯一匹配项和同一赔款对象，取得付款方、收款方与起止日期。仅观察这一对国家；没有匹配关系不代表目标没有第三国赔款。日期区间包含观察日期是派生结果，实际支付义务、金额/比例和对象+0x28旗标语义仍unknown。该模块尚未接入F03，国家对可见条件、运行时代码守卫、父层双遍采集与实机交付仍需开发。见[双边赔款读取](docs/信息导出/接口/战争与战报/双边战争赔款关系读取.md)。
 
 三段新REA与独立普通PE/Capstone核对确认B23下creator 9b6270、registration a68c40和vector mutator 28d840；普通代码共864B，包含两条验证过的CHAININFO续行。读取器只搜索字节，不调用这些会写状态的函数。债务提示7c2eb0把本金与86b4e0/86b6c0计算项相加，仍需精确重现日期、整数和浮点分支；没有输出近似总债务。破产警报已追到alert_bankrupt的index0登记与文本缓存，触发算法和外国可见性仍未闭合；两个文案key的xref空结果不表示功能不存在。
 
@@ -2267,7 +2267,7 @@ MCP收据见work/runtime/information-foreign-military-quality-20261029-001/mcp-l
 <!-- batch87-foreign-forces-current:start -->
 ## 第87批：外国士兵与船只统计已接入
 
-F02.visible_army与visible_navy由planned提升为partial，分别提供原生外交士兵统计值与船只数，公共projection_version3。陆军另附record_count，不把记录数当作人数。英国50970人/51记录/30船，勃艮第27224/28/11，奥尔良5052/6/0。军力质量继续planned；实际渲染、缓存新鲜度与完整战场视野尚未证明。见[接口](docs/02-使用与接口/国家与国内/外国陆海军统计查询.md)。
+F02.visible_army与visible_navy由planned提升为partial，分别提供原生外交士兵统计值与船只数，公共projection_version3。陆军另附record_count，不把记录数当作人数。英国50970人/51记录/30船，勃艮第27224/28/11，奥尔良5052/6/0。军力质量继续planned；实际渲染、缓存新鲜度与完整战场视野尚未证明。见[接口](docs/信息导出/接口/国家与国内/外国陆海军统计查询.md)。
 
 3份metadata研究与3份production private均保存并严格重放；MCP002查询、报告和2秒/5秒周期通过，周期{'2': 2, '5': 2}，21份原始报告按实际来源散列关联，订阅取消、server0。组合查询验证科技、人力、军力三来源。物理POR、非玩家FRA、raw56564448保持，无切国、推进、保存、游戏重启、注入、业务派发、游戏函数调用或Computer Use。
 
@@ -2278,7 +2278,7 @@ F02.visible_army与visible_navy由planned提升为partial，分别提供原生�
 <!-- batch86-foreign-manpower-current:start -->
 ## 第86批：外国人力与其独立准入条件已接入
 
-F02.manpower由planned提升为partial，提供储备原值、三项原生贡献和合计。visibility分别报告国家查看条件与人力军事统计条件，公共projection_version2。英国2239、勃艮第20395、奥尔良20623；当前三项贡献计数均0，准入走public_options。组件类别、物理人数单位及最终UI文字尚未全部确认，单位保留native_manpower_statistic/scale1。见[接口](docs/02-使用与接口/国家与国内/外国人力查询.md)。
+F02.manpower由planned提升为partial，提供储备原值、三项原生贡献和合计。visibility分别报告国家查看条件与人力军事统计条件，公共projection_version2。英国2239、勃艮第20395、奥尔良20623；当前三项贡献计数均0，准入走public_options。组件类别、物理人数单位及最终UI文字尚未全部确认，单位保留native_manpower_statistic/scale1。见[接口](docs/信息导出/接口/国家与国内/外国人力查询.md)。
 
 三份私有实采及公开采集已保存并严格重放；查询、报告和2秒/5秒周期交付通过，实际周期{'2': 2, '5': 2}，订阅已取消、server0。物理POR、非玩家FRA、raw56564448保持。没有切国、推进、保存、重启、注入、业务派发、游戏函数调用或Computer Use。
 
@@ -2291,7 +2291,7 @@ F02.manpower由planned提升为partial，提供储备原值、三项原生贡献
 
 G02.resource在原有key/icon上新增name子项，公共projection_version4。名称来自同一父层只读采集中的当前语言缓存；不称最终UI文字。名称缺失、动态模板或名称单独变化时保留稳定key/icon，共享身份变化仍全撤回。八字段继续partial，覆盖计数62 available/184 partial/151 planned不变；完整74/397、阶段2/3/4和B01–B04继续，goal active。
 
-实采183的paper为“纸张”；184的grain为“谷物”；236的cloth为“布料”。2000发现位0，八字段unknown且无字段或本地化读取。物理POR、非玩家FRA、raw56564448保持，无切国、推进、保存、重启、注入、业务派发、游戏函数调用或Computer Use。见[接口](docs/02-使用与接口/贸易与省份/省份资源名称查询.md)。
+实采183的paper为“纸张”；184的grain为“谷物”；236的cloth为“布料”。2000发现位0，八字段unknown且无字段或本地化读取。物理POR、非玩家FRA、raw56564448保持，无切国、推进、保存、重启、注入、业务派发、游戏函数调用或Computer Use。见[接口](docs/信息导出/接口/贸易与省份/省份资源名称查询.md)。
 
 保存后的私有报告和公开采集均逐份严格重放；查询、报告及2秒/5秒周期通过，实际周期{'2': 2, '5': 2}、24份MCP采集，取消订阅/server0。首次客户端15秒等待未达周期阈值，最终取消后保存结果已满足；离线核对后接收，未重启或重采。独立审计5724项通过，manual结果副本不计新采集。唯一full为4395 passed / 106 failed / 35 errors / 2014 subtests，Counter141→141，新增0，整套仍非全绿；832选定来源冻结并复核。
 
@@ -2302,7 +2302,7 @@ G02.resource在原有key/icon上新增name子项，公共projection_version4。�
 
 F01.wars由planned提升为partial，提供当前国家敌对关联表中的去重战争数、双方成员及可关联的共享war ID。F01五字段均partial，公共projection_version3；不称全局完整战争枚举，生命周期、角色和领导者仍未证实。完整74/397、阶段2/3/4与B01–B04继续，goal active。
 
-实际FRA关联10行、1场战争；ORL关联同一个共享ID war_1c5b10c9b19ce405_00000007。ENG是另一对象，关联已有registry ID4；POR的0场战争以实际双遍读取为据。双方成员按非玩家FRA逐项准入，未准入者不输出国家标签。具体结果见本批原件与[接口](docs/02-使用与接口/国家与国内/国家发展度与外国实力查询.md)。
+实际FRA关联10行、1场战争；ORL关联同一个共享ID war_1c5b10c9b19ce405_00000007。ENG是另一对象，关联已有registry ID4；POR的0场战争以实际双遍读取为据。双方成员按非玩家FRA逐项准入，未准入者不输出国家标签。具体结果见本批原件与[接口](docs/信息导出/接口/国家与国内/国家发展度与外国实力查询.md)。
 
 公开查询、报告与2秒/5秒周期通过；实际周期{'2': 2, '5': 2}，24份MCP采集，manual结果副本不算新采集。独立审计通过、订阅取消/server0。物理POR、非玩家FRA、raw56564448保持，无保存、重启、注入、推进、切国、业务派发、游戏函数调用或Computer Use。
 
@@ -2317,7 +2317,7 @@ F01.territory新增city_count，提升为partial，只表示原生num_of_cities�
 
 21份城市管道raw逐份重放，另2份战争形状研究原件单独重放，共23份。真实查询、报告及两个周期交付通过，周期{'2': 2, '5': 2}，18份MCP采集；manual结果副本不算新采集，订阅取消/server0。物理POR、非玩家FRA、raw56564448保持，无保存、重启、注入、推进、切国、外交执行、游戏函数调用或Computer Use。
 
-唯一full为4265 passed / 106 failed / 35 errors / 2005 subtests，Counter141→141，新增0，整套仍非全绿。801选定来源冻结并复核；配置62 available/183 partial/152 planned、47 callable，actual live56/147/194、42 callable。见[接口](docs/02-使用与接口/国家与国内/国家发展度与外国实力查询.md)。
+唯一full为4265 passed / 106 failed / 35 errors / 2005 subtests，Counter141→141，新增0，整套仍非全绿。801选定来源冻结并复核；配置62 available/183 partial/152 planned、47 callable，actual live56/147/194、42 callable。见[接口](docs/信息导出/接口/国家与国内/国家发展度与外国实力查询.md)。
 
 <!-- batch83-country-territory-current:end -->
 
@@ -2330,14 +2330,14 @@ F01.development、subject_scale、major_power由planned提升为partial。发展
 
 18份原始capture逐份重放；MCP查询、报告和2秒/5秒周期交付关联通过，实际周期{'2': 2, '5': 1}，取消订阅、server0。原producer在三份采样之后的收据路径错误由离线重放修复，原件保留，未重采；后置pin不冒称前置冻结。
 
-唯一full为4224 passed / 106 failed / 35 errors / 2005 subtests，Counter141→141，新增0；整套仍非全绿。788份选定来源冻结并复核。覆盖62 available/182 partial/153 planned；完整74/397、阶段2/3/4、B01–B04与goal继续。见[接口](docs/02-使用与接口/国家与国内/国家发展度与外国实力查询.md)。
+唯一full为4224 passed / 106 failed / 35 errors / 2005 subtests，Counter141→141，新增0；整套仍非全绿。788份选定来源冻结并复核。覆盖62 available/182 partial/153 planned；完整74/397、阶段2/3/4、B01–B04与goal继续。见[接口](docs/信息导出/接口/国家与国内/国家发展度与外国实力查询.md)。
 
 <!-- batch82-country-scale-current:end -->
 
 <!-- batch81-province-production-current:start -->
 ## 第81批：发展度、资源与贸易中心已接入，G02八字段均为partial
 
-新增development/resource/center_of_trade三字段。发展度是含条件部落分量的有效千分整数；资源提供本地化键和图标索引，未取得译文；贸易中心提供存在、级别、类型和sprite键，空指针为known无中心。实际183为23/paper/内陆2级，184为17/grain/内陆1级，236为20/cloth/沿海2级；185为15/paper/无中心且未读定义。2000八字段unknown且无字段数据读。见[接口说明](docs/02-使用与接口/贸易与省份/省份所有者与控制者查询.md)。
+新增development/resource/center_of_trade三字段。发展度是含条件部落分量的有效千分整数；资源提供本地化键和图标索引，未取得译文；贸易中心提供存在、级别、类型和sprite键，空指针为known无中心。实际183为23/paper/内陆2级，184为17/grain/内陆1级，236为20/cloth/沿海2级；185为15/paper/无中心且未读定义。2000八字段unknown且无字段数据读。见[接口说明](docs/信息导出/接口/贸易与省份/省份所有者与控制者查询.md)。
 
 25份实际raw capture重放，查询、报告及2秒/5秒周期交付关联通过；实际周期{'2': 2, '5': 1}，20份MCP采集，不把manual列表副本算作采集。取消订阅/server0；物理POR、非玩家FRA、raw56564448保持。没有保存、重启、注入、推进、切国、外交执行、游戏函数调用或Computer Use。
 
@@ -2348,7 +2348,7 @@ F01.development、subject_scale、major_power由planned提升为partial。发展
 <!-- batch80-province-details-current:start -->
 ## 第80批：先确认具体读取路径，再接入省份文化、宗教和自治度
 
-G02新增culture/religion/autonomy三字段partial，连同owner/controller支持五字段查询、报告和周期订阅。物理玩家POR、逻辑观察及操控方非玩家FRA不变；按钮权限与信息读取分开，不先假定非玩家没有UI或消息。见[接口说明](docs/02-使用与接口/贸易与省份/省份所有者与控制者查询.md)。
+G02新增culture/religion/autonomy三字段partial，连同owner/controller支持五字段查询、报告和周期订阅。物理玩家POR、逻辑观察及操控方非玩家FRA不变；按钮权限与信息读取分开，不先假定非玩家没有UI或消息。见[接口说明](docs/信息导出/接口/贸易与省份/省份所有者与控制者查询.md)。
 
 实际183文化法兰西、236英格兰，两者宗教天主教/frame1、自治度0；2000发现位0，五字段unknown且无字段数据读。18份raw重放、21组fields关联通过；15份实际MCP capture，2秒2次/5秒1次，取消订阅/server0。未执行游戏函数、保存、重启、注入、推进、切国或Computer Use。
 
@@ -2359,7 +2359,7 @@ G02新增culture/religion/autonomy三字段partial，连同owner/controller支�
 <!-- batch79-province-current:start -->
 ## 第79批：省份所有者与控制者已接入
 
-G02.owner/controller均partial，只对已确认FRA发现位1的省份读取；位0返回unknown且不读字段，不称invisible。183实采FRA/FRA、236 ENG/ENG、2000未知负例通过。物理POR、LLM非玩家FRA不变；不是以背景样式或选中pointer存储判断权限。见[接口说明](docs/02-使用与接口/贸易与省份/省份所有者与控制者查询.md)。
+G02.owner/controller均partial，只对已确认FRA发现位1的省份读取；位0返回unknown且不读字段，不称invisible。183实采FRA/FRA、236 ENG/ENG、2000未知负例通过。物理POR、LLM非玩家FRA不变；不是以背景样式或选中pointer存储判断权限。见[接口说明](docs/信息导出/接口/贸易与省份/省份所有者与控制者查询.md)。
 
 主动/报告及两个周期覆盖3对象，15实际capture归档、18份raw重放及21组公开fields独立审计通过；取消订阅/server0。无保存/重启/注入/推进/切国/外交动作或Computer Use。
 
@@ -2369,7 +2369,7 @@ G02.owner/controller均partial，只对已确认FRA发现位1的省份读取；�
 <!-- batch78-country-person-current:start -->
 ## 第78批：统治者与继承四字段已接入
 
-先确认实际路径，再决定非玩家是否需要其它方案。当前姓名函数有已加载plugin64.dll改写；新读取器正向核验原版或指定插件的代码/回调/返回地址，没有据此推断非玩家普遍缺少UI。S04 ruler/heir/dynasty/personal_union均partial，只接country；完整标签、摄政、联统名单及succession_dispute仍未完成。见[接口说明](docs/02-使用与接口/机制与宗教/统治者与继承信息查询.md)。
+先确认实际路径，再决定非玩家是否需要其它方案。当前姓名函数有已加载plugin64.dll改写；新读取器正向核验原版或指定插件的代码/回调/返回地址，没有据此推断非玩家普遍缺少UI。S04 ruler/heir/dynasty/personal_union均partial，只接country；完整标签、摄政、联统名单及succession_dispute仍未完成。见[接口说明](docs/信息导出/接口/机制与宗教/统治者与继承信息查询.md)。
 
 保持物理POR、LLM非玩家FRA、raw56564448。英国及法国的private003与真实MCP主动/报告/两个周期通过，5份原始MCP capture留存、订阅取消、server0；无切国/时间推进/保存/重启/注入/业务派发或Computer Use。1049案例独立年龄夹具是真实owned执行；先前无原件的533案例说法已撤回。
 
@@ -2379,7 +2379,7 @@ G02.owner/controller均partial，只对已确认FRA发现位1的省份读取；�
 <!-- batch77-country-faith-current:start -->
 ## 第77批：非玩家观察方的主宗教名称
 
-S02.faith已接入当前主宗教缓存名称、原始EU4 escape编码和图标帧请求，均partial。首轮实采拒绝了错误的配置键解释，修正后法国和英国均取得“天主教”/icon1；逻辑观察方仍为非玩家FRA，物理玩家POR，raw56564448不变。查询、报告及2秒/5秒周期交付通过，5份实际MCP capture保留、订阅取消、server0。见[接口说明](docs/02-使用与接口/机制与宗教/非玩家观察方的主宗教查询.md)。
+S02.faith已接入当前主宗教缓存名称、原始EU4 escape编码和图标帧请求，均partial。首轮实采拒绝了错误的配置键解释，修正后法国和英国均取得“天主教”/icon1；逻辑观察方仍为非玩家FRA，物理玩家POR，raw56564448不变。查询、报告及2秒/5秒周期交付通过，5份实际MCP capture保留、订阅取消、server0。见[接口说明](docs/信息导出/接口/机制与宗教/非玩家观察方的主宗教查询.md)。
 
 唯一full为3526 passed/106 failed/35 errors/2005 subtests，相对76批无新增失败，整套仍非全绿；650份选定来源pre-full冻结并复核。覆盖74/397、62 available/167 partial/168 planned、44 callable。完整阶段2/3/4、B01–B04和法国战报新正例继续，goal active。最新身份、失败尝试、独立审查及禁重试规则见HANDOFF顶部。
 <!-- batch77-country-faith-current:end -->
@@ -2387,7 +2387,7 @@ S02.faith已接入当前主宗教缓存名称、原始EU4 escape编码和图标�
 <!-- batch76-foreign-technology-current:start -->
 ## 第76批：外国军事科技查询与观察方准入已接通
 
-F02新增military_technology和该字段的visibility，均partial；原生国家查看条件按非玩家FRA绑定重索引，父级单独确认Human1/FRA controller0，不要求逻辑观察方等于物理玩家。ENG数据不会借FRA值改标签，也不把投影当实际UI。见[接口说明](docs/04-实现研究/国家与国内/外国军事科技与观察方准入.md)。
+F02新增military_technology和该字段的visibility，均partial；原生国家查看条件按非玩家FRA绑定重索引，父级单独确认Human1/FRA controller0，不要求逻辑观察方等于物理玩家。ENG数据不会借FRA值改标签，也不把投影当实际UI。见[接口说明](docs/信息导出/实现研究/国家与国内/外国军事科技与观察方准入.md)。
 
 实际v33/PID30548/session30548-1dd66f8c50752e2保持POR玩家、FRA AI、raw56564448。读取ENG槽46、科技4/raw04000000，FRA准入位图分支允许；source的ROM/profile/日期/两遍及原始trace核验通过。真实MCP主动、报告、2秒两次/5秒一次交付字段一致，5份实际capture归档，订阅取消、server0。首个开发probe因特殊`---`条目被误拒，修正解析器后成功；原件保留。没有切国、保存、重启、注入、日期推进、业务派发或Computer Use。
 
@@ -2397,7 +2397,7 @@ F02新增military_technology和该字段的visibility，均partial；原生国�
 <!-- batch75-battle-control-text-current:start -->
 ## 第75批：技能和将领图标的帧请求已接通
 
-B04查询、报告和事件投影新增固定1.37.4转换请求，wire4–7的projection_version为13；原始输入、重复项、未知值与实际UI边界均保留。基础GFX声明不等于运行时图标；full_display_complete仍false。见[接口说明](docs/04-实现研究/战报/战报技能与将领图标帧请求.md)。
+B04查询、报告和事件投影新增固定1.37.4转换请求，wire4–7的projection_version为13；原始输入、重复项、未知值与实际UI边界均保留。基础GFX声明不等于运行时图标；full_display_complete仍false。见[接口说明](docs/信息导出/实现研究/战报/战报技能与将领图标帧请求.md)。
 
 解析35项、owned CRT36案例及两项记录数据集成通过，前述失败尝试保留。真实recorded MCP两case的查询/报告/后台事件一致，订阅已取消、server均exit0；13条历史v7记录共128请求，不是法国新正例。唯一full为3344passed/106failed/35errors/2005subtests，无新增失败，整套仍非全绿。611来源已pre-full冻结并在结束后复核；另一个漏纳入的测试只在during-full补存、结束后匹配，不称pre-full。全部shell handles收齐。
 
@@ -2409,7 +2409,7 @@ B04查询、报告和事件投影新增固定1.37.4转换请求，wire4–7的pr
 <!-- batch74-battle-event-context-current:start -->
 ## 第74批：同事件定义与文字上下文已实采
 
-v33/wire7在同场战斗结束、记录封存前复制消息定义及本地化缓存，扩展失败时保留原v6记录；公开查询仍只接纳FRA直接参战记录。新增部分不调用游戏函数，不把模板或按钮缓存冒充已显示的完整正文。详见[接口说明](docs/04-实现研究/战报/战报同事件定义与文字上下文.md)。
+v33/wire7在同场战斗结束、记录封存前复制消息定义及本地化缓存，扩展失败时保留原v6记录；公开查询仍只接纳FRA直接参战记录。新增部分不调用游戏函数，不把模板或按钮缓存冒充已显示的完整正文。详见[接口说明](docs/信息导出/实现研究/战报/战报同事件定义与文字上下文.md)。
 
 当前v33-001/PID30548、creation134376782534496994、session30548-1dd66f8c50752e2，125份原生来源；玩家POR1、LLM非玩家FRA0、Human1、raw56564448并暂停。新窗口只推进一次35天，取得12陆1海13场及13份known上下文，FRA/POR均未参战；法国同服务正例验收保留failed，不重跑碰样本。source disabled/unowned、无active订阅、server0；模块/patch/unwind仍留到进程退出。当前身份、HASH及已完成请求的禁重试规则以HANDOFF顶部为准，旧v32安装不再控制游戏。
 
@@ -2427,7 +2427,7 @@ full002为3307passed/106failed/35errors/2005subtests，无新增失败，603份�
 
 candidate参数构建新增基于实际type2值的长度计划，13项纯CPP测试通过，不重放旧59B leaf、不调用游戏formatter。读取器定向14项+6subtests通过；full002为3266passed/106failed/35errors/1965subtests，较72无新增失败，既有失败未解决。457份来源冻结并在结束后复核；001/002及失败收据分别保留，无root shell仍运行。
 
-文档见[战报正文与结果框组成](docs/04-实现研究/战报/战报正文与结果框组成.md)，原件为`work/runtime/information-battle-body-source-20261028-001/`。下一步继续同事件绑定、各控件、完整正文/布局/可见性与法国新正例；不写共享definition、不切FRA为玩家、不重播旧窗口。覆盖仍62 available/164 partial/171 planned，74主题397字段及完整阶段2/3/4与B01–B04目标不变，goal active。历史业务、原120批及r71两次切国等禁重试规则见HANDOFF最新顶部。
+文档见[战报正文与结果框组成](docs/信息导出/实现研究/战报/战报正文与结果框组成.md)，原件为`work/runtime/information-battle-body-source-20261028-001/`。下一步继续同事件绑定、各控件、完整正文/布局/可见性与法国新正例；不写共享definition、不切FRA为玩家、不重播旧窗口。覆盖仍62 available/164 partial/171 planned，74主题397字段及完整阶段2/3/4与B01–B04目标不变，goal active。历史业务、原120批及r71两次切国等禁重试规则见HANDOFF最新顶部。
 <!-- batch73-battle-body-source-current:end -->
 
 <!-- batch72-passive-gate-trace-current:start -->
@@ -2445,7 +2445,7 @@ v32继承v30 wire6/title-query，只加private EU4-BATTLE-GATE-TRACE/1 sidecar�
 
 采集已disabled，native captured/trace均11、零busy/full/foreign/copy/guard/drop，journal completed-disabled/unowned，无active subscription，server0。原生patch/unwind和模块仍按设计保留到进程退出；不能称disable已unmap。既有v30 owned-output title helper调用/销毁各11次，trace本身不额外调用游戏函数。本批没有新切国、业务提交/回应、保存请求或Computer Use。
 
-原件见`work/runtime/information-battle-gate-trace-20261028-001/`，核心为development-summary-001、live-001/gate-trace-join-001、independent-live-audit-001、snapshot-receipt-001和source-post-run-verification-001。7份native文件快照与3份SQLite只读backup已封存；control-probe仅取初始stat的完整LF前缀，随后69B不在快照。详见[玩家与LLM的战报路径](docs/04-实现研究/战报/玩家国家与LLM观察方的战报路径.md)。
+原件见`work/runtime/information-battle-gate-trace-20261028-001/`，核心为development-summary-001、live-001/gate-trace-join-001、independent-live-audit-001、snapshot-receipt-001和source-post-run-verification-001。7份native文件快照与3份SQLite只读backup已封存；control-probe仅取初始stat的完整LF前缀，随后69B不在快照。详见[玩家与LLM的战报路径](docs/信息导出/实现研究/战报/玩家国家与LLM观察方的战报路径.md)。
 
 仍需完整B04正文/按钮/布局/可见性及法国专属正例，不为该接口再把FRA设为玩家，也不重放本窗口碰样本。后续信息来源设计必须保持非玩家LLM角色。覆盖仍74主题397字段、62 available/164 partial/171 planned，完整阶段2/3/4及B01–B04原目标不变，goal active。全部历史successful/dispatched/unknown、原final-pass IDs、未闭合业务ownership及原120项继续禁重试，尤其SIE→FRA military_access proposal1、r70_country_money_001_outbound及r71两个切国成功请求。
 
@@ -2465,7 +2465,7 @@ v32继承v30 wire6/title-query，只加private EU4-BATTLE-GATE-TRACE/1 sidecar�
 
 首轮full001为3228 passed、106 failed、35 errors、1938 subtests，与70批无新增失败。错误路线Python增量撤回后，312份选定来源已通过结束复核。覆盖仍74主题397字段、62 available/164 partial/171 planned，完整阶段2/3/4与goal active。
 
-64批原件已确认玩家POR时仍能采集并持久交付非玩家FRA直接参战海战：11条完整记录中只有sequence6含FRA，具有58项formatter输入。不能把编号6写成6场法国事件；Line1未捕获也不能推断AI国没有消息。UI分派/正文的具体断点尚待逐场被动取证，见[战报路径说明](docs/04-实现研究/战报/玩家国家与LLM观察方的战报路径.md)。
+64批原件已确认玩家POR时仍能采集并持久交付非玩家FRA直接参战海战：11条完整记录中只有sequence6含FRA，具有58项formatter输入。不能把编号6写成6场法国事件；Line1未捕获也不能推断AI国没有消息。UI分派/正文的具体断点尚待逐场被动取证，见[战报路径说明](docs/信息导出/实现研究/战报/玩家国家与LLM观察方的战报路径.md)。
 
 下一步复用既有POR玩家/FRA观察方的真实自然战斗证据，区分战斗数据生成、消息资格/分派、popup及Line1构造。历史原件不能倒推出每场战斗未记录的gate条件。仅在确认具体缺口后决定补取何种被动证据或改用其他来源；不重复原窗口碰运气、不切玩家。历史120项、successful/dispatched/unknown业务、原final-pass IDs及未闭合ownership继续禁重试，尤其SIE→FRA military_access proposal1与r70_country_money_001_outbound。
 <!-- batch71-battle-recipient-current:end -->
@@ -2481,7 +2481,7 @@ R03 rivals 已接通只读查询与周期采样；字段只表示所选国家主
 
 相邻B04工作仅补充静态control contract、formatter输入contract与owned constructor-leaf fixture 003。fixture通过65项检查：固定59B constructor leaf在自有进程调用1次，104B逐字节匹配，RW→RX与VirtualFree均通过。该结果只覆盖fixture；真实EU4 formatter、战报正文与可见范围仍未验收，B04保持未完成。
 
-接口见[本国主动宿敌只读接口](docs/02-使用与接口/关系与外交/本国主动指定宿敌只读接口.md)。
+接口见[本国主动宿敌只读接口](docs/信息导出/接口/关系与外交/本国主动指定宿敌只读接口.md)。
 <!-- batch70-country-rivals-summary:end -->
 
 <!-- batch69-military-resources-summary:start -->
@@ -2499,7 +2499,7 @@ N02 已接通 sailors 与 force_limits 的主动查询和后台周期报告。FR
 
 本批无新保存、日期推进、外交业务或Computer Use；恢复复用了原119份来源及同一DLL。live003使用新会话的独立RPM参考，旧会话原件保留。候选探针曾在OpenProcess前因pin错误退出，其临时失败收据被误删，原字节未恢复；保留事后说明，修正后只执行一次实际候选RPM。历史successful/dispatched/unknown、原final-pass IDs、未闭合ownership及原120-action batch继续禁重试，尤其SIE→FRA military access proposal1和r70_country_money_001_outbound；61批比较JSON原件仍未恢复。
 
-接口见[本国水手与军队上限](docs/02-使用与接口/国家与国内/本国水手与军队上限只读接口.md)，原件见[第69批摘要](work/runtime/information-country-force-resources-20261027-001/development-summary-001.json)。下一步继续完整战报文字、可见性及计划其余来源。
+接口见[本国水手与军队上限](docs/信息导出/接口/国家与国内/本国水手与军队上限只读接口.md)，原件见[第69批摘要](work/runtime/information-country-force-resources-20261027-001/development-summary-001.json)。下一步继续完整战报文字、可见性及计划其余来源。
 独立离线审计002通过26项检查并核对91份输入；主动/周期内部采集只保留各自摘要hash，不能用显式样本逐字节还原。审计001首次失败收据曾被改写，现为按原已知SHA重建的历史件，未保留首次文件；以[审计002](work/runtime/information-country-force-resources-20261027-001/live-independent-audit-002.json)为独立实机核对，事件见[收据说明](work/runtime/information-country-force-resources-20261027-001/live-independent-audit-receipt-incident-001.json)。
 
 <!-- batch69-military-resources-summary:end -->
@@ -2517,7 +2517,7 @@ N02 已接通 army_size、navy_size、army_composition、navy_composition，通�
 
 本批无保存、重启、安装、日期推进、外交业务或Computer Use。复用《开发过程自动化.md》的后台启动和成就提示确认，不重做成熟保存/载入基础验收。历史successful/dispatched/unknown、原final-pass IDs、未闭合ownership及原120-action batch继续禁重试，尤其SIE→FRA military access proposal1和r70_country_money_001_outbound；61批比较JSON原件仍未恢复。
 
-调用见[本国现存军队](docs/02-使用与接口/国家与国内/本国现存军队只读接口.md)，原件见[第68批摘要](work/runtime/information-country-forces-20261027-001/development-summary-001.json)。下一步继续剩余军力语义、完整战报文字和可见性及计划其余字段。
+调用见[本国现存军队](docs/信息导出/接口/国家与国内/本国现存军队只读接口.md)，原件见[第68批摘要](work/runtime/information-country-forces-20261027-001/development-summary-001.json)。下一步继续剩余军力语义、完整战报文字和可见性及计划其余字段。
 <!-- batch68-country-forces-summary:end -->
 
 <!-- batch67-war-participants-summary:start -->
@@ -2537,7 +2537,7 @@ W01 已接通原生两侧国家向量：直接读取本次国家对发现的战�
 
 N02追到Declare War敌我兵力展示，但record+28单位及active/deployed语义仍未闭合，不升级字段。战报静态路径存在同步窗口填充分支，不能把Line1缺失归因于等待不足；真实正文与可见性继续研究。既有回归债审计未发现当前信息服务测试失败；hot-reload没有独立测试节点，不据此宣称验收完成。
 
-调用见[战争参战名单](docs/02-使用与接口/战争与战报/战争参战名单只读接口.md)，原件与审计见[第67批摘要](work/runtime/information-war-context-forces-20261027-001/development-summary-001.json)。历史successful/dispatched/unknown、原final-pass IDs、未闭合ownership及原120-action batch继续禁重试，尤其SIE→FRA military access proposal1和r70_country_money_001_outbound。61批比较JSON精确原件仍未恢复，不宣称旧61归档整体通过。
+调用见[战争参战名单](docs/信息导出/接口/战争与战报/战争参战名单只读接口.md)，原件与审计见[第67批摘要](work/runtime/information-war-context-forces-20261027-001/development-summary-001.json)。历史successful/dispatched/unknown、原final-pass IDs、未闭合ownership及原120-action batch继续禁重试，尤其SIE→FRA military access proposal1和r70_country_money_001_outbound。61批比较JSON精确原件仍未恢复，不宣称旧61归档整体通过。
 <!-- batch67-war-participants-summary:end -->
 
 <!-- batch66-war-score-summary:start -->
@@ -2555,7 +2555,7 @@ N02 仅增加721字节的普通静态审计：RVA [ee5430,ee5701)，+d18链接�
 
 继续复用 v30-003：PID36432、creation134375780666987441、session36432-1dd660f811253b1，EXE1.37.4 SHA b23fa0e1f698d31b01cdd1c3817a675805d8c6286cb66f9c231e6e2a42544d77、DLL SHA 3d9e1fea9d8f34297a4a20646ea0b45d7d0f6a4af11cef6411586dd8b3264964、118 native sources、wire6。采集disabled、累计11记录，journal completed-disabled/unowned；补丁与展开资源仍随进程存在。本批无日期推进、保存、重启、安装、外交业务或Computer Use。成熟保存、后台启动和成就提示关闭继续复用《开发过程自动化.md》。
 
-接口见[战争分数只读接口](docs/02-使用与接口/战争与战报/战争分数只读接口.md)，原件与审计见[第66批摘要](work/runtime/information-war-score-20261027-001/development-summary-001.json)。旧65批324件归档保持原哈希。历史successful/dispatched/unknown、原final-pass IDs、未闭合ownership及原120-action batch继续禁重试，尤其SIE→FRA military access proposal1和r70_country_money_001_outbound。61批比较JSON精确原件仍未恢复，不宣称旧61归档整体通过。
+接口见[战争分数只读接口](docs/信息导出/接口/战争与战报/战争分数只读接口.md)，原件与审计见[第66批摘要](work/runtime/information-war-score-20261027-001/development-summary-001.json)。旧65批324件归档保持原哈希。历史successful/dispatched/unknown、原final-pass IDs、未闭合ownership及原120-action batch继续禁重试，尤其SIE→FRA military access proposal1和r70_country_money_001_outbound。61批比较JSON精确原件仍未恢复，不宣称旧61归档整体通过。
 <!-- batch66-war-score-summary:end -->
 
 <!-- batch65-war-discovery-summary:start -->
@@ -2573,7 +2573,7 @@ P04后果总览/领土变化、P05包围网候选已接通既有公开peace_cons
 
 战报正文继续单列静态研究；Line1真实样本、metadata、完整展示与可见范围仍未完成，不因定位到函数或候选标题而升级为完整B04。现有保存、后台启动和成就提示确认入口继续复用《开发过程自动化.md》，不安排基础功能复测。
 
-接口见[战争发现与议和信息](docs/02-使用与接口/战争与战报/战争发现与议和信息接口.md)，原件与独立审计见[第65批摘要](work/runtime/information-war-discovery-20261027-001/development-summary-001.json)。历史successful/dispatched/unknown、原final-pass IDs、未闭合ownership及原120-action batch继续禁重试，尤其SIE→FRA military access proposal1和r70_country_money_001_outbound。61批比较JSON精确原件仍未恢复，不宣称其旧archive整体通过。
+接口见[战争发现与议和信息](docs/信息导出/接口/战争与战报/战争发现与议和信息接口.md)，原件与独立审计见[第65批摘要](work/runtime/information-war-discovery-20261027-001/development-summary-001.json)。历史successful/dispatched/unknown、原final-pass IDs、未闭合ownership及原120-action batch继续禁重试，尤其SIE→FRA military access proposal1和r70_country_money_001_outbound。61批比较JSON精确原件仍未恢复，不宣称其旧archive整体通过。
 <!-- batch65-war-discovery-summary:end -->
 
 <!-- batch64-autonomous-live-summary:start -->
@@ -2593,7 +2593,7 @@ P05.overextension 已补入 peace_consequences.overextension 路径，保留旧�
 
 旧62批447件和63批540件全部哈希匹配；新夹具125/126误写旧stage后仅移动了这些新增文件，原报告字节及路径映射保留。61批比较JSON原件仍未恢复。历史successful/dispatched/unknown、原final-pass IDs、未闭合ownership及原120-action batch继续禁重试，尤其SIE→FRA military access proposal1和r70_country_money_001_outbound。
 
-收据见[第64批摘要](work/runtime/information-battle-autonomous-live-20261027-001/development-summary-001.json)；调用见[战报订阅采集管理](docs/02-使用与接口/战报订阅采集管理.md)。下一步继续完整窗口文字、可见性和计划其余字段；W01战争发现的复数列表与单数字段路径缺口尚未修复。
+收据见[第64批摘要](work/runtime/information-battle-autonomous-live-20261027-001/development-summary-001.json)；调用见[战报订阅采集管理](docs/信息导出/接口/战报订阅采集管理.md)。下一步继续完整窗口文字、可见性和计划其余字段；W01战争发现的复数列表与单数字段路径缺口尚未修复。
 <!-- batch64-autonomous-live-summary:end -->
 
 <!-- batch63-capture-management-summary:start -->
@@ -2611,7 +2611,7 @@ P05.overextension 已补入 peace_consequences.overextension 路径，保留旧�
 
 本批未保存、重启、重新注入或使用 Computer Use。成就提示已有《开发过程自动化.md》第4节的原生确认及 WM_CHAR 小写 c 入口；当前已载入，不重复发送。历史成功/已派发/unknown、原final-pass IDs、未闭合ownership和原120-action batch继续禁重试，尤其 SIE→FRA military access proposal1 与 r70_country_money_001_outbound。第61批比较JSON误覆盖事件仍按第62批说明保留，未声称原件恢复。
 
-调用见[战报订阅采集管理](docs/02-使用与接口/战报订阅采集管理.md)，收据见[第63批摘要](work/runtime/information-battle-capture-management-20261027-001/development-summary-001.json)。
+调用见[战报订阅采集管理](docs/信息导出/接口/战报订阅采集管理.md)，收据见[第63批摘要](work/runtime/information-battle-capture-management-20261027-001/development-summary-001.json)。
 <!-- batch63-capture-management-summary:end -->
 
 <!-- batch62-native-title-summary:start -->
@@ -2647,13 +2647,13 @@ v29/wire6已安装并完成一次35天自然观察：raw56559408→56560248，16
 
 换版本前直接复用成熟checkpoint保存一次：llm_diplomacy_information_v29_checkpoint_20261027_001.eu4（43310139B、SHA5eed95e26e353b49aa4d7dbfeb6851080526a4d1b3559634657360037dc23865），三个autosave恢复。后台启动和原生确认完成载入，新DLL只安装一次；不安排基础保存或专门重载验收，不因锁屏截图要求解锁。实际锁屏全过程启动未另作专项验收，不能把后台运行证据改称该专项已通过。
 
-归档入口work/runtime/information-battle-native-observer-20261027-001/development-summary-001.json，接口说明见[原生文本读取与传输](docs/04-实现研究/战报/战报原生文本读取与传输.md)。下一步取得真实消息/Line1候选并继续标题和完整窗口。历史successful/dispatched/unknown、原final-pass IDs、未闭合ownership及原120-action batch继续禁重试，尤其SIE→FRA military access proposal1及r70_country_money_001_outbound。
+归档入口work/runtime/information-battle-native-observer-20261027-001/development-summary-001.json，接口说明见[原生文本读取与传输](docs/信息导出/实现研究/战报/战报原生文本读取与传输.md)。下一步取得真实消息/Line1候选并继续标题和完整窗口。历史successful/dispatched/unknown、原final-pass IDs、未闭合ownership及原120-action batch继续禁重试，尤其SIE→FRA military access proposal1及r70_country_money_001_outbound。
 <!-- batch61-native-observer-summary:end -->
 
 <!-- batch60-native-text-summary:start -->
 ## 第六十批：原生战报文字的复制、传输与公开消费
 
-已实现owned-native-text双遍复制/冲突撤回、IBOW.v6/NTXT封装和B04.details.native_text投影，保留四类文字的来源、原始字节及知识态。新增两个REA函数证据；Line1入口自有RX trampoline与ABI测试通过。20条真实旧v5载荷兼容回放通过。C++合成Reader→复制/合并→v6编码→recorded MCP查询/报告/事件交付完成；文字是synthetic fixture，不能称为实机文字采集。详见[原生文本读取与传输](docs/04-实现研究/战报/战报原生文本读取与传输.md)。
+已实现owned-native-text双遍复制/冲突撤回、IBOW.v6/NTXT封装和B04.details.native_text投影，保留四类文字的来源、原始字节及知识态。新增两个REA函数证据；Line1入口自有RX trampoline与ABI测试通过。20条真实旧v5载荷兼容回放通过。C++合成Reader→复制/合并→v6编码→recorded MCP查询/报告/事件交付完成；文字是synthetic fixture，不能称为实机文字采集。详见[原生文本读取与传输](docs/信息导出/实现研究/战报/战报原生文本读取与传输.md)。
 
 完整回归3012 passed、106 failed、35 errors，另1900子测试通过；新增5项全通过，新增失败节点0。覆盖表未改，仍74主题397字段、配置60/159/178；完整阶段2/3/4、LLM自主订阅和完整B01–B04继续，goal active。
 
@@ -2665,7 +2665,7 @@ v29/wire6已安装并完成一次35天自然观察：raw56559408→56560248，16
 <!-- batch59-diplomat-favor-summary:start -->
 ## 第五十九批：外交官与获取人情任务
 
-已接通N05.diplomat_tasks与R05.favor_tasks，均partial、complete=false。FRA当前4个实例、2个空闲，0号在BUR建立间谍网，1号指向ORL且任务类型未知；FRA→BUR获取人情任务未激活。原始日期不作为预计返回日，实例数量不作为总容量。查询、报告及周期交付与独立原始读取对照通过，调用见[外交官与人情任务接口](docs/02-使用与接口/任务/外交官与人情任务只读接口.md)。
+已接通N05.diplomat_tasks与R05.favor_tasks，均partial、complete=false。FRA当前4个实例、2个空闲，0号在BUR建立间谍网，1号指向ORL且任务类型未知；FRA→BUR获取人情任务未激活。原始日期不作为预计返回日，实例数量不作为总容量。查询、报告及周期交付与独立原始读取对照通过，调用见[外交官与人情任务接口](docs/信息导出/接口/任务/外交官与人情任务只读接口.md)。
 
 完整回归3007 passed、106 failed、35 errors，另1900子测试通过；新增失败节点0，既有失败/错误141次、128节点。配置{'available': 60, 'partial': 159, 'planned': 178}，实机{'available': 60, 'partial': 126, 'planned': 211}，均74主题397字段。完整阶段2/3/4、LLM自主订阅及完整B01–B04继续，goal active。
 
@@ -2679,7 +2679,7 @@ v29/wire6已安装并完成一次35天自然观察：raw56559408→56560248，16
 <!-- batch58-trade-transfer-summary:start -->
 ## 第五十八批：贸易权转移关系
 
-T05.transfer 已接通 FRA 的国家全表与指定贸易节点查询。波尔多节点当前有来自 AUV 的转入记录：raw9958、scale1000，即9.958点贸易权；TO列表为空。全部80个节点已与独立原始读取逐项核对，保留TO/FROM方向、正负原值和真实空集合；商人引导方向仍为planned，转移记录不作为节点价值流量或贸易收入。接口保持partial、complete=false，调用见[贸易权转移只读接口](docs/02-使用与接口/贸易与省份/贸易权转移只读接口.md)。
+T05.transfer 已接通 FRA 的国家全表与指定贸易节点查询。波尔多节点当前有来自 AUV 的转入记录：raw9958、scale1000，即9.958点贸易权；TO列表为空。全部80个节点已与独立原始读取逐项核对，保留TO/FROM方向、正负原值和真实空集合；商人引导方向仍为planned，转移记录不作为节点价值流量或贸易收入。接口保持partial、complete=false，调用见[贸易权转移只读接口](docs/信息导出/接口/贸易与省份/贸易权转移只读接口.md)。
 
 真实MCP的国家/节点、T05混合字段与T04来源、报告及1条两秒周期交付共9项检查通过；订阅已取消、无活动订阅、服务exit0。正式full001为2983 passed、106 failed、35 errors，另1900个子测试通过；新增6项全通过，新增/解决失败节点均0，既有失败错误仍141次、128节点。配置覆盖60/157/180，实机目录60/124/213（static on、mission/battle off），均74主题397字段；完整阶段2/3/4、LLM自主订阅和完整B01–B04继续，goal active。
 
@@ -2689,7 +2689,7 @@ T05.transfer 已接通 FRA 的国家全表与指定贸易节点查询。波尔�
 <!-- batch57-war-identity-summary:start -->
 ## 第五十七批：战报与外交查询共用战争编号
 
-已接通 B01.war_id：法国参与的多国战斗（结果代表 SAV/FLA，原始序列9）返回 `war_412ee732430b7c99_00000003`，与 FRA→FLA 当前战争查询中的编号一致。编号仅在当前 observer session 内有效；跨存档、原生对象代际及完整 B01–B04 仍未完成。实机查询、报告及1条事件交付通过；订阅已取消、无活动订阅、服务exit0。调用见[战报战争编号接口](docs/02-使用与接口/战争与战报/战报战争编号接口.md)。
+已接通 B01.war_id：法国参与的多国战斗（结果代表 SAV/FLA，原始序列9）返回 `war_412ee732430b7c99_00000003`，与 FRA→FLA 当前战争查询中的编号一致。编号仅在当前 observer session 内有效；跨存档、原生对象代际及完整 B01–B04 仍未完成。实机查询、报告及1条事件交付通过；订阅已取消、无活动订阅、服务exit0。调用见[战报战争编号接口](docs/信息导出/接口/战争与战报/战报战争编号接口.md)。
 
 正式全回归一次：2977 passed、106 failed、35 errors，另1900个子测试通过；新增13项测试全通过，无新增或解决的失败节点。既有失败/错误仍为141次、128节点。配置覆盖60/156/181，实机目录54/143/200，均为74主题397字段；两组统计按实际启用的来源分别记录。完整阶段2/3/4、LLM自主订阅及完整B01–B04继续，goal active。
 
@@ -2709,7 +2709,7 @@ R01 国家网络合同覆盖 6 类关系，国家对合同保留 9 类；默认�
 
 运行身份为 session `31460-1dd653f69242d7b`、game_date `56557728`、observer `FRA`；live receipt 的 read_only=True、business_actions_submitted=0。本批不保存、不重启、不推进日期，不提交外交业务。
 
-调用见[保证与军事访问关系网接口](docs/02-使用与接口/关系与外交/保证与军事访问关系网接口.md)。
+调用见[保证与军事访问关系网接口](docs/信息导出/接口/关系与外交/保证与军事访问关系网接口.md)。
 <!-- batch56-directed-relations-summary:end -->
 
 <!-- batch55-relation-remaining-summary:start -->
@@ -2725,7 +2725,7 @@ R01 国家对支持 9 类关系，FRA 国家网络支持 4 类；默认国家对
 
 当前 session `31460-1dd653f69242d7b`、game_date `56557728`、observer `FRA`，其余运行身份与 1.37.4 EXE 绑定沿用 live receipt；本批保持只读，不保存、重启、推进日期或提交外交业务。
 
-调用见[驻港权与贸易联盟接口](docs/02-使用与接口/贸易与省份/驻港权与贸易联盟接口.md)。
+调用见[驻港权与贸易联盟接口](docs/信息导出/接口/贸易与省份/驻港权与贸易联盟接口.md)。
 <!-- batch55-relation-remaining-summary:end -->
 
 <!-- batch54-relation-network-summary:start -->
@@ -2739,7 +2739,7 @@ R01 国家对支持 9 类关系，FRA 国家网络支持 4 类；默认国家对
 
 来源结论选用 `work/runtime/information-relation-current-20261027-001/independent-network-expected-003.json`、`work/runtime/information-relation-current-20261027-001/raw-comparison-002.json` 和 `work/runtime/information-relation-current-20261027-001/memory-live-replay-001.json`；首份 raw/reference 错件保留为历史，修正版 reference 与 production replay 通过离线校正/回放验收，不把旧失败文件或 action/legality/pending 状态当成当前关系。
 
-调用见[联盟与联姻关系网接口](docs/02-使用与接口/关系与外交/联盟与联姻关系网接口.md)。
+调用见[联盟与联姻关系网接口](docs/信息导出/接口/关系与外交/联盟与联姻关系网接口.md)。
 <!-- batch54-relation-network-summary:end -->
 
 ## 2026-10-27 第五十三批关系状态与修正文本（历史）
@@ -2752,61 +2752,61 @@ R01 国家对支持 9 类关系，FRA 国家网络支持 4 类；默认国家对
 
 ## 2026-10-27 第五十二批当前贷款与国家修正（历史）
 
-2026-10-27 第五十二批：新增当前贷款及直接国家修正记录。N01返回3笔本金128、131、131杜卡特、利率均2%的贷款；贷款方映射及原始到期值的日历解释保留缺项。N07提供修正标识、目标及定义效果，N08提供原始起止日期、剩余期限与持续类型；当前两条修正剩余5341天和3063天，默认起始日期保持unknown。这8个字段均为partial，真实MCP主动查询、报告和三条两秒周期交付已与独立原始记录对照，订阅已取消。直接实例列表与全部修正来源、最终有效属性分开；名称、说明、来源、移除条件及N03完整军事修正继续开发。配置覆盖为60 available / 128 partial / 209 planned、40个可调用主题；本次实机目录为60 / 117 / 220、37个可调用主题，均74主题397字段。完整回归为2873项通过、106项失败、35项错误，另1894个子测试通过；较51批新增失败节点0、解决0，全套仍非全绿。新增36个用例均通过，已包含在完整统计中。本批复用原进程和DLL。完整开发计划继续，调用见[国家贷款与当前修正只读接口](docs/02-使用与接口/国家与国内/国家贷款与当前修正只读接口.md)。
+2026-10-27 第五十二批：新增当前贷款及直接国家修正记录。N01返回3笔本金128、131、131杜卡特、利率均2%的贷款；贷款方映射及原始到期值的日历解释保留缺项。N07提供修正标识、目标及定义效果，N08提供原始起止日期、剩余期限与持续类型；当前两条修正剩余5341天和3063天，默认起始日期保持unknown。这8个字段均为partial，真实MCP主动查询、报告和三条两秒周期交付已与独立原始记录对照，订阅已取消。直接实例列表与全部修正来源、最终有效属性分开；名称、说明、来源、移除条件及N03完整军事修正继续开发。配置覆盖为60 available / 128 partial / 209 planned、40个可调用主题；本次实机目录为60 / 117 / 220、37个可调用主题，均74主题397字段。完整回归为2873项通过、106项失败、35项错误，另1894个子测试通过；较51批新增失败节点0、解决0，全套仍非全绿。新增36个用例均通过，已包含在完整统计中。本批复用原进程和DLL。完整开发计划继续，调用见[国家贷款与当前修正只读接口](docs/信息导出/接口/国家与国内/国家贷款与当前修正只读接口.md)。
 
 先读HANDOFF最新节及52批development-summary-001.json。当前PID31460/session31460-1dd653f69242d7b/date56557728/v27-002，physicalPOR/observerFRA。modifiers v2只读直接实例列表，日期来自instance、key/effects来自definition，仍partial；身份、no-repeat及历史完整性见HANDOFF。
 
 ## 2026-10-27 第五十一批陆军职业度（历史）
 
-2026-10-27 第五十一批：N03新增陆军职业度，FRA当前raw为655，按32768缩放为比例，约2%。`professionalism`保留有符号64位整数和八字节原始编码，字段available、complete=true，支持主动查询、报告与周期订阅。真实MCP结果与上一批独立采样的原始字节一致，五项军事字段共同查询、三条两秒周期交付和取消均通过。科技、传统及士气继续可用，纪律仍partial，军事修正继续开发。配置覆盖为60 available / 120 partial / 217 planned、38个可调用主题；本次含静态、未启用任务/战报来源的实机目录为60 / 109 / 228、35个可调用主题，均74主题397字段。完整回归为2837项通过、106项失败、35项错误，另1894个子测试通过；较50批新增失败节点0、解决0，全套仍非全绿。新增22个用例均通过，已包含在完整统计中。本批复用原进程和DLL，没有新增独立RPM采样。完整计划继续，调用见[军事质量只读接口](docs/02-使用与接口/国家与国内/军事质量只读接口.md)。
+2026-10-27 第五十一批：N03新增陆军职业度，FRA当前raw为655，按32768缩放为比例，约2%。`professionalism`保留有符号64位整数和八字节原始编码，字段available、complete=true，支持主动查询、报告与周期订阅。真实MCP结果与上一批独立采样的原始字节一致，五项军事字段共同查询、三条两秒周期交付和取消均通过。科技、传统及士气继续可用，纪律仍partial，军事修正继续开发。配置覆盖为60 available / 120 partial / 217 planned、38个可调用主题；本次含静态、未启用任务/战报来源的实机目录为60 / 109 / 228、35个可调用主题，均74主题397字段。完整回归为2837项通过、106项失败、35项错误，另1894个子测试通过；较50批新增失败节点0、解决0，全套仍非全绿。新增22个用例均通过，已包含在完整统计中。本批复用原进程和DLL，没有新增独立RPM采样。完整计划继续，调用见[军事质量只读接口](docs/信息导出/接口/国家与国内/军事质量只读接口.md)。
 
 先读HANDOFF最新节及51批development-summary-001.json。职业度为country+50的inline signedQword、ratio/32768；旧raw003可直接复用，未重采。军事修正仍缺active容器/定义及来源期限连接，纪律仍缺enabled非零线程路径。当前PID31460/session31460-1dd653f69242d7b/date56557728/v27-002，physicalPOR/observerFRA；身份、no-repeat和历史完整性见HANDOFF。
 
 ## 2026-10-27 第五十批士气与纪律（历史）
 
-2026-10-27 第五十批：N03新增本国陆海军士气缓存和纪律计算，FRA当前陆军士气为3.123、海军士气为2.142、纪律为100%。`morale`返回army/navy两个原始整数，scale=1000，字段available、complete=true；`discipline`为partial、complete=false，支持原生处理器结果不依赖未知线程标志的分支，相关非零贡献仍返回具体缺项原因。两字段及既有科技、传统的共同查询、报告和三条两秒周期交付均通过实机对照，订阅已取消、服务退出码0。职业度和军事修正仍待开发。配置覆盖为59 available / 120 partial / 218 planned、38个可调用主题；本次含静态、未启用任务/战报来源的实机目录为59 / 109 / 229、35个可调用主题，均74主题397字段。完整回归为2815项通过、106项失败、35项错误，另1894个子测试通过；较49批新增失败节点0、解决0，全套仍非全绿。新增32个用例均通过，已包含在完整统计中。本批复用现有游戏进程和DLL。完整计划继续，调用见[军事质量只读接口](docs/02-使用与接口/国家与国内/军事质量只读接口.md)。
+2026-10-27 第五十批：N03新增本国陆海军士气缓存和纪律计算，FRA当前陆军士气为3.123、海军士气为2.142、纪律为100%。`morale`返回army/navy两个原始整数，scale=1000，字段available、complete=true；`discipline`为partial、complete=false，支持原生处理器结果不依赖未知线程标志的分支，相关非零贡献仍返回具体缺项原因。两字段及既有科技、传统的共同查询、报告和三条两秒周期交付均通过实机对照，订阅已取消、服务退出码0。职业度和军事修正仍待开发。配置覆盖为59 available / 120 partial / 218 planned、38个可调用主题；本次含静态、未启用任务/战报来源的实机目录为59 / 109 / 229、35个可调用主题，均74主题397字段。完整回归为2815项通过、106项失败、35项错误，另1894个子测试通过；较49批新增失败节点0、解决0，全套仍非全绿。新增32个用例均通过，已包含在完整统计中。本批复用现有游戏进程和DLL。完整计划继续，调用见[军事质量只读接口](docs/信息导出/接口/国家与国内/军事质量只读接口.md)。
 
 先读HANDOFF最新节及50批development-summary-001.json。morale是两侧current caches，discipline仍缺enabled非零线程贡献；profession仅raw655及type8模板链，不得猜scale。当前PID31460/session31460-1dd653f69242d7b/date56557728/v27-002，physicalPOR/observerFRA；完整身份、no-repeat及历史完整性见HANDOFF。
 
 ## 2026-10-27 第四十九批军事科技与陆军传统（历史）
 
-2026-10-27 第四十九批：N03新增军事科技等级和陆军传统，FRA当前分别为4级、21.052点。`military_technology`和`army_tradition`均为available、字段complete=true，支持共同查询、报告与周期订阅。真实MCP的查询、报告和三条两秒周期结果均与独立原始参考一致，订阅已取消、服务正常退出。默认N03仍包含四个未实现字段，整体complete=false；士气、纪律、职业度和军事修正继续开发。同时修正N04读取配置对父读取器的过期源码依赖，六个既有国内压力字段恢复实际读取，覆盖等级不变。配置覆盖为58 available / 119 partial / 220 planned、38个可调用主题；本次含静态、未启用任务/战报来源的实机目录为58 / 108 / 231、35个可调用主题，均74主题397字段。完整回归为2783项通过、106项失败、35项错误，另1894个子测试通过；较48批新增失败节点0、解决0，全套仍非全绿。新增23个用例均通过，已包含在完整统计中。本批复用现有进程和DLL，完整计划继续。调用见[军事质量只读接口](docs/02-使用与接口/国家与国内/军事质量只读接口.md)。
+2026-10-27 第四十九批：N03新增军事科技等级和陆军传统，FRA当前分别为4级、21.052点。`military_technology`和`army_tradition`均为available、字段complete=true，支持共同查询、报告与周期订阅。真实MCP的查询、报告和三条两秒周期结果均与独立原始参考一致，订阅已取消、服务正常退出。默认N03仍包含四个未实现字段，整体complete=false；士气、纪律、职业度和军事修正继续开发。同时修正N04读取配置对父读取器的过期源码依赖，六个既有国内压力字段恢复实际读取，覆盖等级不变。配置覆盖为58 available / 119 partial / 220 planned、38个可调用主题；本次含静态、未启用任务/战报来源的实机目录为58 / 108 / 231、35个可调用主题，均74主题397字段。完整回归为2783项通过、106项失败、35项错误，另1894个子测试通过；较48批新增失败节点0、解决0，全套仍非全绿。新增23个用例均通过，已包含在完整统计中。本批复用现有进程和DLL，完整计划继续。调用见[军事质量只读接口](docs/信息导出/接口/国家与国内/军事质量只读接口.md)。
 
 先读HANDOFF最新节及49批development-summary-001.json。军事等级按mil_tech定义查index，不假定固定槽；军传统直接缓存/1000。原独立采样001的累计计数误判仅作只读重析，未重采；N04过期父依赖用v2修正。当前PID31460/session31460-1dd653f69242d7b/date56557728/v27-002，physicalPOR/observerFRA；身份、no-repeat和历史归档事故见HANDOFF。
 
 ## 2026-10-27 第四十八批节点商人任务（历史）
 
-2026-10-27 第四十八批：T05 `merchant_task` 已接入。按贸易节点返回 `none`、`collect` 或 `transfer`，按国家列出当前有商人的节点和任务，保留原生顺序。本次FRA为 `rheinland → transfer`、`champagne → collect`，其余78节点为none；全部80节点与独立原始参考一致。商人任务、收集资格和收入可以共同查询，报告及三条两秒周期结果已交付，订阅已取消、服务正常退出。字段保持partial、complete=false，尚未覆盖商人行进中和空闲的完整生命周期；独立transfer字段和steering方向继续开发。配置覆盖为56 available / 119 partial / 222 planned、37个可调用主题；本次含静态、未启用任务/战报来源的实机目录为56 / 108 / 233、34个可调用主题，均74主题397字段。完整回归为2760项通过、106项失败、35项错误，另1894个子测试通过；较47批新增失败节点0、解决0，全套仍非全绿。新增7个用例均通过，已包含在完整统计中；另1个既有collection用例调整了未实现字段及名称，不计为新增。本批复用现有游戏进程、DLL及读取链路。完整计划继续，调用见[贸易收入与商人任务接口](docs/02-使用与接口/贸易与省份/贸易收入只读接口.md)。
+2026-10-27 第四十八批：T05 `merchant_task` 已接入。按贸易节点返回 `none`、`collect` 或 `transfer`，按国家列出当前有商人的节点和任务，保留原生顺序。本次FRA为 `rheinland → transfer`、`champagne → collect`，其余78节点为none；全部80节点与独立原始参考一致。商人任务、收集资格和收入可以共同查询，报告及三条两秒周期结果已交付，订阅已取消、服务正常退出。字段保持partial、complete=false，尚未覆盖商人行进中和空闲的完整生命周期；独立transfer字段和steering方向继续开发。配置覆盖为56 available / 119 partial / 222 planned、37个可调用主题；本次含静态、未启用任务/战报来源的实机目录为56 / 108 / 233、34个可调用主题，均74主题397字段。完整回归为2760项通过、106项失败、35项错误，另1894个子测试通过；较47批新增失败节点0、解决0，全套仍非全绿。新增7个用例均通过，已包含在完整统计中；另1个既有collection用例调整了未实现字段及名称，不计为新增。本批复用现有游戏进程、DLL及读取链路。完整计划继续，调用见[贸易收入与商人任务接口](docs/信息导出/接口/贸易与省份/贸易收入只读接口.md)。
 
 先读HANDOFF最新节及48批development-summary-001.json。商人存在由AE/has_trader绑定，完整行进与空闲生命周期仍缺。当前PID31460/session31460-1dd653f69242d7b/date56557728/v27-002、physicalPOR/observerFRA；身份、no-repeat及历史归档事故见HANDOFF。
 
 ## 2026-10-27 第四十七批收集谓词与动态名称（历史）
 
-2026-10-27 第四十七批：T05 `collection` 已接入原生收集组合谓词。按节点查询返回布尔值，按FRA国家查询返回按原生顺序排列的收集节点列表；当前只有`champagne`。collection与income可在一次采集中共同读取；false只表示收集谓词不满足，不代表没有商人或正在转移。T04动态来源名称也已接入现有原生本地化读取器：字面文本可返回名称，模板、缺失键和失败仍为未知，来源数量保持独立；数值单位仍未知。当前80节点动态来源均为空，非空名称只完成真实验证器与本地化读取器的离线接线测试，不声称取得了实机非空样本。collection的80节点、国家列表、收入混合查询、报告和三条两秒周期交付均已通过实机对照，订阅取消、服务正常退出。两个主题仍保持partial、complete=false，商人任务、贸易转移及steering方向继续开发。配置覆盖为56 available / 118 partial / 223 planned、37个可调用主题；本次含静态、未启用任务/战报来源的实机目录为56 / 107 / 234、34个可调用主题，均74主题397字段。完整回归为2753项通过、106项失败、35项错误，另1894个子测试通过；较46批新增失败节点0、解决0，全套仍非全绿。新增21个用例均通过，已包含在完整统计中。本批未保存、重启、换DLL、推进日期或执行外交业务。完整计划继续，调用见[贸易收入与收集接口](docs/02-使用与接口/贸易与省份/贸易收入只读接口.md)和[贸易来源接口](docs/02-使用与接口/贸易与省份/贸易竞争力只读接口.md)。
+2026-10-27 第四十七批：T05 `collection` 已接入原生收集组合谓词。按节点查询返回布尔值，按FRA国家查询返回按原生顺序排列的收集节点列表；当前只有`champagne`。collection与income可在一次采集中共同读取；false只表示收集谓词不满足，不代表没有商人或正在转移。T04动态来源名称也已接入现有原生本地化读取器：字面文本可返回名称，模板、缺失键和失败仍为未知，来源数量保持独立；数值单位仍未知。当前80节点动态来源均为空，非空名称只完成真实验证器与本地化读取器的离线接线测试，不声称取得了实机非空样本。collection的80节点、国家列表、收入混合查询、报告和三条两秒周期交付均已通过实机对照，订阅取消、服务正常退出。两个主题仍保持partial、complete=false，商人任务、贸易转移及steering方向继续开发。配置覆盖为56 available / 118 partial / 223 planned、37个可调用主题；本次含静态、未启用任务/战报来源的实机目录为56 / 107 / 234、34个可调用主题，均74主题397字段。完整回归为2753项通过、106项失败、35项错误，另1894个子测试通过；较46批新增失败节点0、解决0，全套仍非全绿。新增21个用例均通过，已包含在完整统计中。本批未保存、重启、换DLL、推进日期或执行外交业务。完整计划继续，调用见[贸易收入与收集接口](docs/信息导出/接口/贸易与省份/贸易收入只读接口.md)和[贸易来源接口](docs/信息导出/接口/贸易与省份/贸易竞争力只读接口.md)。
 
 先读HANDOFF最新节及47批development-summary-001.json。collection是原生组合谓词，false不推出商人任务；动态name只有literal可known，数量单位仍unknown。当前PID31460/session31460-1dd653f69242d7b/date56557728/v27-002，physicalPOR/observerFRA，no-repeat与历史归档事故见HANDOFF。
 
 ## 2026-10-27 第四十六批贸易来源明细（历史）
 
-2026-10-27 第四十六批：T04 `sources` 新增主贸易城市加成、动态来源容器和本国转出/转入的竞争力明细。当前FRA主贸易城市加成在香槟节点为5点；4个节点共有5条转入明细，绑定ORL/AUV国家引用后返回数量。动态列表当前80节点均为空；非空时保留原始值和名称字节，显示名称与业务单位仍为未知。转移数量为竞争力点数，方向来自转出/转入容器，保留数值原始正负号。全部80节点已与独立原始采样对照，四字段共同查询、报告和三条两秒周期交付通过，订阅已取消、服务正常退出。sources外层单位改为mixed，各明细保留自身单位；仍为partial、complete=false，修正倍率、竞争国可见范围等继续开发。覆盖计数保持56 available / 117 partial / 224 planned、37个可调用主题；本次含静态、未启用任务/战报来源的实机目录为56 / 106 / 235、34个可调用主题，均为74主题397字段。完整回归为2732项通过、106项失败、35项错误，另1894个子测试通过；与45批相比新增失败节点0、解决0，全套仍非全绿。新增16个用例均通过，已包含在完整统计中。本批未保存或重启游戏、未换DLL、推进日期或执行外交业务。完整计划继续开发，调用方法见[贸易竞争力只读接口](docs/02-使用与接口/贸易与省份/贸易竞争力只读接口.md)。
+2026-10-27 第四十六批：T04 `sources` 新增主贸易城市加成、动态来源容器和本国转出/转入的竞争力明细。当前FRA主贸易城市加成在香槟节点为5点；4个节点共有5条转入明细，绑定ORL/AUV国家引用后返回数量。动态列表当前80节点均为空；非空时保留原始值和名称字节，显示名称与业务单位仍为未知。转移数量为竞争力点数，方向来自转出/转入容器，保留数值原始正负号。全部80节点已与独立原始采样对照，四字段共同查询、报告和三条两秒周期交付通过，订阅已取消、服务正常退出。sources外层单位改为mixed，各明细保留自身单位；仍为partial、complete=false，修正倍率、竞争国可见范围等继续开发。覆盖计数保持56 available / 117 partial / 224 planned、37个可调用主题；本次含静态、未启用任务/战报来源的实机目录为56 / 106 / 235、34个可调用主题，均为74主题397字段。完整回归为2732项通过、106项失败、35项错误，另1894个子测试通过；与45批相比新增失败节点0、解决0，全套仍非全绿。新增16个用例均通过，已包含在完整统计中。本批未保存或重启游戏、未换DLL、推进日期或执行外交业务。完整计划继续开发，调用方法见[贸易竞争力只读接口](docs/信息导出/接口/贸易与省份/贸易竞争力只读接口.md)。
 
 先读HANDOFF最新节及46批development-summary-001.json。主贸易城市加成与TO/FROM点数已闭合；动态名称/单位、倍率和竞争国可见范围仍未知。PID31460/session31460-1dd653f69242d7b/date56557728/v27-002，physicalPOR/observerFRA；no-repeat与历史归档事故见HANDOFF。
 
 ## 2026-10-27 第四十五批贸易份额与来源（历史）
 
-2026-10-27 第四十五批：T04 新增 `shares` 和 `sources`，按国家组织结果，当前提供 FRA。香槟节点原生份额为348/1000，即34.8%；省份竞争力来源为60.538点。莱茵兰节点的份额为0，下游商人转移来源为12.107点。份额直接复制独立缓存；来源读取省份、轻型船只和下游商人转移三类原生行，并按原生条件省略不显示的行。全部80节点已与独立原始采样对照，报告和三条两秒周期结果已交付、订阅已取消。四个T04字段可在同一查询中共同读取，均保持 partial、complete=false；竞争国可见范围、首都、动态来源列表和修正项继续开发。配置矩阵为56 available / 117 partial / 224 planned、37个可调用主题；本次含静态、未启用任务/战报源的实际目录为56 available / 106 partial / 235 planned、34个可调用主题，均为74主题397字段。完整回归为2716项通过、106项失败、35项错误，另1894个子测试通过。较44批新增失败节点0、解决0；全套仍非全绿。新增15个用例、其中失败或错误0项，已包含在完整统计中。本批未保存或重启游戏、未换DLL、推进日期或执行外交业务。完整计划继续开发，见[贸易竞争力只读接口](docs/02-使用与接口/贸易与省份/贸易竞争力只读接口.md)。
+2026-10-27 第四十五批：T04 新增 `shares` 和 `sources`，按国家组织结果，当前提供 FRA。香槟节点原生份额为348/1000，即34.8%；省份竞争力来源为60.538点。莱茵兰节点的份额为0，下游商人转移来源为12.107点。份额直接复制独立缓存；来源读取省份、轻型船只和下游商人转移三类原生行，并按原生条件省略不显示的行。全部80节点已与独立原始采样对照，报告和三条两秒周期结果已交付、订阅已取消。四个T04字段可在同一查询中共同读取，均保持 partial、complete=false；竞争国可见范围、首都、动态来源列表和修正项继续开发。配置矩阵为56 available / 117 partial / 224 planned、37个可调用主题；本次含静态、未启用任务/战报源的实际目录为56 available / 106 partial / 235 planned、34个可调用主题，均为74主题397字段。完整回归为2716项通过、106项失败、35项错误，另1894个子测试通过。较44批新增失败节点0、解决0；全套仍非全绿。新增15个用例、其中失败或错误0项，已包含在完整统计中。本批未保存或重启游戏、未换DLL、推进日期或执行外交业务。完整计划继续开发，见[贸易竞争力只读接口](docs/信息导出/接口/贸易与省份/贸易竞争力只读接口.md)。
 
 先读HANDOFF最新节及45批development-summary-001.json。shares来自独立entry2C缓存，B58D00返回收入；三来源保持原生条件和缺口。PID31460/session31460-1dd653f69242d7b/date56557728/v27-002，physicalPOR/observerFRA；no-repeat和39归档事故见HANDOFF。
 
 ## 2026-10-27 第四十四批贸易竞争力（历史）
 
-2026-10-27 第四十四批：T04 新增 `country_power` 和 `total_power`，可按贸易节点读取 FRA 的竞争力与节点总竞争力。香槟节点当前分别为174.898和746.110，全部80个节点的两项结果均与服务启动前的独立原始采样及参考计算一致；报告与三条两秒周期结果已交付，订阅已取消。两字段保持 partial、complete=false；本国数值由原始缓存按原生公式派生，总竞争力为另一缓存的直接复制。竞争国、份额和来源分解继续开发。原始指令复核纠正了旧说明中的判断宽度：商先缩窄为32位，再与零比较；新边界测试覆盖了旧说明无法正确处理的输入。配置矩阵为56 available / 115 partial / 226 planned、37个可调用主题；本次含静态、未启用任务/战报源的实机目录为56 available / 104 partial / 237 planned、34个可调用主题，均为74主题397字段。完整回归为2701项通过、106项失败、35项错误，另1894个子测试通过。与43批相比新增失败节点0、解决0；全套仍非全绿。新增14个用例已包含在完整统计中，不与定向测试累加。本批未保存或重启游戏、未换DLL、推进日期或执行外交业务。完整计划继续开发，调用方式见[贸易竞争力只读接口](docs/02-使用与接口/贸易与省份/贸易竞争力只读接口.md)。
+2026-10-27 第四十四批：T04 新增 `country_power` 和 `total_power`，可按贸易节点读取 FRA 的竞争力与节点总竞争力。香槟节点当前分别为174.898和746.110，全部80个节点的两项结果均与服务启动前的独立原始采样及参考计算一致；报告与三条两秒周期结果已交付，订阅已取消。两字段保持 partial、complete=false；本国数值由原始缓存按原生公式派生，总竞争力为另一缓存的直接复制。竞争国、份额和来源分解继续开发。原始指令复核纠正了旧说明中的判断宽度：商先缩窄为32位，再与零比较；新边界测试覆盖了旧说明无法正确处理的输入。配置矩阵为56 available / 115 partial / 226 planned、37个可调用主题；本次含静态、未启用任务/战报源的实机目录为56 available / 104 partial / 237 planned、34个可调用主题，均为74主题397字段。完整回归为2701项通过、106项失败、35项错误，另1894个子测试通过。与43批相比新增失败节点0、解决0；全套仍非全绿。新增14个用例已包含在完整统计中，不与定向测试累加。本批未保存或重启游戏、未换DLL、推进日期或执行外交业务。完整计划继续开发，调用方式见[贸易竞争力只读接口](docs/信息导出/接口/贸易与省份/贸易竞争力只读接口.md)。
 
 先读HANDOFF最新节及44批development-summary-001.json。新合同采用source-index002/expected002，旧错误说明及初版输出保留。当前PID31460/session31460-1dd653f69242d7b/date56557728/v27-002，physicalPOR/observerFRA；历史no-repeat与39批归档事故见HANDOFF。
 
 ## 2026-10-27 第四十三批本埠节点与字段分流（历史）
 
-2026-10-27 第四十三批：T02 `home_node` 已接入原生本埠标志，当前 FRA 返回 `champagne`。真实查询、报告和三条两秒周期结果与独立采样一致；字段保持 partial、complete=false。组合层新增按字段选择适配器，T02 的本埠状态与静态上游、线路可共同使用；字段各自保留对象范围和触发能力。节点对象的默认查询继续返回线路，本埠字段标为 not_applicable；静态线路仍仅支持主动查询，周期订阅会被明确拒绝。配置矩阵为 56 available / 113 partial / 228 planned、36个可调用主题；本次启用静态、未启用任务/战报来源的实机目录为 56 available / 102 partial / 239 planned、33个可调用主题，均为74主题397字段。最终完整回归为2687项通过、106项失败、35项错误，另1894个子测试通过；全套仍非全绿。本批未保存或重启游戏、未换DLL、推进日期或执行外交业务。完整目标继续开发，调用方式见[本埠贸易节点接口](docs/02-使用与接口/贸易与省份/本埠贸易节点接口.md)。
+2026-10-27 第四十三批：T02 `home_node` 已接入原生本埠标志，当前 FRA 返回 `champagne`。真实查询、报告和三条两秒周期结果与独立采样一致；字段保持 partial、complete=false。组合层新增按字段选择适配器，T02 的本埠状态与静态上游、线路可共同使用；字段各自保留对象范围和触发能力。节点对象的默认查询继续返回线路，本埠字段标为 not_applicable；静态线路仍仅支持主动查询，周期订阅会被明确拒绝。配置矩阵为 56 available / 113 partial / 228 planned、36个可调用主题；本次启用静态、未启用任务/战报来源的实机目录为 56 available / 102 partial / 239 planned、33个可调用主题，均为74主题397字段。最终完整回归为2687项通过、106项失败、35项错误，另1894个子测试通过；全套仍非全绿。本批未保存或重启游戏、未换DLL、推进日期或执行外交业务。完整目标继续开发，调用方式见[本埠贸易节点接口](docs/信息导出/接口/贸易与省份/本埠贸易节点接口.md)。
 
 先读HANDOFF最新节及43批development-summary-001.json；旧39两份目标测试收据的归档事故仍未恢复，不改旧pin。当前game PID31460/session31460-1dd653f69242d7b/date56557728/v27-002，physicalPOR/observerFRA。下一步按trade-power-source-002及native-trade-power-inputs-002独立采样推进T04 country_power/total_power；shares/sources和merchant-task语义缺口独立保留，不再重复现有partial验收。
 
@@ -2818,7 +2818,7 @@ R01 国家对支持 9 类关系，FRA 国家网络支持 4 类；默认国家对
 
 ## 2026-10-27 第四十一批当前预算来源（历史）
 
-先读HANDOFF顶部、docs/05-历史记录/外交开发推进复盘.md、docs/04-实现研究/国家与国内/当前预算预测来源.md。本批只增加来源证据，没有新增公开字段或覆盖升级。12收入/21支出组件已映射到预算视图writer，derivedvtable1D38C38/+48→EB7B20、+50→EB40F0，合计view+578/+5BC、余额相减。956F0仅32位复制；country/view alias已分别闭合，不能复制未证明观察国和新鲜度的UI缓存。5AC constructor置0，其他writer未知；其余分项包含动态native计算。
+先读HANDOFF顶部、docs/历史归档/外交开发推进复盘.md、docs/信息导出/实现研究/国家与国内/当前预算预测来源.md。本批只增加来源证据，没有新增公开字段或覆盖升级。12收入/21支出组件已映射到预算视图writer，derivedvtable1D38C38/+48→EB7B20、+50→EB40F0，合计view+578/+5BC、余额相减。956F0仅32位复制；country/view alias已分别闭合，不能复制未证明观察国和新鲜度的UI缓存。5AC constructor置0，其他writer未知；其余分项包含动态native计算。
 
 estimated_monthly_income已绑定country+E38/signed32/scale1000。一条2F36F0..2F7EB1路径先通过AF16C0滚动台账，再取C+770收入0..8/15/16聚合，int32回绕后signed<1置1；是台账估计路径，具体调度和所有写者/GUI等价未证。独立RPM在本session/date56557728取得FRA+E38 raw21104，两遍一致/handleclosed/50430B/1062calls，没有游戏函数或状态修改。与上月收入相等的样本不代替静态链或GUI证明。
 
@@ -2828,7 +2828,7 @@ stage work/runtime/information-budget-forecast-20261027-001/development-summary-
 
 ## 2026-10-27 第四十批上月经常性收支台账（历史）
 
-先读HANDOFF顶部、docs/05-历史记录/外交开发推进复盘.md和docs/02-使用与接口/国家与国内/月度经济台账只读接口.md。N01.monthly_income/monthly_expenses/monthly_balance已接通真实MCP查询、报告和周期订阅；FRA本次上月经常性收入21.104、支出26.240、结余−5.136金币。原生序列化名明确是lastmonthincometable/lastmonthexpensetable，三项partial/complete=false，不能当当前GUI预算预测。monthly-only无需reference_recipient；混合treasury仍需参考国并复用旧只读inspection。3条2秒周期delivered、cancelled/serverexit0、前后pause/date/player保持。月度reader纯RPM，混合treasury旧链包含nativecall；业务提交0。
+先读HANDOFF顶部、docs/历史归档/外交开发推进复盘.md和docs/信息导出/接口/国家与国内/月度经济台账只读接口.md。N01.monthly_income/monthly_expenses/monthly_balance已接通真实MCP查询、报告和周期订阅；FRA本次上月经常性收入21.104、支出26.240、结余−5.136金币。原生序列化名明确是lastmonthincometable/lastmonthexpensetable，三项partial/complete=false，不能当当前GUI预算预测。monthly-only无需reference_recipient；混合treasury仍需参考国并复用旧只读inspection。3条2秒周期delivered、cancelled/serverexit0、前后pause/date/player保持。月度reader纯RPM，混合treasury旧链包含nativecall；业务提交0。
 
 新增monthly_economy_memory及profile SHAbd5e3ee39b02e4b5f183790d4550f394c6248eaa4dc4c68e9c17d9ec3254d831/sourceSHA7fd7af774a6c75731b3f54874ef179444c19b28ddf58845e867cac32462468ac，13guard/953B避开ASLR绝对指针。原parent默认三君主点契约和profile不变，显式include_monthly_economy才读228B。income index12明确排除，旧R71报告保留；收入11槽、支出23槽、int32回绕和原始bytes均验证，unitducats/scale1000，reference_periodprevious_month。完整来源和条件见新文档及HANDOFF。
 
@@ -2838,7 +2838,7 @@ stage work/runtime/information-economy-20261027-001/development-summary-001.json
 
 ## 2026-10-26 第三十九批贸易节点名称（历史）
 
-先读HANDOFF顶部、docs/05-历史记录/外交开发推进复盘.md及docs/02-使用与接口/贸易与省份/静态贸易信息接口.md。T01.name已通过全部80节点真实MCP查询、与节点图混合查询及三节点报告；2秒/3秒周期分别交付3条/2条，两个订阅cancelled、serverexit0，before/aftercontrol slot189/pause1/speed0/date56557728。英吉利海峡、塞维利亚、君士坦丁堡等名称与独立原始缓存字节一致；原生语言标识l_english保留，本次文本为中文。
+先读HANDOFF顶部、docs/历史归档/外交开发推进复盘.md及docs/信息导出/接口/贸易与省份/静态贸易信息接口.md。T01.name已通过全部80节点真实MCP查询、与节点图混合查询及三节点报告；2秒/3秒周期分别交付3条/2条，两个订阅cancelled、serverexit0，before/aftercontrol slot189/pause1/speed0/date56557728。英吉利海峡、塞维利亚、君士坦丁堡等名称与独立原始缓存字节一致；原生语言标识l_english保留，本次文本为中文。
 
 新增中性NativeLocalizationReader，任务兼容wrapper保留custom派生；StaticTradeSource显式name按node_id读缓存，声明混合来源，读后静态复核在整query收尾。定义变化拒绝旧名称与拓扑，名称自身失败但静态未变保留其他known。operator+static/mission共享reader，recorded/save/nooperator不注入；只有注入reader的T01增periodic。T01.name仍partial（动态模板未求值），矩阵56/108/233、35callable；actual仅static为56/97/244、32callable，均74/397。
 
@@ -2848,7 +2848,7 @@ stage work/runtime/information-trade-names-20261026-001/development-summary-001.
 
 ## 2026-10-26 第三十八批全国平均叛乱度（历史）
 
-先读HANDOFF顶部、docs/05-历史记录/外交开发推进复盘.md及docs/02-使用与接口/国家与国内/平均叛乱度只读接口.md。N04.unrest已接入实际MCP单/六字段/混合query及三条周期交付，FRA raw-7127/scale1000/unrest，即−7.127点；保留负值，不转百分比。six/mixedcomplete、cancelled、serverexit0、before/aftercontrol slot189/pause1/speed0/date56557728。N04六字段本次均known，宗教统一仍partial。
+先读HANDOFF顶部、docs/历史归档/外交开发推进复盘.md及docs/信息导出/接口/国家与国内/平均叛乱度只读接口.md。N04.unrest已接入实际MCP单/六字段/混合query及三条周期交付，FRA raw-7127/scale1000/unrest，即−7.127点；保留负值，不转百分比。six/mixedcomplete、cancelled、serverexit0、before/aftercontrol slot189/pause1/speed0/date56557728。N04六字段本次均known，宗教统一仍partial。
 
 新增average_unrest_memory.py/profile SHAd5ec922b125ac8bf34ddf3063bd3c2212a3cfd5590f3f781d09296c55efc9cb1；属性0x1CA01E0/+0x10→0x6E0220直接复制country+0x2030。普通有界PE producer/threshold/formatter证明signed32/scale1000/点数；12runtime guards避开ASLR绝对指针，静态vtable仍有pin。默认capture仍原3，旧profile不改，复用原reader生命周期；basis native_country_average_unrest_cache，origin copied_native_country_average_cache。
 
@@ -2860,7 +2860,7 @@ stage work/runtime/information-average-unrest-20261026-001/development-summary-0
 
 ## 2026-10-26 第三十七批过度扩张只读字段（历史）
 
-先读HANDOFF顶部、docs/05-历史记录/外交开发推进复盘.md及docs/02-使用与接口/国家与国内/过度扩张只读接口.md。N04.overextension已通过实际MCP单/五字段query、六字段mixed及三次周期交付，FRA当前raw0/scale1000/fraction即0%，available；mixed只因unrest unsupported而partial，取消订阅/serverexit0。独立reference先取得E48原字节，before/aftercontrol均slot189/paused1/speed0/date56557728。
+先读HANDOFF顶部、docs/历史归档/外交开发推进复盘.md及docs/信息导出/接口/国家与国内/过度扩张只读接口.md。N04.overextension已通过实际MCP单/五字段query、六字段mixed及三次周期交付，FRA当前raw0/scale1000/fraction即0%，available；mixed只因unrest unsupported而partial，取消订阅/serverexit0。独立reference先取得E48原字节，before/aftercontrol均slot189/paused1/speed0/date56557728。
 
 新增overextension_memory.py及独立profile SHA5793db229f75847ecccffcd7b8c9874289014100969d284ab4530c837e45d281，复用原domestic reader生命周期，默认3字段及旧profile不变。普通PE已证明国家UI和两条独立getter直接读country+E48，单位fraction/scale1000，公开basis native_ui_current_cache/value_origin copied_native_ui_cache；不是和平预览、重新计算或存档字段。8段guard及源contract固定，当前非零只在自有测试。
 
@@ -2872,7 +2872,7 @@ stage work/runtime/information-average-unrest-20261026-001/development-summary-0
 
 ## 2026-10-26 第三十六批宗教统一只读字段（历史）
 
-先读HANDOFF顶部、docs/05-历史记录/外交开发推进复盘.md及docs/宗教统一只读接口.md。N04.religious_unity现为partial并通过真实MCP单/四字段查询、含OE/unrest缺项的混合查询和三条2秒周期结果；FRA原值1000/scale1000/fraction，即100%。独立probe与原生输入派生读取相符，订阅取消、服务exit0，before/aftercontrol均slot189/paused1/speed0/date56557728。
+先读HANDOFF顶部、docs/历史归档/外交开发推进复盘.md及docs/信息导出/接口/国家与国内/宗教统一只读接口.md。N04.religious_unity现为partial并通过真实MCP单/四字段查询、含OE/unrest缺项的混合查询和三条2秒周期结果；FRA原值1000/scale1000/fraction，即100%。独立probe与原生输入派生读取相符，订阅取消、服务exit0，before/aftercontrol均slot189/paused1/speed0/date56557728。
 
 新增religious_unity_memory.py和独立profile SHA281c45c5dfee98a366858e212eefc52c26c907d8695b3802538fcd2bde4caef7；旧N04三字段profile b727...不变、默认capture仍3，显式新字段复用现有RPM生命周期。支持正常缓存/处理器为空的E7特殊规则及A8叠加、密集/稀疏首匹配、32位加法/下限0、无上限；处理器和CALCULATING后备路径unknown，raw_hex为派生编码非EE0直接值。静态/PE/自有测试/实际输入/服务消费分层，没有nativecall。
 
@@ -2884,7 +2884,7 @@ stage work/runtime/information-average-unrest-20261026-001/development-summary-0
 
 ## 2026-10-26 第三十五批战报控件参战侧（历史）
 
-先读HANDOFF顶部、docs/05-历史记录/外交开发推进复盘.md及docs/04-实现研究/战报/逐场战报控件参战侧.md。B04 display/projection9已公开交付原生参战侧绑定：真实FRA seq3为OUR/HSA combat0/result1、ENEMY/FRA combat1/result0；recorded KEL seq8为OUR/KEL combat0/result1、ENEMY/PSA combat1/result0，观察标签分别ENEMY/OUR。陆36/41、海38/42控件有side_binding，报告/query/subscription同details与原payload，各1event/nexttick0，公共侧身份24项检查通过。完整74/397与阶段二/三/四、LLM自主订阅、完整B01–B04继续active，覆盖计数不增。
+先读HANDOFF顶部、docs/历史归档/外交开发推进复盘.md及docs/信息导出/实现研究/战报/逐场战报控件参战侧.md。B04 display/projection9已公开交付原生参战侧绑定：真实FRA seq3为OUR/HSA combat0/result1、ENEMY/FRA combat1/result0；recorded KEL seq8为OUR/KEL combat0/result1、ENEMY/PSA combat1/result0，观察标签分别ENEMY/OUR。陆36/41、海38/42控件有side_binding，报告/query/subscription同details与原payload，各1event/nexttick0，公共侧身份24项检查通过。完整74/397与阶段二/三/四、LLM自主订阅、完整B01–B04继续active，覆盖计数不增。
 
 新增battle_display_sides.py及display/battles接线。固定formatter OUR/ENEMY对应原始combat0/1，不对应固定result数组index；按完整参战fullrefs反排，并单独判断observer。mapping不一致仅result index未知；不完整或跨侧重叠的context不丢原text。显式键白名单不覆盖icon/flag/WINORLOSE/CAPTURE，attack/defend仍未知，B01 winner保留独立判断；完整title/Line1/buttons/layout/raw_text仍缺。title-callsite-002确认标题helper与NAME插入位于旧gate内，未新增hook或REA，不靠同点重复采集。
 
@@ -2894,7 +2894,7 @@ stage work/runtime/information-average-unrest-20261026-001/development-summary-0
 
 ## 2026-10-26 第三十四批战报控件明细（历史）
 
-先读HANDOFF顶部、docs/05-历史记录/外交开发推进复盘.md及docs/04-实现研究/战报/逐场战报控件明细投影.md。B04 details.display/projection8已复用原真实记录通过公开query/report/subscription：当前FRA原seq3陆战41绑定/40输入/26已知direct text，recorded KEL海战42/40/32，各1事件/nexttick0。原native格式、空字符串和全部重复输入保留，numeric/icon/flag不冒充文本，compact二次格式缺输出；layout/OUR-ENEMY角色与实际UI仍未验证，metadata未绑定项不丢。raw_text/完整窗口继续缺，完整74/397阶段二/三/四和LLM自主订阅goal active，覆盖计数不增加。
+先读HANDOFF顶部、docs/历史归档/外交开发推进复盘.md及docs/信息导出/实现研究/战报/逐场战报控件明细投影.md。B04 details.display/projection8已复用原真实记录通过公开query/report/subscription：当前FRA原seq3陆战41绑定/40输入/26已知direct text，recorded KEL海战42/40/32，各1事件/nexttick0。原native格式、空字符串和全部重复输入保留，numeric/icon/flag不冒充文本，compact二次格式缺输出；layout/OUR-ENEMY角色与实际UI仍未验证，metadata未绑定项不丢。raw_text/完整窗口继续缺，完整74/397阶段二/三/四和LLM自主订阅goal active，覆盖计数不增加。
 
 新增display6测试含于战斗组合162pass/41subtests（JUnit203 entries非独立测试数），6处projection断言改8；本批完整bridge/tests为2541pass/107fail/35errors/1894subtests，142次失败/错误与129节点均和旧基线相同，0新增/0解决，仍非全绿。work/runtime/information-battle-display-20261026-001/development-summary-001.json含静态控件/最终文本合同、实际消费和本批归档。无新游戏窗口、采集、原生更新、保存或重启；consumer修复继续重读原数据，不重发业务或旧事件。
 
@@ -2902,7 +2902,7 @@ stage work/runtime/information-average-unrest-20261026-001/development-summary-0
 
 ## 2026-10-26 第三十三批格式化容器采集（历史）
 
-先读HANDOFF顶部、docs/05-历史记录/外交开发推进复盘.md及docs/04-实现研究/战报/逐场战报格式化容器采集.md。当前live FRA已通过报告/query/subscription取得真实seq3 HSA/FRA陆战47项模板；recorded KEL/PSA海战51项也通过，各1事件/nexttick0。模板含已格式化数值与将领文本，来源是cleanup前容器，message metadata明确未捕获；与physical POR相符的君主/国家文本原样保留，不当FRA信息或战斗角色。完整窗口正文/标题和门槛内键仍缺，不拼值当raw_text。B04 projection7/已有partial字段扩展，完整74主题397字段、阶段二/三/四与LLM自主订阅继续，goal active，不增覆盖计数。
+先读HANDOFF顶部、docs/历史归档/外交开发推进复盘.md及docs/信息导出/实现研究/战报/逐场战报格式化容器采集.md。当前live FRA已通过报告/query/subscription取得真实seq3 HSA/FRA陆战47项模板；recorded KEL/PSA海战51项也通过，各1事件/nexttick0。模板含已格式化数值与将领文本，来源是cleanup前容器，message metadata明确未捕获；与physical POR相符的君主/国家文本原样保留，不当FRA信息或战斗角色。完整窗口正文/标题和门槛内键仍缺，不拼值当raw_text。B04 projection7/已有partial字段扩展，完整74主题397字段、阶段二/三/四与LLM自主订阅继续，goal active，不增覆盖计数。
 
 最后实机PID31460/session31460-1dd653f69242d7b、v27-002/110sources，旧34612已关闭。唯一已发布35天窗口56556888→56557728采12条v4（11陆1海），全部47–51pairs，container12/失败0；独立RPM暂停/speed0、采集disabled且无待发分片。raw快照、实际回执、sourcekind缺陷修复、定向报告及完整安装身份见HANDOFF和work/runtime/information-battle-container-20261026-001/development-summary-001.json。最初旧v23 probe拒绝发生于发布前，未重放/重装；v27-001仅未安装候选，002为实际安装。
 
@@ -2910,7 +2910,7 @@ stage work/runtime/information-average-unrest-20261026-001/development-summary-0
 
 ## 2026-10-26 第三十二批消息模板采集（历史）
 
-先读 HANDOFF 顶部和 docs/05-历史记录/外交开发推进复盘.md。v26 已在实际游戏中采得9条 v4（8陆战/1海战），B04 details.message_template/projection7 可公开消费；9条模板均缺失，完整正文仍未完成，不能把缺输入写成已知空文本。recorded ATJ 的真实 seq1 海战通过 query/report/subscription：1事件、nexttick0；当前 live FRA 未参与这9场，外部记录查询 unavailable、订阅0，不能声称 FRA 获得了这些战报。完整74主题397字段、阶段二/三/四及LLM自主订阅继续，goal active，字段覆盖计数不增加。
+先读 HANDOFF 顶部和 docs/历史归档/外交开发推进复盘.md。v26 已在实际游戏中采得9条 v4（8陆战/1海战），B04 details.message_template/projection7 可公开消费；9条模板均缺失，完整正文仍未完成，不能把缺输入写成已知空文本。recorded ATJ 的真实 seq1 海战通过 query/report/subscription：1事件、nexttick0；当前 live FRA 未参与这9场，外部记录查询 unavailable、订阅0，不能声称 FRA 获得了这些战报。完整74主题397字段、阶段二/三/四及LLM自主订阅继续，goal active，字段覆盖计数不增加。
 
 最后实机 PID34612/session34612-1dd651a75345a76，v26-003/110sources；DLL及manifest完整身份见 HANDOFF。唯一新35天窗口56556048→56556888已结束，独立RPM确认暂停/speed0，采集 disabled且无待发分片，patch/RX/unwind保留至进程退出。冻结 raw-v4.sqlite3、实际公开回执、真实v4 fixture、定向测试及静态合同在 work/runtime/information-battle-text-20261026-001/development-summary-001.json。首次Python probe常量错误已修，未重装/重放；全套未重跑，历史2443/107/35非全绿。
 
@@ -2918,7 +2918,7 @@ stage work/runtime/information-average-unrest-20261026-001/development-summary-0
 
 ## 2026-10-26 第三十一批战斗结算字段（历史）
 
-先读HANDOFF顶部、docs/05-历史记录/外交开发推进复盘.md及docs/04-实现研究/战报/逐场战报结算字段.md。B03现接入ships_captured/prestige/army_tradition/war_score四个partial字段，projection6；当前live目录48/115/234、74主题397字段，完整阶段二/三/四及LLM自主订阅继续，goal active。值是整条参战侧的结果窗口操作数，不当单国实际delta/战争总分；raw/scale1000、按原生截位生成可读数字。海军传统不冒充army，歼灭/撤退仍未支持。
+先读HANDOFF顶部、docs/历史归档/外交开发推进复盘.md及docs/信息导出/实现研究/战报/逐场战报结算字段.md。B03现接入ships_captured/prestige/army_tradition/war_score四个partial字段，projection6；当前live目录48/115/234、74主题397字段，完整阶段二/三/四及LLM自主订阅继续，goal active。值是整条参战侧的结果窗口操作数，不当单国实际delta/战争总分；raw/scale1000、按原生截位生成可读数字。海军传统不冒充army，歼灭/撤退仍未支持。
 
 复用batch30真实v3六条：当前live FRA公开报告/订阅/query交付原巴黎seq4，FRA/FOI/AUV侧威望-.49、传统2.880/数字+2.8、战争分-.98；recorded ATJ原马来亚海seq3俘获0、威望-.13、战争分-.25。nexttick均0，outboxdelivered/llm_readunknown；旧报告/cursor不改，无新采集或游戏控制。33/5/16项分组通过，非唯一总数，全套未重跑，最近2443/107/35非全绿。stage information-battle-effects-20261026-001/development-summary-001.json含4条新小REA、普通caller参数窗口、值合同与最终归档。
 
@@ -2926,7 +2926,7 @@ stage work/runtime/information-average-unrest-20261026-001/development-summary-0
 
 ## 2026-10-26 第三十批海战净变化与剩余（历史）
 
-先读HANDOFF顶部、docs/05-历史记录/外交开发推进复盘.md及docs/04-实现研究/战报/逐场战报海战净变化与剩余.md。v25已复制海战四loss槽、gate和调整行类型，IBOW v3保留v2，生产projection5支持B02四类船只initial/net_change/remaining。losses是负损正增的净变化；旧v2仍初始数，v3缺扩展明确unknown。真实新35天窗口取得6条（2海战），recorded ATJ公开订阅/query交付3轻→0、MLC24保持；当前live FRA交付新巴黎陆战，FRA/FOI/AUV侧39122−7141=31981、战败，与旧对HOL胜利不同。nexttick均0，outboxdelivered/llm_readunknown，B02仍partial，popup/真实俘获rows未验证。
+先读HANDOFF顶部、docs/历史归档/外交开发推进复盘.md及docs/信息导出/实现研究/战报/逐场战报海战净变化与剩余.md。v25已复制海战四loss槽、gate和调整行类型，IBOW v3保留v2，生产projection5支持B02四类船只initial/net_change/remaining。losses是负损正增的净变化；旧v2仍初始数，v3缺扩展明确unknown。真实新35天窗口取得6条（2海战），recorded ATJ公开订阅/query交付3轻→0、MLC24保持；当前live FRA交付新巴黎陆战，FRA/FOI/AUV侧39122−7141=31981、战败，与旧对HOL胜利不同。nexttick均0，outboxdelivered/llm_readunknown，B02仍partial，popup/真实俘获rows未验证。
 
 stage information-battle-naval-losses-20261026-001/development-summary-001.json。owned30checks/wire4+15/manager15groups、战斗40、组合31+4subtests及新缺扩展/真实v3定向通过；全套未重跑，最近2443/107/35仍非全绿。无新REA，静态合同复用既有证据。完整74主题397字段、阶段二/三/四和LLM自主订阅继续，goal active；下一步B03、完整文本及其他可见战场等，不缩范围。
 
@@ -2934,7 +2934,7 @@ stage information-battle-naval-losses-20261026-001/development-summary-001.json�
 
 ## 2026-10-26 第二十九批海战初始数量（历史）
 
-先读HANDOFF顶部、docs/05-历史记录/外交开发推进复盘.md及docs/04-实现研究/战报/逐场战报海战初始数量.md。B02已按重船/轻船/桨船/运输船导出整侧海战初始数，v1已有result[3:7]归一化数直接复用，不再次除1000。key→popup控件→同纹理frame船种静态链已闭合，195B swap helper也确认七初始槽随country换序。新projection_version4，unit_breakdown仅initial，naval loss/remaining明确未支持；runtime popup/businesscomplete仍false。
+先读HANDOFF顶部、docs/历史归档/外交开发推进复盘.md及docs/信息导出/实现研究/战报/逐场战报海战初始数量.md。B02已按重船/轻船/桨船/运输船导出整侧海战初始数，v1已有result[3:7]归一化数直接复用，不再次除1000。key→popup控件→同纹理frame船种静态链已闭合，195B swap helper也确认七初始槽随country换序。新projection_version4，unit_breakdown仅initial，naval loss/remaining明确未支持；runtime popup/businesscomplete仍false。
 
 真实recorded SAK公开报告订阅交付旧seq4/8，seq4 JMB8桨+6运对SAK3轻，主动query一致/次tick0；不是live SAK授权，也未访问游戏。首次公开单位men误注入已修，acceptance002/query002为最终消费证据，旧报告保留。work/runtime/information-battle-naval-20261026-001/development-summary-001.json含静态合同、最终分组51pass及归档。最近full2443/107/35仍非全绿。
 
@@ -2942,7 +2942,7 @@ stage information-battle-naval-losses-20261026-001/development-summary-001.json�
 
 ## 2026-10-26 第二十八批战报胜负（历史）
 
-先读HANDOFF顶部、docs/05-历史记录/外交开发推进复盘.md及docs/04-实现研究/战报/逐场战报胜负字段.md。B01 winner已从原生结束方向闭合为partial，当前FRA公开事件订阅实际交付巴黎战役FRA/FOI/AUV获胜，次tick0。原始/结果双侧方向须唯一fullref双射且一致；projection_version3，旧报告/cursor不改。代表国不是整侧唯一获胜国家，不赋予攻击防守/歼灭/撤退角色。真实14条（9land/5naval）方向一致，海战seq4 recorded SAK defeat覆盖flag0。
+先读HANDOFF顶部、docs/历史归档/外交开发推进复盘.md及docs/信息导出/实现研究/战报/逐场战报胜负字段.md。B01 winner已从原生结束方向闭合为partial，当前FRA公开事件订阅实际交付巴黎战役FRA/FOI/AUV获胜，次tick0。原始/结果双侧方向须唯一fullref双射且一致；projection_version3，旧报告/cursor不改。代表国不是整侧唯一获胜国家，不赋予攻击防守/歼灭/撤退角色。真实14条（9land/5naval）方向一致，海战seq4 recorded SAK defeat覆盖flag0。
 
 本批三条新REA闭合22B5D0/22C0B0/22ACE0，均缓存noanalysis且退出；result+108 bool与combat-side+108向量末端分别记录，窗口WINORLOSE节点尚未关联实际title。阶段入口work/runtime/information-battle-outcome-20261026-001/development-summary-001.json。46项分组相关测试通过，最近full2443/107/35仍非全绿。没有保存、重启、推进、启停捕获或外交派发，成熟工具/DLL沿用。
 
@@ -2950,7 +2950,7 @@ stage information-battle-naval-losses-20261026-001/development-summary-001.json�
 
 ## 2026-10-26 第二十七批持续摄取与兵力字段（最新）
 
-先读HANDOFF顶部、docs/05-历史记录/外交开发推进复盘.md及docs/04-实现研究/战报/逐场战报持续摄取与兵力字段.md。当前FRA公开消费已贯通自动日志摄取、B02陆战兵种初始/损失/剩余/明细、H01序列和W03战损引用；同配置48/110/239、74主题397字段，完整阶段二/三/四继续，goal active。数量按整条参战侧，巴黎FRA/FOI/AUV合计40928/1806/39122，popup尚未对照，仍partial。
+先读HANDOFF顶部、docs/历史归档/外交开发推进复盘.md及docs/信息导出/实现研究/战报/逐场战报持续摄取与兵力字段.md。当前FRA公开消费已贯通自动日志摄取、B02陆战兵种初始/损失/剩余/明细、H01序列和W03战损引用；同配置48/110/239、74主题397字段，完整阶段二/三/四继续，goal active。数量按整条参战侧，巴黎FRA/FOI/AUV合计40928/1806/39122，popup尚未对照，仍partial。
 
 实际14条中4条result/context反序，已修正B01按同index错配，巴黎mapping[1,0]；旧报告保留，新projection_version2。服务新--battle-ingest-installation复用既有有界组件，read/poll自动刷新，原生采集启停仍独立；H01原字段不被覆盖，war选择/未支持过滤明确拒绝，历史cursor可恢复且不暴露外国事件ID/数量。
 
@@ -2960,7 +2960,7 @@ stage information-battle-continuous-20261026-001有实际live报告/历史/公�
 
 ## 2026-10-25 第二十六批真实事件订阅（历史）
 
-先读HANDOFF顶部、docs/05-历史记录/外交开发推进复盘.md及docs/04-实现研究/战报/逐场战报事件与订阅接入.md。本批已通过公开JSONL报告/订阅将真实“巴黎”陆战交付给当前FRA会话，B01/B04有12个partial字段；B02/B03及完整战报仍缺。按完整国家引用确认本国直接参战，其他战场visibility仍未解决；event_id只标识采集记录。新增--battle-stream、事件read_event与不支持过滤的显式拒绝，持续raw摄取尚为单独工具。
+先读HANDOFF顶部、docs/历史归档/外交开发推进复盘.md及docs/信息导出/实现研究/战报/逐场战报事件与订阅接入.md。本批已通过公开JSONL报告/订阅将真实“巴黎”陆战交付给当前FRA会话，B01/B04有12个partial字段；B02/B03及完整战报仍缺。按完整国家引用确认本国直接参战，其他战场visibility仍未解决；event_id只标识采集记录。新增--battle-stream、事件read_event与不支持过滤的显式拒绝，持续raw摄取尚为单独工具。
 
 复用v24和现有runner，唯一新35天窗口56554368→56555208；新增13条，累计14条，8条非空war上下文且陆海战都有实际样本。当前原PID15612/session15612-1dd64921da9212c、POR、暂停/速度0、capturedisabled，DLL和安装不变；完整身份见HANDOFF。世界比上一checkpoint再前进40天，不丢进度、不重放窗口。未保存/重启/重编译。记录是partial/outbox delivered/llm_readunknown。
 
@@ -2968,7 +2968,7 @@ stage information-battle-service-20261025-001含真实live/recorded公开工具�
 
 ## 2026-10-25 第二十五批真实上下文（历史）
 
-先读HANDOFF顶部及docs/05-历史记录/外交开发推进复盘.md。用户要求停止对成熟保存功能追加检查；复用已有基础工具，优先运行新增功能，按实际缺陷补测试，按批次收尾。完整74主题397字段及阶段二/三/四不变，54/107/236、B01–B04 planned，goal active。
+先读HANDOFF顶部及docs/历史归档/外交开发推进复盘.md。用户要求停止对成熟保存功能追加检查；复用已有基础工具，优先运行新增功能，按实际缺陷补测试，按批次收尾。完整74主题397字段及阶段二/三/四不变，54/107/236、B01–B04 planned，goal active。
 
 v24已在新PID15612/session15612-1dd64921da9212c实际安装并采集一条自然陆战：1455.12.22，蒂鲁吉拉帕利，VIJ对REB；真实getter、两侧参与者和原始数值已进入v2/SQLite，战争上下文为空。当前POR、raw56554368/暂停/速度0、capture disabled。实际DLL及安装目录、完整身份见HANDOFF；原v24构建和105来源沿用，不再重复编译。5天窗口是新进度，禁止重放。
 
@@ -2976,7 +2976,7 @@ v24已在新PID15612/session15612-1dd64921da9212c实际安装并采集一条自�
 
 ## 2026-10-25 第二十四批上下文观察器接入（历史）
 
-先读HANDOFF顶部及docs/04-实现研究/战报/逐场战报上下文观察器接入.md。goal active，完整74主题397字段及阶段二/三/四、LLM自主配置/订阅不变，54/107/236、35主题部分可调用、B01–B04 planned不变。v24 manager现已接context/v2，未知caller不使用RBX war，context失败保留v1；新build v24-001的105来源匹配，DLL SHA c920495a2d61d91fffc7cbbcd026febcf56d29a352dfc07cc803c0be1034aecb，已编译尚未安装。
+先读HANDOFF顶部及docs/信息导出/实现研究/战报/逐场战报上下文观察器接入.md。goal active，完整74主题397字段及阶段二/三/四、LLM自主配置/订阅不变，54/107/236、35主题部分可调用、B01–B04 planned不变。v24 manager现已接context/v2，未知caller不使用RBX war，context失败保留v1；新build v24-001的105来源匹配，DLL SHA c920495a2d61d91fffc7cbbcd026febcf56d29a352dfc07cc803c0be1034aecb，已编译尚未安装。
 
 manager最终007通过91 native/21wire，四context场景真实走私有RXcaller→patch→shim→manager→tramp→selfbody，原return/LastError及一次body保持；006只是直接callback已补正，旧报告保留。15组原生日志归档后通过严格frame/CRC/SQLite重组/v2解码，重开ACK0；明确自有fixture元数据。新版ingester统一重组后严格分派v1/v2，坏载荷保留raw并rejected，transport ACK不等business验收，专项7pass。封存18真实v23记录经新离线DB全等旧payload/hash/value，原快照不改。旧manager68、旧control33/11subtests、新v24安装8/4subtests均通过；full未重跑，历史2443/107/35非全绿。完整性/visibility/public身份及统一事件/LLM订阅仍缺。
 
@@ -2984,7 +2984,7 @@ manager最终007通过91 native/21wire，四context场景真实走私有RXcaller
 
 ## 2026-10-25 第二十三批类型与原始上下文（历史）
 
-先读HANDOFF顶部及docs/04-实现研究/战报/逐场战报类型与原始上下文.md。goal active，完整74主题397字段、阶段二/三/四和LLM自主管理订阅不变；54/107/236、35主题部分可调用、B01–B04 planned不变。本批三条新固定1374 REA补充占位符展开、Tradition和GainPrestige相关summary原始槽；收据完整、缓存未变，无重复query。原router证据已绑定selector1陆战/2海战，自然getter实际编码仍待验证，旧18条wire不能追补kind。
+先读HANDOFF顶部及docs/信息导出/实现研究/战报/逐场战报类型与原始上下文.md。goal active，完整74主题397字段、阶段二/三/四和LLM自主管理订阅不变；54/107/236、35主题部分可调用、B01–B04 planned不变。本批三条新固定1374 REA补充占位符展开、Tradition和GainPrestige相关summary原始槽；收据完整、缓存未变，无重复query。原router证据已绑定selector1陆战/2海战，自然getter实际编码仍待验证，旧18条wire不能追补kind。
 
 owned context组件最终87项检查通过，header SHA b89cca290cd133c934191404be2d12a2d6044d6107b56da900bbd1ae3f7f319b；复制原始侧参与者/六数值槽、可选war成员与物理玩家成员关系，预算与前后稳定性有守卫。成员关系不证明visibility，地址不作公开ID。IBOW v2内嵌原v1结果并附可选上下文，最终42项native+36项Python通过；所有业务完整性与visibility标志仍false。最终报告为owned-context stage的context-test-003及context-wire stage的context-wire-test-003，旧报告保留。尚未接入manager、游戏DLL、实际摄取或统一事件服务。
 
@@ -2994,7 +2994,7 @@ owned context组件最终87项检查通过，header SHA b89cca290cd133c934191404
 
 ## 2026-10-25 第二十二批自然记录实机验证（历史）
 
-先读HANDOFF顶部及docs/04-实现研究/战报/逐场战报实机启停与自然观测.md。goal active，完整74主题397字段、阶段二/三/四不变，54/107/236及B01–B04 planned不变。本批已按用户授权自行恢复R70，在新PID39456/creation134374061200954087/session39456-1dd647f28e8d2e7中安装v23并通过真实enable/disable/resume；实际玩家POR完整引用010000bd00524f50。安装目录information-battle-live-001复用原v23-005同DLL，明确不是重新编译；103来源一致，原005未重新安装。
+先读HANDOFF顶部及docs/信息导出/实现研究/战报/逐场战报实机启停与自然观测.md。goal active，完整74主题397字段、阶段二/三/四不变，54/107/236及B01–B04 planned不变。本批已按用户授权自行恢复R70，在新PID39456/creation134374061200954087/session39456-1dd647f28e8d2e7中安装v23并通过真实enable/disable/resume；实际玩家POR完整引用010000bd00524f50。安装目录information-battle-live-001复用原v23-005同DLL，明确不是重新编译；103来源一致，原005未重新安装。
 
 两次独立TEST_ONLY自然窗口为1天56553384→56553408及35天→56554248；均精确暂停且独立RPM速度0。后者得到18条raw observation、序号1–18、线程23696、known_router=true，无报告drop/copy/guard失败；不是18条完整业务战报。严格解码、SQLite持久化与重开接收保持18条、无新增ACK/重复，冻结raw/日志前缀/只读DB backup，integrity_check=ok。最终采集disabled，日期56554248，保留已发布patch/DLL/unwind到process exit；不得重放窗口。runner14项、probe6项、ingest5项测试通过；无生产改动未重跑完整pytest，历史2443pass/107fail/35errors不变。
 
@@ -3004,7 +3004,7 @@ owned context组件最终87项检查通过，header SHA b89cca290cd133c934191404
 
 ## 2026-10-25 第二十一批观察器生命周期（历史）
 
-先读 HANDOFF 顶部及 docs/04-实现研究/战报/逐场战报观察器生命周期.md。goal active，完整74主题397字段、阶段二/三/四不变，54/107/236与B01–B04 planned不变。本批完成v23研究source的安装/启停/身份/线程/故障管理，原始result+summary经自有队列、编解码和分片进入checked日志；没有在游戏安装新DLL或得到自然战报。
+先读 HANDOFF 顶部及 docs/信息导出/实现研究/战报/逐场战报观察器生命周期.md。goal active，完整74主题397字段、阶段二/三/四不变，54/107/236与B01–B04 planned不变。本批完成v23研究source的安装/启停/身份/线程/故障管理，原始result+summary经自有队列、编解码和分片进入checked日志；没有在游戏安装新DLL或得到自然战报。
 
 最终build v23-005，103sourcepins匹配，DLL SHA eaf53986e159bfca7af717228a7bc983a8df03fec32a23eb4a82e5ca503133c3。manager008对自有RX源68checks通过，fixed EXE实际拒绝fixture，成功生产身份/enable仍需实机；summary24/wire21及Python对照通过。installer/controller最终33pass11subtests，full2443pass/107fail/35error/1888subtests，142历史失败错误/129节点无新增无解决。新source-audit/summary另固定当前源码；旧review003是末次小修前pin不冒称current。
 
@@ -3012,7 +3012,7 @@ owned context组件最终87项检查通过，header SHA b89cca290cd133c934191404
 
 ## 2026-10-25 第二十批自然入口与复制（最新）
 
-goal继续active，先读HANDOFF顶部及docs/04-实现研究/战报/逐场战报自然入口与复制.md。完整74主题397字段、阶段二/三/四不变，54available/107partial/236planned、B01–B04仍planned。上一批真实历史读取属于progress，本批新增自然入口plan/shim/ownedcopy和自有进程真实patch组合，继续progress；无游戏访问、无安装/注入/保存/日期推进/业务派发。HTTP问题已单次回答，不再重复。
+goal继续active，先读HANDOFF顶部及docs/信息导出/实现研究/战报/逐场战报自然入口与复制.md。完整74主题397字段、阶段二/三/四不变，54available/107partial/236planned、B01–B04仍planned。上一批真实历史读取属于progress，本批新增自然入口plan/shim/ownedcopy和自有进程真实patch组合，继续progress；无游戏访问、无安装/注入/保存/日期推进/业务派发。HTTP问题已单次回答，不再重复。
 
 新plan取238620前21B完整指令，满足既有事务32B上限；41Btramp使用第三callee-owned home槽+mod01尾跳，七push展开投影。旧FF25在PC21误认epilog，扩大SizeOfProlog也失败；两份失败保留。最终unwind003直接用header prepare产物实际CPU执行，12合法PC通过。shim保存参数/GP/XMM128/flags/FPcontrol/LastError，恢复阶段拆3个展开范围，最终ABI006为4cases含2nested、7展开边界通过。owned-result header复制结果/两侧原值/名称与commander，不保留source pointers，79checks、栈17136B；当前只收rawdate/result，不推断kind/visibility/publicwarID。
 
@@ -3022,7 +3022,7 @@ integration008用当前公共entrypatch事务+三个新组件实际安装/调用
 
 ## 2026-10-25 第十九批历史结果与保留范围（历史）
 
-goal继续active，先读HANDOFF顶部及docs/04-实现研究/战报/逐场战报历史读取与保留范围.md。完整74主题397字段及阶段二、三、四不变，54available/107partial/236planned，B01–B04仍planned。新work/information_battle_war_memory.py是研究用pureRPM/query-only，不接生产服务；18项离线测试通过。root实机FRA/BUR读到1war/1result，地点/舰船/损失/名称与指挥官原始字节同固定R70保存，历史event日期56552232与1455.9.26间隔核对通过；FRA/ENG为0war/0result，保存也无共同战争。两份最终live双遍一致、暂停1/speed0、真实EXE/creation/实际加载v22DLL前后身份一致，CloseHandle成功，未调用游戏函数、写内存、保存或推进日期。
+goal继续active，先读HANDOFF顶部及docs/信息导出/实现研究/战报/逐场战报历史读取与保留范围.md。完整74主题397字段及阶段二、三、四不变，54available/107partial/236planned，B01–B04仍planned。新work/information_battle_war_memory.py是研究用pureRPM/query-only，不接生产服务；18项离线测试通过。root实机FRA/BUR读到1war/1result，地点/舰船/损失/名称与指挥官原始字节同固定R70保存，历史event日期56552232与1455.9.26间隔核对通过；FRA/ENG为0war/0result，保存也无共同战争。两份最终live双遍一致、暂停1/speed0、真实EXE/creation/实际加载v22DLL前后身份一致，CloseHandle成功，未调用游戏函数、写内存、保存或推进日期。
 
 结果保留有阈值：signed summary+38>200或<-200且上下文非空。D89A80把result加入warF0/F8/100并创建historyevent；1DD3C0是side74 war_goal计算，不是warID绑定。history根是内嵌war108，实际vtable1D20BE0、90→8F440 true；group/event90→8F450 false不可混用。result两侧为内嵌10/88、commander内嵌side18；不要把首qword的vtable/字符串内容当对象指针。最终FRA/BUR 38historynodes中18个其他条目仍unknown，retained_observation_completefalse、visibility/battle/overallfalse。旧保存UTF8replacement报告保留，新binary LF字节基线用于文本字节核对。
 
@@ -3030,7 +3030,7 @@ goal继续active，先读HANDOFF顶部及docs/04-实现研究/战报/逐场战�
 
 ## 2026-10-25 第十八批分片与采集范围（历史）
 
-goal继续active，先读HANDOFF顶部及docs/04-实现研究/战报/逐场战报分片与采集范围.md。完整74主题397字段及阶段二、三、四不变，54available/107partial/236planned，B01–B04仍planned。新通用multipart codec最多1MiB、4032B每片；真实native queue/drain/wire/checked writer输出269帧/268独立记录，tailer→transport→SQLite assembler还原1/4032/4033/10037/1048576五组。Python最终report002为13pass/4subtests，支持缺片/CRC/冲突持久锁存、重启、事务cursor、source绑定和readonly竞态守卫。只transport_complete，不是battle/overall；64组/8MiB是准入门限，终端冲突仍如实保留。
+goal继续active，先读HANDOFF顶部及docs/信息导出/实现研究/战报/逐场战报分片与采集范围.md。完整74主题397字段及阶段二、三、四不变，54available/107partial/236planned，B01–B04仍planned。新通用multipart codec最多1MiB、4032B每片；真实native queue/drain/wire/checked writer输出269帧/268独立记录，tailer→transport→SQLite assembler还原1/4032/4033/10037/1048576五组。Python最终report002为13pass/4subtests，支持缺片/CRC/冲突持久锁存、重启、事务cursor、source绑定和readonly竞态守卫。只transport_complete，不是battle/overall；64组/8MiB是准入门限，终端冲突仍如实保留。
 
 三条新固定1374静态来源：8C1BA0消息settings选88/90/98/A0，84C0B0按signed16槽查树且只AL有意义，不能当已证明visibility。14B33A0查模板/展开$，缺失复制key，FC00分支不证明完整文本。244630的16B静态候选入口和机器参数已记录，但前置formatter可能抑制消息，不能单hook证明fullcapture。root ledger和research-index/sourceaudit001可复核；14B33A0 raw32MB触发旧postreadguard、runmissing，providerexit/peak未知，以expectedreceiptgap保留，不能称3条都运行验收通过。
 
@@ -3040,7 +3040,7 @@ goal继续active，先读HANDOFF顶部及docs/04-实现研究/战报/逐场战�
 
 ## 2026-10-25 第十七批窗口字段与文件游标（历史）
 
-goal继续active，先读HANDOFF顶部与docs/04-实现研究/战报/逐场战报窗口与本地日志.md。完整74主题397字段及阶段二、三、四不变，当前54available/107partial/236planned，B01–B04仍planned。新4条固定1374只读REA证明窗口重新分配模板节点并复制key/value，但context仍有按值借用；陆海战各控件、Line1与按钮是独立文本路径，不能用_LOG或单行代替完整结果框。最终静态index/sourceaudit002和root popup-field-ledger001可复核；4个shell均终态、无重复REA。
+goal继续active，先读HANDOFF顶部与docs/信息导出/实现研究/战报/逐场战报窗口与本地日志.md。完整74主题397字段及阶段二、三、四不变，当前54available/107partial/236planned，B01–B04仍planned。新4条固定1374只读REA证明窗口重新分配模板节点并复制key/value，但context仍有按值借用；陆海战各控件、Line1与按钮是独立文本路径，不能用_LOG或单行代替完整结果框。最终静态index/sourceaudit002和root popup-field-ledger001可复核；4个shell均终态、无重复REA。
 
 新work下checked Windows file sink与Python持久游标tailer已通过离线组合验收：完整写/flush后确认，失败回滚/故障锁存，16KiB尾部修复；两侧用相同范围exclusive/shared文件锁，busy无推进，防止读入待回滚行。cursor在receiver事务ack后CAS提交，重试幂等、截断/替换/异stream拒绝。原生最终report002、versioned exe002，Python最终report006为33pass/33subtests/0skip；真实header+A/A/B日志→SQLite2条，4096B及restart字节保持。只验证通用bytes，未接真实payload/game hook/订阅，completefalse。
 
@@ -3048,7 +3048,7 @@ goal继续active，先读HANDOFF顶部与docs/04-实现研究/战报/逐场战�
 
 ## 2026-10-25 第十六批消息对象与本地传输（历史）
 
-goal继续active，先读HANDOFF顶部和docs/04-实现研究/战报/逐场战报消息与传输.md。完整74主题397字段及阶段二、三、四不变；当前54available/107partial/236planned，B01–B04仍planned。root新7条固定1374只读REA闭合message移动、日期、提交及Land/Compact/Naval窗口选择；日志用_LOG模板，不代表完整popup。下一原生问题是598DC0的message复制、8C75D0/8CA460实际窗口字段，合法生命周期/可见性/ABI与完整payload未证明。
+goal继续active，先读HANDOFF顶部和docs/信息导出/实现研究/战报/逐场战报消息与传输.md。完整74主题397字段及阶段二、三、四不变；当前54available/107partial/236planned，B01–B04仍planned。root新7条固定1374只读REA闭合message移动、日期、提交及Land/Compact/Naval窗口选择；日志用_LOG模板，不代表完整popup。下一原生问题是598DC0的message复制、8C75D0/8CA460实际窗口字段，合法生命周期/可见性/ABI与完整payload未证明。
 
 新work下wire编码器与Python SQLite receiver通过离线组合验收：drain+encoder真实写三帧(A丢确认重试同A，再4096B的B)，SQLite幂等为2条并重启保持；最终19pass/24subtests/0skip。支持完整uint64字符串、事务后ack、冲突拒绝、区间缺口、有界分页与一致读快照；没有B业务payload、实机采集或订阅接入。单条4096B尚无分片，旧line()忽略写入/刷新结果，正式native输出需另外接线。
 
@@ -3056,7 +3056,7 @@ goal继续active，先读HANDOFF顶部和docs/04-实现研究/战报/逐场战�
 
 ## 2026-10-25 第十五批战报身份、释放路径与排出确认（历史）
 
-goal继续active，先读HANDOFF顶部与docs/04-实现研究/战报/逐场战报采集与交付边界.md。完整74主题397字段及阶段二、三、四不变，当前54available/107partial/236planned，B01–B04仍planned。本轮新增4条固定1374只读REA，闭合country/commander选择分支、海战StealShips的随机数/转移副作用，以及result字符串条件清理。原始侧、代表国家、war比较用引用和最终侧必须分别保存；losses在俘获前后也不是同一快照，不能调用这些函数作查询。
+goal继续active，先读HANDOFF顶部与docs/信息导出/实现研究/战报/逐场战报采集与交付边界.md。完整74主题397字段及阶段二、三、四不变，当前54available/107partial/236planned，B01–B04仍planned。本轮新增4条固定1374只读REA，闭合country/commander选择分支、海战StealShips的随机数/转移副作用，以及result字符串条件清理。原始侧、代表国家、war比较用引用和最终侧必须分别保存；losses在俘获前后也不是同一快照，不能调用这些函数作查询。
 
 新OwnedBattleDrain已通过严格C++17、禁用异常和实际负编译验证。它保留未确认记录，重试同ID/bytes、每轮<=64次尝试，拒绝mutable overload和重入，pending或drain期间阻止reset。组件尚未接生产DLL/frame/持久化/信息事件源，不表示真实战报已采集。新研究stage最终index/sourceaudit为002，旧001保留；原生最终测试在information-battle-drain-20261025-001/report-002.json。
 
@@ -3068,7 +3068,7 @@ goal继续active，先读HANDOFF顶部；完整74主题397字段及阶段二、�
 
 唯一已解释语义变化是旧1375 relation-state manifest先拒绝被修复的HTTP host源码；该路径此前缺native build，本来未就绪。旧manifest/pin不改；当前1374 R02不走旧路径，N04 reader/profile/serve及v22未变。当前覆盖54/107/236、35主题部分可调用不变。新归档入口audit_information_http_recovery_delivery.py的source-audit-002已通过，最终delivery/manifest.json及复制后核验记录实际封存结果；旧recovery失败审计不覆盖。
 
-战报新scalar stage有3条固定1374 REA：1707B30整数字段写出、CFCD0除1000、AE8A80分组与k缩写显示。陆20/海24模板机械账本新增，原始侧与玩家视角、损失符号/转换顺序保留差异；全部仍静态证据，B01–B04 planned，队列未连自然采集。完整Evidence/SHA和下一步见HANDOFF及docs/04-实现研究/战报/逐场战报原生来源.md。
+战报新scalar stage有3条固定1374 REA：1707B30整数字段写出、CFCD0除1000、AE8A80分组与k缩写显示。陆20/海24模板机械账本新增，原始侧与玩家视角、损失符号/转换顺序保留差异；全部仍静态证据，B01–B04 planned，队列未连自然采集。完整Evidence/SHA和下一步见HANDOFF及docs/信息导出/实现研究/战报/逐场战报原生来源.md。
 
 游戏沿用上轮新installation，使用前重新核对实际身份/暂停，不重注入或重放任何历史动作。用户HTTP用途问题已单次回答，不再重复解释；继续实际信息开发。
 
@@ -3078,13 +3078,13 @@ goal继续active，完整74主题397字段及阶段二、三、四不变，先�
 
 N04稳定度/厌战/腐败已独立pureRPM采样与最终真实MCP005验收，raw1000/5125/1803；单字段/混合unsupported/三次周期/取消/暂停保持通过。三字段在固定1374/FRA范围内available、runtime_validationvalidated，当前54available/107partial/236planned，35主题部分可调用；宗教统一/过度扩张/unrest仍planned。新自包含recorded fixture与6项集成测试已通过；最终信息专项582pass/18subtests，full002为2420pass/108fail/35errors/1834subtests，未通过。原142失败/错误节点持续，另1个Observer HTTP10053，三项原始消息差异的语义未变；定向复查及首次full保留，未反复等待偶然全绿。reader/profilev3/contract003/serve不变，不能放松旧verifier或覆盖旧证据。
 
-战报7条新静态REA及保存键/陆战账本已冻结到information-battle-layout-20261025-001。错误候选1dcb10保留selection_error，实际侧保存1dce20；字段尺度、战争/战斗与两侧身份仍待闭合。新64槽/4096B复制队列通过MinGW严格编译和双线程测试，含身份隔离/代际/序号缺口，但尚未连战报hook、帧排出或外部订阅，B01–B04仍planned。范围、Evidence/SHA和下一步见docs/04-实现研究/战报/逐场战报原生来源.md。
+战报7条新静态REA及保存键/陆战账本已冻结到information-battle-layout-20261025-001。错误候选1dcb10保留selection_error，实际侧保存1dce20；字段尺度、战争/战斗与两侧身份仍待闭合。新64槽/4096B复制队列通过MinGW严格编译和双线程测试，含身份隔离/代际/序号缺口，但尚未连战报hook、帧排出或外部订阅，B01–B04仍planned。范围、Evidence/SHA和下一步见docs/信息导出/实现研究/战报/逐场战报原生来源.md。
 
 没有重放旧外交动作、保存或推进日期；所有历史成功/派发/unknown/未闭合及120批次继续禁止重放，纠错仍需完整audit和--test-only。第十一批及更早manifest不变，新审计/归档入口为work/audit_information_recovery_delivery.py，严格归档门因新增HTTP失败未通过，本批暂无正式delivery/manifest；test-summary-002与最终audit003保存当前负面结果，不能放宽基线或称全套通过。
 
 ## 2026-10-25 第十二批逐场战报来源（历史）
 
-goal继续active，先读HANDOFF顶部和docs/04-实现研究/战报/逐场战报原生来源.md。六次固定1374静态REA已定位结果路由、非围城构造、0x138结果对象、辅助汇总和海战消息路径。一次性状态、临时对象释放、战争侧重排和游戏观察对象均影响采集，不能直接调用这些函数当查询。B01–B04仍planned，无新reader/采集/运行事件；当前51/110/236、35部分可调用主题不变。
+goal继续active，先读HANDOFF顶部和docs/信息导出/实现研究/战报/逐场战报原生来源.md。六次固定1374静态REA已定位结果路由、非围城构造、0x138结果对象、辅助汇总和海战消息路径。一次性状态、临时对象释放、战争侧重排和游戏观察对象均影响采集，不能直接调用这些函数当查询。B01–B04仍planned，无新reader/采集/运行事件；当前51/110/236、35部分可调用主题不变。
 
 首个REA文件超10MiB，仅有界提取选定值并核对缓存，不重跑；run缺席导致provider退出码/peak未知。其余五次正常收齐。任务trigger与国内压力剩余来源也已离线盘点，未提升字段。完整证据、普通字节与REA边界、下一步及不重放规则见HANDOFF；第十一批manifest和生产源码保持封存状态。
 
@@ -3112,45 +3112,45 @@ goal继续active，先读HANDOFF顶部和开发进展第八批。N06威望与R02
 
 ## 2026-10-24 第七批有限动态派生入口（最新）
 
-goal继续active，先读HANDOFF顶部和docs/05-历史记录/信息导出开发进展.md第七批。两个单选项无条件自定义方法已接入查询Root=FRA的有限文本派生；实际UI Root未证，未调用native函数。003主动/筛选/三次2秒周期通过：61任务122key，14derived/116known/6unknown，名称60/1、说明56/5；397信息测试和18subtests通过；完整回归2235passed/107failed/35errors，0新增失败节点，全套未通过。61份编译/41处来源指纹核对，归档见本批delivery/manifest.json及archive-verification.json。最新生产状态覆盖下节“仅研究”的历史说明。
+goal继续active，先读HANDOFF顶部和docs/历史归档/信息导出开发进展.md第七批。两个单选项无条件自定义方法已接入查询Root=FRA的有限文本派生；实际UI Root未证，未调用native函数。003主动/筛选/三次2秒周期通过：61任务122key，14derived/116known/6unknown，名称60/1、说明56/5；397信息测试和18subtests通过；完整回归2235passed/107failed/35errors，0新增失败节点，全套未通过。61份编译/41处来源指纹核对，归档见本批delivery/manifest.json及archive-verification.json。最新生产状态覆盖下节“仅研究”的历史说明。
 
 仍PID37376/session37376-1dd639fff00a820、POR玩家189/FRA观察方，暂停原日期，无安装/业务派发/保存/推进；历史不重放规则不变。74主题/397字段仅49available/101partial/247planned，目标尚未完成。来源、精确SHA、归档和下一步见HANDOFF。
 
 ## 2026-10-24 动态文本研究入口（最新）
 
-goal继续active，生产为下节第六批，先读HANDOFF顶部和docs/04-实现研究/任务/任务动态本地化研究.md。第七批已找到根目录customizable_localization定义、实际注册的两个方法及其唯一正权重无条件选项；候选中文“分支任务”已在原生缓存读到，但Root转换与优先内建路径尚未闭合，没有接入M01，生产仍20项动态unknown。下一入口6fc600/6fc6a0；后者REA无procedure，保留普通leaf范围，不重跑相同请求。所有本批shell与workers已结束，未改生产、未派发或推进。
+goal继续active，生产为下节第六批，先读HANDOFF顶部和docs/信息导出/实现研究/任务/任务动态本地化研究.md。第七批已找到根目录customizable_localization定义、实际注册的两个方法及其唯一正权重无条件选项；候选中文“分支任务”已在原生缓存读到，但Root转换与优先内建路径尚未闭合，没有接入M01，生产仍20项动态unknown。下一入口6fc600/6fc6a0；后者REA无procedure，保留普通leaf范围，不重跑相同请求。所有本批shell与workers已结束，未改生产、未派发或推进。
 
 ## 2026-10-24 本地化缓存入口
 
-goal继续active，先读HANDOFF顶部、docs/05-历史记录/信息导出开发进展.md第六批和docs/02-使用与接口/任务/任务本地化接口.md。M01 name/description已接入当前原生缓存：61实际任务/122key，l_english+会话显式eu4_escape，102普通文本/20动态未知；主动、指定任务和3次2秒周期交付与独立RPM一致，静态候选字节逐项相同。322项information测试通过；全套2160passed/107failed/35errors，0新增失败节点，仍未全过，审计见本批test-summary；49 available/101 partial/247 planned，整个目标未完成。
+goal继续active，先读HANDOFF顶部、docs/历史归档/信息导出开发进展.md第六批和docs/信息导出/接口/任务/任务本地化接口.md。M01 name/description已接入当前原生缓存：61实际任务/122key，l_english+会话显式eu4_escape，102普通文本/20动态未知；主动、指定任务和3次2秒周期交付与独立RPM一致，静态候选字节逐项相同。322项information测试通过；全套2160passed/107failed/35errors，0新增失败节点，仍未全过，审计见本批test-summary；49 available/101 partial/247 planned，整个目标未完成。
 
 仍PID37376/session37376-1dd639fff00a820，POR玩家/FRA观察方，暂停1455.11.13/raw56553384，无新安装、业务派发、保存或推进。动态替换、当前分支显示、完整trigger/奖励效果、新事件/逐场战报仍未完成。字节守卫、profile与原始SHA、只读REA缓存路径、历史不重放限制及归档见HANDOFF顶部，原生缓存文字不代表最终动态界面。
 
 ## 2026-10-24 实际子任务来源入口
 
-goal继续active，先读HANDOFF顶部、docs/05-历史记录/信息导出开发进展.md第五批和docs/02-使用与接口/任务/任务实际子任务接口.md。实时M01已从18个加载根直接读取61个子任务对象，不再由文件回填ID；真实MCP主动/筛选/两次周期与独立RPM一致。任务专属失败保留已确认根完成，基础守卫或清理失败拒绝全体。232项信息测试全过，全套仍有旧失败/错误；分支可见性、完整trigger与本地化尚未实现。
+goal继续active，先读HANDOFF顶部、docs/历史归档/信息导出开发进展.md第五批和docs/信息导出/接口/任务/任务实际子任务接口.md。实时M01已从18个加载根直接读取61个子任务对象，不再由文件回填ID；真实MCP主动/筛选/两次周期与独立RPM一致。任务专属失败保留已确认根完成，基础守卫或清理失败拒绝全体。232项信息测试全过，全套仍有旧失败/错误；分支可见性、完整trigger与本地化尚未实现。
 
 仍是PID37376/session37376-1dd639fff00a820，POR玩家/FRA观察方，暂停1455.11.13/raw56553384，沿用现有安装，无新派发/安装/推进/保存。根条件主接口+30/+a8与解析接口+68/+e0需区分。下一步入口和精确证据见HANDOFF，历史不重放与资源上限继续适用，旧封存不可覆盖。
 
 ## 2026-10-24 前置完成与分支输入入口
 
-按计划开发的goal继续active。先读HANDOFF顶部和docs/05-历史记录/信息导出开发进展.md第四批。M02增加字面前置列表对捕获完成记录的核对，以及按需读取的地图、四指定旗标和Domination条件有限输入；61条定义为13无前置/48未满足，主动查询和三次暂停周期交付通过。它没有实现分支可见性、完整trigger或当前可完成判定，也不是完整DLC清单；198项信息测试全通过，全套仍有旧失败和错误。
+按计划开发的goal继续active。先读HANDOFF顶部和docs/历史归档/信息导出开发进展.md第四批。M02增加字面前置列表对捕获完成记录的核对，以及按需读取的地图、四指定旗标和Domination条件有限输入；61条定义为13无前置/48未满足，主动查询和三次暂停周期交付通过。它没有实现分支可见性、完整trigger或当前可完成判定，也不是完整DLC清单；198项信息测试全通过，全套仍有旧失败和错误。
 
 仍为PID37376/session37376-1dd639fff00a820，POR玩家/FRA观察方，暂停1455.11.13/raw56553384，沿用现有安装；没有新安装、派发、推进或保存。来源合同、精确身份、测试审计与归档见HANDOFF。REA已可复用本地只读Ghidra缓存，下一步从加载根的子任务向量和potential显示路径继续；不得重跑大型反汇编、重新导入整映像或重放历史业务。
 
 ## 2026-10-24 任务信息接口入口
 
-按计划开发的goal继续active。先读HANDOFF顶部、docs/05-历史记录/信息导出开发进展.md与docs/02-使用与接口/任务/任务信息接口.md。M01/M02/M04已部分接入实时任务槽位、完成记录及对应静态规则；最终MCP验收为5槽/18根、空完成列表和两次暂停场景周期交付。分支可见性、条件进度与奖励实际效果未求值，32个部分可调用主题不代表全目录完成。保存来源另用--mission-save，始终recorded/query-only、没有伪造实时会话。
+按计划开发的goal继续active。先读HANDOFF顶部、docs/历史归档/信息导出开发进展.md与docs/信息导出/接口/任务/任务信息接口.md。M01/M02/M04已部分接入实时任务槽位、完成记录及对应静态规则；最终MCP验收为5槽/18根、空完成列表和两次暂停场景周期交付。分支可见性、条件进度与奖励实际效果未求值，32个部分可调用主题不代表全目录完成。保存来源另用--mission-save，始终recorded/query-only、没有伪造实时会话。
 
 仍为PID37376/session37376-1dd639fff00a820，POR玩家/FRA观察方，暂停1455.11.13/raw56553384，沿用已有R74F安装。没有新安装、业务派发、推进或保存。R70完整保存与实时都是18根，旧来源清单的17根是漏项，不能沿用；完成字段在保存中缺失仍unknown。原生版本、纯RPM/普通反汇编边界、最终证据和剩余工作见HANDOFF最新节，历史业务不重放。
 
 ## 2026-10-24 信息来源扩展入口
 
-按计划开发的goal仍active。先读HANDOFF顶部与docs/05-历史记录/信息导出开发进展.md。国家资源三个字段及暂停场景的真实MCP多周期导出已验收，静态贸易可独立读取；74项全字段、实际任务树、新变化阳性及逐场战报仍未完成。当前游戏PID37376/session37376-1dd639fff00a820，1.37.4/R74F DLL，POR玩家/FRA观察方，暂停1455.11.13/raw56553384；安装已有记录，不得重复注入。只读报告与精确身份见HANDOFF，本批没有外交提交、日期推进或新保存。历史业务不重放，1.37.5冻结地址与证据不混入本批。
+按计划开发的goal仍active。先读HANDOFF顶部与docs/历史归档/信息导出开发进展.md。国家资源三个字段及暂停场景的真实MCP多周期导出已验收，静态贸易可独立读取；74项全字段、实际任务树、新变化阳性及逐场战报仍未完成。当前游戏PID37376/session37376-1dd639fff00a820，1.37.4/R74F DLL，POR玩家/FRA观察方，暂停1455.11.13/raw56553384；安装已有记录，不得重复注入。只读报告与精确身份见HANDOFF，本批没有外交提交、日期推进或新保存。历史业务不重放，1.37.5冻结地址与证据不混入本批。
 
 ## 2026-10-24 信息接口开发入口
 
-新工作为信息导出与自主订阅，先读 HANDOFF.md 顶部和 docs/05-历史记录/信息导出开发进展.md。MCP入口 tools/serve_information.py，合同与示例见 docs/03-开发与验收/信息服务合同.md、docs/02-使用与接口/信息接口使用说明.md。框架及历史真实记录集成已完成，实时采集与74项全字段仍未验收，不得把目录登记当作完整导出。下方外交交付和暂停说明保留各自版本与历史范围。
+新工作为信息导出与自主订阅，先读 HANDOFF.md 顶部和 docs/历史归档/信息导出开发进展.md。MCP入口 tools/serve_information.py，合同与示例见 docs/信息导出/开发与验收/信息服务合同.md、docs/信息导出/接口/信息接口使用说明.md。框架及历史真实记录集成已完成，实时采集与74项全字段仍未验收，不得把目录登记当作完整导出。下方外交交付和暂停说明保留各自版本与历史范围。
 
 ## 2026-10-20 合并后的状态入口
 
@@ -3158,11 +3158,11 @@ goal继续active，先读HANDOFF顶部、docs/05-历史记录/信息导出开发
 
 ## 2026-10-17 PR #4 上游合并
 
-本分支已整合上游 1.37.4 开发与 2026-10-16 冻结的 1.37.5 研究快照。下方的暂停状态及进程编号分别属于各自历史检查点，不构成新的实机操作授权。工具兼容、历史来源及离线验证范围见[合并说明](docs/research-20261016/merge-20261017.md)。
+本分支已整合上游 1.37.4 开发与 2026-10-16 冻结的 1.37.5 研究快照。下方的暂停状态及进程编号分别属于各自历史检查点，不构成新的实机操作授权。工具兼容、历史来源及离线验证范围见[合并说明](docs/历史归档/research-20261016/merge-20261017.md)。
 
 ## 2026-10-16 最新工作状态
 
-用户要求暂停逆向，核对GitHub并整理上传已有结果；不要自行恢复实机测试或新采样。先读[研究进展](docs/05-历史记录/research-20261016.md)、HANDOFF顶部和work/AGENTS.md。本快照包含1.37.5源码及选定证据，旧1.37.4流程是历史。
+用户要求暂停逆向，核对GitHub并整理上传已有结果；不要自行恢复实机测试或新采样。先读[研究进展](docs/历史归档/research-20261016.md)、HANDOFF顶部和work/AGENTS.md。本快照包含1.37.5源码及选定证据，旧1.37.4流程是历史。
 
 120项原批次41派发/77拒绝/2未知；48效果信号/44历史持久化/42候选，仍未全通过。直接观察稳定15 profile/98pin，工具表v8为7项受限验收。和平v2只验空队列、继承人只验双向missing-key；当前缺席不证明原请求。R87已完整独审接受，R89只源码审，v7只方案；accepted lookup仍v6。native_ready=false，禁止重发策略保持。
 
@@ -3172,7 +3172,7 @@ goal继续active，先读HANDOFF顶部、docs/05-历史记录/信息导出开发
 
 当前状态入口：[HANDOFF.md](HANDOFF.md)（2026-10-05）。新对话或协作者先读交接文档，再按索引核对证据；以下安装部分是模组层说明，不代表完整原生外交能力。
 
-当前联盟需求的系统逆向入口：[联盟外交逆向梳理](docs/04-实现研究/关系与外交/联盟外交逆向梳理.md)、[逆向索引模块](reverse_engineering/README.md)。先复用已绑定 EXE 哈希的函数/来源，再按优先问题深入；静态结论与归档运行身份分别维护。
+当前联盟需求的系统逆向入口：[联盟外交逆向梳理](docs/外交操作/实现研究/关系与外交/联盟外交逆向梳理.md)、[逆向索引模块](reverse_engineering/README.md)。先复用已绑定 EXE 哈希的函数/来源，再按优先问题深入；静态结论与归档运行身份分别维护。
 
 目标：玩家与外部 LLM 交流，法国保持原生 AI 国家，LLM 接管外交决策，原生 AI 保留军事经济。当前仍是单机原型，没有配置真实 LLM 服务。不使用电脑/UI 自动化；助手已负责自动重启和 DLL 安装，用户手动载入、控制台和推进。
 
@@ -3182,13 +3182,13 @@ goal继续active，先读HANDOFF顶部、docs/05-历史记录/信息导出开发
 
 ## 安装
 
-先按[路径配置](docs/03-开发与验收/路径配置.md)复制 `local.env.example` 为 `local.env`，填写本机的 `EU4_GAME_ROOT`、`EU4_USER_DATA` 和 `EU4_PYTHON`；真实路径只保存在被忽略的 `local.env` 中。随后运行 `python work/install.py`，从本机 1.37.4 原版脚本构建独立覆盖模组，复制到用户数据目录的 `mod/llm_bridge`，并在 `dlc_load.json` 末尾启用。第一次运行会备份原 `dlc_load.json` 到 `work/backup/`。不更改游戏安装目录。需要重新启动游戏加载。
+先按[路径配置](docs/共用开发/路径配置.md)复制 `local.env.example` 为 `local.env`，填写本机的 `EU4_GAME_ROOT`、`EU4_USER_DATA` 和 `EU4_PYTHON`；真实路径只保存在被忽略的 `local.env` 中。随后运行 `python work/install.py`，从本机 1.37.4 原版脚本构建独立覆盖模组，复制到用户数据目录的 `mod/llm_bridge`，并在 `dlc_load.json` 末尾启用。第一次运行会备份原 `dlc_load.json` 到 `work/backup/`。不更改游戏安装目录。需要重新启动游戏加载。
 
 安装器从 `local.env` 读取路径，换机器只需重新填写本地配置。模组复制完整外交动作和 on_actions 原版文件，因此可能与改动同文件的其他内容模组冲突；当前保留已启用的汉化模组。
 
 ## 新测试局
 
-人工读取日志和复现实验的步骤见[人工实验与日志读取流程](docs/03-开发与验收/人工实验与日志读取流程.md)，agent也可参考该流程。桥接命令详见 bridge/README.md。
+人工读取日志和复现实验的步骤见[人工实验与日志读取流程](docs/共用开发/人工实验与日志读取流程.md)，agent也可参考该流程。桥接命令详见 bridge/README.md。
 
 ## 当前控制边界
 

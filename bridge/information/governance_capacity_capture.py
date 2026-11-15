@@ -6,6 +6,8 @@ import json
 from pathlib import Path
 import re
 
+from work.document_paths import resolve_repo_path
+
 from . import foreign_country_memory as _backend
 from . import foreign_quality_capture as _base
 from . import foreign_technology as _technology
@@ -34,7 +36,7 @@ def _load_profile():
             or profile.get('code_guards', [])[:len(parent['code_guards'])] != parent['code_guards']):
         raise ValueError('GOVERNANCE_CAPACITY_PROFILE_BUILD_OR_PARENT')
     for record in profile['source_evidence'] + profile['layout_dependencies']:
-        path = (ROOT/record['path']).resolve()
+        path = resolve_repo_path(ROOT, record['path']).resolve()
         path.relative_to(ROOT)
         if path.stat().st_size != record['bytes'] or _owner._sha(path) != record['sha256']:
             raise ValueError('GOVERNANCE_CAPACITY_PROFILE_DEPENDENCY')

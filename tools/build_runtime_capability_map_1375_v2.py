@@ -4,8 +4,8 @@ import json
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-OLD = 'docs/runtime-capability-map-1375.json'
-OUTPUT = ROOT / 'docs/runtime-capability-map-1375-v2.json'
+OLD = 'docs/外交操作/数据/runtime-capability-map-1375.json'
+OUTPUT = ROOT / 'docs/外交操作/数据/runtime-capability-map-1375-v2.json'
 HERE = 'work/candidates/support-heir-current-observer-1375-v1/'
 REVIEWS = {
  'work/reports/support-heir-current-observer-source-review-20261015-r1/independent-source-ready.json': '6ca2a47412189b621ecc765791557f0e4ea861d26317b2831fb5d2b7f6842a21',
@@ -64,7 +64,7 @@ def main():
  with OUTPUT.open('x', encoding='utf-8', newline='\n') as stream:
   stream.write(json.dumps(result, indent=2, ensure_ascii=False) + '\n')
  print(json.dumps(dict(status='built', accepted_entries=5, pending_active_world=1,
-  output=pin('docs/runtime-capability-map-1375-v2.json'))))
+  output=pin('docs/外交操作/数据/runtime-capability-map-1375-v2.json'))))
 
 
 if __name__ == '__main__': main()
