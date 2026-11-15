@@ -393,3 +393,131 @@ def test_manifest_batch_limit_must_fit_supported_range(tmp_path, monkeypatch, li
     manifest.write_text(json.dumps(document), encoding='utf-8')
     with pytest.raises(ValueError, match='CWTOOLS_MANIFEST_BATCH_SIZE_INVALID'):
         cwtools_script.CwtoolsScriptParser(manifest)
+
+
+def _local_fixture_root(tmp_path: Path, monkeypatch) -> tuple[Path, Path, Path]:
+    root = tmp_path / "portable-repo"
+    source_dir = root / "tools" / "dotnet" / "cwtools-script"
+    source_dir.mkdir(parents=True)
+    output_dir = root / "work" / "deps" / "cwtools-script" / "publish"
+    output_dir.mkdir(parents=True)
+    dotnet = root / "fake-dotnet.exe"
+    dotnet.write_bytes(b"fake configured dotnet")
+    source_files = {
+        "CWTOOLS-LICENSE-MIT.txt": b"MIT\n",
+        "CwtoolsScript.fsproj": b"<Project />\n",
+        "NuGet.Config": b"<configuration />\n",
+        "Program.fs": b"let parserVersion = \"0.6.0-alpha\"\n",
+        "packages.lock.json": json.dumps({"dependencies": {"net8.0": {
+            "CWTools": {"resolved": "0.6.0-alpha", "requested": "[0.6.0-alpha]"},
+            "FSharp.Core": {"resolved": "9.0.303", "requested": "[9.0.303]"},
+        }}}).encode("utf-8"),
+    }
+    source_rows = []
+    for name, raw in source_files.items():
+        path = source_dir / name
+        path.write_bytes(raw)
+        source_rows.append({"path": path.relative_to(root).as_posix(),
+                            "bytes": len(raw), "sha256": _sha(raw)})
+    assembly = output_dir / "CwtoolsScript.dll"
+    runtime = output_dir / "CwtoolsScript.runtimeconfig.json"
+    assembly.write_bytes(b"fake built parser assembly")
+    runtime.write_bytes(b"{}\n")
+    artifact_rows = []
+    for path in (assembly, runtime):
+        raw = path.read_bytes()
+        artifact_rows.append({"path": path.relative_to(root).as_posix(),
+                              "bytes": len(raw), "sha256": _sha(raw)})
+
+    source_manifest = source_dir / "adapter-manifest.json"
+    source_document = {
+        "schema": cwtools_script.SOURCE_MANIFEST_SCHEMA,
+        "package": {"id": "CWTools", "version": cwtools_script.PACKAGE_VERSION},
+        "license": "MIT",
+        "target_framework": "net8.0",
+        "max_batch_files": 64,
+        "project": "tools/dotnet/cwtools-script/CwtoolsScript.fsproj",
+        "output_directory": "work/deps/cwtools-script/publish",
+        "assembly": "work/deps/cwtools-script/publish/CwtoolsScript.dll",
+        "parser": {"name": "CWTools", "version": cwtools_script.PACKAGE_VERSION},
+        "files": source_rows,
+    }
+    source_raw = json.dumps(source_document).encode("utf-8")
+    source_manifest.write_bytes(source_raw)
+    local_manifest = root / "work" / "deps" / "cwtools-script" / "adapter-manifest.json"
+    local_manifest.parent.mkdir(parents=True, exist_ok=True)
+    local_manifest.write_text(json.dumps({
+        "schema": cwtools_script.LOCAL_MANIFEST_SCHEMA,
+        "package": {"id": "CWTools", "version": cwtools_script.PACKAGE_VERSION},
+        "license": "MIT",
+        "max_batch_files": 64,
+        "source_manifest": {"path": source_manifest.relative_to(root).as_posix(),
+                            "bytes": len(source_raw), "sha256": _sha(source_raw)},
+        "artifacts": artifact_rows,
+    }), encoding="utf-8")
+    monkeypatch.setattr(cwtools_script, "ROOT", root)
+    monkeypatch.setattr(cwtools_script, "SOURCE_MANIFEST", source_manifest)
+    monkeypatch.setattr(cwtools_script, "DEFAULT_MANIFEST", local_manifest)
+    monkeypatch.setenv("EU4_DOTNET", str(dotnet))
+    return root, local_manifest, assembly
+
+
+def test_missing_local_build_reports_the_explicit_build_command(tmp_path, monkeypatch):
+    local_manifest = tmp_path / "repo" / "work" / "deps" / "cwtools-script" / "adapter-manifest.json"
+    monkeypatch.setattr(cwtools_script, "DEFAULT_MANIFEST", local_manifest)
+    with pytest.raises(ValueError, match="CWTOOLS_PARSER_BUILD_REQUIRED") as error:
+        cwtools_script.CwtoolsScriptParser()
+    assert "python tools/build_cwtools_parser.py" in str(error.value)
+
+
+def test_local_manifest_uses_configured_dotnet_and_pins_source_and_artifacts(tmp_path, monkeypatch):
+    _root, manifest, assembly = _local_fixture_root(tmp_path, monkeypatch)
+    source = tmp_path / "sample.txt"
+    source.write_text("trigger = { owns = 183 }", encoding="utf-8")
+    calls = []
+
+    def runner(command):
+        calls.append(command)
+        assert command[0] == str(manifest.parents[3] / "fake-dotnet.exe")
+        assert command[1] == str(assembly)
+        return _document([_row(Path(command[2]), items=[_scalar("owns", "183", 1)])])
+
+    parser = cwtools_script.CwtoolsScriptParser(manifest, runner=runner)
+    parsed = parser.parse_files([source])[str(source.resolve())]
+    assert parsed["nodes"][0].key == "owns"
+    assert parser.context()["status"] == "ready"
+    assert len(calls) == 1
+
+    source_file = manifest.parents[3] / "tools" / "dotnet" / "cwtools-script" / "Program.fs"
+    source_file.write_bytes(b"modified parser source")
+    assert parser.context()["status"] == "unready"
+
+
+def test_local_manifest_rejects_changed_built_artifact(tmp_path, monkeypatch):
+    _root, manifest, assembly = _local_fixture_root(tmp_path, monkeypatch)
+    parser = cwtools_script.CwtoolsScriptParser(manifest, runner=lambda _command: {})
+    assembly.write_bytes(b"modified parser assembly")
+    assert parser.context()["status"] == "unready"
+
+
+def test_stale_local_manifest_reports_build_command_when_artifact_is_missing(tmp_path, monkeypatch):
+    _root, manifest, assembly = _local_fixture_root(tmp_path, monkeypatch)
+    assembly.unlink()
+    with pytest.raises(ValueError, match="CWTOOLS_PARSER_BUILD_REQUIRED") as error:
+        cwtools_script.CwtoolsScriptParser(manifest, runner=lambda _command: {})
+    assert "python tools/build_cwtools_parser.py" in str(error.value)
+
+
+def test_builder_uses_optional_nuget_cache_without_overriding_standard_variable(
+        tmp_path, monkeypatch):
+    from tools import build_cwtools_parser
+
+    configured_cache = tmp_path / "nuget-cache"
+    monkeypatch.delenv("NUGET_PACKAGES", raising=False)
+    monkeypatch.setattr(build_cwtools_parser, "get_path",
+                        lambda name, *, required=False: (
+                            configured_cache if name == "EU4_NUGET_PACKAGES" else None))
+    assert build_cwtools_parser._dotnet_environment()["NUGET_PACKAGES"] == str(configured_cache)
+
+    monkeypatch.setenv("NUGET_PACKAGES", "explicit-standard-cache")
+    assert build_cwtools_parser._dotnet_environment()["NUGET_PACKAGES"] == "explicit-standard-cache"

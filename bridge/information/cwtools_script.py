@@ -10,21 +10,34 @@ import hashlib
 import math
 from pathlib import Path
 import re
+import shutil
 import subprocess
 import tempfile
 
 from .saved_province_interests import _json, _pin
+from work.local_config import get_path
 
 ROOT = Path(__file__).resolve().parents[2]
-DEFAULT_MANIFEST = ROOT / 'tools/dotnet/cwtools-script/adapter-manifest.json'
+SOURCE_MANIFEST = ROOT / 'tools/dotnet/cwtools-script/adapter-manifest.json'
+DEFAULT_MANIFEST = ROOT / 'work/deps/cwtools-script/adapter-manifest.json'
 PACKAGE_VERSION = '0.6.0-alpha'
 SCHEMA = 'eu4.cwtools.script_ast.v1'
+SOURCE_MANIFEST_SCHEMA = 'eu4.cwtools.parser.source.v1'
+LOCAL_MANIFEST_SCHEMA = 'eu4.cwtools.parser.local.v1'
+LEGACY_MANIFEST_SCHEMA = 'eu4.cwtools.parser.v1'
 MAX_BATCH_FILES = 64
 MAX_BATCH_BYTES = 4 * 1024 * 1024
 MAX_OUTPUT_BYTES = 64 * 1024 * 1024
+MAX_ARTIFACT_BYTES = 128 * 1024 * 1024
 MAX_NODES = 262144
 MAX_DEPTH = 96
 SHA = re.compile(r'[0-9a-f]{64}\Z')
+BUILD_COMMAND = 'python tools/build_cwtools_parser.py'
+
+
+def _build_required(reason):
+    suffix = f' ({reason})' if reason else ''
+    return ValueError(f'CWTOOLS_PARSER_BUILD_REQUIRED: run `{BUILD_COMMAND}`{suffix}')
 
 
 def _input_pin(path):
@@ -40,10 +53,67 @@ class CwtoolsScriptParser:
     def __init__(self, manifest=None, *, runner=None):
         self.manifest = Path(manifest or DEFAULT_MANIFEST).resolve()
         self._runner = runner or self._run
+        if not self.manifest.is_file() and self.manifest == DEFAULT_MANIFEST.resolve():
+            raise _build_required('local parser artifacts are missing')
         manifest_pin = _pin(self.manifest, 256 * 1024)
         document = _json(self.manifest.read_bytes())
-        if (not isinstance(document, dict) or document.get('schema') != 'eu4.cwtools.parser.v1'
-                or document.get('package') != {'id': 'CWTools', 'version': PACKAGE_VERSION}
+        if not isinstance(document, dict):
+            raise ValueError('CWTOOLS_MANIFEST_INVALID')
+        self._pins = [manifest_pin]
+        if document.get('schema') == LEGACY_MANIFEST_SCHEMA:
+            self._load_legacy_manifest(document)
+        elif document.get('schema') == LOCAL_MANIFEST_SCHEMA:
+            self._load_local_manifest(document)
+        else:
+            raise ValueError('CWTOOLS_MANIFEST_INVALID')
+        self._metadata = {'name': 'CWTools', 'version': PACKAGE_VERSION,
+                          'manifest_sha256': manifest_pin['sha256'],
+                          'semantics': 'syntax_only', 'conditions_evaluated': False,
+                          'effects_executed': False}
+        self.assert_current()
+
+    def _repo_file(self, relative, code):
+        if (not isinstance(relative, str) or not relative or Path(relative).is_absolute()
+                or '\\' in relative or '..' in Path(relative).parts):
+            raise ValueError(code)
+        path = (ROOT / relative).resolve()
+        try:
+            path.relative_to(ROOT.resolve())
+        except ValueError as exc:
+            raise ValueError(code) from exc
+        return path
+
+    @staticmethod
+    def _valid_pin_record(record):
+        return (isinstance(record, dict) and isinstance(record.get('path'), str)
+                and type(record.get('bytes')) is int and record['bytes'] > 0
+                and isinstance(record.get('sha256'), str) and SHA.fullmatch(record['sha256']))
+
+    def _pin_records(self, records, *, minimum, maximum, seen, error_prefix,
+                     max_each=MAX_ARTIFACT_BYTES, max_total=MAX_ARTIFACT_BYTES):
+        if not isinstance(records, list) or not minimum <= len(records) <= maximum:
+            raise ValueError(f'{error_prefix}_FILES_INVALID')
+        total = 0
+        pinned = []
+        for record in records:
+            if not self._valid_pin_record(record):
+                raise ValueError(f'{error_prefix}_PIN_INVALID')
+            path = self._repo_file(record['path'], f'{error_prefix}_PATH_INVALID')
+            if path in seen:
+                raise ValueError(f'{error_prefix}_DUPLICATE_PIN')
+            seen.add(path)
+            measured = _pin(path, max_each)
+            if (measured['size_bytes'], measured['sha256']) != (record['bytes'], record['sha256']):
+                raise ValueError(f'{error_prefix}_PIN_MISMATCH')
+            total += measured['size_bytes']
+            if total > max_total:
+                raise ValueError(f'{error_prefix}_SIZE_LIMIT')
+            pinned.append(measured)
+        self._pins.extend(pinned)
+        return pinned
+
+    def _load_legacy_manifest(self, document):
+        if (document.get('package') != {'id': 'CWTools', 'version': PACKAGE_VERSION}
                 or document.get('license') != 'MIT'):
             raise ValueError('CWTOOLS_MANIFEST_INVALID')
         self._max_batch_files = document.get('max_batch_files', 16)
@@ -54,36 +124,106 @@ class CwtoolsScriptParser:
         if (not isinstance(records, list) or not 2 <= len(records) <= 64
                 or not isinstance(command, list) or len(command) != 2):
             raise ValueError('CWTOOLS_MANIFEST_FILES_INVALID')
-        self._pins = [manifest_pin]
         seen = set()
-        for record in records:
-            if (not isinstance(record, dict) or not isinstance(record.get('path'), str)
-                    or Path(record['path']).is_absolute() or '\\' in record['path']
-                    or '..' in Path(record['path']).parts or type(record.get('bytes')) is not int
-                    or not isinstance(record.get('sha256'), str) or not SHA.fullmatch(record['sha256'])):
-                raise ValueError('CWTOOLS_MANIFEST_PIN_INVALID')
-            path = (ROOT / record['path']).resolve()
-            path.relative_to(ROOT)
-            if path in seen:
-                raise ValueError('CWTOOLS_MANIFEST_DUPLICATE_PIN')
-            seen.add(path)
-            measured = _pin(path, 128 * 1024 * 1024)
-            if (measured['size_bytes'], measured['sha256']) != (record['bytes'], record['sha256']):
-                raise ValueError('CWTOOLS_MANIFEST_PIN_MISMATCH')
-            self._pins.append(measured)
+        pinned = self._pin_records(records, minimum=2, maximum=64, seen=seen,
+                                   error_prefix='CWTOOLS_MANIFEST', max_total=512 * 1024 * 1024)
         self._command = []
         for relative in command:
             if not isinstance(relative, str):
                 raise ValueError('CWTOOLS_COMMAND_INVALID')
-            path = (ROOT / relative).resolve()
+            path = self._repo_file(relative, 'CWTOOLS_COMMAND_INVALID')
             if path not in seen:
                 raise ValueError('CWTOOLS_COMMAND_NOT_PINNED')
             self._command.append(str(path))
-        self._metadata = {'name': 'CWTools', 'version': PACKAGE_VERSION,
-                          'manifest_sha256': manifest_pin['sha256'],
-                          'semantics': 'syntax_only', 'conditions_evaluated': False,
-                          'effects_executed': False}
-        self.assert_current()
+
+    def _load_local_manifest(self, document):
+        if (document.get('package') != {'id': 'CWTools', 'version': PACKAGE_VERSION}
+                or document.get('license') != 'MIT'):
+            raise ValueError('CWTOOLS_MANIFEST_INVALID')
+        self._max_batch_files = document.get('max_batch_files')
+        if type(self._max_batch_files) is not int or not 1 <= self._max_batch_files <= MAX_BATCH_FILES:
+            raise ValueError('CWTOOLS_MANIFEST_BATCH_SIZE_INVALID')
+
+        seen = {self.manifest}
+        source = document.get('source_manifest')
+        expected_source_path = SOURCE_MANIFEST.resolve().relative_to(ROOT.resolve()).as_posix()
+        if (not isinstance(source, dict) or source.get('path') != expected_source_path
+                or type(source.get('bytes')) is not int or source['bytes'] <= 0
+                or not isinstance(source.get('sha256'), str) or not SHA.fullmatch(source['sha256'])):
+            raise ValueError('CWTOOLS_SOURCE_MANIFEST_REFERENCE_INVALID')
+        source_path = self._repo_file(source['path'], 'CWTOOLS_SOURCE_MANIFEST_PATH_INVALID')
+        source_pin = _pin(source_path, 256 * 1024)
+        if (source_pin['size_bytes'], source_pin['sha256']) != (source['bytes'], source['sha256']):
+            raise _build_required('the local manifest is stale for the current source manifest')
+        if source_path in seen:
+            raise ValueError('CWTOOLS_MANIFEST_DUPLICATE_PIN')
+        seen.add(source_path)
+        self._pins.append(source_pin)
+        source_document = _json(source_path.read_bytes())
+        if (not isinstance(source_document, dict)
+                or source_document.get('schema') != SOURCE_MANIFEST_SCHEMA
+                or source_document.get('package') != {'id': 'CWTools', 'version': PACKAGE_VERSION}
+                or source_document.get('license') != 'MIT'
+                or source_document.get('target_framework') != 'net8.0'
+                or source_document.get('max_batch_files') != self._max_batch_files
+                or source_document.get('assembly') != 'work/deps/cwtools-script/publish/CwtoolsScript.dll'
+                or source_document.get('output_directory') != 'work/deps/cwtools-script/publish'):
+            raise ValueError('CWTOOLS_SOURCE_MANIFEST_INVALID')
+        source_records = source_document.get('files')
+        source_pins = self._pin_records(source_records, minimum=5, maximum=32, seen=seen,
+                                        error_prefix='CWTOOLS_SOURCE', max_each=8 * 1024 * 1024,
+                                        max_total=32 * 1024 * 1024)
+        package_lock = next((Path(pin['path']) for pin in source_pins
+                             if Path(pin['path']).name == 'packages.lock.json'), None)
+        if package_lock is None:
+            raise ValueError('CWTOOLS_PACKAGE_LOCK_MISSING')
+        lock = _json(package_lock.read_bytes())
+        locked = lock.get('dependencies', {}).get('net8.0', {}) if isinstance(lock, dict) else {}
+        if (locked.get('CWTools', {}).get('resolved') != PACKAGE_VERSION
+                or locked.get('FSharp.Core', {}).get('resolved') != '9.0.303'):
+            raise ValueError('CWTOOLS_PACKAGE_LOCK_MISMATCH')
+
+        artifact_directory = source_document['output_directory']
+        assembly_relative = source_document['assembly']
+        assembly_path = self._repo_file(assembly_relative, 'CWTOOLS_ARTIFACT_PATH_INVALID')
+        artifacts = document.get('artifacts')
+        try:
+            artifact_pins = self._pin_records(artifacts, minimum=2, maximum=128, seen=seen,
+                                              error_prefix='CWTOOLS_ARTIFACT',
+                                              max_each=MAX_ARTIFACT_BYTES,
+                                              max_total=MAX_ARTIFACT_BYTES)
+        except (OSError, ValueError) as exc:
+            raise _build_required(f'local parser artifacts are missing or invalid: {exc}') from exc
+        directory_prefix = artifact_directory.rstrip('/') + '/'
+        artifact_paths = {Path(record['path']) for record in artifacts}
+        if (Path(assembly_relative) not in artifact_paths
+                or any(not path.as_posix().startswith(directory_prefix) for path in artifact_paths)):
+            raise _build_required('local parser artifact manifest is invalid')
+        self._command = [self._dotnet_command(), str(assembly_path)]
+
+    @staticmethod
+    def _dotnet_command():
+        configured = get_path('EU4_DOTNET', required=False)
+        candidates = []
+        if configured is not None:
+            configured = Path(configured)
+            if configured.is_dir():
+                candidates.extend((configured / 'dotnet.exe', configured / 'dotnet'))
+            else:
+                candidates.append(configured)
+        for candidate in candidates:
+            if candidate.is_file():
+                return str(candidate.resolve())
+        if configured is not None:
+            found = shutil.which(str(configured))
+            if found:
+                return found
+        found = shutil.which('dotnet')
+        if found:
+            return found
+        raise ValueError(
+            'CWTOOLS_DOTNET_NOT_CONFIGURED: set EU4_DOTNET, then run '
+            '`python tools/build_cwtools_parser.py`')
 
     def assert_current(self):
         for expected in self._pins:
@@ -105,7 +245,7 @@ class CwtoolsScriptParser:
         with tempfile.TemporaryFile() as output, tempfile.TemporaryFile() as errors:
             try:
                 result = subprocess.run(command, stdin=subprocess.DEVNULL, stdout=output,
-                                        stderr=errors, timeout=60, close_fds=True)
+                                        stderr=errors, timeout=60, close_fds=True, cwd=ROOT)
             except (OSError, subprocess.TimeoutExpired) as exc:
                 raise ValueError('CWTOOLS_PARSER_EXECUTION_FAILED') from exc
             output.seek(0)

@@ -33,6 +33,8 @@ _COMMIT = "a85622d368bbb7afca938ed70fdd5eda44aec769"
 _LICENSE = "MIT"
 _SCOPES_BYTES = 876
 _SCOPES_SHA256 = "be3bfe226fd202c0268f4aacdfbb10548de38e4632ea5f59e50a9bf231739f5d"
+_SCOPES_LF_BYTES = 830
+_SCOPES_LF_SHA256 = "d276ea723dd44108e5597188c2e6c5feff64dc01f6a9baaf6828ac82d774b8c8"
 _EXPECTED_VENDOR = {
     "schema": "cwtools-eu4-config.vendored-scope-rules.v1",
     "repository_url": _REPOSITORY_URL,
@@ -173,7 +175,10 @@ def load_scope_rules(root: str | Path | None = None) -> dict[str, Any]:
     """
     workspace = _DEFAULT_ROOT if root is None else Path(root).resolve()
     vendor_dir = workspace / _VENDOR_RELATIVE
-    vendor_raw = _read_bounded(vendor_dir / _VENDOR_NAME, _MAX_VENDOR_BYTES)
+    vendor_path = vendor_dir / _VENDOR_NAME
+    if not vendor_path.exists():
+        vendor_path = vendor_dir.with_name(vendor_dir.name + ".vendor.json")
+    vendor_raw = _read_bounded(vendor_path, _MAX_VENDOR_BYTES)
     vendor = _strict_json(vendor_raw)
     _require(type(vendor) is dict and vendor == _EXPECTED_VENDOR,
              "CWTools VENDOR.json schema, commit, license, or consumed-file pin mismatch")
@@ -185,8 +190,11 @@ def load_scope_rules(root: str | Path | None = None) -> dict[str, Any]:
     scopes_path = vendor_dir / _SCOPES_NAME
     raw = _read_bounded(scopes_path, _MAX_SCOPE_FILE_BYTES)
     actual_sha = hashlib.sha256(raw).hexdigest()
-    _require(len(raw) == consumed["bytes"] == _SCOPES_BYTES
-             and actual_sha == consumed["sha256"] == _SCOPES_SHA256,
+    canonical = raw.replace(b"\r\n", b"\n")
+    _require(consumed["bytes"] == _SCOPES_BYTES
+             and consumed["sha256"] == _SCOPES_SHA256
+             and len(canonical) == _SCOPES_LF_BYTES
+             and hashlib.sha256(canonical).hexdigest() == _SCOPES_LF_SHA256,
              "Vendored scopes.cwt bytes or SHA-256 mismatch")
     parsed = _parse_scope_rules(raw)
     source = {
@@ -196,6 +204,7 @@ def load_scope_rules(root: str | Path | None = None) -> dict[str, Any]:
         "file": _SCOPES_NAME,
         "file_bytes": len(raw),
         "file_sha256": actual_sha,
+        "canonical_lf_sha256": _SCOPES_LF_SHA256,
         "coverage": "one pinned scope metadata file only; not whole EU4 1.37.4 configuration and not runtime visibility",
     }
     return {

@@ -1,10 +1,12 @@
 @echo off
 setlocal
+if /i "%~1"=="__codex_internal_msvc_build" goto run_build
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File "%~dp0..\..\..\work\native\run-msvc-build.ps1" -BuildScript "%~f0" -OutputDirectory "%~1"
+exit /b %errorlevel%
+:run_build
 set "tagcommand31_src=%~dp0src\work\candidates\v26-gap-curry-bootstrap-1375\"
-set "tagcommand31_out=%~1"
+set "tagcommand31_out=%~2"
 mkdir "%tagcommand31_out%" || exit /b 10
-call "C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Auxiliary\Build\vcvars64.bat" > "%tagcommand31_out%\environment.stdout" 2>&1
-if errorlevel 1 exit /b 11
 for %%f in (bootstrap installer native_rival) do (
  cl /nologo /std:c++17 /EHsc /W4 /WX /O2 /MT /GS /c "%tagcommand31_src%%%f.cpp" /Fo"%tagcommand31_out%\%%f.obj" > "%tagcommand31_out%\%%f.stdout" 2> "%tagcommand31_out%\%%f.stderr"
  if errorlevel 1 exit /b 12

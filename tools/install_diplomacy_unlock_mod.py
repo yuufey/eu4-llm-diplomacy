@@ -13,6 +13,7 @@ import uuid
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 from tools.build_diplomacy_unlock_mod import EXE_SHA, NAME
+from work.local_config import game_root, user_data
 
 ENTRY = f"mod/{NAME}.mod"
 
@@ -97,11 +98,11 @@ def install(user_data: Path, game_root: Path, *, source=None, disable=False):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--user-data", type=Path, default=Path.home() / "Documents/Paradox Interactive/Europa Universalis IV")
-    parser.add_argument("--game-root", type=Path, default=ROOT.parent)
+    parser.add_argument("--user-data", type=Path)
+    parser.add_argument("--game-root", type=Path)
     parser.add_argument("--disable", action="store_true")
     args = parser.parse_args()
-    print(json.dumps(install(args.user_data, args.game_root, disable=args.disable), ensure_ascii=False, indent=2))
+    print(json.dumps(install(args.user_data or user_data(), args.game_root or game_root(), disable=args.disable), ensure_ascii=False, indent=2))
 
 
 if __name__ == "__main__":

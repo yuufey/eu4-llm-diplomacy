@@ -1,0 +1,6 @@
+[submodule "third_party/cwtools-eu4-config"]
+	path = third_party/cwtools-eu4-config
+	url = https://github.com/cwtools/cwtools-eu4-config.git
+[submodule "third_party/jomini"]
+	path = third_party/jomini
+	url = https://github.com/rakaly/jomini.git

@@ -1,6 +1,7 @@
 # Native manifests and retained evidence refer to exact repository bytes.
 # Keep checkouts identical across machines with different core.autocrlf values.
 * -text
+* whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol
 
 # These reviewed artifacts are checked by byte count and SHA-256.
 # Preserve their committed bytes when checking out on Windows.

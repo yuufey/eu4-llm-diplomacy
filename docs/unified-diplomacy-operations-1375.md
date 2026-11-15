@@ -1,5 +1,17 @@
 # EU4 1.37.5 统一外交操作接口
 
+## 适用版本与本地入口
+
+本页描述远端V32宿主的1.37.5接口合同。`bridge.diplomacy_operations`提供可复用的目录、请求标准化和响应投影，响应保留原生决定及其验证标志、送达与效果状态。整体接受状态继续取自观察摘要。
+
+当前仓库的信息模块及非玩家FRA实机入口使用1.37.4，信息服务入口为`tools/serve_information.py`，外交工具入口为`tools/diplomacy.py`。游戏、用户数据及工具路径通过`local.env`配置，owner适配器的仓库根目录从自身位置推导。
+
+远端提交还引用了未包含的V32运行时模块，包括`eu4harness.tools`、`v32_diplomacy_dispatch_20261019`、`cold_source_identity_20261022`及候选目录中的`tag32_api`、`subject_codec`和各transport模块。重建完整V32宿主需要原交付提供这些依赖及对应构建。214项参数查询和1.37.5实机结果的适用现场保存在原交付记录中。
+
+`response`的纯数据投影已直接使用请求附带的观察摘要，能够在当前仓库独立运行。完整迁移步骤见[路径配置与换电脑迁移](03-开发与验收/路径配置.md)。
+
+## V32接口合同
+
 全部行动使用 `{request_id, action, parameters}`，沿用当前 cold product 的同一个 owner、请求队列和证据台账。
 
 | 操作 | HTTP 路径 | 输入/输出 |

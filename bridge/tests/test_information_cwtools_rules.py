@@ -21,7 +21,7 @@ class CwtoolsScopeRuleTests(unittest.TestCase):
         root = Path(temp.name)
         vendor_dir = root / "third_party/cwtools-eu4-config"
         vendor_dir.mkdir(parents=True)
-        shutil.copyfile(VENDOR_DIR / "VENDOR.json", vendor_dir / "VENDOR.json")
+        shutil.copyfile(VENDOR_DIR.with_name(VENDOR_DIR.name + ".vendor.json"), vendor_dir / "VENDOR.json")
         shutil.copyfile(VENDOR_DIR / "scopes.cwt", vendor_dir / "scopes.cwt")
         self.addCleanup(temp.cleanup)
         return root, vendor_dir
@@ -38,9 +38,22 @@ class CwtoolsScopeRuleTests(unittest.TestCase):
         self.assertEqual(trade_node["parents"], ["Province"])
         self.assertEqual(trade_node["source"]["commit"], "a85622d368bbb7afca938ed70fdd5eda44aec769")
         self.assertEqual(trade_node["source"]["license"], "MIT")
-        self.assertEqual(trade_node["source"]["file_sha256"], cwtools_rules._SCOPES_SHA256)
+        self.assertEqual(trade_node["source"]["file_sha256"],
+                         hashlib.sha256((VENDOR_DIR / "scopes.cwt").read_bytes()).hexdigest())
         json.dumps(rules, ensure_ascii=False, allow_nan=False)
         json.dumps(trade_node, ensure_ascii=False, allow_nan=False)
+
+    def test_submodule_lf_and_crlf_checkouts_have_identical_rules(self):
+        root, vendor_dir = self.workspace_copy()
+        path = vendor_dir / "scopes.cwt"
+        canonical = path.read_bytes().replace(b"\r\n", b"\n")
+        path.write_bytes(canonical)
+        lf = cwtools_rules.load_scope_rules(root)
+        path.write_bytes(canonical.replace(b"\n", b"\r\n"))
+        crlf = cwtools_rules.load_scope_rules(root)
+        self.assertEqual(lf["scopes"], crlf["scopes"])
+        self.assertEqual(lf["rule_source"]["canonical_lf_sha256"],
+                         crlf["rule_source"]["canonical_lf_sha256"])
 
     def test_vendor_schema_or_commit_tampering_is_rejected(self):
         root, vendor_dir = self.workspace_copy()
@@ -83,6 +96,8 @@ class CwtoolsScopeRuleTests(unittest.TestCase):
         (vendor_dir / "VENDOR.json").write_text(json.dumps(vendor), encoding="utf-8")
         with patch.object(cwtools_rules, "_SCOPES_BYTES", len(raw)), \
                 patch.object(cwtools_rules, "_SCOPES_SHA256", digest), \
+                patch.object(cwtools_rules, "_SCOPES_LF_BYTES", len(raw)), \
+                patch.object(cwtools_rules, "_SCOPES_LF_SHA256", digest), \
                 patch.object(cwtools_rules, "_EXPECTED_VENDOR", vendor):
             with self.assertRaisesRegex(ValueError, "Malformed scopes.cwt text"):
                 cwtools_rules.load_scope_rules(root)

@@ -329,7 +329,7 @@ def test_real_capture_validation_reaches_military_resources_adapter(tmp_path: Pa
 
 def test_capture_marks_close_failure_unknown(monkeypatch: pytest.MonkeyPatch) -> None:
     reader = _make_reader()
-    exe = Path(r"D:/Downloads/Europa Universalis IV（1.37.4）/Europa Universalis IV/eu4.exe")
+    exe = Path("C:/fixture/eu4.exe")
     class Kernel:
         def OpenProcess(self, *_args):
             return object()

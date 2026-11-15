@@ -263,9 +263,11 @@ def test_replace_path_escape_is_rejected(tmp_path):
 
 
 def test_real_1374_enabled_stack_reads_the_current_122_target_keys():
-    game = Path(r"D:\Downloads\Europa Universalis IV（1.37.4）\Europa Universalis IV")
-    user = Path(r"C:\Users\wangyufei\Documents\Paradox Interactive\Europa Universalis IV")
-    if not (game / "missions").is_dir() or not (user / "dlc_load.json").is_file():
+    from work.local_config import get_path
+
+    game = get_path("EU4_GAME_ROOT", required=False)
+    user = get_path("EU4_USER_DATA", required=False)
+    if game is None or user is None or not (game / "missions").is_dir() or not (user / "dlc_load.json").is_file():
         pytest.skip("local EU4 1.37.4 installation is not configured")
     mission_index = MissionDefinitionIndex(game, user)
     if mission_index.context()["status"] != "ready":
