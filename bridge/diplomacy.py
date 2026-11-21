@@ -37,6 +37,7 @@ from .diplomacy_journal import (AmbiguousRequestError, ContextMismatchError, Dur
                                 RequestConflictError, RequestPermissionError,
                                 UnknownRequestError)
 from .diplomacy_control import DiplomacyPermissionError
+from . import diplomat_recall
 from .diplomacy_session import probe_identity
 from .country_control_ack import has_v65_country_control_capability
 from .country_control_runtime import CAPABILITY as _NATIVE_COUNTRY_CONTROL_CONFIGURATION_CAPABILITY
@@ -18124,9 +18125,10 @@ ative_vassalization_submission`` ACK is issued.
                 # Keep the readiness predicate identical to the bounded wait
                 # helper.  The local import avoids a module-level cycle while
                 # retaining one pure implementation for both paths.
-                from work.observer_runtime_ready import _stable_matching_heartbeat
+                from work.observer_runtime_ready import _stable_matching_heartbeat, expected_physical_player
                 return _stable_matching_heartbeat(
-                    events, self.session_id, allow_date_progress=allow_date_progress)
+                    events, self.session_id, player=expected_physical_player(self.record),
+                    allow_date_progress=allow_date_progress)
 
             latest = stable_health_from_tail(_RESPONSE_LOG_CHUNK_BYTES)
             if latest is None and log_size > _RESPONSE_LOG_CHUNK_BYTES:
@@ -18149,6 +18151,15 @@ class DiplomacyTools:
         self.journal = journal
         self.session = session
         self._pending_native_responses: dict[tuple, dict] = {}
+
+    @property
+    def can_recall_diplomat(self) -> bool:
+        return diplomat_recall.recall_available(self.session, getattr(self, "control", None))
+
+    def recall_diplomat(self, request_id: str, diplomat_id: int) -> dict:
+        result = diplomat_recall.submit_diplomat_recall(
+            self.session, getattr(self, "control", None), self.journal, request_id, diplomat_id)
+        return self.get_diplomatic_result(request_id) if result is None else result
 
     def _controlled_country(self) -> str | None:
         """Return this connection's country, keeping legacy direct callers FRA-bound."""
@@ -25982,7 +25993,11 @@ class DiplomacyTools:
             return {"request_id": request_id, "status": "unknown", "submitted": False,
                     "game_outcome": "unknown", "reason": reason("REQUEST_ID_AMBIGUOUS", "历史命名空间存在重复编号，无法唯一关联结果。", "runtime_error")}
         self._authorize_record(record)
-        self._persist_native_response(record)
+        is_recall = record.payload["action_id"] == diplomat_recall.TOOL_NAME
+        if is_recall:
+            diplomat_recall.reconcile_diplomat_recall(self.session, self.journal, record)
+        else:
+            self._persist_native_response(record)
         try:
             record = self.journal.lookup_request(request_id)
         except (UnknownRequestError, AmbiguousRequestError):
@@ -25994,6 +26009,7 @@ class DiplomacyTools:
         return {"contract_version": 1, "request_id": request_id, "action_id": record.payload["action_id"],
                 "status": record.status, "submitted": record.submitted_at is not None,
                 "game_outcome": record.status if record.status in ("accepted", "rejected", "executed") else "unknown",
-                "result": record.result, "updated_at": record.updated_at,
+                "result": None if is_recall and record.status in {"constructed", "submitted"} else record.result,
+                "updated_at": record.updated_at,
                 "evidence": [{"type": event.evidence_type, "layer": event.arrival_layer,
                               "sha256": event.content_sha256} for event in evidence]}

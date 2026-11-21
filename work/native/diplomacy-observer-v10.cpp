@@ -485,6 +485,10 @@ static void native_control_country_tick() noexcept {
 }
 #endif
 
+#ifdef BRIDGE_NATIVE_COUNTRY_CONTROL
+#include "diplomat-recall-mcp.inc"
+#endif
+
 static bool observation_rollback_family() {
     struct Slot { uintptr_t address; void* original; void* replacement; } slots[]={
         {base+0x1c80720,reinterpret_cast<void*>(base+0x129450),reinterpret_cast<void*>(&lifecycle_destructor_observe)},
@@ -758,6 +762,12 @@ extern "C" void bridge_frame_tick(void* context) {
 #ifdef BRIDGE_NATIVE_COUNTRY_CONTROL
         if (frame_count>=100) native_control_country_tick();
 #endif
+#ifdef BRIDGE_NATIVE_COUNTRY_CONTROL
+        if (frame_count>=100) native_game_speed_tick();
+#endif
+#ifdef BRIDGE_NATIVE_COUNTRY_CONTROL
+        if (frame_count>=100) native_diplomat_recall_mcp_tick();
+#endif
         uintptr_t vassal_context_game=0;
         if (read(base+0x233fe58,vassal_context_game)) {
             vassal_test_context_tick(vassal_context_game);
@@ -895,6 +905,7 @@ extern "C" __declspec(dllexport) DWORD WINAPI BridgeStart(void* argument) {
     if (swprintf(execution_authority_test_path,MAX_PATH,L"%ls\\diplomacy-authority-test.req",module_path)<0) return 27;
 #ifdef BRIDGE_NATIVE_COUNTRY_CONTROL
     if (!native_control_country_set_paths(module_path)) return 27;
+    if (!native_diplomat_recall_set_paths(module_path)) return 27;
 #endif
     if (!rival_authority_set_paths(module_path)) return 27;
     if (!rival_execution_set_paths(module_path)) return 27;
@@ -1197,7 +1208,7 @@ extern "C" __declspec(dllexport) DWORD WINAPI BridgeStart(void* argument) {
         constexpr char marker[]="\"native_generic_execution_entry_guard\":true";
         constexpr char fields[]=",\"native_gift_query\":true,\"native_gift_submission\":true,\"native_influence_query\":true,\"native_influence_submission\":true,\"native_live_war_score_query\":true,\"native_proposal_expiry_observation\":true,\"native_result_game_date_observation\":true"
 #ifdef BRIDGE_NATIVE_COUNTRY_CONTROL
-            ",\"native_country_control_configuration\":true,\"native_country_control_protocol\":\"EU4CONTROL1\",\"native_country_control_ack\":\"native_controlled_countries_set\",\"native_country_control_request\":\"controlled-countries.req\""
+            ",\"native_country_control_configuration\":true,\"native_country_control_protocol\":\"EU4CONTROL1\",\"native_country_control_ack\":\"native_controlled_countries_set\",\"native_country_control_request\":\"controlled-countries.req\",\"native_game_speed_control\":true,\"native_game_speed_control_protocol\":\"EU4SPEED1\",\"native_diplomat_recall_by_id\":true,\"native_diplomat_recall_protocol\":\"EU4RECALL1\""
 #endif
 #ifdef BRIDGE_RIVAL_OBSERVATION
 #ifdef BRIDGE_RIVAL_RECORD_OBSERVATION

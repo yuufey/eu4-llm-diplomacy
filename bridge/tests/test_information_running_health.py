@@ -48,18 +48,28 @@ def test_information_source_uses_the_read_only_health_entry_point():
 
 
 @pytest.mark.parametrize('second_date', [100, 124])
-def test_running_health_finds_the_pair_behind_a_busy_log_tail(tmp_path, monkeypatch, second_date):
+@pytest.mark.parametrize('installed_player', [None, 'O00'])
+def test_running_health_finds_the_pair_behind_a_busy_log_tail(tmp_path, monkeypatch, second_date, installed_player):
     import bridge.diplomacy as diplomacy
     session = object.__new__(ObserverSession)
     session.session_id = 'running-test'
     session.record = {'session_id': 'running-test', 'pid': 1, 'installation_returncode': 0, 'dll_sha256': 'test-dll'}
+    if installed_player is not None:
+        session.record['preflight_player_tag'] = installed_player
     session.directory = tmp_path
     session.game_exe = tmp_path / 'eu4.exe'
     monkeypatch.setattr(diplomacy, 'probe_identity', lambda *_: {
         'session_id': 'running-test', 'modules': [{'sha256': 'test-dll'}]})
     monkeypatch.setattr(diplomacy, '_RESPONSE_LOG_CHUNK_BYTES', 256)
     monkeypatch.setattr(diplomacy, '_HEALTH_LOG_MAX_TAIL_BYTES', 512)
-    lines = [json.dumps(heartbeat(100, 1)), 'x' * 700, json.dumps(heartbeat(second_date, 2)), 'x' * 700]
+    player = installed_player or 'POR'
+    first = {**heartbeat(100, 1), 'player': player}
+    second = {**heartbeat(second_date, 2), 'player': player}
+    lines = [json.dumps(first), 'x' * 700, json.dumps(second), 'x' * 700]
     (tmp_path / 'control-probe.jsonl').write_text('\n'.join(lines) + '\n', encoding='utf-8')
     assert session.health()['status'] == ('ready' if second_date == 100 else 'unready')
     assert session.information_health()['status'] == 'ready'
+    if installed_player is not None:
+        lines[2] = json.dumps({**second, 'player': 'POR'})
+        (tmp_path / 'control-probe.jsonl').write_text('\n'.join(lines) + '\n', encoding='utf-8')
+        assert session.information_health()['status'] == 'unready'

@@ -1,4 +1,5 @@
 param([switch]$SavedTestGame, [ValidatePattern('^[A-Za-z0-9_-]+\.eu4$')][string]$SaveName,
+    [switch]$RequireStopped,
     [ValidateSet('dx9', 'dx11', 'opengl', 'opengl4')][string]$Renderer)
 $ErrorActionPreference = 'Stop'
 if (-not $SavedTestGame) { throw 'Restart is for the separate saved test game; pass -SavedTestGame.' }
@@ -12,8 +13,10 @@ if ($SaveName) {
     if (-not (Test-Path -LiteralPath $savePath -PathType Leaf)) { throw 'Requested test save does not exist; no process was stopped.' }
 }
 $launchRecordPath = Join-Path $PSScriptRoot '..\runtime\game-launch.json'
+$transientSave = '(?i)(?<!\S)-continue=llm_load_[0-9a-f]{32}\.eu4(?=\s|$)'
 $gameInstances = @(Get-CimInstance Win32_Process -Filter "name='eu4.exe'")
 if ($gameInstances.Count -gt 1) { throw 'Multiple EU4 instances; no process was stopped.' }
+if ($RequireStopped -and $gameInstances.Count -ne 0) { throw 'EU4 is already running; no process was stopped.' }
 if ((Get-FileHash -Algorithm SHA256 -LiteralPath $expectedExe).Hash -ne $expectedHash) {
     throw 'Game executable differs from the tested build.'
 }
@@ -23,7 +26,8 @@ if ($gameInstances.Count -eq 1) {
     if ($gameInstance.CommandLine -notmatch '^\s*(?:"[^"]*"|\S+)(?:\s+(.*))?$') {
         throw 'Cannot preserve original launch arguments; no process was stopped.'
     }
-    $originalArguments = $Matches[1]
+    # The shared loader removes its ASCII staging alias after verification.
+    $originalArguments = [regex]::Replace([string]$Matches[1], $transientSave, '').Trim()
     [ordered]@{ executable = $expectedExe; arguments = $originalArguments } |
         ConvertTo-Json | Set-Content -LiteralPath $launchRecordPath -Encoding UTF8
     $gameProcess = Get-Process -Id $gameInstance.ProcessId
@@ -42,7 +46,7 @@ if ($gameInstances.Count -eq 1) {
     if (-not (Test-Path -LiteralPath $launchRecordPath)) { throw 'No existing game or saved launch arguments.' }
     $previousLaunch = Get-Content -LiteralPath $launchRecordPath -Raw | ConvertFrom-Json
     if ($previousLaunch.executable -ne $expectedExe) { throw 'Unexpected saved executable.' }
-    $originalArguments = $previousLaunch.arguments
+    $originalArguments = [regex]::Replace([string]$previousLaunch.arguments, $transientSave, '').Trim()
 }
 $launchParameters = @{
     FilePath = $expectedExe

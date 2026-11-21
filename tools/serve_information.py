@@ -63,6 +63,7 @@ def _same_database_file(left: Path | str, right: Path | str) -> bool:
 
 def _build_runtime(args: argparse.Namespace):
     from bridge.diplomacy_control import DiplomacyControl
+    from bridge.game_time_control import bind_game_time_control
 
     controlled_country = getattr(args, "controlled_country", None) or args.observer
     control = DiplomacyControl(args.owner, controlled_country)
@@ -200,6 +201,10 @@ def _build_runtime(args: argparse.Namespace):
     journal = None
     diplomacy_tools = None
     session = None
+    game_time_control = None
+    allow_time_control = getattr(args, "allow_time_control", False)
+    if allow_time_control and not args.operator_session:
+        raise ValueError("--allow-time-control requires --operator-session with an O00 observer")
     if args.operator_session:
         # One session and journal serve both the read-only information source
         # and explicit diplomacy tool calls. Sources still call query methods.
@@ -208,6 +213,8 @@ def _build_runtime(args: argparse.Namespace):
         from work.local_config import game_exe
 
         session = ObserverSession(args.operator_session, game_exe())
+        if allow_time_control:
+            game_time_control = bind_game_time_control(session)
         session.controlled_country = controlled_country
         configure_control = getattr(session, "configure_controlled_countries", None)
         if controlled_country is not None and callable(configure_control):
@@ -586,6 +593,7 @@ def _build_runtime(args: argparse.Namespace):
         setattr(service, "battle_ingestor", battle_ingestor)
     service.diplomacy_tools = diplomacy_tools
     service.diplomacy_control = control
+    service.game_time_control = game_time_control
     return service, journal
 
 
@@ -630,6 +638,8 @@ def build_parser() -> argparse.ArgumentParser:
                         help="SQLite database for reports, subscriptions and outbox")
     parser.add_argument("--operator-session", type=Path,
                         help="Verified observer installation.json; omit for offline discovery")
+    parser.add_argument("--allow-time-control", action="store_true",
+                        help="Expose clock control for a no-player test with a verified O00 observer")
     parser.add_argument("--observer", default=None,
                         help="Trusted operator country tag; kept distinct from the game's player tag")
     parser.add_argument("--controlled-country", default=None,

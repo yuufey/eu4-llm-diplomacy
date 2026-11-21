@@ -1328,7 +1328,11 @@ static void alliance_query_tick() {
     }
     uintptr_t game=0; uint64_t player=0,actor=0,recipient=0; int32_t date=0;
     if (!read(base+0x233fe58,game) || !read(game+0x1dd0,date) || !read(game+0x1e60,player)
+#ifdef BRIDGE_NATIVE_COUNTRY_CONTROL
+        || !observation_country_handle(player) || date!=expected_date) {
+#else
         || (player&0xffffff)!=0x524f50 || date!=expected_date) {
+#endif
         alliance_query_failure(id,"QUERY_GAME_CONTEXT_CHANGED"); return;
     }
     if (!alliance_query_country(actor_tag,actor) || !alliance_query_country(recipient_tag,recipient) || actor==recipient) {

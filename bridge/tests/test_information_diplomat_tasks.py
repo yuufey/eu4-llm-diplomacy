@@ -36,6 +36,7 @@ P3_DIPLOMAT_TASKS = {
         {
             "state": "returning", "task": "unknown", "actor": "FRA", "recipient": "GEN",
             "status": "known", "state_status": "known", "state_raw_18": 1, "state_raw": 1,
+            "raw_id_44": 0, "raw_id_44_hex": "00000000",
             "action_token_raw": 10555, "actor_fullref_raw": 72058118028218950,
             "recipient_fullref_raw": 72058453036516679,
             "actor_resolution": {"role": "actor", "slot": 122, "tag_candidate": "FRA", "country_count": 1380, "tag": "FRA"},
@@ -46,12 +47,13 @@ P3_DIPLOMAT_TASKS = {
         {
             "state": "active", "task": "build_spy_network", "actor": "FRA", "recipient": "BUR",
             "status": "known", "state_status": "known", "state_raw_18": 2, "state_raw": 2,
+            "raw_id_44": 1, "raw_id_44_hex": "01000000",
             "action_token_raw": 13176, "actor_fullref_raw": 72058118028218950,
             "recipient_fullref_raw": 72058096554497346,
             "task_family": "build_spy_network", "task_family_status": "known",
         },
-        {"state": "idle", "status": "known", "state_raw": 0, "actor": None, "recipient": None, "task_family": None},
-        {"state": "idle", "status": "known", "state_raw": 0, "actor": None, "recipient": None, "task_family": None},
+        {"state": "idle", "status": "known", "state_raw": 0, "raw_id_44": 2, "raw_id_44_hex": "02000000", "actor": None, "recipient": None, "task_family": None},
+        {"state": "idle", "status": "known", "state_raw": 0, "raw_id_44": 3, "raw_id_44_hex": "03000000", "actor": None, "recipient": None, "task_family": None},
     ],
 }
 
@@ -64,14 +66,24 @@ def test_concise_diplomat_tasks_projects_actual_p3_fields_and_preserves_full_inp
         "instance_count_observed": 4,
         "available_count_observed": 2,
         "instances": [
-            {"state": "returning", "task": "unknown", "actor": "FRA", "recipient": "GEN"},
-            {"state": "active", "task": "build_spy_network", "actor": "FRA", "recipient": "BUR"},
-            {"state": "idle"}, {"state": "idle"},
+            {"diplomat_id": 0, "state": "returning", "task": "unknown", "actor": "FRA", "recipient": "GEN"},
+            {"diplomat_id": 1, "state": "active", "task": "build_spy_network", "actor": "FRA", "recipient": "BUR"},
+            {"diplomat_id": 2, "state": "idle"}, {"diplomat_id": 3, "state": "idle"},
         ],
     }
     assert value == original
     projected["instances"][0]["recipient"] = "SAV"
     assert value == original
+
+
+@pytest.mark.parametrize("diplomat_id", [None, -1, True, "1"])
+def test_concise_diplomat_tasks_rejects_unvalidated_diplomat_ids(diplomat_id):
+    value = {
+        "instance_count_observed": 1,
+        "available_count_observed": 0,
+        "instances": [{"diplomat_id": diplomat_id, "state": "returning"}],
+    }
+    assert concise_diplomat_tasks(value) is None
 
 
 @pytest.mark.parametrize("value", [None, False, [], "unknown"])
@@ -84,8 +96,8 @@ def test_concise_diplomat_tasks_keeps_known_empty_and_unknown_task_states():
         "instance_count_observed": 0, "available_count_observed": 0, "instances": [],
     }
     assert concise_diplomat_tasks({"instance_count_observed": 1, "available_count_observed": 0,
-                                   "instances": [{"state": "unknown", "task": "unknown"}]})["instances"] == [
-        {"state": "unknown", "task": "unknown"},
+                                   "instances": [{"diplomat_id": 0, "state": "unknown", "task": "unknown"}]})["instances"] == [
+        {"diplomat_id": 0, "state": "unknown", "task": "unknown"},
     ]
 
 
@@ -100,8 +112,9 @@ class _Session:
 
 
 class _Base:
-    def __init__(self, directory: Path):
+    def __init__(self, directory: Path, observer: str = "FRA"):
         self.session = _Session(directory)
+        self.observer = observer
         self.calls = 0
         self.after_context = None
 
@@ -114,7 +127,7 @@ class _Base:
             "session_id": SESSION_ID,
             "game_sha256": GAME_SHA256,
             "game_version": "1.37.4",
-            "observer": "FRA",
+            "observer": self.observer,
             "game_date": GAME_DATE,
             "game_date_raw": GAME_DATE,
         }
@@ -216,11 +229,11 @@ def _record(rows: list[dict]) -> dict:
     }
 
 
-def _report(rows: list[dict]) -> dict:
+def _report(rows: list[dict], country: str = "FRA") -> dict:
     record = _record(rows)
     snapshot = {
         "status": "observed",
-        "country": "FRA",
+        "country": country,
         "country_pointer": record["country_pointer"],
         "game_date": {"value": GAME_DATE, "raw_hex": _raw(GAME_DATE)},
         "record": deepcopy(record),
@@ -229,8 +242,8 @@ def _report(rows: list[dict]) -> dict:
         "schema": "information_diplomat_tasks_runtime.v1",
         "status": "observed",
         "completed": True,
-        "country": "FRA",
-        "request": {"country": "FRA"},
+        "country": country,
+        "request": {"country": country},
         "identity": {
             "binding_verified": True,
             "installation_session_id": SESSION_ID,
@@ -255,8 +268,8 @@ def _query(fields=None, *, country="FRA", parameters=None):
     }
 
 
-def _source(tmp_path: Path, report: dict, calls: list):
-    base = _Base(tmp_path)
+def _source(tmp_path: Path, report: dict, calls: list, observer: str = "FRA"):
+    base = _Base(tmp_path, observer=observer)
 
     def capture(installation, country="FRA"):
         calls.append((installation, country))
@@ -281,9 +294,14 @@ def test_catalog_and_query_scope_are_narrow(tmp_path: Path):
     assert item["object_types"] == ["country"]
     assert item["triggers"] == ["query", "periodic"]
     assert source.validate_query(_query(), _Base(tmp_path).context())["parameters"] == {}
+    assert source.validate_query(_query(country="ENG"))["object"]["country"] == "ENG"
     with pytest.raises(InformationError) as other_country:
-        source.validate_query(_query(country="ENG"))
+        source.validate_query(_query(country="ENG"), _Base(tmp_path).context())
     assert other_country.value.code == "observer_scope_mismatch"
+    assigned_base = _Base(tmp_path / "eng", observer="ENG")
+    assigned = NativeDiplomatTasksSource(assigned_base, capture=lambda *_args, **_kwargs: None)
+    assert assigned.validate_query(_query(country="ENG"), assigned_base.context())["object"]["country"] == "ENG"
+    assert assigned.catalog()[0]["observer_scope"] == ["ENG"]
     with pytest.raises(InformationError) as extra_field:
         source.validate_query(_query(fields=["diplomat_tasks", "diplomats_total"]))
     assert extra_field.value.code == "unknown_field"
@@ -314,6 +332,40 @@ def test_projection_preserves_counts_raw_rows_states_and_unknown_tokens(tmp_path
     assert value["instances"][3]["action_token_raw"] == 4242
     assert value["instances"][0]["lifecycle_date_raw"]["raw_20"] == GAME_DATE - 100
     assert calls == [(tmp_path / "installation.json", "FRA")]
+
+
+@pytest.mark.parametrize("country", ["ENG", "O00"])
+def test_read_uses_only_the_assigned_non_fra_observer_and_passes_its_tag(
+        tmp_path: Path, monkeypatch, country: str):
+    rows = [_row(7, 1, 10559)]
+    monkeypatch.setattr(diplomat_tasks_memory, "validate_capture", lambda *args: True)
+    calls: list[tuple[Path, str]] = []
+    source, base = _source(tmp_path, _report(rows, country=country), calls, observer=country)
+
+    result = source.read(_query(country=country), base.context())
+    field = result["fields"]["diplomat_tasks"]
+    assert field["status"] == "known"
+    assert field["value"]["instances"][0]["diplomat_id"] == 7
+    assert field["value"]["instances"][0]["state"] == "returning"
+    assert calls == [(tmp_path / "installation.json", country)]
+
+    with pytest.raises(InformationError) as mismatch:
+        source.read(_query(country="FRA" if country != "FRA" else "ENG"), base.context())
+    assert mismatch.value.code == "observer_scope_mismatch"
+
+
+@pytest.mark.parametrize("diplomat_id,raw_hex", [(-1, "ffffffff"), (True, "01000000")])
+def test_projection_rejects_invalid_diplomat_id_even_if_capture_validator_returns_true(
+        tmp_path: Path, monkeypatch, diplomat_id: int, raw_hex: str):
+    row = _row(0, 1, 10559)
+    row["raw_id_44"] = diplomat_id
+    row["raw_id_44_hex"] = raw_hex
+    monkeypatch.setattr(diplomat_tasks_memory, "validate_capture", lambda *args: True)
+    source, base = _source(tmp_path, _report([row]), [])
+    result = source.read(_query(), base.context())
+    field = result["fields"]["diplomat_tasks"]
+    assert field["status"] == "unknown"
+    assert field["reason"] == "DIPLOMAT_TASKS_DIPLOMAT_ID_INVALID"
 
 
 def test_invalid_validator_or_cleanup_retracts_without_empty_known_value(tmp_path: Path, monkeypatch):
@@ -429,8 +481,8 @@ def test_public_concise_query_preserves_returning_and_idle_diplomats(tmp_path: P
         assert [row["state"] for row in value["instances"]] == ["returning", "idle"]
         assert value["instances"][0]["task"] == "build_spy_network"
         assert value["instances"] == [
-            {"state": "returning", "task": "build_spy_network", "actor": "FRA", "recipient": "BUR"},
-            {"state": "idle"},
+            {"diplomat_id": 0, "state": "returning", "task": "build_spy_network", "actor": "FRA", "recipient": "BUR"},
+            {"diplomat_id": 1, "state": "idle"},
         ]
         full = tools.call("information_get_result", {
             "result_id": result["result_id"], "view": "full",

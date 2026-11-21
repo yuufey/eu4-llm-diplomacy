@@ -13,6 +13,7 @@ import ctypes as C
 from ctypes import wintypes as W
 import os
 from pathlib import Path
+import re
 import time
 from typing import Any
 import uuid
@@ -26,6 +27,16 @@ _POLL_SECONDS = 0.2
 _MAX_TIMEOUT_SECONDS = 30.0
 _GAME_WINDOW_TITLE = "Europa Universalis IV"
 _SW_SHOWNOACTIVATE = 4
+
+
+def expected_physical_player(record: object) -> str:
+    """Use the loaded player verified by the installer, or the legacy POR default."""
+    if isinstance(record, dict):
+        for key in ("preflight_player_tag", "verified_loaded_player_tag"):
+            tag = record.get(key)
+            if isinstance(tag, str) and re.fullmatch(r"[A-Z0-9]{3}", tag):
+                return tag
+    return "POR"
 
 
 def _heartbeat_thread_token(event: dict) -> tuple[str, int | str] | tuple[str]:
@@ -257,7 +268,8 @@ def _fresh_matching_heartbeat(session: Any, log_path: Path) -> bool:
         except (UnicodeDecodeError, ValueError):
             continue
         events.append(event)
-    return _stable_matching_heartbeat(events, expected_session) is not None
+    player = expected_physical_player(getattr(session, "record", None))
+    return _stable_matching_heartbeat(events, expected_session, player=player) is not None
 
 
 def wait_runtime_ready(session: Any, timeout: float = _MAX_TIMEOUT_SECONDS,

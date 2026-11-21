@@ -412,7 +412,7 @@ if ($LandPromiseObservation) {
         'information-land-promise-observer.inc')
 }
 if ($NativeCountryControl) {
-    $sourceNames += @('control-country-policy.h')
+    $sourceNames += @('control-country-policy.h','diplomat-recall-mcp.inc')
 }
 $sources = foreach ($name in $sourceNames) {
     $source = Join-Path $PSScriptRoot $name
@@ -668,6 +668,8 @@ if ($NativeCountryControl) {
     $manifest.native_country_control_protocol = 'EU4CONTROL1'
     $manifest.native_country_control_ack = 'native_controlled_countries_set'
     $manifest.native_country_control_request = 'controlled-countries.req'
+    $manifest.native_diplomat_recall_by_id = $true
+    $manifest.native_diplomat_recall_protocol = 'EU4RECALL1'
 }
 $manifest | ConvertTo-Json -Depth 8 | Set-Content -LiteralPath (Join-Path $outputDirectory 'build-manifest.json') -Encoding UTF8
 Get-FileHash -LiteralPath $dll -Algorithm SHA256

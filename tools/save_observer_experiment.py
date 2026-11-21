@@ -2,7 +2,7 @@
 
 The only native request emitted by this script is the fixed TEST_ONLY autosave
 token.  A successful console result is only a transport signal; the real save
-file, its POR metadata, size, stability, and before/after paused state must
+file, its player and date metadata, size, stability, and before/after paused state must
 also verify before the archive is reported successful.  Save recovery backs up
 and restores only the three native rotating autosaves; other save files remain
 in the report as size/mtime metadata and are never copied or overwritten.
@@ -26,6 +26,8 @@ sys.path.insert(0, str(ROOT / "work"))
 
 from bridge.diplomacy import ObserverSession
 from bridge.diplomacy_session import probe_identity
+from bridge.information.collection_lock import CollectionLock
+from bridge.information.truce_date_math import decode_date
 from local_config import game_exe, get_value, user_data
 
 
@@ -34,6 +36,7 @@ MAX_TIMEOUT = 300
 POLL_SECONDS = 0.25
 STABLE_SECONDS = 2.0
 MIN_SAVE_BYTES = 100_000
+OBSERVER_HEADER_BYTES = 64 * 1024
 SAVE_NAME = re.compile(r"^llm_diplomacy_[A-Za-z0-9][A-Za-z0-9_-]{0,127}\.eu4$", re.IGNORECASE)
 ROTATING_AUTOSAVE_NAMES = ("autosave.eu4", "old_autosave.eu4", "older_autosave.eu4")
 ROTATING_AUTOSAVE_KEYS = frozenset(name.casefold() for name in ROTATING_AUTOSAVE_NAMES)
@@ -207,13 +210,19 @@ def _read_log_events(path: Path, offset: int):
                 yield line_offset, end_offset, event
 
 
-def _state_signature(state: dict) -> dict[str, object]:
-    required = ("date_raw", "player_slot", "paused_flag")
+def _state_signature(state: dict, pid: int) -> dict[str, object]:
+    required = ("date_raw", "player_slot", "player_tag", "paused_flag")
     if any(key not in state for key in required):
         raise ExperimentError("CONTROL_STATE_FIELDS_MISSING")
     result = {key: state[key] for key in required}
-    if result["player_slot"] != 189 or result["paused_flag"] != 1:
-        raise ExperimentError("CONTROL_STATE_NOT_PAUSED_POR")
+    slot = result["player_slot"]
+    player = result["player_tag"]
+    if (state.get("read_only") is not True or state.get("pid") != pid
+            or type(slot) is not int or not 0 <= slot < 4096
+            or not isinstance(player, str) or re.fullmatch(r"[A-Z0-9]{3}", player) is None):
+        raise ExperimentError("CONTROL_PLAYER_NOT_VERIFIED")
+    if type(result["paused_flag"]) is not int or result["paused_flag"] != 1:
+        raise ExperimentError("CONTROL_STATE_NOT_PAUSED")
     return result
 
 
@@ -262,16 +271,12 @@ def _verify_session(installation: Path) -> tuple[ObserverSession, dict, dict, di
     if len(modules) != 1 or str(modules[0].get("sha256", "")).lower() != expected_dll:
         raise ExperimentError("OBSERVER_DLL_HASH_MISMATCH")
     session = ObserverSession(installation, executable)
-    health = session.health()
-    if health.get("status") != "ready":
-        raise ExperimentError("OBSERVER_FRAME_HEALTH_NOT_READY")
     evidence = {
         "pid": pid,
         "creation_filetime": expected_creation,
         "session_id": expected_session,
         "dll_sha256": expected_dll,
         "actual_modules": modules,
-        "health": health,
     }
     return session, record, actual, evidence
 
@@ -286,7 +291,41 @@ def _read_meta_text(stream, limit: int = 4 * 1024 * 1024) -> str:
     return bytes(data).decode("utf-8", errors="replace")
 
 
-def _inspect_save(path: Path) -> dict[str, object]:
+def _observer_archive_header(data: bytes, serialized_player: str) -> bytes | None:
+    """Recognize the text autosave layout with no country assigned to a player."""
+    settings = re.search(rb"(?m)^gameplaysettings\s*=\s*\{", data)
+    if not data.startswith((b"EU4txt\n", b"EU4txt\r\n")) or settings is None:
+        return None
+    header = data[:settings.start()]
+    if re.search(rb"(?m)^players_countries\s*=", header):
+        return None
+    player_line = rb'(?m)^player="' + serialized_player.encode("ascii") + rb'"(?=\r?$)'
+    header, count = re.subn(player_line, b'player="O00"', header)
+    if count != 1:
+        return None
+    header = re.sub(rb'(?m)^displayed_country_name="[^\r\n]*"(?=\r?$)',
+                    b'displayed_country_name="Observer"', header, count=1)
+    return header + data[settings.start():]
+
+
+def _copy_observer_archive(source: Path, target: Path, serialized_player: str) -> str:
+    digest = hashlib.sha256()
+    with source.open("rb") as original:
+        header = _observer_archive_header(original.read(OBSERVER_HEADER_BYTES), serialized_player)
+        if header is None:
+            raise ExperimentError("OBSERVER_AUTOSAVE_HEADER_CHANGED")
+        with target.open("xb") as archive:
+            archive.write(header)
+            digest.update(header)
+            for chunk in iter(lambda: original.read(1024 * 1024), b""):
+                archive.write(chunk)
+                digest.update(chunk)
+    return digest.hexdigest()
+
+
+def _inspect_save(path: Path, *, expected_player: str | None = None,
+                  expected_date: str | None = None,
+                  allow_observer_fallback: bool = False) -> dict[str, object]:
     file_size = path.stat().st_size
     if file_size <= MIN_SAVE_BYTES:
         return {"valid": False, "reason": "FILE_TOO_SMALL", "file_size": file_size}
@@ -309,11 +348,17 @@ def _inspect_save(path: Path) -> dict[str, object]:
     except (OSError, KeyError, RuntimeError, zipfile.BadZipFile) as error:
         return {"valid": False, "reason": f"SAVE_READ_FAILED:{type(error).__name__}",
                 "file_size": file_size, "container": container}
-    player_match = re.search(r"(?m)^\s*player\s*=\s*\"?([A-Z]{3})", meta)
+    player_match = re.search(r'(?m)^\s*player\s*=\s*"?([A-Z0-9]{3})\b', meta)
     date_match = re.search(r"(?m)^\s*date\s*=\s*\"?([0-9.]+)", meta)
     player = player_match.group(1) if player_match else None
     date = date_match.group(1) if date_match else None
-    valid = (player == "POR" and date is not None and re.fullmatch(r"\d+\.\d{1,2}\.\d{1,2}", date) is not None
+    fallback = False
+    if allow_observer_fallback and expected_player == "O00" and player not in (None, "O00") and container == "text":
+        with path.open("rb") as stream:
+            fallback = _observer_archive_header(stream.read(OBSERVER_HEADER_BYTES), player) is not None
+    valid = (player is not None and (expected_player is None or player == expected_player or fallback)
+             and date is not None and re.fullmatch(r"\d+\.\d{1,2}\.\d{1,2}", date) is not None
+             and (expected_date is None or date == expected_date)
              and file_size > MIN_SAVE_BYTES and payload_size > MIN_SAVE_BYTES)
     return {
         "valid": valid,
@@ -323,6 +368,7 @@ def _inspect_save(path: Path) -> dict[str, object]:
         "container": container,
         "player": player,
         "date": date,
+        **({"observer_autosave_fallback": True} if fallback else {}),
     }
 
 
@@ -373,7 +419,7 @@ def _restore_originals(directory: Path, backup: Path,
 
 def _wait_for_autosave(directory: Path, baseline: dict[str, dict[str, object]],
                        log: Path, start_offset: int, deadline: float,
-                       emit=_emit) -> tuple[Path, dict, list[dict[str, object]]]:
+                       *, player: str, date: str, emit=_emit) -> tuple[Path, dict, list[dict[str, object]]]:
     autosave_key = "autosave.eu4"
     baseline_autosave = baseline.get(autosave_key)
     seen_offsets: set[int] = set()
@@ -422,12 +468,13 @@ def _wait_for_autosave(directory: Path, baseline: dict[str, dict[str, object]],
                 if not changed:
                     reset_stability()
                 else:
-                    inspection = _inspect_save(candidate)
+                    inspection = _inspect_save(candidate, expected_player=player, expected_date=date,
+                                               allow_observer_fallback=player == "O00")
                     if signature != last_candidate_signature:
                         last_candidate_signature = signature
                         emit("autosave_candidate_checked", path=str(candidate), **inspection)
                     if not inspection.get("valid"):
-                        reset_stability()
+                        stable_signature = stable_since = None
                     elif signature != stable_signature:
                         stable_signature = signature
                         stable_since = time.monotonic()
@@ -478,6 +525,18 @@ def run_experiment(installation: Path, name: str, timeout: int = MAX_TIMEOUT,
     installation = installation.resolve()
     if not installation.is_file():
         raise ExperimentError("INSTALLATION_FILE_MISSING")
+    saves = user_data() / "save games"
+    if not saves.is_dir():
+        raise ExperimentError(f"SAVE_DIRECTORY_MISSING:{saves}")
+    # All installations using this save folder share the same rotation files.
+    with CollectionLock(saves / ".eu4-autosave").acquire(blocking=False) as acquired:
+        if not acquired:
+            raise ExperimentError("AUTOSAVE_ARCHIVE_ALREADY_RUNNING")
+        return _archive_autosave(installation, saves, name, timeout, expected_date)
+
+
+def _archive_autosave(installation: Path, saves: Path, name: str,
+                      timeout: int, expected_date: str | None) -> dict:
     experiment_dir = installation.parent
     report_base = experiment_dir / f"save-observer-report-{time.time_ns()}.json"
     request = experiment_dir / "game-control.request"
@@ -499,11 +558,9 @@ def run_experiment(installation: Path, name: str, timeout: int = MAX_TIMEOUT,
     deadline = time.monotonic() + timeout
     try:
         session, installation_record, identity, session_evidence = _verify_session(installation)
+        pid = identity["pid"]
         state["session"] = session_evidence
         emit = _emit
-        emit("session_verified", pid=identity["pid"], creation_filetime=identity["creation_filetime"],
-             dll_sha256=session_evidence["dll_sha256"], date_raw=session_evidence["health"].get("date_raw"))
-        saves = user_data() / "save games"
         existing_target = _find_casefold(saves, name)
         if existing_target is not None:
             raise ExperimentError("TARGET_ALREADY_EXISTS_NO_OVERWRITE")
@@ -513,10 +570,26 @@ def run_experiment(installation: Path, name: str, timeout: int = MAX_TIMEOUT,
             raise ExperimentError("CONTROL_LOG_MISSING")
         log_start = log.stat().st_size
         before_output = experiment_dir / f"probe-before-{time.time_ns()}.json"
-        before_state = _probe_control_state(identity["pid"], before_output, deadline)
-        before_signature = _state_signature(before_state)
+        before_state = _probe_control_state(pid, before_output, deadline)
+        before_signature = _state_signature(before_state, pid)
+        player = before_signature["player_tag"]
+        date_raw = before_signature["date_raw"]
+        # Verify the live player's heartbeat using this invocation's binding.
+        # The declared player used by other consumers of the receipt stays intact.
+        session.record = {**installation_record, "preflight_player_tag": player}
+        health = session.health()
+        if health.get("status") != "ready":
+            raise ExperimentError("OBSERVER_FRAME_HEALTH_NOT_READY")
+        if date_raw != health.get("date_raw"):
+            raise ExperimentError("CONTROL_DATE_DIFFERS_FROM_FRAME_HEALTH")
+        session_evidence["health"] = health
+        emit("session_verified", pid=pid, creation_filetime=identity["creation_filetime"],
+             dll_sha256=session_evidence["dll_sha256"], date_raw=date_raw)
+        date = ".".join(map(str, decode_date(date_raw)[:3]))
+        if expected_date is not None and date != expected_date:
+            raise ExperimentError("SAVE_DATE_DIFFERS_FROM_EXPLICIT_EXPERIMENT_DATE")
         state["probe_before"] = {"path": str(before_output), "signature": before_signature}
-        emit("paused_por_state_verified", phase="before", **before_signature)
+        emit("paused_player_verified", phase="before", **before_signature)
         baseline = _snapshot_saves(saves)
         rotating_baseline = _rotating_baseline(baseline)
         metadata_only_baseline = {
@@ -552,33 +625,35 @@ def run_experiment(installation: Path, name: str, timeout: int = MAX_TIMEOUT,
                              "token": AUTOSAVE_TOKEN.decode("ascii")}
         emit("autosave_request_queued", path=str(request), log_start_offset=log_start)
         autosave, save_inspection, console_events = _wait_for_autosave(
-            saves, baseline, log, log_start, deadline, emit=emit)
+            saves, baseline, log, log_start, deadline, player=player, date=date, emit=emit)
         state["console_events"] = console_events
-        if expected_date is not None and save_inspection["date"] != expected_date:
-            raise ExperimentError("SAVE_DATE_DIFFERS_FROM_EXPLICIT_EXPERIMENT_DATE")
         log_end = log.stat().st_size
         state["log_offsets"] = {"start": log_start, "end": log_end}
         after_output = experiment_dir / f"probe-after-{time.time_ns()}.json"
-        after_state = _probe_control_state(identity["pid"], after_output, deadline)
-        after_signature = _state_signature(after_state)
+        after_state = _probe_control_state(pid, after_output, deadline)
+        after_signature = _state_signature(after_state, pid)
         state["probe_after"] = {"path": str(after_output), "signature": after_signature}
-        emit("paused_por_state_verified", phase="after", **after_signature)
+        emit("paused_player_verified", phase="after", **after_signature)
         if before_signature != after_signature:
             raise ExperimentError("CONTROL_STATE_CHANGED_DURING_AUTOSAVE")
         health_after = session.health()
-        if health_after.get("status") != "ready":
+        if health_after.get("status") != "ready" or health_after.get("date_raw") != date_raw:
             raise ExperimentError("OBSERVER_FRAME_HEALTH_LOST")
         state["session"]["health_after"] = health_after
         target = saves / name
         if _find_casefold(saves, name) is not None:
             raise ExperimentError("TARGET_APPEARED_BEFORE_ARCHIVE_NO_OVERWRITE")
         source_hash = _sha256_stream(autosave)
-        _copy_new_file(autosave, target)
-        target_inspection = _inspect_save(target)
+        if save_inspection.get("observer_autosave_fallback"):
+            expected_target_hash = _copy_observer_archive(autosave, target, save_inspection["player"])
+        else:
+            _copy_new_file(autosave, target)
+            expected_target_hash = source_hash
+        target_inspection = _inspect_save(target, expected_player=player, expected_date=date)
         if not target_inspection.get("valid"):
             raise ExperimentError("ARCHIVE_COPY_FAILED_VALIDATION")
         target_hash = _sha256_stream(target)
-        if target_hash != source_hash or _sha256_stream(autosave) != source_hash:
+        if target_hash != expected_target_hash or _sha256_stream(autosave) != source_hash:
             raise ExperimentError("AUTOSAVE_CHANGED_OR_ARCHIVE_COPY_HASH_MISMATCH")
         emit("archive_created", path=str(target), sha256=target_hash)
         restore_info = _restore_originals(saves, backup, baseline, name, emit=emit)
@@ -590,7 +665,7 @@ def run_experiment(installation: Path, name: str, timeout: int = MAX_TIMEOUT,
             "status": "success",
             "save": {"path": str(target), "sha256": target_hash,
                      "source": str(autosave), "inspection": target_inspection},
-            "native_save": {"path": str(autosave), "inspection": save_inspection},
+            "native_save": {"path": str(autosave), "sha256": source_hash, "inspection": save_inspection},
             "restore": restore_info,
             "finished_at_unix": time.time(),
         })
@@ -642,7 +717,7 @@ def run_experiment(installation: Path, name: str, timeout: int = MAX_TIMEOUT,
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--installation", type=Path, required=True,
-                        help="r3 installation.json for the already running observer")
+                        help="installation.json for the already running observer")
     parser.add_argument("--name", required=True,
                         help="llm_diplomacy_<unique>.eu4; existing targets are never overwritten")
     parser.add_argument("--timeout", type=int, default=MAX_TIMEOUT)
@@ -650,7 +725,7 @@ def main(argv: list[str] | None = None) -> int:
     args = parser.parse_args(argv)
     try:
         report = run_experiment(args.installation, args.name, args.timeout, args.expected_date)
-    except ExperimentError as error:
+    except (OSError, RuntimeError) as error:
         print(json.dumps({"status": "failure", "error": str(error)}, ensure_ascii=False), flush=True)
         return 1
     print(json.dumps({"status": report["status"], "report": report["report"],

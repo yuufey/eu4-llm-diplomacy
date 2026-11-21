@@ -229,14 +229,18 @@ class GameToolsTests(unittest.TestCase):
         try:
             self.assertIs(server.tools, self.tools)
             initialize(server)
-            listed = server.handle({"jsonrpc": "2.0", "id": 2, "method": "tools/list"})
+            listed = server.handle({
+                "jsonrpc": "2.0", "id": 2, "method": "tools/list",
+                "params": {"_meta": {"progressToken": 2}},
+            })
             self.assertEqual(
                 tuple(item["name"] for item in listed["result"]["tools"]),
                 INFORMATION_TOOL_NAMES + DIPLOMACY_TOOL_NAMES,
             )
             mcp_result = server.handle({
                 "jsonrpc": "2.0", "id": 3, "method": "tools/call",
-                "params": {"name": "get_diplomatic_result", "arguments": {"request_id": "missing-1"}},
+                "params": {"name": "get_diplomatic_result", "arguments": {"request_id": "missing-1"},
+                           "_meta": {"progressToken": "test-call"}},
             })
             self.assertFalse(mcp_result["result"]["isError"])
             self.assertEqual(

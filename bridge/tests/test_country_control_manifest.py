@@ -16,6 +16,7 @@ ROOT = Path(__file__).resolve().parents[2]
 V64_CANDIDATE = ROOT / "work/runtime/diplomacy-observer-20261115-land-promise-v64-001"
 NATIVE_SOURCE = ROOT / "work/native/diplomacy-observer-v10.cpp"
 POLICY_SOURCE = ROOT / "work/native/control-country-policy.h"
+RECALL_SOURCE = ROOT / "work/native/diplomat-recall-mcp.inc"
 
 
 def _v64_manifest():
@@ -50,6 +51,8 @@ def _v65_fixture(tmp_path, *, source_transform=None):
         "native_country_control_protocol": "EU4CONTROL1",
         "native_country_control_ack": "native_controlled_countries_set",
         "native_country_control_request": "controlled-countries.req",
+        "native_diplomat_recall_by_id": True,
+        "native_diplomat_recall_protocol": "EU4RECALL1",
     })
     manifest["compiler_arguments"].append("-DBRIDGE_NATIVE_COUNTRY_CONTROL=1")
     cpp_row = next(row for row in manifest["sources"]
@@ -59,9 +62,14 @@ def _v65_fixture(tmp_path, *, source_transform=None):
         "name": start.NATIVE_COUNTRY_CONTROL_SOURCE,
         "sha256": hashlib.sha256(policy_bytes).hexdigest(),
     })
+    manifest["sources"].append({
+        "name": RECALL_SOURCE.name,
+        "sha256": hashlib.sha256(RECALL_SOURCE.read_bytes()).hexdigest(),
+    })
     overlay = _SourceOverlay(V64_CANDIDATE, {
         start.MACRO_EVENT_ACK_SOURCE: cpp_path,
         start.NATIVE_COUNTRY_CONTROL_SOURCE: policy_path,
+        RECALL_SOURCE.name: RECALL_SOURCE,
     })
     return manifest, overlay, source_text
 
@@ -75,7 +83,23 @@ def test_v65_country_control_contract_projects_to_v64(tmp_path):
     manifest, overlay, _ = _v65_fixture(tmp_path)
     start._validate_information_battle_manifest(manifest, overlay)
     assert manifest["version"] == 65
-    assert len(manifest["sources"]) == 207
+    assert len(manifest["sources"]) == 208
+
+
+@pytest.mark.parametrize("mutation", ["old_protocol", "unmanifested", "source_hash", "tick_missing"])
+def test_v65_recall_requires_its_exact_delta(mutation, tmp_path):
+    transform = (lambda text: text.replace("native_diplomat_recall_mcp_tick();",
+                                           "other_tick();")) if mutation == "tick_missing" else None
+    manifest, overlay, _ = _v65_fixture(tmp_path, source_transform=transform)
+    if mutation == "old_protocol":
+        manifest["native_diplomat_recall_protocol"] = "EU4RECALL0"
+    elif mutation == "unmanifested":
+        manifest.pop("native_diplomat_recall_by_id")
+        manifest.pop("native_diplomat_recall_protocol")
+        manifest["sources"] = [row for row in manifest["sources"] if row["name"] != RECALL_SOURCE.name]
+    elif mutation == "source_hash":
+        next(row for row in manifest["sources"] if row["name"] == RECALL_SOURCE.name)["sha256"] = "0" * 64
+    _reject(manifest, overlay)
 
 
 @pytest.mark.parametrize("mutation", [

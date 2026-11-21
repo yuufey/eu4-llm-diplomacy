@@ -5,6 +5,8 @@ from copy import deepcopy
 from typing import Any
 
 from .diplomacy_control import DiplomacyPermissionError
+from .diplomat_recall import MAX_DIPLOMAT_ID, TOOL_NAME as RECALL_TOOL
+from .game_time_control import TOOL_DEFINITION as GAME_TIME_DEFINITION, TOOL_NAME as GAME_TIME_TOOL
 from .information.model import InformationError, canonical
 from .information.tools import InformationTools, TAG_SCHEMA, validate_schema
 
@@ -18,6 +20,22 @@ _ACTION_PROPERTIES = {
 }
 _ACTION_REQUIRED = ["action_id", "actor", "recipient"]
 _REQUEST_ID = {"type": "string", "pattern": "^[A-Za-z0-9_-]{1,64}$"}
+
+_RECALL_DEFINITION = {
+    "name": RECALL_TOOL,
+    "description": "按 N05 查询返回的外交官 ID，召回本轮控制国的一名外交官。用原 request_id 查询结果。",
+    "inputSchema": {
+        "type": "object",
+        "properties": {
+            "request_id": _REQUEST_ID,
+            "diplomat_id": {"type": "integer", "minimum": 0, "maximum": MAX_DIPLOMAT_ID},
+        },
+        "required": ["request_id", "diplomat_id"],
+        "additionalProperties": False,
+    },
+    "annotations": {"readOnlyHint": False, "destructiveHint": True,
+                    "idempotentHint": True, "openWorldHint": True},
+}
 
 
 DIPLOMACY_TOOL_DEFINITIONS = (
@@ -99,6 +117,12 @@ class GameTools:
                 "For inbound accept/reject the recipient is the decision country."
             )
         self._definitions = deepcopy(list(DIPLOMACY_TOOL_DEFINITIONS))
+        if getattr(self.diplomacy, "can_recall_diplomat", False) is True:
+            self._definitions.append(deepcopy(_RECALL_DEFINITION))
+        self.clock = getattr(service, "game_time_control", None)
+        if self.clock is not None:
+            self._definitions.append(deepcopy(GAME_TIME_DEFINITION))
+            self.instructions += " set_game_speed controls the game clock in this observer test."
         self._schemas = {item["name"]: item["inputSchema"] for item in self._definitions}
 
     def definitions(self) -> list[dict[str, Any]]:
@@ -107,6 +131,8 @@ class GameTools:
     list_tools = definitions
 
     def call(self, name: str, arguments: Any = None) -> Any:
+        if name == GAME_TIME_TOOL and self.clock is None:
+            raise InformationError("permission_denied", "Clock control is disabled")
         if not isinstance(name, str) or name not in self._schemas:
             return self.information.call(name, arguments)
         arguments = {} if arguments is None else arguments
@@ -116,13 +142,15 @@ class GameTools:
             raise InformationError("invalid_parameters", str(error)) from error
         validate_schema(arguments, self._schemas[name])
         arguments = deepcopy(arguments)
-        if self.diplomacy is None:
+        if name != GAME_TIME_TOOL and self.diplomacy is None:
             raise InformationError("source_unavailable", "Diplomacy requires a live --operator-session with diplomacy enabled")
         # The background scheduler and all live information collection already
         # acquire this reentrant lock. An action completes before either reads.
         with self.service.collection_lock.acquire():
             if self.service._closed:
                 raise InformationError("service_closed", "Game service is closed")
+            if name == GAME_TIME_TOOL:
+                return self.clock(arguments["speed"])
             try:
                 if self.control is not None:
                     if name in ("inspect_diplomatic_action", "execute_diplomatic_action"):
@@ -135,6 +163,8 @@ class GameTools:
                 return getattr(self.diplomacy, name)(**arguments)
             except DiplomacyPermissionError as error:
                 raise InformationError("permission_denied", str(error)) from error
+            except InformationError:
+                raise
             except ValueError as error:
                 raise InformationError("invalid_parameters", str(error)) from error
 
