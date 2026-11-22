@@ -57,7 +57,11 @@ static Pending begin(uintptr_t container, uintptr_t output, uintptr_t key, uintp
     pending.country_pointer = container-0x9998;
     uint64_t reference = 0;
     if (!read(pending.country_pointer+0x20, reference)) return pending;
+#ifdef BRIDGE_NATIVE_COUNTRY_CONTROL
+    if (!observation_information_country_handle(reference)) return {};
+#else
     if ((reference & 0xffffffu) != 0x415246u) return {};
+#endif
     pending.value.country = reference;
     pending.output = output;
     uintptr_t canonical = 0;
@@ -206,14 +210,22 @@ static void flush() noexcept {
         char name_hex[owned::kMaxName*2+1]{};
         for (unsigned byte = 0; byte < event.value.mission.length; ++byte)
             std::snprintf(name_hex+byte*2, 3, "%02x", static_cast<unsigned char>(event.value.mission.text[byte]));
+        const auto reference=event.value.country;
+        const char country[4]={static_cast<char>(reference),static_cast<char>(reference>>8),
+                               static_cast<char>(reference>>16),0};
+#ifdef BRIDGE_NATIVE_COUNTRY_CONTROL
+        constexpr unsigned schema=3;
+#else
+        constexpr unsigned schema=2;
+#endif
         char message[1400]{};
         const int bytes = std::snprintf(message, sizeof(message),
-            "{\"event\":\"native_mission_completed\",\"schema_version\":2,\"session_id\":\"%lu-%llx\","
-            "\"sequence\":%llu,\"country\":\"FRA\",\"country_fullref\":\"0x%llx\",\"date_raw\":%d,"
+            "{\"event\":\"native_mission_completed\",\"schema_version\":%u,\"session_id\":\"%lu-%llx\","
+            "\"sequence\":%llu,\"country\":\"%.3s\",\"country_fullref\":\"0x%llx\",\"date_raw\":%d,"
             "\"mission_id_hex\":\"%s\",\"completed_before\":false,\"completed_after\":true,"
             "\"completion_path\":\"%s\",\"source\":\"mission_completed_set_insert_normal_return\",\"complete\":true}\n",
-            static_cast<unsigned long>(GetCurrentProcessId()), static_cast<unsigned long long>(observation_creation),
-            static_cast<unsigned long long>(event.sequence), static_cast<unsigned long long>(event.value.country),
+            schema,static_cast<unsigned long>(GetCurrentProcessId()), static_cast<unsigned long long>(observation_creation),
+            static_cast<unsigned long long>(event.sequence),country,static_cast<unsigned long long>(reference),
             event.value.date, name_hex, event.value.path == plan::Path::command ? "command_handler" : "script_effect");
         if (bytes <= 0 || static_cast<size_t>(bytes) >= sizeof(message)) { transport_fault = true; return; }
         if (!append(message, static_cast<size_t>(bytes))) return;

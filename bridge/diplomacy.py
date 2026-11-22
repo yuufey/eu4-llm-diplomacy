@@ -35,11 +35,13 @@ from .diplomat_availability import (
 from .diplomacy_journal import (AmbiguousRequestError, ContextMismatchError, DurableJournal,
                                 EvidenceConflictError, InvalidTransitionError,
                                 RequestConflictError, RequestPermissionError,
-                                UnknownRequestError)
+                                RequestRecord, ResponseLogCursor, UnknownRequestError)
 from .diplomacy_control import DiplomacyPermissionError
+from . import diplomat_recall
 from .diplomacy_session import probe_identity
 from .country_control_ack import has_v65_country_control_capability
 from .country_control_runtime import CAPABILITY as _NATIVE_COUNTRY_CONTROL_CONFIGURATION_CAPABILITY
+from .country_control_runtime import OBSERVATION_CAPABILITY as _NATIVE_INFORMATION_OBSERVER_CAPABILITY
 from .native_text import (DEFAULT_NATIVE_TEXT_CODEC, InvalidNativeText,
                           decode_native_text_hex, validate_native_text_codec)
 from .peace_execution import normalize_peace_execution_parameters
@@ -426,6 +428,7 @@ class ObserverSession:
         self.native_text_codec = validate_native_text_codec(
             self.record.get("native_text_codec", DEFAULT_NATIVE_TEXT_CODEC))
         self._response_log_offsets: dict[str, int] = {}
+        self._response_log_identities: dict[str, tuple[int, int]] = {}
         # Inbound observations use one bounded stream cursor, while the
         # native proposal id is kept as a per-proposal de-duplication key.
         # The mapping deliberately remains private: it contains the native
@@ -471,6 +474,15 @@ class ObserverSession:
         self.managed_countries = tuple(configured)
         return result
 
+    def configure_information_observers(self, countries) -> dict | None:
+        from .country_control_runtime import configure_native_observation
+
+        if _NATIVE_INFORMATION_OBSERVER_CAPABILITY not in self.installation_capabilities():
+            return None
+        receipt = configure_native_observation(self, countries)
+        self.observed_countries = tuple(receipt["countries"])
+        return receipt
+
     def _installation_ack(self) -> dict | None:
         """Return only this installation's bounded, operator-owned ack."""
         log = self.directory / "control-probe.jsonl"
@@ -499,6 +511,11 @@ class ObserverSession:
         if ack is None:
             return frozenset()
         capabilities: set[str] = set()
+        if (type(ack.get("version")) is int and ack["version"] == 65
+                and ack.get(_NATIVE_INFORMATION_OBSERVER_CAPABILITY) is True
+                and type(ack.get("native_country_modifier_scoped_schema")) is int
+                and ack["native_country_modifier_scoped_schema"] == 2):
+            capabilities.add(_NATIVE_INFORMATION_OBSERVER_CAPABILITY)
         advertised = ack.get("caps", ack.get("capabilities"))
         if isinstance(advertised, dict):
             capabilities.update(key for key, value in advertised.items()
@@ -520,12 +537,18 @@ class ObserverSession:
         capabilities.discard(country_modifier_observation.REMOVE_CAPABILITY)
         capabilities.discard(country_modifier_observation.EXPIRY_CAPABILITY)
         capabilities.discard(subsidy_expiry_observation.CAPABILITY)
+        capabilities.discard(subsidy_expiry_observation.SCOPED_CAPABILITY)
         capabilities.discard(truce_expiry_observation.CAPABILITY)
+        capabilities.discard(truce_expiry_observation.SCOPED_CAPABILITY)
         capabilities.discard(claim_expiry_observation.CAPABILITY)
+        capabilities.discard(claim_expiry_observation.SCOPED_CAPABILITY)
         capabilities.discard(land_promise_observation.CAPABILITY)
+        capabilities.discard(land_promise_observation.SCOPED_CAPABILITY)
         capabilities.discard(rival_observation.CAPABILITY)
         capabilities.discard(rival_observation.RECORD_CAPABILITY)
+        capabilities.discard(rival_observation.SCOPED_CAPABILITY)
         capabilities.discard(war_declaration_observation.CAPABILITY)
+        capabilities.discard(war_declaration_observation.SCOPED_CAPABILITY)
         capabilities.discard(relation_observation.CAPABILITY)
         capabilities.discard(relation_observation.RECORD_CAPABILITY)
         capabilities.discard(relation_observation.ROYAL_RECORD_CAPABILITY)
@@ -533,9 +556,12 @@ class ObserverSession:
         capabilities.discard(relation_observation.SUPPORT_SUBJECT_RECORD_CAPABILITY)
         capabilities.discard(mission_observation.CAPABILITY)
         capabilities.discard(mission_observation.SET_CAPABILITY)
+        capabilities.discard(mission_observation.SCOPED_CAPABILITY)
         capabilities.discard(mission_availability_observation.CAPABILITY)
+        capabilities.discard(mission_availability_observation.SCOPED_CAPABILITY)
         capabilities.discard(mission_condition_observation.CAPABILITY)
         capabilities.discard(mission_condition_observation.PROVINCE_CAPABILITY)
+        capabilities.discard(mission_condition_observation.SCOPED_CAPABILITY)
         capabilities.discard(_NATIVE_INBOUND_RESPONSE_CAPABILITY)
         capabilities.discard(_NATIVE_INBOUND_ROYAL_RESPONSE_CAPABILITY)
         capabilities.discard(_NATIVE_INBOUND_SUPPORT_RESPONSE_CAPABILITY)
@@ -693,20 +719,40 @@ class ObserverSession:
             capabilities.add(country_modifier_observation.REMOVE_CAPABILITY)
         if country_modifier_observation.supported_expiry_ack(ack, self.record.get('game_sha256')):
             capabilities.add(country_modifier_observation.EXPIRY_CAPABILITY)
+        scoped_expiry = (_NATIVE_INFORMATION_OBSERVER_CAPABILITY in capabilities
+            and type(ack.get('native_expiry_scoped_wire')) is int and ack['native_expiry_scoped_wire'] == 2)
         if subsidy_expiry_observation.supported_ack(ack, self.record.get('game_sha256')):
             capabilities.add(subsidy_expiry_observation.CAPABILITY)
+            if scoped_expiry:
+                capabilities.add(subsidy_expiry_observation.SCOPED_CAPABILITY)
         if truce_expiry_observation.supported_ack(ack, self.record.get('game_sha256')):
             capabilities.add(truce_expiry_observation.CAPABILITY)
+            if scoped_expiry:
+                capabilities.add(truce_expiry_observation.SCOPED_CAPABILITY)
         if claim_expiry_observation.supported_ack(ack, self.record.get('game_sha256')):
             capabilities.add(claim_expiry_observation.CAPABILITY)
+            if scoped_expiry:
+                capabilities.add(claim_expiry_observation.SCOPED_CAPABILITY)
         if land_promise_observation.supported_ack(ack, self.record.get('game_sha256')):
             capabilities.add(land_promise_observation.CAPABILITY)
+            if (_NATIVE_INFORMATION_OBSERVER_CAPABILITY in capabilities
+                    and type(ack.get('native_land_promise_scoped_schema')) is int
+                    and ack['native_land_promise_scoped_schema'] == 2):
+                capabilities.add(land_promise_observation.SCOPED_CAPABILITY)
         if rival_observation.supported_ack(ack, self.record.get('game_sha256')):
             capabilities.add(rival_observation.CAPABILITY)
         if rival_observation.supported_record_ack(ack, self.record.get('game_sha256')):
             capabilities.add(rival_observation.RECORD_CAPABILITY)
+            if (_NATIVE_INFORMATION_OBSERVER_CAPABILITY in capabilities
+                    and type(ack.get('native_rival_change_scoped_schema')) is int
+                    and ack['native_rival_change_scoped_schema'] == 4):
+                capabilities.add(rival_observation.SCOPED_CAPABILITY)
         if war_declaration_observation.supported_ack(ack, self.record.get('game_sha256')):
             capabilities.add(war_declaration_observation.CAPABILITY)
+            if (_NATIVE_INFORMATION_OBSERVER_CAPABILITY in capabilities
+                    and type(ack.get('native_war_declaration_scoped_schema')) is int
+                    and ack['native_war_declaration_scoped_schema'] == 2):
+                capabilities.add(war_declaration_observation.SCOPED_CAPABILITY)
         if relation_observation.supported_ack(ack, self.record.get('game_sha256')):
             capabilities.add(relation_observation.CAPABILITY)
         if relation_observation.supported_record_ack(ack, self.record.get('game_sha256')):
@@ -717,16 +763,32 @@ class ObserverSession:
             capabilities.add(relation_observation.DIRECTED_RECORD_CAPABILITY)
         if relation_observation.supported_support_subject_record_ack(ack, self.record.get('game_sha256')):
             capabilities.add(relation_observation.SUPPORT_SUBJECT_RECORD_CAPABILITY)
+            if (_NATIVE_INFORMATION_OBSERVER_CAPABILITY in capabilities
+                    and type(ack.get('native_relation_change_scoped_schema')) is int
+                    and ack['native_relation_change_scoped_schema'] == 6):
+                capabilities.add(relation_observation.SCOPED_CAPABILITY)
         if mission_observation.supported_ack(ack, self.record.get('game_sha256')):
             capabilities.add(mission_observation.CAPABILITY)
         if mission_observation.supported_set_ack(ack, self.record.get('game_sha256')):
             capabilities.add(mission_observation.SET_CAPABILITY)
+            if (_NATIVE_INFORMATION_OBSERVER_CAPABILITY in capabilities
+                    and type(ack.get('native_mission_completion_scoped_schema')) is int
+                    and ack['native_mission_completion_scoped_schema'] == 3):
+                capabilities.add(mission_observation.SCOPED_CAPABILITY)
         if mission_availability_observation.supported_ack(ack, self.record.get('game_sha256')):
             capabilities.add(mission_availability_observation.CAPABILITY)
+            if (_NATIVE_INFORMATION_OBSERVER_CAPABILITY in capabilities
+                    and type(ack.get('native_mission_availability_scoped_schema')) is int
+                    and ack['native_mission_availability_scoped_schema'] == 2):
+                capabilities.add(mission_availability_observation.SCOPED_CAPABILITY)
         if mission_condition_observation.supported_ack(ack, self.record.get('game_sha256')):
             capabilities.add(mission_condition_observation.CAPABILITY)
         if mission_condition_observation.supported_province_ack(ack, self.record.get('game_sha256')):
             capabilities.add(mission_condition_observation.PROVINCE_CAPABILITY)
+            if (_NATIVE_INFORMATION_OBSERVER_CAPABILITY in capabilities
+                    and type(ack.get('native_mission_condition_scoped_schema')) is int
+                    and ack['native_mission_condition_scoped_schema'] == 4):
+                capabilities.add(mission_condition_observation.SCOPED_CAPABILITY)
         if (ack.get(_NATIVE_CALL_TO_ARMS_OBSERVATION_CAPABILITY) is True
                 and ack.get("native_call_to_arms_ai_response_held") is False
                 and type(ack.get("version")) is int
@@ -766,7 +828,10 @@ class ObserverSession:
             capabilities.add(_NATIVE_GIFT_QUERY_CAPABILITY)
         if ack.get(_NATIVE_INFLUENCE_QUERY_CAPABILITY) is True:
             capabilities.add(_NATIVE_INFLUENCE_QUERY_CAPABILITY)
-        if (type(ack.get("version")) is int and ack["version"] == 34
+        debt_quote_version = ack.get("version")
+        debt_quote_scope_supported = (debt_quote_version == 34 or (
+            debt_quote_version == 65 and ack.get("native_debt_quote_configured_country_scope") is True))
+        if (type(debt_quote_version) is int and debt_quote_scope_supported
                 and ack.get(_NATIVE_DEBT_QUOTE_QUERY_CAPABILITY) is True
                 and type(ack.get("native_debt_quote_query_wire")) is int
                 and ack["native_debt_quote_query_wire"] == 1
@@ -1253,32 +1318,43 @@ ew_entry`` or
                         if modifier_enabled:
                             self._country_modifier_observations.observe(event, allow_removal=(
                                 country_modifier_observation.REMOVE_CAPABILITY in capabilities), allow_expiry=(
-                                country_modifier_observation.EXPIRY_CAPABILITY in capabilities))
+                                country_modifier_observation.EXPIRY_CAPABILITY in capabilities),
+                                allow_scoped=(_NATIVE_INFORMATION_OBSERVER_CAPABILITY in capabilities))
                         if subsidy_expiry_enabled:
-                            self._subsidy_expiries.observe(event)
+                            self._subsidy_expiries.observe(event,
+                                allow_scoped=subsidy_expiry_observation.SCOPED_CAPABILITY in capabilities)
                         if truce_expiry_enabled:
-                            self._truce_expiries.observe(event)
+                            self._truce_expiries.observe(event,
+                                allow_scoped=truce_expiry_observation.SCOPED_CAPABILITY in capabilities)
                         if claim_expiry_enabled:
-                            self._claim_expiries.observe(event)
+                            self._claim_expiries.observe(event,
+                                allow_scoped=claim_expiry_observation.SCOPED_CAPABILITY in capabilities)
                         if land_promise_enabled:
-                            self._land_promises.observe(event)
+                            self._land_promises.observe(event,
+                                allow_scoped=land_promise_observation.SCOPED_CAPABILITY in capabilities)
                         if rival_enabled:
-                            self._rival_observations.observe(event,allow_record=rival_record_enabled)
+                            self._rival_observations.observe(event, allow_record=rival_record_enabled,
+                                allow_scoped=rival_observation.SCOPED_CAPABILITY in capabilities)
                         if war_enabled:
-                            self._war_declarations.observe(event)
+                            self._war_declarations.observe(event,
+                                allow_scoped=war_declaration_observation.SCOPED_CAPABILITY in capabilities)
                         if relation_enabled:
                             self._relation_observations.observe(event,
                                 allow_record=relation_observation.RECORD_CAPABILITY in capabilities,
                                 allow_royal_record=relation_observation.ROYAL_RECORD_CAPABILITY in capabilities,
                                 allow_directed_record=relation_observation.DIRECTED_RECORD_CAPABILITY in capabilities,
-                                allow_support_subject_record=relation_observation.SUPPORT_SUBJECT_RECORD_CAPABILITY in capabilities)
+                                allow_support_subject_record=relation_observation.SUPPORT_SUBJECT_RECORD_CAPABILITY in capabilities,
+                                allow_scoped=relation_observation.SCOPED_CAPABILITY in capabilities)
                         if mission_enabled:
                             self._mission_observations.observe(event, allow_set=(
-                                mission_observation.SET_CAPABILITY in capabilities))
+                                mission_observation.SET_CAPABILITY in capabilities),
+                                allow_scoped=mission_observation.SCOPED_CAPABILITY in capabilities)
                         if mission_availability_enabled:
-                            self._mission_availability_observations.observe(event)
+                            self._mission_availability_observations.observe(event,
+                                allow_scoped=mission_availability_observation.SCOPED_CAPABILITY in capabilities)
                         if mission_condition_enabled:
-                            self._mission_condition_observations.observe(event)
+                            self._mission_condition_observations.observe(event,
+                                allow_scoped=mission_condition_observation.SCOPED_CAPABILITY in capabilities)
                         if expiry_enabled and isinstance(event, dict):
                             if (event.get('event') == 'native_alliance_lifecycle_drop'
                                     and self._inbound_log_session_id == self.session_id
@@ -5497,6 +5573,40 @@ ative_flags`` as private header
     inspect_native_inbound_offer = inspect_native_inbound_response
     query_native_inbound_response = inspect_native_inbound_response
 
+    @staticmethod
+    def _submission_log_cursor(log: Path) -> ResponseLogCursor:
+        stat = log.stat()
+        return ResponseLogCursor(stat.st_dev, stat.st_ino, stat.st_size)
+
+    def _restore_response_log_cursor(
+            self, request_id: str, cursor: ResponseLogCursor | None) -> None:
+        if cursor is None:
+            self._response_log_offsets.pop(request_id, None)
+            self._response_log_identities.pop(request_id, None)
+        else:
+            self._response_log_offsets[request_id] = cursor.offset
+            self._response_log_identities[request_id] = (cursor.device, cursor.file_id)
+
+    def _response_log_cursor(self, request_id: str) -> ResponseLogCursor | None:
+        identity = self._response_log_identities.get(request_id)
+        offset = self._response_log_offsets.get(request_id)
+        if identity is not None and offset is not None:
+            return ResponseLogCursor(*identity, offset)
+        return None
+
+    def _seek_response_log(self, request_id: str, stream) -> int:
+        # Stat the handle being read so a replacement cannot inherit an old offset.
+        stat = os.fstat(stream.fileno())
+        identity = (stat.st_dev, stat.st_ino)
+        offset = self._response_log_offsets.get(request_id, 0)
+        if (self._response_log_identities.get(request_id, identity) != identity
+                or stat.st_size < offset):
+            offset = 0
+        stream.seek(offset)
+        self._response_log_offsets[request_id] = offset
+        self._response_log_identities[request_id] = identity
+        return offset
+
     def read_native_alliance_response(self, request_id: str, actor: str,
                                       recipient: str, phase: str,
                                       date_raw: object,
@@ -5507,12 +5617,8 @@ ative_flags`` as private header
 
         log = self.directory / "control-probe.jsonl"
         try:
-            size = log.stat().st_size
-            offset = self._response_log_offsets.get(request_id, 0)
-            if size < offset:
-                offset = 0
             with log.open("rb") as stream:
-                stream.seek(offset)
+                offset = self._seek_response_log(request_id, stream)
                 pending = b""
                 consumed = offset
                 scanned = 0
@@ -5834,12 +5940,8 @@ ative_flags`` as private header
             return {"status": "invalid", "reason_code": "NATIVE_RIVAL_ACTION_INVALID"}
         log = self.directory / "control-probe.jsonl"
         try:
-            size = log.stat().st_size
-            offset = self._response_log_offsets.get(request_id, 0)
-            if size < offset:
-                offset = 0
             with log.open("rb") as stream:
-                stream.seek(offset)
+                offset = self._seek_response_log(request_id, stream)
                 pending = b""
                 consumed = offset
                 scanned = 0
@@ -5901,12 +6003,8 @@ ative_flags`` as private header
             return {"status": "invalid", "reason_code": "NATIVE_DECLARE_WAR_PARAMETERS_INVALID"}
         log = self.directory / "control-probe.jsonl"
         try:
-            size = log.stat().st_size
-            offset = self._response_log_offsets.get(request_id, 0)
-            if size < offset:
-                offset = 0
             with log.open("rb") as stream:
-                stream.seek(offset)
+                offset = self._seek_response_log(request_id, stream)
                 pending = b""
                 consumed = offset
                 scanned = 0
@@ -5970,12 +6068,8 @@ ative_flags`` as private header
             return {"status": "invalid", "reason_code": "NATIVE_PEACE_DATE_INVALID"}
         log = self.directory / "control-probe.jsonl"
         try:
-            size = log.stat().st_size
-            offset = self._response_log_offsets.get(request_id, 0)
-            if size < offset:
-                offset = 0
             with log.open("rb") as stream:
-                stream.seek(offset)
+                offset = self._seek_response_log(request_id, stream)
                 pending = b""
                 consumed = offset
                 scanned = 0
@@ -7377,10 +7471,11 @@ ative_peace_execution_result`` before exposing a business outcome.
             return {"status": "failed", "reason_code": "NATIVE_PEACE_WIRE_INVALID"}
         log = self.directory / "control-probe.jsonl"
         try:
-            offset = log.stat().st_size
+            cursor = self._submission_log_cursor(log)
         except OSError:
             return {"status": "failed",
                     "reason_code": "NATIVE_PEACE_SUBMISSION_LOG_UNAVAILABLE"}
+        offset = cursor.offset
         published = self._publish_atomic_request(
             wire, request_id, _PEACE_EXECUTE_REQUEST_NAME)
         if published == "busy":
@@ -7444,7 +7539,8 @@ ative_peace_execution_result`` before exposing a business outcome.
                     if receipt is None:
                         return {"status": "failed",
                                 "reason_code": "NATIVE_PEACE_RECEIPT_INVALID"}
-                    return {"status": "submitted", "receipt": receipt}
+                    return {"status": "submitted", "receipt": receipt,
+                            "response_log_cursor": cursor}
             time.sleep(0.02)
         return {"status": "timeout", "reason_code": "NATIVE_PEACE_SUBMISSION_TIMEOUT"}
 
@@ -7486,10 +7582,11 @@ ative_peace_execution_result`` before exposing a business outcome.
             return {"status": "failed", "reason_code": "NATIVE_DECLARE_WAR_WIRE_INVALID"}
         log = self.directory / "control-probe.jsonl"
         try:
-            offset = log.stat().st_size
+            cursor = self._submission_log_cursor(log)
         except OSError:
             return {"status": "failed",
                     "reason_code": "NATIVE_DECLARE_WAR_SUBMISSION_LOG_UNAVAILABLE"}
+        offset = cursor.offset
         expiry = int(time.time_ns() // 100 + _FILETIME_EPOCH + 10 * 10_000_000)
         values = self._declare_war_participant_values(
             selected, actor, recipient)
@@ -7559,7 +7656,8 @@ ative_peace_execution_result`` before exposing a business outcome.
                     if receipt is None:
                         return {"status": "failed",
                                 "reason_code": "NATIVE_DECLARE_WAR_RECEIPT_INVALID"}
-                    return {"status": "submitted", "receipt": receipt}
+                    return {"status": "submitted", "receipt": receipt,
+                            "response_log_cursor": cursor}
             time.sleep(0.02)
         return {"status": "timeout", "reason_code": "NATIVE_DECLARE_WAR_SUBMISSION_TIMEOUT"}
 
@@ -7590,9 +7688,10 @@ ative_peace_execution_result`` before exposing a business outcome.
             return {"status": "failed", "reason_code": "NATIVE_RIVAL_WIRE_INVALID"}
         log = self.directory / "control-probe.jsonl"
         try:
-            offset = log.stat().st_size
+            cursor = self._submission_log_cursor(log)
         except OSError:
             return {"status": "failed", "reason_code": "NATIVE_RIVAL_SUBMISSION_LOG_UNAVAILABLE"}
+        offset = cursor.offset
         expiry_tick = _native_tick_count_ms() + 30_000
         wire = (f"RIVAL_EXEC1 {request_id} {creation_filetime:x} {expiry_tick} "
                 f"{wanted_date} {action_id} {self._controlled_country()} {recipient}\n")
@@ -7638,7 +7737,8 @@ ative_peace_execution_result`` before exposing a business outcome.
                         event, request_id, actor, recipient, phase, wanted_date, action_id, controlled_country=self._controlled_country())
                     if receipt is None:
                         return {"status": "failed", "reason_code": "NATIVE_RIVAL_RECEIPT_INVALID"}
-                    return {"status": "submitted", "receipt": receipt}
+                    return {"status": "submitted", "receipt": receipt,
+                            "response_log_cursor": cursor}
             time.sleep(0.02)
         return {"status": "timeout", "reason_code": "NATIVE_RIVAL_SUBMISSION_TIMEOUT"}
 
@@ -7785,9 +7885,10 @@ ative_peace_execution_result`` before exposing a business outcome.
             return {"status": "failed", "reason_code": "NATIVE_SUBMISSION_DATE_INVALID"}
         log = self.directory / "control-probe.jsonl"
         try:
-            offset = log.stat().st_size
+            cursor = self._submission_log_cursor(log)
         except OSError:
             return {"status": "failed", "reason_code": "NATIVE_SUBMISSION_LOG_UNAVAILABLE"}
+        offset = cursor.offset
         expiry = int(time.time_ns() // 100 + _FILETIME_EPOCH + 10 * 10_000_000)
         wire_fields = ("v2" if action_id in _INSULT_ACTIONS else "v1",
                        request_id, self.session_id, str(expiry), str(date_raw),
@@ -7854,7 +7955,8 @@ ative_peace_execution_result`` before exposing a business outcome.
                             event, request_id, actor, recipient, phase, date_raw, action_id))
                     if receipt is None:
                         return {"status": "failed", "reason_code": "NATIVE_SUBMISSION_RECEIPT_INVALID"}
-                    return {"status": "submitted", "receipt": receipt}
+                    return {"status": "submitted", "receipt": receipt,
+                            "response_log_cursor": cursor}
             time.sleep(0.02)
         return {"status": "timeout", "reason_code": "NATIVE_SUBMISSION_TIMEOUT"}
 
@@ -7944,9 +8046,10 @@ ative_peace_execution_result`` before exposing a business outcome.
             return {"status": "failed", "reason_code": "NATIVE_SUBMISSION_WIRE_INVALID"}
         log = self.directory / "control-probe.jsonl"
         try:
-            offset = log.stat().st_size
+            cursor = self._submission_log_cursor(log)
         except OSError:
             return {"status": "failed", "reason_code": "NATIVE_SUBMISSION_LOG_UNAVAILABLE"}
+        offset = cursor.offset
         expiry = int(time.time_ns() // 100 + _FILETIME_EPOCH + 10 * 10_000_000)
         if action_id == _GIFT_ACTION:
             wire = (f"EU4DIP_EXECUTE_GIFT|v1|{request_id}|{self.session_id}|{expiry}|"
@@ -8001,7 +8104,8 @@ ative_peace_execution_result`` before exposing a business outcome.
                     if receipt is None:
                         return {"status": "failed", "reason_code":
                                 "NATIVE_SUBMISSION_RECEIPT_INVALID"}
-                    return {"status": "submitted", "receipt": receipt}
+                    return {"status": "submitted", "receipt": receipt,
+                            "response_log_cursor": cursor}
             time.sleep(0.02)
         return {"status": "timeout", "reason_code": "NATIVE_SUBMISSION_TIMEOUT"}
 
@@ -8811,9 +8915,10 @@ ative_peace_execution_result`` before exposing a business outcome.
             return {"status": "failed", "reason_code": "NATIVE_INBOUND_WIRE_INVALID"}
         log = self.directory / "control-probe.jsonl"
         try:
-            offset = log.stat().st_size
+            cursor = self._submission_log_cursor(log)
         except OSError:
             return {"status": "failed", "reason_code": "NATIVE_SUBMISSION_LOG_UNAVAILABLE"}
+        offset = cursor.offset
         expiry = int(time.time_ns() // 100 + _FILETIME_EPOCH + 10 * 10_000_000)
         wire = "|".join(("v1", request_id, self.session_id, str(expiry), str(wanted_date),
                           action_id, actor, self._controlled_country(), phase, str(wanted_id))) + "\n"
@@ -8824,7 +8929,8 @@ ative_peace_execution_result`` before exposing a business outcome.
             return {"status": "failed", "reason_code": "INBOUND_RESPONSE_CHANNEL_WRITE_FAILED"}
         # A new response cannot precede its publication. Retain this boundary
         # for later result polling, including an acknowledgement timeout.
-        self._response_log_offsets.setdefault(request_id, offset)
+        if request_id not in self._response_log_offsets:
+            self._restore_response_log_cursor(request_id, cursor)
         deadline = time.monotonic() + max(0.0, min(float(timeout), _EXECUTE_WAIT_SECONDS))
         while time.monotonic() < deadline:
             try:
@@ -8862,7 +8968,8 @@ ative_peace_execution_result`` before exposing a business outcome.
                         return {"status": "failed", "reason_code": "NATIVE_SUBMISSION_NOT_SUBMITTED"}
                     receipt = self._public_native_inbound_submission_receipt(
                         event, request_id, actor, phase, wanted_date, action_id, controlled_country=self._controlled_country())
-                    return {"status": "submitted", "receipt": receipt}
+                    return {"status": "submitted", "receipt": receipt,
+                            "response_log_cursor": cursor}
             time.sleep(0.02)
         return {"status": "timeout", "reason_code": "NATIVE_SUBMISSION_TIMEOUT"}
 
@@ -8878,12 +8985,8 @@ ative_peace_execution_result`` before exposing a business outcome.
 
         log = self.directory / "control-probe.jsonl"
         try:
-            size = log.stat().st_size
-            offset = self._response_log_offsets.get(request_id, 0)
-            if size < offset:
-                offset = 0
             with log.open("rb") as stream:
-                stream.seek(offset)
+                offset = self._seek_response_log(request_id, stream)
                 pending = b""
                 consumed = offset
                 scanned = 0
@@ -16752,6 +16855,9 @@ ative_alliance_inspection`` wire and
     def inspect_take_on_debt(self, actor: str, recipient: str,
                              phase: str = "initiate") -> dict | None:
         _normalize_debt_quote_request(actor, recipient, phase, {})
+        acknowledgement = self._installation_ack() or {}
+        if acknowledgement.get("version") == 34 and (actor != "FRA" or recipient == "POR"):
+            raise ValueError("TAKE_ON_DEBT_LEGACY_COUNTRY_SCOPE")
         return self.inspect_alliance(
             _DEBT_QUOTE_ACTION, actor, recipient, phase,
             frozenset({_NATIVE_DEBT_QUOTE_QUERY_CAPABILITY}))
@@ -18089,7 +18195,16 @@ ative_vassalization_submission`` ACK is issued.
             return health(allow_date_progress=True)
         return health()
 
-    def health(self, *, allow_date_progress: bool = False) -> dict:
+    def physical_player_health(self, *, allow_date_progress: bool = False) -> dict:
+        """Check that the frame still reports the installation's verified seat."""
+        from work.observer_runtime_ready import expected_physical_player
+
+        return self.health(allow_date_progress=allow_date_progress,
+                           expected_player=expected_physical_player(self.record))
+
+    def health(self, *, allow_date_progress: bool = False,
+               expected_player: str | None = None) -> dict:
+        """Check the bound process and a stable current frame context."""
         try:
             if self.record.get("installation_returncode") != 0:
                 raise RuntimeError("INSTALLATION_NOT_CONFIRMED")
@@ -18126,7 +18241,8 @@ ative_vassalization_submission`` ACK is issued.
                 # retaining one pure implementation for both paths.
                 from work.observer_runtime_ready import _stable_matching_heartbeat
                 return _stable_matching_heartbeat(
-                    events, self.session_id, allow_date_progress=allow_date_progress)
+                    events, self.session_id, player=expected_player,
+                    allow_date_progress=allow_date_progress)
 
             latest = stable_health_from_tail(_RESPONSE_LOG_CHUNK_BYTES)
             if latest is None and log_size > _RESPONSE_LOG_CHUNK_BYTES:
@@ -18149,6 +18265,16 @@ class DiplomacyTools:
         self.journal = journal
         self.session = session
         self._pending_native_responses: dict[tuple, dict] = {}
+        self._native_response_lock = RLock()
+
+    @property
+    def can_recall_diplomat(self) -> bool:
+        return diplomat_recall.recall_available(self.session, getattr(self, "control", None))
+
+    def recall_diplomat(self, request_id: str, diplomat_id: int) -> dict:
+        result = diplomat_recall.submit_diplomat_recall(
+            self.session, getattr(self, "control", None), self.journal, request_id, diplomat_id)
+        return self.get_diplomatic_result(request_id) if result is None else result
 
     def _controlled_country(self) -> str | None:
         """Return this connection's country, keeping legacy direct callers FRA-bound."""
@@ -19284,24 +19410,27 @@ class DiplomacyTools:
             response = reader(getattr(record, "request_id"), *context)
         return response
 
-    def _persist_native_response(self, record: object) -> None:
+    def _persist_native_response(self, record: RequestRecord) -> None:
         """Retain consumed evidence until its journal transaction succeeds."""
-        key = (getattr(record, "experiment_id", None),
-               getattr(record, "session_id", None), getattr(record, "request_id", None))
-        if (getattr(record, "status", None) not in {"submitted", "unknown", "executing", "waiting_response"}
-                or getattr(record, "submitted_at", None) is None
+        key = (record.experiment_id, record.session_id, record.request_id)
+        if (record.status not in {"submitted", "unknown", "executing", "waiting_response"}
+                or record.submitted_at is None
                 or self.session is None
-                or getattr(record, "session_id", None) != getattr(self.session, "session_id", None)):
+                or record.session_id != getattr(self.session, "session_id", None)):
             self._pending_native_responses.pop(key, None)
             return
+        observer = self.session if isinstance(self.session, ObserverSession) else None
         response = self._pending_native_responses.get(key)
         if response is None:
+            if observer is not None:
+                observer._restore_response_log_cursor(record.request_id, record.response_log_cursor)
             response = self._read_native_response(record)
-        if not isinstance(response, dict):
-            return
-        status = response.get("status")
-        result = response.get("result")
+        cursor = observer._response_log_cursor(record.request_id) if observer is not None else None
+        status = response.get("status") if isinstance(response, dict) else None
+        result = response.get("result") if isinstance(response, dict) else None
         if status not in {"accepted", "rejected", "executed", "invalidated", "unknown"} or not isinstance(result, dict):
+            if cursor is not None:
+                self.journal.checkpoint_response_log(record, cursor)
             return
         self._pending_native_responses[key] = response
         event_id = self._native_response_event_id(result)
@@ -19348,6 +19477,8 @@ class DiplomacyTools:
             except InvalidTransitionError:
                 self._pending_native_responses.pop(key, None)
                 return
+        elif cursor is not None:
+            self.journal.checkpoint_response_log(record, cursor, result=result, event_id=event_id)
         else:
             self.journal.record_result(
                 getattr(record, "request_id"), result,
@@ -19564,7 +19695,9 @@ class DiplomacyTools:
                     inspection, "NATIVE_INBOUND_SUBMISSION_RECEIPT_INVALID",
                     "原生入站响应未提供与当前提议绑定的完整transport回执。")
                 return self._persist_unsubmitted(request_id, failed)
-            self.journal.mark_submitted(request_id, claim.claim_token, receipt)
+            self.journal.mark_submitted(
+                request_id, claim.claim_token, receipt,
+                response_log_cursor=native.get("response_log_cursor"))
             return self.get_diplomatic_result(request_id)
         code = native.get("reason_code")
         if not isinstance(code, str) or not re.fullmatch(r"[A-Z0-9_]{1,80}", code):
@@ -19670,7 +19803,9 @@ class DiplomacyTools:
                     request_id, self._execution_result(
                         inspection, "NATIVE_PEACE_SUBMISSION_RECEIPT_INVALID",
                         "议和原生提交没有提供完整绑定回执。"))
-            self.journal.mark_submitted(request_id, claim.claim_token, receipt)
+            self.journal.mark_submitted(
+                request_id, claim.claim_token, receipt,
+                response_log_cursor=native.get("response_log_cursor"))
             return self.get_diplomatic_result(request_id)
         code = native.get("reason_code")
         if not isinstance(code, str) or not re.fullmatch(r"[A-Z0-9_]{1,96}", code):
@@ -19789,7 +19924,9 @@ class DiplomacyTools:
                     self._execution_result(
                         inspection, "NATIVE_DECLARE_WAR_SUBMISSION_RECEIPT_INVALID",
                         "宣战原生提交没有提供完整绑定回执。"))
-            self.journal.mark_submitted(request_id, claim.claim_token, receipt)
+            self.journal.mark_submitted(
+                request_id, claim.claim_token, receipt,
+                response_log_cursor=native.get("response_log_cursor"))
             return self.get_diplomatic_result(request_id)
         code = native.get("reason_code")
         if not isinstance(code, str) or re.fullmatch(r"[A-Z0-9_]{1,96}", code) is None:
@@ -19894,7 +20031,9 @@ class DiplomacyTools:
                     self._execution_result(
                         inspection, "NATIVE_RIVAL_SUBMISSION_RECEIPT_INVALID",
                         "宿敌原生提交没有提供完整绑定回执。"))
-            self.journal.mark_submitted(request_id, claim.claim_token, receipt)
+            self.journal.mark_submitted(
+                request_id, claim.claim_token, receipt,
+                response_log_cursor=native.get("response_log_cursor"))
             return self.get_diplomatic_result(request_id)
         code = native.get("reason_code")
         if not isinstance(code, str) or re.fullmatch(r"[A-Z0-9_]{1,96}", code) is None:
@@ -20083,7 +20222,9 @@ class DiplomacyTools:
                 failed = self._execution_result(inspection, "NATIVE_SUBMISSION_RECEIPT_INVALID",
                                                 "原生提交未提供完整 transport 回执，未标记为已提交。")
                 return self._persist_unsubmitted(request_id, failed)
-            self.journal.mark_submitted(request_id, claim.claim_token, receipt)
+            self.journal.mark_submitted(
+                request_id, claim.claim_token, receipt,
+                response_log_cursor=native.get("response_log_cursor"))
             return self.get_diplomatic_result(request_id)
         code = native.get("reason_code")
         if not isinstance(code, str) or not re.fullmatch(r"[A-Z0-9_]{1,80}", code):
@@ -22869,6 +23010,8 @@ class DiplomacyTools:
         inspection["interface_support"]["query"] = _NATIVE_DEBT_QUOTE_QUERY_CAPABILITY
         if not isinstance(native, dict) or "error_code" in native:
             inspection["interface_support"]["reason_code"] = "QUERY_DEBT_QUOTE_UNAVAILABLE"
+            if isinstance(native, dict) and isinstance(native.get("error_code"), str):
+                inspection["interface_support"]["native_reason_code"] = native["error_code"]
             return inspection
         # ObserverSession has already validated and whitelisted this result.
         # In particular the operator loan rows never enter the public facade.
@@ -25051,16 +25194,14 @@ class DiplomacyTools:
                                     inspection["legality"]["reasons"].sort(
                                         key=lambda item: item.get("code")
                                         != "NATIVE_VALIDITY_FALSE")
-                    controlled = {self._controlled_country()}
-                    session_record = getattr(self.session, "record", {})
-                    physical_player = (session_record.get("preflight_player_tag")
-                                       if isinstance(session_record, dict) else None)
-                    if physical_player is None:
-                        # Legacy observer installations were restricted to an
-                        # unloaded or POR test save; retain that historical
-                        # physical-player identity only when no probe tag was
-                        # recorded.
-                        physical_player = "POR"
+                    controlled = self._controlled_country()
+                    if _NATIVE_COUNTRY_CONTROL_CONFIGURATION_CAPABILITY in self._installation_capabilities():
+                        ai_recipient = native.get("score_applicable") is True
+                    else:
+                        session_record = getattr(self.session, "record", {})
+                        physical_player = (session_record.get("preflight_player_tag")
+                                           if isinstance(session_record, dict) else None)
+                        ai_recipient = recipient != (physical_player or "POR")
                     if (native.get("diplomat_context_readable") is True
                             and isinstance(native.get("diplomat_required"), bool)
                             and ObserverSession._safe_int(native.get("available_diplomat_count"), 0, 256) is not None):
@@ -25071,8 +25212,7 @@ class DiplomacyTools:
                             "source": "native_rule", "complete": False}}
                     acceptance_visible = (
                         action_id in _NEGOTIATED_INITIATION_ACTIONS
-                        and applies and recipient not in controlled
-                        and recipient != physical_player)
+                        and applies and recipient != controlled and ai_recipient)
                     components = {
                         "ui_action_selection": visibility if selection_checked else None,
                         "ui_enabled_gate_verified": native.get("ui_enabled_gate_checked") is True,
@@ -25982,7 +26122,12 @@ class DiplomacyTools:
             return {"request_id": request_id, "status": "unknown", "submitted": False,
                     "game_outcome": "unknown", "reason": reason("REQUEST_ID_AMBIGUOUS", "历史命名空间存在重复编号，无法唯一关联结果。", "runtime_error")}
         self._authorize_record(record)
-        self._persist_native_response(record)
+        is_recall = record.payload["action_id"] == diplomat_recall.TOOL_NAME
+        if is_recall:
+            diplomat_recall.reconcile_diplomat_recall(self.session, self.journal, record)
+        else:
+            with self._native_response_lock:
+                self._persist_native_response(record)
         try:
             record = self.journal.lookup_request(request_id)
         except (UnknownRequestError, AmbiguousRequestError):
@@ -25994,6 +26139,7 @@ class DiplomacyTools:
         return {"contract_version": 1, "request_id": request_id, "action_id": record.payload["action_id"],
                 "status": record.status, "submitted": record.submitted_at is not None,
                 "game_outcome": record.status if record.status in ("accepted", "rejected", "executed") else "unknown",
-                "result": record.result, "updated_at": record.updated_at,
+                "result": None if is_recall and record.status in {"constructed", "submitted"} else record.result,
+                "updated_at": record.updated_at,
                 "evidence": [{"type": event.evidence_type, "layer": event.arrival_layer,
                               "sha256": event.content_sha256} for event in evidence]}

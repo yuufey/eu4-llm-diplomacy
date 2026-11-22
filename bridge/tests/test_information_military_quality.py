@@ -168,7 +168,7 @@ def test_catalog_and_default_scope_are_explicit(tmp_path: Path):
     assert item["fields"]["army_tradition"]["coverage"] == "available"
     assert source.validate_query(_query(), base.context())["parameters"] == {}
     with pytest.raises(InformationError) as other_country:
-        source.validate_query({**_query(), "object": {"type": "country", "country": "ENG"}})
+        source.validate_query({**_query(), "object": {"type": "country", "country": "ENG"}}, base.context())
     assert other_country.value.code == "observer_scope_mismatch"
     with pytest.raises(InformationError) as extra_field:
         source.validate_query(_query(["military_modifiers"]))

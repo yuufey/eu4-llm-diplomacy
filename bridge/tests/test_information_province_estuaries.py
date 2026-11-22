@@ -79,12 +79,12 @@ def _predicate_field(predicates):
     }
 
 
-def _gate(*, admitted=True, discovered=True):
+def _gate(*, admitted=True, discovered=True, observer="FRA"):
     return {
         "admission": {
             "status": "known",
             "admitted": admitted,
-            "observer_nonplayer_role": {"observer": "FRA", "verified": True},
+            "observer_nonplayer_role": {"observer": observer, "verified": True},
         },
         "discovery": {"status": "known", "value": discovered},
     }
@@ -95,7 +95,7 @@ def _report(
     *,
     province_id=PROVINCE_ID,
     observer="FRA",
-    backend_observer="FRA",
+    backend_observer=None,
     admitted=True,
     discovered=True,
     consistency="stable",
@@ -108,7 +108,7 @@ def _report(
             key: {"status": "known", "value": False}
             for key in KEYS
         }
-    gates = _gate(admitted=admitted, discovered=discovered)
+    gates = _gate(admitted=admitted, discovered=discovered, observer=observer)
     target = {
         "province_id": province_id,
         "admission_by_pass": {phase: deepcopy(gates["admission"]) for phase in ("pass1", "pass2")},
@@ -127,7 +127,7 @@ def _report(
             "backend": {
                 "status": "observed",
                 "consistency": {"status": "stable"},
-                "observer": {"tag": backend_observer},
+                "observer": {"tag": backend_observer or observer},
                 "targets": [target],
             },
         },
@@ -154,8 +154,8 @@ def _report(
 
 
 def _source(tmp_path, monkeypatch, *, rule=None, report=None, capture_error=None, after_capture=None,
-            validator=True):
-    base = g02.Base(tmp_path, g02.make_context())
+            validator=True, observer="FRA"):
+    base = g02.Base(tmp_path, g02.make_context(observer=observer))
     rules = rule or _RuleSource()
     result_report = deepcopy(report if report is not None else _report())
     calls = {"capture": [], "validate": []}
@@ -202,11 +202,12 @@ def _source(tmp_path, monkeypatch, *, rule=None, report=None, capture_error=None
         ),
     ],
 )
+@pytest.mark.parametrize("observer", ("FRA", "TUR"))
 def test_or_classification_preserves_unknowns_and_only_emits_typed_values(
-    tmp_path, monkeypatch, predicates, expected_status, expected_value, matched, unknown,
+    tmp_path, monkeypatch, predicates, expected_status, expected_value, matched, unknown, observer,
 ):
-    report = _report(predicates)
-    source, base, rules, calls = _source(tmp_path, monkeypatch, report=report)
+    report = _report(predicates, observer=observer)
+    source, base, rules, calls = _source(tmp_path, monkeypatch, report=report, observer=observer)
 
     result = source.read(PROVINCE_ID, base.context())
 
@@ -223,7 +224,7 @@ def test_or_classification_preserves_unknowns_and_only_emits_typed_values(
     assert result["game_fact"] is False
     assert result["engine_loaded_rule_verified"] is False
     assert result["rule_binding"] == rules.context()
-    assert result["source"]["provenance"]["observer"] == "FRA"
+    assert result["source"]["provenance"]["observer"] == observer
     assert result["source"]["provenance"]["session_id"] == base.current["session_id"]
     assert result["source"]["provenance"]["game_date"] == GAME_DATE
     assert result["source"]["provenance"]["province_id"] == PROVINCE_ID
@@ -231,7 +232,7 @@ def test_or_classification_preserves_unknowns_and_only_emits_typed_values(
     assert result["source"]["provenance"]["native_function_invoked"] is False
     assert len(result["source"]["provenance"]["capture_report_sha256"]) == 64
     assert calls["capture"] == [
-        (tmp_path / "installation.json", PROVINCE_ID, KEYS, "FRA")
+        (tmp_path / "installation.json", PROVINCE_ID, KEYS, observer)
     ]
     assert calls["validate"][0][2:] == (g02.CREATION, PROVINCE_ID, KEYS)
     assert "RAW_MEMORY_MUST_NOT_ESCAPE" not in repr(result)

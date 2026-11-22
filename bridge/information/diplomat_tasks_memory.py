@@ -16,6 +16,7 @@ from copy import deepcopy
 from datetime import datetime, timezone
 import hashlib
 import json
+import re
 from pathlib import Path
 from typing import Any, Mapping
 
@@ -36,6 +37,7 @@ LEGACY_ARCHIVE_NATIVE_SOURCE = Path("work/runtime/information-debt-quote-query-2
 EXPECTED_EXE_SHA256 = "b23fa0e1f698d31b01cdd1c3817a675805d8c6286cb66f9c231e6e2a42544d77"
 EXPECTED_VERSION = "1.37.4"
 EXPECTED_COUNTRY = "FRA"
+_COUNTRY_TAG = re.compile(r"[A-Z0-9]{3}\Z")
 
 _PROFILE_PINS = {
     EXPECTED_PROFILE_ID: (EXPECTED_PROFILE_SHA256, PROFILE_FILE, 2),
@@ -558,6 +560,10 @@ def _tag_from_fullref(fullref: int) -> str | None:
     return raw.decode("ascii")
 
 
+def _valid_country_tag(value: Any) -> bool:
+    return isinstance(value, str) and _COUNTRY_TAG.fullmatch(value) is not None
+
+
 def _resolve_fullref(reader: Any, fullref: int, *, role: str, module_base: int, profile: Mapping[str, Any], budget: _ReadBudget, cache: dict[int, dict[str, Any]]) -> dict[str, Any]:
     if fullref in cache:
         cached = deepcopy(cache[fullref])
@@ -881,7 +887,7 @@ def _module_base_hex(value: Any) -> str | None:
 
 
 def capture(installation: Path, country: str = EXPECTED_COUNTRY) -> dict[str, Any]:
-    """Capture the current FRA diplomat record graph through bounded RPM."""
+    """Capture one assigned country's diplomat graph through bounded RPM."""
     installation = Path(installation)
     report: dict[str, Any] = {"probe": "information-diplomat-tasks-runtime", "probe_version": 1, "probe_script": str(Path(__file__).resolve()), "probe_script_sha256": None, "profile": {"path": str(PROFILE_FILE), "sha256": EXPECTED_PROFILE_SHA256, "profile_id": EXPECTED_PROFILE_ID, "max_bytes": PROFILE_MAX_BYTES}, "read_only": True, "native_function_invoked": False, "evidence_kind": "pure_runtime_observation_not_static_evidence", "captured_at": datetime.now(timezone.utc).isoformat(), "request": {"installation": str(installation), "country": country}, "country": country, "target_build": {"version": EXPECTED_VERSION, "expected_exe_sha256": EXPECTED_EXE_SHA256}, "static_contract_guard": None, "file_code_guard": None, "runtime_code_guard": None, "identity": {"installation_path": str(installation), "installation_pid": None, "installation_creation_filetime": None, "installation_session_id": None, "process_path": None, "process_path_sha256": None, "process_path_sha256_matches_expected": None, "process_creation_filetime": None, "process_creation_utc": None, "process_creation_matches_installation": None, "module_path": None, "module_path_matches_process": None, "binding_verified": False}, "module_base": None, "before": None, "after": None, "fields": {FIELD_KEY: _unknown_field("not_read")}, "values": None, "raw_hex": None, "raw_bytes_hex": None, "instance_count_observed": None, "complete": False, "doublepass": {"performed": False, "consistent": None, "mismatches": [], "atomic": False}, "access": {"open_process_mask": "QUERY_INFORMATION|VM_READ", "open_process_mask_hex": _hex(PROCESS_ACCESS), "rpm_total_limit": MAX_TOTAL_RPM, "rpm_single_read_limit": MAX_SINGLE_RPM, "rpm_bytes_requested": 0, "rpm_calls": 0, "native_game_calls": False, "target_memory_writes": False, "dll_injection": False, "private_heap_scan": False, "ui_control": False, "date_advance": False, "save_or_reload": False}, "cleanup": {"handle_close": {"status": "unknown", "success": None, "closed": False}}, "status": "starting", "errors": [], "completed": False}
     kernel = None
@@ -889,9 +895,9 @@ def capture(installation: Path, country: str = EXPECTED_COUNTRY) -> dict[str, An
     reader = None
     try:
         report["probe_script_sha256"] = hashlib.sha256(Path(__file__).read_bytes()).hexdigest()
-        if country != EXPECTED_COUNTRY:
+        if not _valid_country_tag(country):
             report["status"] = "unsupported_country"
-            report["errors"].append({"stage": "request", "status": "unknown", "error": "Only FRA is permitted"})
+            report["errors"].append({"stage": "request", "status": "unknown", "error": "Country must be a three-character ASCII tag"})
             return report
         profile = _load_profile()
         report["static_contract_guard"] = _static_contract_guard(profile)
@@ -1005,6 +1011,44 @@ def _validate_resolution(item: Mapping[str, Any], role: str, fullref: int, layou
     return _valid_address(pointer, layout)
 
 
+def _validate_country_scan(scan: Any, country: str, country_pointer: Any) -> bool:
+    if not isinstance(scan, Mapping) or scan.get("status") != "observed":
+        return False
+    count = scan.get("country_count")
+    count_hex = scan.get("country_count_raw_hex")
+    matches = scan.get("matches")
+    if (type(count) is not int or not 1 <= count <= 4096
+            or count_hex != (count & 0xFFFFFFFF).to_bytes(4, "little").hex()
+            or not isinstance(matches, list) or len(matches) != 1):
+        return False
+    match = matches[0]
+    if not isinstance(match, Mapping) or match.get("tag") != country:
+        return False
+    slot = match.get("slot")
+    fullref_hex = match.get("fullref_raw_hex")
+    pointer_text = match.get("pointer")
+    table_entry_hex = match.get("table_entry_raw_hex")
+    if type(slot) is not int or not 0 <= slot < count:
+        return False
+    try:
+        fullref_raw = bytes.fromhex(str(fullref_hex))
+        pointer = int(str(pointer_text), 0)
+        table_entry_raw = bytes.fromhex(str(table_entry_hex))
+        requested_pointer = int(str(country_pointer), 0)
+    except (TypeError, ValueError):
+        return False
+    if (len(fullref_raw) != 8 or len(table_entry_raw) != 8
+            or int.from_bytes(table_entry_raw, "little") != pointer
+            or pointer != requested_pointer):
+        return False
+    fullref = int.from_bytes(fullref_raw, "little")
+    return (
+        _tag_from_fullref(fullref) == country
+        and ((fullref >> 32) & 0xFFFF) == slot
+        and match.get("fullref_raw_hex") == fullref.to_bytes(8, "little").hex()
+    )
+
+
 def _validate_item(item: Any, layout: Mapping[str, int], module_base: int) -> bool:
     if not isinstance(item, Mapping) or item.get("status") != "known":
         return False
@@ -1019,7 +1063,12 @@ def _validate_item(item: Any, layout: Mapping[str, int], module_base: int) -> bo
         return False
     record = int.from_bytes(record_raw, "little")
     state = state_raw[0]
-    if item.get("state_raw_18") != state or item.get("state") != KNOWN_STATE_NAMES.get(state) or item.get("state_status") != ("known" if state in KNOWN_STATE_NAMES else "unknown") or item.get("raw_id_44") != int.from_bytes(id_raw, "little", signed=True):
+    diplomat_id = item.get("raw_id_44")
+    if (type(item.get("state_raw_18")) is not int or item.get("state_raw_18") != state
+            or item.get("state") != KNOWN_STATE_NAMES.get(state)
+            or item.get("state_status") != ("known" if state in KNOWN_STATE_NAMES else "unknown")
+            or type(diplomat_id) is not int or diplomat_id < 0
+            or diplomat_id != int.from_bytes(id_raw, "little", signed=True)):
         return False
     if record == 0:
         return item.get("record_address") is None and item.get("raw_action_type_a8") is None and item.get("actor_fullref_raw") is None and item.get("recipient_fullref_raw") is None and item.get("lifecycle_date_raw") is None and item.get("raw_2c") is None
@@ -1090,7 +1139,9 @@ def validate_record(record: Any, *, profile: Mapping[str, Any] | None = None, of
 
 def validate_capture(report: Any, context: Mapping[str, Any] | None, creation_filetime: int, country: str = EXPECTED_COUNTRY) -> bool:
     """Validate capture identity, date, cleanup and two-pass raw equality."""
-    if not isinstance(report, Mapping) or report.get("status") != "observed" or report.get("completed") is not True or report.get("country") != country or country != EXPECTED_COUNTRY:
+    if (not _valid_country_tag(country) or not isinstance(report, Mapping)
+            or report.get("status") != "observed" or report.get("completed") is not True
+            or report.get("country") != country):
         return False
     if report.get("profile") != {"path": str(PROFILE_FILE), "sha256": EXPECTED_PROFILE_SHA256, "profile_id": EXPECTED_PROFILE_ID, "max_bytes": PROFILE_MAX_BYTES}:
         return False
@@ -1102,7 +1153,11 @@ def validate_capture(report: Any, context: Mapping[str, Any] | None, creation_fi
         return False
     if type(creation_filetime) is not int or identity.get("installation_creation_filetime") != creation_filetime or identity.get("process_creation_filetime") != creation_filetime:
         return False
-    if not isinstance(context, Mapping) or type(context.get("game_date")) is not int:
+    if (not isinstance(context, Mapping) or context.get("observer") != country
+            or type(context.get("game_date")) is not int):
+        return False
+    request = report.get("request")
+    if not isinstance(request, Mapping) or request.get("country") != country:
         return False
     expected_session = context.get("session_id", context.get("installation_session_id"))
     if expected_session is not None and identity.get("installation_session_id") != expected_session:
@@ -1112,6 +1167,15 @@ def validate_capture(report: Any, context: Mapping[str, Any] | None, creation_fi
         return False
     before, after = report.get("before"), report.get("after")
     if not isinstance(before, Mapping) or not isinstance(after, Mapping) or not isinstance(before.get("record"), Mapping) or not isinstance(after.get("record"), Mapping) or not validate_record(before["record"]) or not validate_record(after["record"]):
+        return False
+    if (before.get("country") != country or after.get("country") != country
+            or before.get("country_scan") != after.get("country_scan")
+            or before.get("country_pointer") != report.get("country_pointer")
+            or after.get("country_pointer") != report.get("country_pointer")
+            or before["record"].get("country_pointer") != report.get("country_pointer")
+            or after["record"].get("country_pointer") != report.get("country_pointer")
+            or not _validate_country_scan(before.get("country_scan"), country, report.get("country_pointer"))
+            or not _validate_country_scan(after.get("country_scan"), country, report.get("country_pointer"))):
         return False
     if _diff_paths(_compare_record(before["record"]), _compare_record(after["record"])):
         return False

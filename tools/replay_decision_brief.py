@@ -1,0 +1,29 @@
+"""Test desktop delivery using one previously captured, read-only EU4 brief."""
+from __future__ import annotations
+
+import argparse
+import json
+from pathlib import Path
+import sys
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+
+from bridge.information.decision_desktop import send_desktop_brief
+
+
+def main() -> int:
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--thread", required=True)
+    parser.add_argument("--receipt", type=Path, required=True)
+    parser.add_argument("--active-only", action="store_true", help="Verify delivery to an already running turn")
+    args = parser.parse_args()
+    captured = json.loads(args.receipt.read_text(encoding="utf-8-sig"))
+    brief = captured["brief"]
+    outcome = send_desktop_brief(args.thread, brief, active_only=args.active_only)
+    print(json.dumps({"event": "decision_desktop_delivered", "result_id": brief["result_id"], **outcome},
+                     ensure_ascii=False), flush=True)
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

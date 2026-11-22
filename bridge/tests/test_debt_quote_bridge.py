@@ -67,6 +67,15 @@ class DebtQuoteBridgeTests(unittest.TestCase):
                     session, "_installation_ack", return_value=malformed):
                 self.assertNotIn(QUERY_CAPABILITY, session.installation_capabilities())
 
+    def test_v65_requires_explicit_configured_country_scope(self):
+        session = object.__new__(ObserverSession)
+        session.record = {}
+        ack = dict(self._ack(), version=65)
+        for field in (None, False, 1, True):
+            with self.subTest(scope=field), patch.object(session, "_installation_ack",
+                    return_value=dict(ack, native_debt_quote_configured_country_scope=field)):
+                self.assertEqual(QUERY_CAPABILITY in session.installation_capabilities(), field is True)
+
     def test_copied_caps_cannot_grant_quote(self):
         session = object.__new__(ObserverSession)
         session.record = {}
@@ -171,11 +180,20 @@ class DebtQuoteBridgeTests(unittest.TestCase):
             self.assertTrue(captured[0].endswith("\n"))
             self.assertFalse(list(session.directory.glob("*.pending")))
 
-    def test_quote_rejects_player_or_foreign_actor_before_channel(self):
+    def test_legacy_quote_rejects_out_of_scope_country_pair_before_channel(self):
         session = object.__new__(ObserverSession)
-        for actor, recipient in (("POR", "ENG"), ("FRA", "POR"), ("FRA", "FRA")):
-            with self.subTest(actor=actor, recipient=recipient), patch.object(
-                    session, "inspect_alliance") as read_channel:
-                with self.assertRaises(ValueError):
-                    session.inspect_take_on_debt(actor, recipient)
-                read_channel.assert_not_called()
+        with patch.object(session, "_installation_ack", return_value=self._ack()):
+            for actor, recipient in (("POR", "ENG"), ("FRA", "POR"), ("FRA", "FRA")):
+                with self.subTest(actor=actor, recipient=recipient), patch.object(
+                        session, "inspect_alliance") as read_channel:
+                    with self.assertRaises(ValueError):
+                        session.inspect_take_on_debt(actor, recipient)
+                    read_channel.assert_not_called()
+
+    def test_v65_allows_current_country_pair_to_reach_native_validation(self):
+        session = object.__new__(ObserverSession)
+        ack = dict(self._ack(), version=65, native_debt_quote_configured_country_scope=True)
+        with patch.object(session, "_installation_ack", return_value=ack), patch.object(
+                session, "inspect_alliance") as read_channel:
+            session.inspect_take_on_debt("TUR", "POR")
+            self.assertEqual(read_channel.call_args.args[:4], (ACTION_ID, "TUR", "POR", "initiate"))

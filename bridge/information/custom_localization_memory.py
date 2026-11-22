@@ -21,6 +21,7 @@ from datetime import datetime, timezone
 import hashlib
 import json
 from pathlib import Path
+import re
 import sys
 from typing import Any, Mapping, Sequence
 
@@ -810,8 +811,8 @@ def capture(installation: Path, country: str, methods: Sequence[str]) -> dict[st
         report["probe_script_sha256"] = _sha256_file(Path(__file__).resolve())
     except OSError as exc:
         report["errors"].append({"stage": "probe_identity", "status": "unknown", "error": str(exc)})
-    if country != EXPECTED_COUNTRY:
-        return _invalid_request_report(report, "Only FRA is permitted", "unsupported_country")
+    if not isinstance(country, str) or re.fullmatch(r"[A-Z0-9]{3}", country) is None:
+        return _invalid_request_report(report, "Invalid country tag", "unsupported_country")
     if not request_valid:
         return _invalid_request_report(report, request_error or "invalid_method_request")
     handle = None

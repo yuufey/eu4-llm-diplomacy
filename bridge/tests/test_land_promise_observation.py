@@ -81,7 +81,7 @@ def test_fra_membership_scope_allows_other_countries_promise_in_fra_war():
 
 @pytest.mark.parametrize('change', [
     {'event': 'native_call_to_arms_observed'}, {'session_id': 'other'}, {'sequence': True}, {'sequence': 0},
-    {'sequence': 2**63}, {'date_raw': True}, {'date_raw': 0}, {'wire': True}, {'wire': 2}, {'war_id': None},
+    {'sequence': 2**63}, {'date_raw': True}, {'date_raw': 0}, {'wire': True}, {'wire': 3}, {'war_id': None},
     {'war_id': 'war_0123'}, {'war_id': WAR_ID.upper()}, {'source': 'call_to_arms_before_executor'}, {'source': []},
     {'promisor_ref': fullref('fra')}, {'promisor_ref': '0x'}, {'promisor_ref': fullref('FRA', 4096)},
     {'beneficiary_ref': fullref('FRA')}, {'beneficiary_ref': fullref('---')}, {'observer_ref': fullref('POR')},

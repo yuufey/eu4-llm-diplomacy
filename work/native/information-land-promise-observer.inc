@@ -124,8 +124,9 @@ static PromiseRecord promised_record(uintptr_t war, uint64_t beneficiary) noexce
     return flag == 0 ? PromiseRecord::promised : PromiseRecord::absent;
 }
 
-static bool value_for_war(const Pending& pending, uintptr_t war, uint64_t beneficiary,
-                          owned::Value& value) noexcept {
+static void enqueue(const owned::Value& value) noexcept;
+
+static bool observe_promises_for_war(const Pending& pending, uintptr_t war, uint64_t beneficiary) noexcept {
     PeaceWarSideMembers first_a{}, first_b{}, side_a{}, side_b{};
     const char* reason = nullptr;
     if (!peace_war_capture_vectors_stable(war, 0x48, 0x50, 0x58, 0x78, 0x80, 0x88,
@@ -135,15 +136,22 @@ static bool value_for_war(const Pending& pending, uintptr_t war, uint64_t benefi
     if (!first_side || !opponents.count
         || !peace_war_capture_participant_sides(war, pending.actor, opponents.handles[0], side_a, side_b, reason)) return false;
     const unsigned actor_side = peace_war_side_for_handle(side_a, side_b, pending.actor);
-    value = owned::Value{};
+    owned::Value value{};
     if (peace_war_side_for_handle(side_a, side_b, beneficiary) != actor_side) return true;
     const auto record = promised_record(war, beneficiary);
     if (record == PromiseRecord::unreadable) return false;
     if (record == PromiseRecord::absent) return true;
-    for (const auto* side : {&side_a, &side_b})
-        for (unsigned index = 0; index < side->count; ++index)
-            if ((side->handles[index] & 0xffffffu) == 0x415246u) value.observer = side->handles[index];
-    if (!value.observer) return true;
+    uint64_t observers[32]{};
+    unsigned observer_count=0;
+    for (const auto* side : {&side_a, &side_b}) {
+        for (unsigned index = 0; index < side->count; ++index) {
+            const auto handle=side->handles[index];
+            if (!observation_information_country_handle(handle)) continue;
+            if (observer_count==32) return false;
+            observers[observer_count++]=handle;
+        }
+    }
+    if (!observer_count) return true;
     const auto registered = peace_query_register_war(war);
     if (!registered || !peace_war_registry_lifetimes.current(*registered)) return false;
     value.promisor = pending.actor;
@@ -151,6 +159,10 @@ static bool value_for_war(const Pending& pending, uintptr_t war, uint64_t benefi
     value.date = pending.date;
     value.kind = pending.kind;
     std::memcpy(value.war_id, registered->public_id, sizeof(value.war_id));
+    for (unsigned index=0;index<observer_count;++index) {
+        value.observer=observers[index];
+        enqueue(value);
+    }
     return true;
 }
 
@@ -243,9 +255,7 @@ static void finish(Pending& pending) noexcept {
                 || birth.state != information::war_registry::BirthState::complete
                 || birth.actor != pending.actor || birth.recipient != pending.recipient) note_drop();
             else for (unsigned index = 0; index < pending.count; ++index) {
-                owned::Value value{};
-                if (value_for_war(pending, difference.reference, pending.promises[index], value)) enqueue(value);
-                else note_drop();
+                if (!observe_promises_for_war(pending,difference.reference,pending.promises[index])) note_drop();
             }
         } else if (difference.outcome != information::war_declaration::Outcome::unchanged) note_drop();
     } else {
@@ -254,9 +264,7 @@ static void finish(Pending& pending) noexcept {
             || !country_references(pending.recipient, pending.recipient_country, recipient_after)) note_drop();
         else for (unsigned index = 0; index < recipient_after.count; ++index) {
             if (!owned::joined(pending.actor_before, actor_after, pending.recipient_before, recipient_after, index)) continue;
-            owned::Value value{};
-            if (value_for_war(pending, recipient_after.values[index], pending.recipient, value)) enqueue(value);
-            else note_drop();
+            if (!observe_promises_for_war(pending,recipient_after.values[index],pending.recipient)) note_drop();
         }
     }
     pending.kind = owned::Kind::none;
@@ -286,11 +294,16 @@ static void flush() noexcept {
             "{\"event\":\"native_land_promise_established\",\"session_id\":\"%lu-%llx\","
             "\"sequence\":%llu,\"date_raw\":%d,\"promisor_ref\":\"0x%llx\","
             "\"beneficiary_ref\":\"0x%llx\",\"observer_ref\":\"0x%llx\",\"war_id\":\"%s\","
-            "\"source\":\"%s\",\"wire\":1}\n",
+            "\"source\":\"%s\",\"wire\":%u}\n",
             static_cast<unsigned long>(GetCurrentProcessId()), static_cast<unsigned long long>(observation_creation),
             static_cast<unsigned long long>(event.sequence), value.date, static_cast<unsigned long long>(value.promisor),
             static_cast<unsigned long long>(value.beneficiary), static_cast<unsigned long long>(value.observer),
-            value.war_id, source);
+            value.war_id, source,
+#ifdef BRIDGE_NATIVE_COUNTRY_CONTROL
+            2u);
+#else
+            1u);
+#endif
         if (bytes <= 0 || static_cast<size_t>(bytes) >= sizeof(message)) { transport_fault = true; return; }
         if (!append(message, static_cast<size_t>(bytes))) return;
         AcquireSRWLockExclusive(&queue_lock);

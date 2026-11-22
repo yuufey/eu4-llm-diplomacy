@@ -547,7 +547,7 @@ def validate_record(record: Any, trade_income_record: Any) -> bool:
     source_digest = _canonical_digest(trade_income_record)
     if record.get("source_trade_record_canonical_sha256") != source_digest:
         return False
-    if record.get("country") != trade_income_record.get("country") or record.get("country") != EXPECTED_COUNTRY:
+    if record.get("country") != trade_income_record.get("country"):
         return False
     if record.get("country_fullref_raw_hex") != trade_income_record.get("country_fullref_raw_hex"):
         return False
@@ -583,7 +583,7 @@ def validate_record(record: Any, trade_income_record: Any) -> bool:
         observation.get("status") == record.get("status")
         and observation.get("module_base") == module_base
         and observation.get("source_trade_record_canonical_sha256") == source_digest
-        and observation.get("country") == EXPECTED_COUNTRY
+        and observation.get("country") == trade_income_record.get("country")
         and observation.get("country_slot") == trade_income_record.get("country_slot")
         and observation.get("candidate_count") == len(candidates)
     )

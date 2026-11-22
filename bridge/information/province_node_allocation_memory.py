@@ -158,7 +158,7 @@ def _i32(reader: Any, address: int, label: str) -> tuple[int, bytes]:
     return int.from_bytes(raw, "little", signed=True), raw
 
 
-def _parse_country_binding(base: int, binding: Any, *, require_fra: bool) -> dict[str, Any]:
+def _parse_country_binding(base: int, binding: Any) -> dict[str, Any]:
     if not isinstance(binding, Mapping):
         raise _LeafFailure("binding_invalid")
     try:
@@ -179,8 +179,6 @@ def _parse_country_binding(base: int, binding: Any, *, require_fra: bool) -> dic
             or ((fullref >> 32) & 0xFFFF) != slot
             or (fullref & 0xFFFFFFFF).to_bytes(4, "little")[:3].decode("ascii", errors="ignore") != tag
             or (fullref & 0xFF000000) != 0):
-        raise _LeafFailure("binding_invalid")
-    if require_fra and tag != "FRA":
         raise _LeafFailure("binding_invalid")
     return {"tag": tag, "slot": slot, "fullref": hex(fullref),
             "fullref_raw_hex": raw_hex, "country_pointer": retained["country_pointer"]}
@@ -639,7 +637,7 @@ def _read_snapshot(reader: Any, trace: Any, pass_number: int, base: int,
         "province_id": selected_id,
         "recipient_country": selected_data["recipient_country"],
         "contribution_raw": selected_data["contribution_raw"],
-        "observer_country": "FRA",
+        "observer_country": observer["tag"],
         "observer_contribution_raw": selected_data["observer_contribution_raw"],
         "observer_node_province_power_cache_raw": cache_raw,
         "observed_observer_province_power_sum_raw": observed_sum,
@@ -683,7 +681,7 @@ def _snapshot_pair_digest(snapshot: Mapping[str, Any]) -> str:
 
 def read_fields(reader: Any, base: Any, province_binding: Any, province_scan: Any,
                 observer_binding: Any, controller_binding: Any) -> dict[str, dict[str, Any]]:
-    """Read selected province contribution and an FRA node-member subtotal.
+    """Read the selected province contribution and observer’s node subtotal.
 
     Two complete snapshots are compared inside the leaf.  The caller still
     owns session validation, country admission/rebinding, discovery admission,
@@ -693,8 +691,8 @@ def read_fields(reader: Any, base: Any, province_binding: Any, province_scan: An
     try:
         if type(base) is not int or not _address(base, alignment=8):
             raise _LeafFailure("input_invalid")
-        observer = _parse_country_binding(base, observer_binding, require_fra=True)
-        controller = _parse_country_binding(base, controller_binding, require_fra=False)
+        observer = _parse_country_binding(base, observer_binding)
+        controller = _parse_country_binding(base, controller_binding)
         if (controller["slot"] == observer["slot"]
                 and controller["fullref"] != observer["fullref"]):
             raise _LeafFailure("binding_invalid")

@@ -18,7 +18,7 @@ class NativeOpinionDecaySource(NativeOpinionModifiersSource):
 
     def catalog(self):
         topic=super().catalog()[0]
-        topic['scope_note']='逻辑FRA参与的国家对；按原生提示路径推导逐记录年度变化，未知因子保留。'
+        topic['scope_note']='读取观察国参与的双向好感修正记录。'
         topic['fields']={self.field:{'source':type(self).__name__,'coverage':'partial',
             'complete':False,'unit':UNIT,'scale':1000,'period':'per_year_at_current_state',
             'basis':'native_opinion_tooltip_yearly_contribution',
@@ -55,7 +55,7 @@ class NativeOpinionDecaySource(NativeOpinionModifiersSource):
                 'yearly_change_decimal':_decimal_i32(value),'unit':UNIT,'scale':1000,
                 'basis':projected['basis']}
 
-    def _project_backend(self,report,other,actor,recipient):
+    def _project_backend(self,report,other,actor,recipient,observer='FRA'):
         try:
             backend=report['observation']['backend']
             if backend['status']!='observed' or backend['consistency']['status']!='stable':
@@ -66,7 +66,7 @@ class NativeOpinionDecaySource(NativeOpinionModifiersSource):
             if set(fields)!=set(FIELDS):raise ValueError('fields')
             directions=[]
             for holder,target in ((actor,recipient),(recipient,actor)):
-                item=fields[FIELDS[0] if holder=='FRA' else FIELDS[1]]
+                item=fields[FIELDS[0] if holder==observer else FIELDS[1]]
                 direction={'holder':holder,'target':target}
                 if item.get('status') in ('unknown','invisible'):
                     direction.update(status=item['status'],reason='OPINION_DECAY_DIRECTION_UNKNOWN')
@@ -92,7 +92,7 @@ class NativeOpinionDecaySource(NativeOpinionModifiersSource):
     @staticmethod
     def _result(normalized,context,fields,*,reason=None,unavailable=False,target=None,capture_status='not_attempted'):
         provenance={'adapter':'NativeOpinionDecaySource','read_only':True,'native_function_invoked':False,
-                    'scope':'selected_country_pair','observer':'FRA','target':target,
+                    'scope':'selected_country_pair','observer':context.get('observer'),'target':target,
                     'capture_status':capture_status,'actual_settlement_evaluated':False,
                     'end_date_evaluated':False,'yearly_contribution_derived':True}
         if reason is not None:provenance['reason']=reason

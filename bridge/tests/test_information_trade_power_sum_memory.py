@@ -69,18 +69,19 @@ def _environment(
     members: list[tuple[int, bytes]] | None = None,
     role_human_count: int = 1,
     role_controller_type: int = 0,
+    observer: str = "FRA",
 ) -> tuple[Reader, dict, dict]:
     if members is None:
         members = [
             (MEMBER_A, _fullref("POR", 2)),
-            (COUNTRY, _fullref("FRA", COUNTRY_SLOT)),
+            (COUNTRY, _fullref(observer, COUNTRY_SLOT)),
             (MEMBER_C, _fullref("POR", 11)),
         ]
     data: dict[tuple[int, int], bytes] = {}
     data[(MODULE_BASE + memory.DATABASE_GLOBAL_RVA, 8)] = _qword(DATABASE)
     data[(DATABASE + memory.DATABASE_TABLE_OFFSET, 8)] = _qword(TABLE)
     data[(TABLE + COUNTRY_SLOT * 8, 8)] = _qword(COUNTRY)
-    country_fullref = _fullref("FRA", COUNTRY_SLOT)
+    country_fullref = _fullref(observer, COUNTRY_SLOT)
     data[(COUNTRY + memory.COUNTRY_FULLREF_OFFSET, 8)] = country_fullref
     data[(MODULE_BASE + memory.WORLD_GLOBAL_RVA, 8)] = _qword(WORLD)
     data[(WORLD + memory.WORLD_MEMBER_LIST_OFFSET, 8)] = _qword(MEMBERS)
@@ -98,12 +99,12 @@ def _environment(
         "address": _addr(COUNTRY + memory.COUNTRY_FULLREF_OFFSET),
         "raw_hex": country_fullref.hex(),
         "value": hex(int.from_bytes(country_fullref, "little")),
-        "tag": "FRA",
+        "tag": observer,
         "slot": COUNTRY_SLOT,
     }
     country_scan = {
         "status": "observed",
-        "requested_country": "FRA",
+        "requested_country": observer,
         "scanned_entries": memory.MAX_SOURCE_SCAN_ENTRIES,
         "table_field": {
             "address": _addr(table_cell),
@@ -117,7 +118,7 @@ def _environment(
     trade_income = {
         "_fixture_valid": True,
         "status": "observed",
-        "country": "FRA",
+        "country": observer,
         "country_pointer": hex(COUNTRY),
         "country_fullref_address": hex(COUNTRY + memory.COUNTRY_FULLREF_OFFSET),
         "country_fullref_raw_hex": country_fullref.hex(),
@@ -130,8 +131,9 @@ def _read(reader: Reader, trade_income: dict, country_scan: dict):
     return memory.read_fields(reader, MODULE_BASE, trade_income, country_scan)
 
 
-def test_unique_member_and_npc_role_are_verified():
-    reader, trade_income, country_scan = _environment()
+@pytest.mark.parametrize("observer", ("FRA", "TUR"))
+def test_unique_member_and_npc_role_are_verified(observer):
+    reader, trade_income, country_scan = _environment(observer=observer)
 
     result = _read(reader, trade_income, country_scan)
 
@@ -147,6 +149,9 @@ def test_unique_member_and_npc_role_are_verified():
     assert result["membership"]["observer_occurrences"] == 1
     assert result["membership"]["fullref_occurrences"] == 1
     assert result["membership"]["slot_occurrences"] == 1
+    assert result["membership"]["members"][1]["tag"] == observer
+    wrong_scan = {**country_scan, "requested_country": "TUR" if observer == "FRA" else "FRA"}
+    assert _read(reader, trade_income, wrong_scan)["reason"] == "country_scan_country_mismatch"
     assert result["raw_inputs"]["stable"] is True
     assert result["raw_inputs"]["role"]["human_count"] == 1
     assert result["raw_inputs"]["role"]["controller_type"] == 0

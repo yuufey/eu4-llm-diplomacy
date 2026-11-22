@@ -129,8 +129,10 @@ def make_fixture(
     discovered: dict[int, bool] | None = None,
     cache_value: int = 22,
     province_base: int = RECORDS,
+    observer_tag: str = "FRA",
 ):
     reader = FakeMemory()
+    observer_ref = _fullref(observer_tag, FRA_SLOT)
     controllers = controllers or {}
     owners = owners or {}
     powers = powers or {}
@@ -155,7 +157,7 @@ def make_fixture(
         reader.write(record + 0xE8, _q(RUNTIME))
         bitset = BITSET + province_id * 0x100
         reader.write(record + 0x5E0, _q(bitset))
-        controller = controllers.get(province_id, FRA_FULLREF)
+        controller = controllers.get(province_id, observer_ref)
         reader.write(record + 0x470, _q(controller))
         owner = owners.get(province_id, 1)
         reader.write(record + 0x46F, bytes([owner]))
@@ -181,10 +183,11 @@ def make_fixture(
         "requested": {str(selected_id): _province_binding(selected_id)},
     }
     binding = _province_binding(selected_id)
-    observer = _country_binding("FRA", FRA_SLOT, FRA_FULLREF)
-    controller_tag = "FRA" if controllers.get(selected_id, FRA_FULLREF) == FRA_FULLREF else "ENG"
-    controller_ref = FRA_FULLREF if controller_tag == "FRA" else ENG_FULLREF
-    controller_slot = FRA_SLOT if controller_tag == "FRA" else ENG_SLOT
+    observer = _country_binding(observer_tag, FRA_SLOT, observer_ref)
+    is_observer_controller = controllers.get(selected_id, observer_ref) == observer_ref
+    controller_tag = observer_tag if is_observer_controller else "ENG"
+    controller_ref = observer_ref if is_observer_controller else ENG_FULLREF
+    controller_slot = FRA_SLOT if is_observer_controller else ENG_SLOT
     controller_binding = _country_binding(controller_tag, controller_slot, controller_ref)
     return reader, binding, province_scan, observer, controller_binding, calls
 
@@ -194,9 +197,10 @@ def _component(args) -> dict[str, object]:
     return memory.read_fields(reader, BASE, binding, scan, observer, controller)[memory.FIELD]
 
 
-def test_noncenter_member_binds_to_loaded_definition_and_uses_find_node_once_per_pass(monkeypatch):
+@pytest.mark.parametrize("observer_tag", ("FRA", "TUR"))
+def test_noncenter_member_binds_to_loaded_definition_and_uses_find_node_once_per_pass(monkeypatch, observer_tag):
     args = make_fixture(monkeypatch, member_ids=(1, 2, 3), powers={1: 5, 2: 7, 3: 10},
-                        cache_value=22)
+                        cache_value=22, observer_tag=observer_tag)
     field = _component(args)
     assert field["status"] == "known"
     value = field["value"]
@@ -204,7 +208,7 @@ def test_noncenter_member_binds_to_loaded_definition_and_uses_find_node_once_per
     assert value["center_province_id"] == 1
     assert value["center_province_id"] != value["province_id"]
     assert value["node_id"] == "node_test"
-    assert value["recipient_country"] == "FRA"
+    assert value["recipient_country"] == value["observer_country"] == observer_tag
     assert value["contribution_raw"] == 7
     assert value["observer_contribution_raw"] == 7
     assert value["observed_observer_province_power_sum_raw"] == 22
@@ -365,8 +369,9 @@ def test_shared_read_budget_failure_is_unknown(monkeypatch):
 def test_invalid_observer_or_same_slot_generation_binding_is_rejected_without_reads(monkeypatch):
     args = make_fixture(monkeypatch, member_ids=(2,), powers={2: 4})
     reader, binding, scan, observer, controller, _calls = args
-    not_fra = _country_binding("ENG", ENG_SLOT, ENG_FULLREF)
-    field = memory.read_fields(reader, BASE, binding, scan, not_fra, controller)[memory.FIELD]
+    malformed = _country_binding("ENG", ENG_SLOT, ENG_FULLREF)
+    malformed["tag"] = "FRA"
+    field = memory.read_fields(reader, BASE, binding, scan, malformed, controller)[memory.FIELD]
     assert field["status"] == "unknown"
     assert field["reason"] == "binding_invalid"
     assert reader.reads == []

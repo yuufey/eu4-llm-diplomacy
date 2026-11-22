@@ -1,10 +1,11 @@
-"""Read a selected country's primary religion with the FRA view projection.
+"""Read a selected country’s primary religion through the observer’s view.
 
 The shared owner binds process/session/date/ROM and closes the read-only handle.
 This module supplies the faith-specific pinned layout and two-pass collector.
 """
 from __future__ import annotations
 
+from functools import partial
 import hashlib
 import json
 from pathlib import Path
@@ -45,23 +46,26 @@ def _admission(read,base,bindings,observer,target):
     return gate
 
 
-def _observe(reader,base,country,profile):
+def _observe(reader,base,country,profile, *, observer="FRA"):
     def backend(read,module_base,target):
-        return _backend.read_two_pass(read,module_base,'FRA',[target],FIELDS,
+        return _backend.read_two_pass(read,module_base,observer,[target],FIELDS,
             read_fields=_fields.read_fields,admission_reader=_admission)
     return _owner._observe(reader,base,country,profile,backend_reader=backend)
 
 
 def capture(installation:Path,country:str,*,observer:str='FRA')->dict:
     return _owner._capture_common(installation,country,observer=observer,schema=SCHEMA,
-        profile_sha256=PROFILE_SHA256,load_profile=_load_profile,observe=_observe,
-        allow_observer_target=True)
+        profile_sha256=PROFILE_SHA256,load_profile=_load_profile,
+        observe=partial(_observe, observer=observer),
+        allow_observer_target=True, observer_scoped=True)
 
 
 def validate_capture(report,context,creation,country)->bool:
+    observer = context.get('observer') if isinstance(context, dict) else None
     return _owner._validate_capture_common(report,context,creation,country,schema=SCHEMA,
-        profile_sha256=PROFILE_SHA256,load_profile=_load_profile,observe=_observe,
-        allow_observer_target=True,require_access=True)
+        profile_sha256=PROFILE_SHA256,load_profile=_load_profile,
+        observe=partial(_observe, observer=observer),
+        allow_observer_target=True, observer_scoped=True, require_access=True)
 
 
 __all__=['capture','validate_capture']

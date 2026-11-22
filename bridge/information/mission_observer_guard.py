@@ -14,6 +14,36 @@ DLL_SHA256 = "8984b4da991e079d96ef25dc6009c865fcf38176656f11921c189e0756000ea8"
 ASSET_FILE = Path(__file__).parent / "profiles/mission-observer-guard-v54.json"
 ASSET_SHA256 = "6f111e5a650f518f2b1273346876c7fc2e2b4e17b024dd3635a7932411741fa9"
 _BUILDS = {
+    "396f48c807b646eeed7786fcd7bd7a3ab6357f2357eebad2cf6538d0a31d8553": {
+        "version": 65, "dll_name": "eu4_bridge_diplomacy_observer_v65.dll",
+        "asset_file": Path(__file__).parent / "profiles/mission-observer-guard-v65-scoped-lifecycle.json",
+        "asset_sha256": "f0abdac98c2185adfb771680b4d669e6dd2392e41f10fdbe9eba9488080af3db",
+        "manifest_sha256": "15de6f797e4d0c6796e50b2cb750b0c4cc3a1bf085de9ccd3981eca8c085ed15",
+        "manifest_path": "work/runtime/diplomacy-observer-20261122-scoped-country-events-v65-009/build-manifest.json",
+        "source_count": 208, "build_version": 65,
+        "game_sha256": "b23fa0e1f698d31b01cdd1c3817a675805d8c6286cb66f9c231e6e2a42544d77",
+        "evidence_sha256": "beadbf7bb44b6641987d2625985a03f622f31b3f6ff0296e99461a94f6350d33",
+    },
+    "945d9ce8ecf6ac4f487ccc65f8a90554ef4c1e46b4e082fea454688eb68fe194": {
+        "version": 65, "dll_name": "eu4_bridge_diplomacy_observer_v65.dll",
+        "asset_file": Path(__file__).parent / "profiles/mission-observer-guard-v65-scoped-expiry-events.json",
+        "asset_sha256": "d4595d64e2918d63e7183976182a634f385a759a5149e372063853520c349965",
+        "manifest_sha256": "1b7b50ee2201fb57c01f38f94c21adb6ab9c2775ba87c1f8f91e8e6d8411827c",
+        "manifest_path": "work/runtime/diplomacy-observer-20261122-scoped-country-events-v65-008/build-manifest.json",
+        "source_count": 208, "build_version": 65,
+        "game_sha256": "b23fa0e1f698d31b01cdd1c3817a675805d8c6286cb66f9c231e6e2a42544d77",
+        "evidence_sha256": "e36cba7cc4fc401b13b63d568e72f28f228618a0520c7653b5e958d1255d3b9c",
+    },
+    "632e99535d85dce8b2a9e68ce0a1adcca9ccbb220dc30b8ead854fcc56632bd4": {
+        "version": 65, "dll_name": "eu4_bridge_diplomacy_observer_v65.dll",
+        "asset_file": Path(__file__).parent / "profiles/mission-observer-guard-v65-scoped-country-events.json",
+        "asset_sha256": "8d9277232c192bb788c65c1dbea0067ec216ef746b3a533ab2feffdea2140761",
+        "manifest_sha256": "62abd23b8200484e62074c1e8f7b3b8ceb699a870cf6c4ed0ddaa72ba4c093a7",
+        "manifest_path": "work/runtime/diplomacy-observer-20261122-scoped-country-events-v65-007/build-manifest.json",
+        "source_count": 208, "build_version": 65,
+        "game_sha256": "b23fa0e1f698d31b01cdd1c3817a675805d8c6286cb66f9c231e6e2a42544d77",
+        "evidence_sha256": "c062763e19b3e6791fe86aa7fba5132c5d2354e1a5ef4dcbd9eb6cfc30e9835c",
+    },
     "4238740233dbb3415c3151e5eace7f41b517a90d8b8843c9b6cff0e6c579dbc8": {
         "version": 65, "dll_name": "eu4_bridge_diplomacy_observer_v65.dll",
         "asset_file": Path(__file__).parent / "profiles/mission-observer-guard-v65-country-control.json",

@@ -9,7 +9,9 @@ import pytest
 from bridge.information import home_trade_node_memory as home
 from bridge.information import trade_income_memory as trade
 from bridge.information.model import InformationError, canonical
+from bridge.information.trade_collection import NativeTradeCollectionSource
 from bridge.information.trade_home import NativeTradeHomeSource
+from bridge.information.trade_income import NativeTradeIncomeSource
 from bridge.tests import test_information_trade_income_memory as trade_fixture
 
 
@@ -37,6 +39,7 @@ class _Base:
     def __init__(self, directory: Path):
         self.session = _Session(directory)
         self.calls = 0
+        self.observer = "FRA"
         self.after_context = None
 
     def context(self) -> dict:
@@ -48,7 +51,7 @@ class _Base:
             "session_id": SESSION_ID,
             "game_sha256": GAME_SHA256,
             "game_version": "1.37.4",
-            "observer": "FRA",
+            "observer": self.observer,
             "game_date": GAME_DATE,
             "game_date_raw": GAME_DATE,
         }
@@ -89,8 +92,8 @@ def _set_ad(reader, table: int, value: int) -> None:
     reader.data[(address, 0xC0)] = bytes(raw)
 
 
-def _records(reader):
-    trade_record = trade.read_fields(reader, MODULE_BASE, COUNTRY_POINTER)
+def _records(reader, country="FRA"):
+    trade_record = trade.read_fields(reader, MODULE_BASE, COUNTRY_POINTER, country)
     assert trade_record["status"] == "observed"
     assert trade.validate_record(trade_record)
     home_record = home.read_fields(reader, MODULE_BASE, trade_record)
@@ -179,14 +182,18 @@ def test_catalog_and_strict_country_selector(configured, tmp_path: Path):
     assert other_field.value.code == "unknown_field"
 
 
-def test_unique_home_uses_real_child_records_and_compact_provenance(configured, tmp_path: Path):
+@pytest.mark.parametrize("country", ["FRA", "TUR", "D01"])
+def test_unique_home_uses_real_child_records_and_compact_provenance(configured, tmp_path: Path, country: str):
     reader = _reader_with_home_guard(configured[1])
     _set_ad(reader, trade_fixture.TABLE_ONE, 1)
-    trade_record, home_record = _records(reader)
-    base = _Base(tmp_path)
-    report = _report(trade_record, home_record, base)
+    fullref_key = (COUNTRY_POINTER + 0x20, 8)
+    reader.data[fullref_key] = country.encode("ascii") + reader.data[fullref_key][3:]
+    trade_record, home_record = _records(reader, country)
+    report = _report(trade_record, home_record, _Base(tmp_path))
+    report["country"] = report["request"]["country"] = country
     source, base, capture_calls = _source(tmp_path, report)
-    result = source.read(_query({"type": "country", "country": "FRA"}), base.context())
+    base.observer = country
+    result = source.read(_query({"type": "country", "country": country}), base.context())
     field = result["fields"]["home_node"]
     assert field == {
         "status": "known",
@@ -201,7 +208,7 @@ def test_unique_home_uses_real_child_records_and_compact_provenance(configured, 
         "native_home_flag_raw_hex": "01",
     }
     assert result["complete"] is False
-    assert capture_calls == [(tmp_path / "installation.json", "FRA", True, True)]
+    assert capture_calls == [(tmp_path / "installation.json", country, True, True)]
     audit = result["source"]["provenance"]["home_trade_node"]
     assert audit["profile_sha256"] == HOME_PROFILE_SHA256
     assert audit["country_fullref_raw_hex"] == trade_record["country_fullref_raw_hex"]
@@ -215,6 +222,16 @@ def test_unique_home_uses_real_child_records_and_compact_provenance(configured, 
     assert audit["trade_income_record_canonical_sha256"] == hashlib.sha256(
         canonical(trade_record).encode("utf-8")
     ).hexdigest()
+
+    income = NativeTradeIncomeSource(base, capture=lambda *_args, **_kwargs: deepcopy(report))
+    query = {'topic': 'T05', 'object': {'type': 'country', 'country': country},
+             'fields': ['income', 'collection'], 'parameters': {}}
+    values = income.read(query, base.context())['fields']
+    assert values['income']['value'] == trade_record['total_raw']
+    assert values['collection']['status'] == 'known'
+    collect = NativeTradeCollectionSource(income).read(
+        dict(query, topic='T02', fields=['collect_node']), base.context())
+    assert collect['fields']['collect_node']['value'] == values['collection']['value']
 
 
 @pytest.mark.parametrize(

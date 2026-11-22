@@ -25,7 +25,7 @@ class NativeProposalExpiryHistorySource:
     def catalog(self):
         topic = get_topic('H02')
         topic.update(status='available', source=type(self).__name__, context_scope='recorded',
-                     observer_roles=['actor', 'recipient'], observer_scope=['FRA'],
+                     observer_roles=['actor', 'recipient'], observer_scope=[],
                      supported_versions=['1.37.4'], triggers=['query', 'periodic', 'change', 'event'])
         topic['fields'] = {name: topic['fields'][name] for name in LEGACY_FIELDS}
         for field in topic['fields'].values():
@@ -48,7 +48,8 @@ class NativeProposalExpiryHistorySource:
         if event.get('event_type') != 'diplomatic_proposal':
             return None
         payload = event.get('payload', {})
-        if payload.get('observer_status') != 'expired':
+        if (payload.get('observer_status') != 'expired'
+                or context.get('observer') not in (payload.get('actor'), payload.get('recipient'))):
             return None
         obj = query['object']
         if obj['type'] == 'country' and obj.get('country') not in (payload.get('actor'), payload.get('recipient')):

@@ -61,7 +61,7 @@ class NativeForeignSuccessionSource(NativeTradeIncomeSource):
                 'coverage': 'available', 'complete': True, 'period': 'current',
                 'source': 'S04', 'basis': 'current_public_succession_indicators',
                 'description': '当前君主年龄、继承人有无和年龄、继承权强度及联统宗主'}},
-            'object_types': ['country'], 'observer_roles': [], 'observer_scope': ['FRA'],
+            'object_types': ['country'], 'observer_roles': [], 'observer_scope': [],
             'parameters': {'type': 'object', 'properties': {}, 'additionalProperties': False},
             'supported_versions': ['1.37.4'], 'triggers': ['query', 'periodic'],
             'source': type(self).__name__, 'context_scope': 'visible_scope', 'visibility': 'visible_scope'}]
@@ -70,17 +70,20 @@ class NativeForeignSuccessionSource(NativeTradeIncomeSource):
         if (not isinstance(query, dict) or query.get('topic') != 'F04'
                 or set(query) - {'topic', 'object', 'fields', 'parameters'}):
             raise InformationError('invalid_parameters', 'Expected an F04 query')
+        if context is None:
+            context = self.context()
+        observer = context.get('observer') if isinstance(context, dict) else None
         obj = query.get('object')
         if (not isinstance(obj, dict) or set(obj) != {'type', 'country'}
                 or obj.get('type') != 'country' or not isinstance(obj.get('country'), str)
-                or not _TAG.fullmatch(obj['country']) or obj['country'] == 'FRA'):
+                or not _TAG.fullmatch(obj['country']) or obj['country'] == observer):
             raise InformationError('invalid_object', 'F04 requires a foreign country tag')
         if query.get('fields') != ['succession_risk']:
             raise InformationError('invalid_fields', 'Unsupported succession fields')
         if query.get('parameters', {}) != {}:
             raise InformationError('invalid_parameters', 'Succession risk has no extra parameters')
-        if context is not None and (not isinstance(context, dict) or context.get('observer') != 'FRA'):
-            raise InformationError('observer_scope_mismatch', 'The supported observer is FRA')
+        if context is not None and not isinstance(context, dict):
+            raise InformationError('invalid_context', 'F04 context must be an object')
         return {'topic': 'F04', 'object': deepcopy(obj), 'fields': ['succession_risk'], 'parameters': {}}
 
     def read(self, query, context=None):

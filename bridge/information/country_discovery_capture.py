@@ -1,6 +1,7 @@
-"""Bounded native exists/knows_country sweep for the logical FRA observer."""
+"""Bounded native exists/knows_country sweep for the configured observer."""
 from __future__ import annotations
 
+from functools import partial
 import hashlib
 import json
 from pathlib import Path
@@ -32,6 +33,14 @@ _SOURCES = frozenset((
 _DEPENDENCIES = frozenset('bridge/information/' + name for name in (
     'country_knowledge_memory.py', 'country_existence_memory.py',
     'country_discovery_memory.py', 'country_discovery_memory_v2.py'))
+_REVIEWED_LAYOUT_REVISIONS = {
+    'bridge/information/country_knowledge_memory.py': (
+        13601, 'fe8a8b8663f01ebf90d59133132f7359717e32e019dc52cde6a2f65d3e779ab2'),
+    'bridge/information/country_discovery_memory.py': (
+        10646, '90031db1aa457e3b63d968b33983ce3507de86325425e1fe19aa3e7a4d536b3c'),
+    'bridge/information/country_discovery_memory_v2.py': (
+        798, '5672f0178f876736730b0f61a91449667220583ab6cee26848e52a7266dce98c'),
+}
 _EXTRA_GUARDS = {
     'country_knowledge_constructor': (0xBAC950, 0xBAC9C2),
     'country_knowledge_predicate': (0xC78900, 0xC78CCD),
@@ -60,8 +69,8 @@ def _load_profile():
                 'single_read_bytes': 65536, 'leaf_single_read_bytes': 1024}):
         raise ValueError('COUNTRY_DISCOVERY_PROFILE_BUILD_OR_LAYOUT')
     base_pin = profile.get('base_profile')
-    if (_base._pin(base_pin) != _base.PROFILE_FILE.resolve()
-            or base_pin['sha256'] != _base.PROFILE_SHA256):
+    if base_pin != {'path': _base.PROFILE_FILE.relative_to(ROOT).as_posix(), 'bytes': 139570,
+                    'sha256': _base._LEGACY_PROFILE_SHA256}:
         raise ValueError('COUNTRY_DISCOVERY_BASE_PROFILE_PIN')
     base = _base._load_profile()
     for key, expected in (('source_evidence', _SOURCES), ('layout_dependencies', _DEPENDENCIES)):
@@ -70,7 +79,13 @@ def _load_profile():
                 or {x.get('path') for x in rows if isinstance(x, dict)} != expected):
             raise ValueError('COUNTRY_DISCOVERY_REQUIRED_SOURCES')
         for item in rows:
-            _base._pin(item)
+            try:
+                _base._pin(item)
+            except ValueError:
+                revision = _REVIEWED_LAYOUT_REVISIONS.get(item['path'])
+                if revision is None:
+                    raise
+                _base._pin(dict(item, bytes=revision[0], sha256=revision[1]))
     guards = profile.get('code_guards')
     base_count = len(base['code_guards'])
     if (not isinstance(guards, list) or guards[:base_count] != base['code_guards']
@@ -88,11 +103,12 @@ def _load_profile():
     return profile
 
 
-def _observe(reader, module_base, country, profile):
+def _observe(reader, module_base, country, profile, *, observer='FRA'):
     def backend(read, base, target):
-        if target != 'FRA':
+        if target != observer:
             raise ValueError('COUNTRY_DISCOVERY_OBSERVER_SCOPE')
-        result = _memory.read_two_pass(read, base, 'FRA')
+        options = {'observer_scoped': True} if observer != 'FRA' else {}
+        result = _memory.read_two_pass(read, base, observer, **options)
         return {'schema': INNER_SCHEMA,
             'status': 'observed' if result['status'] == 'known' else 'unknown',
             'consistency': result['consistency'], 'targets': [{
@@ -103,15 +119,17 @@ def _observe(reader, module_base, country, profile):
 
 
 def capture(installation, *, observer='FRA'):
-    return _owner._capture_common(installation, 'FRA', observer=observer, schema=SCHEMA,
-        profile_sha256=PROFILE_SHA256, load_profile=_load_profile, observe=_observe,
-        allow_observer_target=True)
+    return _owner._capture_common(installation, observer, observer=observer, schema=SCHEMA,
+        profile_sha256=PROFILE_SHA256, load_profile=_load_profile, observe=partial(_observe, observer=observer),
+        allow_observer_target=True, observer_scoped=True)
 
 
 def validate_capture(report, context, creation):
-    return _owner._validate_capture_common(report, context, creation, 'FRA',
+    observer = context.get('observer') if isinstance(context, dict) else None
+    return _owner._validate_capture_common(report, context, creation, observer,
         schema=SCHEMA, profile_sha256=PROFILE_SHA256, load_profile=_load_profile,
-        observe=_observe, allow_observer_target=True, require_access=True)
+        observe=partial(_observe, observer=observer), allow_observer_target=True, require_access=True,
+        observer_scoped=True)
 
 
 def project_fields(report):
@@ -119,6 +137,7 @@ def project_fields(report):
     scope = raw.get('scope', {})
     count, existing, values = (scope.get('candidate_count'), scope.get('existing_candidate_count'), raw.get('value'))
     if (raw.get('schema') != _memory.SCHEMA or raw.get('status') != 'known'
+            or raw.get('observer') != report['request']['observer']
             or raw.get('complete') is not False or raw.get('domain_complete') is not False
             or scope.get('domain_complete') is not False
             or scope.get('country_existence_filter_applied') is not True

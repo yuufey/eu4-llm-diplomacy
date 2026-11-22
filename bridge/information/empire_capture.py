@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
+from functools import partial
 import hashlib
 import json
 from pathlib import Path
@@ -10,6 +11,7 @@ from typing import Any
 
 from . import empire_memory as _memory
 from . import foreign_technology_capture as _owner
+from .province_state_capture import _matches_reviewed_layout
 
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -73,7 +75,7 @@ def _load_profile() -> dict[str, Any]:
         path.relative_to(ROOT)
         if (type(item["bytes"]) is not int or item["bytes"] < 0
                 or not isinstance(item["sha256"], str)
-                or path.stat().st_size != item["bytes"] or _sha(path) != item["sha256"]):
+                or not _matches_reviewed_layout(item)):
             raise ValueError("EMPIRE_PROFILE_DEPENDENCY")
     guards = profile.get("code_guards")
     if not isinstance(guards, list) or len(guards) < len(_REQUIRED_GUARDS):
@@ -98,14 +100,19 @@ def _load_profile() -> dict[str, Any]:
     return profile
 
 
-def _observe(reader, module_base: int, country: str, profile: dict[str, Any]) -> dict[str, Any]:
+def _valid_observer(observer: Any) -> bool:
+    return isinstance(observer, str) and _TAG.fullmatch(observer) is not None
+
+
+def _observe(reader, module_base: int, country: str, profile: dict[str, Any],
+             *, observer: str = _OBSERVER) -> dict[str, Any]:
     if country != "HRE":
         raise ValueError("EMPIRE_CAPTURE_OBJECT_SCOPE")
     bounded = _memory._BudgetReader(reader)
     guards_before = _owner._guards(bounded, module_base, profile)
     context_before = _owner._context(bounded, module_base)
-    first = _memory._read_state(bounded, module_base, _OBSERVER, "pass1")
-    second = _memory._read_state(bounded, module_base, _OBSERVER, "pass2")
+    first = _memory._read_state(bounded, module_base, observer, "pass1")
+    second = _memory._read_state(bounded, module_base, observer, "pass2")
     context_after = _owner._context(bounded, module_base)
     guards_after = _owner._guards(bounded, module_base, profile)
     role_ok = all(
@@ -152,11 +159,13 @@ def _observe(reader, module_base: int, country: str, profile: dict[str, Any]) ->
 
 
 def capture(installation: Path, *, observer: str = _OBSERVER) -> dict[str, Any]:
-    if observer != _OBSERVER:
+    if not _valid_observer(observer):
         raise ValueError("EMPIRE_OBSERVER_SCOPE")
     inner = _owner._capture_common(
         installation, "HRE", observer=observer, schema=INNER_SCHEMA,
-        profile_sha256=PROFILE_SHA256, load_profile=_load_profile, observe=_observe,
+        profile_sha256=PROFILE_SHA256, load_profile=_load_profile,
+        observe=partial(_observe, observer=observer), observer_scoped=True,
+        allow_observer_target=True,
     )
     return {
         "schema": SCHEMA,
@@ -167,8 +176,10 @@ def capture(installation: Path, *, observer: str = _OBSERVER) -> dict[str, Any]:
 
 
 def validate_capture(report: Any, context: Mapping[str, Any], creation: int) -> bool:
-    if (not isinstance(report, dict) or set(report) != {"schema", "observer", "object", "capture"}
-            or report.get("schema") != SCHEMA or report.get("observer") != _OBSERVER
+    observer = context.get("observer") if isinstance(context, Mapping) else None
+    if (not _valid_observer(observer) or not isinstance(report, dict)
+            or set(report) != {"schema", "observer", "object", "capture"}
+            or report.get("schema") != SCHEMA or report.get("observer") != observer
             or not _owner._same(report.get("object"), _OBJECT)
             or type(creation) is not int or creation <= 0):
         return False
@@ -190,15 +201,16 @@ def validate_capture(report: Any, context: Mapping[str, Any], creation: int) -> 
             return False
     return _owner._validate_capture_common(
         inner, context, creation, "HRE", schema=INNER_SCHEMA,
-        profile_sha256=PROFILE_SHA256, load_profile=_load_profile, observe=_observe,
-        require_access=True,
+        profile_sha256=PROFILE_SHA256, load_profile=_load_profile,
+        observe=partial(_observe, observer=observer), observer_scoped=True,
+        allow_observer_target=True, require_access=True,
     )
 
 
 def project_fields(report: Any) -> dict[str, Any]:
     """Whitelist the stable HRE tags; the caller owns visibility/publication policy."""
-    if (not isinstance(report, dict) or report.get("schema") != SCHEMA
-            or report.get("observer") != _OBSERVER
+    observer = report.get("observer") if isinstance(report, dict) else None
+    if (not _valid_observer(observer) or report.get("schema") != SCHEMA
             or not _owner._same(report.get("object"), _OBJECT)):
         raise ValueError("EMPIRE_PROJECTION_SCOPE")
     inner = report.get("capture")
@@ -206,6 +218,8 @@ def project_fields(report: Any) -> dict[str, Any]:
     passes = observation.get("passes") if isinstance(observation, dict) else None
     cleanup = inner.get("cleanup") if isinstance(inner, dict) else None
     if (not isinstance(inner, dict)
+            or not isinstance(inner.get("request"), dict)
+            or inner["request"].get("observer") != observer
             or inner.get("status") != "observed" or inner.get("completed") is not True
             or inner.get("profile_sha256") != PROFILE_SHA256
             or not isinstance(cleanup, dict) or cleanup.get("status") != "closed"
@@ -222,11 +236,12 @@ def project_fields(report: Any) -> dict[str, Any]:
         raise ValueError("EMPIRE_CAPTURE_NOT_STABLE")
     for state in passes:
         role = state.get("observer_nonplayer") if isinstance(state, dict) else None
-        if (not isinstance(state, dict) or state.get("status") != "known" or state.get("observer") != _OBSERVER
-                or not isinstance(role, dict) or role.get("verified") is not True):
+        if (not isinstance(state, dict) or state.get("status") != "known" or state.get("observer") != observer
+                or not isinstance(role, dict) or role.get("tag") != observer
+                or role.get("verified") is not True):
             raise ValueError("EMPIRE_ROLE_NOT_VERIFIED")
         physical = state.get("physical_client")
-        if (not isinstance(physical, dict) or physical.get("tag") == _OBSERVER
+        if (not isinstance(physical, dict) or physical.get("tag") == observer
                 or not isinstance(physical.get("tag"), str)
                 or _TAG.fullmatch(physical["tag"]) is None
                 or not isinstance(physical.get("fullref_raw_hex"), str)

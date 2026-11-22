@@ -28,7 +28,7 @@ _PHASE = "initiate"
 _FIELDS = ("overlord", "subject", "subject_type")
 _IDENTITY_KEYS = (
     "status", "mode", "complete", "observer", "game_version", "game_sha256",
-    "dll_sha256", "session_id", "game_date",
+    "dll_sha256", "session_id", "world_id", "game_date",
 )
 
 
@@ -65,8 +65,8 @@ def _identity_reason(context: Any) -> str | None:
         return "LIVE_CONTEXT_REQUIRED"
     if context.get("complete") is not True:
         return "BASE_CONTEXT_INCOMPLETE"
-    if context.get("observer") != "FRA":
-        return "OBSERVER_FRA_REQUIRED"
+    if not _is_country(context.get("observer")):
+        return "OBSERVER_COUNTRY_UNVERIFIED"
     if context.get("game_version") != _VERSION:
         return "UNSUPPORTED_GAME_VERSION"
     if context.get("game_sha256") != _GAME_SHA256:
@@ -122,7 +122,7 @@ _CATALOG_ITEM = {
         "additionalProperties": False,
     },
     "supported_versions": [_VERSION],
-    "observer_scope": ["FRA"],
+    "observer_scope": [],
     "triggers": ["query", "periodic", "change"],
     "change_detection": "sampled_state_comparison_not_lossless_events",
     "source": "DiplomacyTools.inspect_diplomatic_action",
@@ -183,8 +183,6 @@ class NativeSubjectRelationSource:
         actor, recipient = obj.get("actor"), obj.get("recipient")
         if obj.get("type") != "country_pair" or not _is_country(actor) or not _is_country(recipient):
             raise InformationError("invalid_object", "R02 country_pair has invalid country tags")
-        if actor != "FRA":
-            raise InformationError("observer_scope_mismatch", "R02 actor must be the verified FRA observer")
         if actor == recipient:
             raise InformationError("invalid_object", "R02 actor and recipient must differ")
         fields = query.get("fields")
@@ -202,10 +200,10 @@ class NativeSubjectRelationSource:
             if not isinstance(context, dict):
                 raise InformationError("invalid_context", "context must be an object")
             observer = context.get("observer")
-            if observer is not None and observer != "FRA":
+            if observer is not None and observer != actor:
                 raise InformationError(
                     "observer_scope_mismatch",
-                    "R02 query is outside the verified FRA observer scope",
+                    "R02 actor must match the configured observer country",
                 )
         normalized = {
             "topic": "R02",
@@ -238,7 +236,7 @@ class NativeSubjectRelationSource:
             "phase": _PHASE,
             "read_only": True,
             "scope": "selected_country_pair",
-            "observer_scope": "FRA",
+            "observer_scope": context.get("observer"),
             "global_relation_claim": False,
         }
         if reason is not None:
@@ -369,6 +367,10 @@ class NativeSubjectRelationSource:
             return self._result(normalized, before, fields, False, reason=reason, unavailable=True)
 
         actor = normalized["object"]["actor"]
+        if actor != before["observer"]:
+            failure = "OBSERVER_SCOPE_MISMATCH"
+            fields = self._failure_fields(normalized["fields"], failure, unavailable=True)
+            return self._result(normalized, before, fields, False, reason=failure, unavailable=True)
         recipient = normalized["object"]["recipient"]
         tools = getattr(self.base_source, "diplomacy_tools", None)
         inspector = getattr(tools, "inspect_diplomatic_action", None)

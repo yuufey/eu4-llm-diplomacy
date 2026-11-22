@@ -7,6 +7,9 @@ from unittest.mock import Mock
 import pytest
 
 from bridge import country_modifier_observation as observation
+from bridge.country_control_runtime import OBSERVATION_CAPABILITY
+from bridge.diplomacy import DiplomacyTools
+from bridge.information.sources import DiplomacySource
 from bridge.information import InformationService
 from bridge.information.composite import CompositeSource
 from bridge.information.model import InformationError
@@ -41,6 +44,33 @@ def sources(tmp_path):
 def snapshots(primary):
     return [event for event in primary.poll_events(primary.context(), None)['events']
             if event['event_type'] in EVENT_TYPES]
+
+
+def test_configured_observers_share_a_native_stream_without_sharing_public_history(tmp_path, monkeypatch):
+    def scoped(sequence, country):
+        fullref = (sequence << 32) | int.from_bytes(country.encode("ascii"), "little")
+        return native_event(sequence, country=country, country_fullref=hex(fullref), schema_version=2)
+
+    session, journal, _ = make_source(tmp_path, events=[scoped(1, "ENG"), scoped(2, "TUR")])
+    session.observed_countries = ("ENG", "TUR")
+    monkeypatch.setattr(session, "installation_capabilities", lambda: frozenset({
+        observation.CAPABILITY, OBSERVATION_CAPABILITY,
+    }))
+    try:
+        tur = DiplomacySource(DiplomacyTools(journal, session), observer="TUR")
+        eng = DiplomacySource(DiplomacyTools(journal, session), observer="ENG")
+        assert observation.EVENT_TYPE in tur.event_types == eng.event_types
+        tur_events = snapshots(tur)
+        eng_events = snapshots(eng)
+        assert [event["payload"]["country"] for event in tur_events] == ["TUR"]
+        assert [event["payload"]["country"] for event in eng_events] == ["ENG"]
+        adapter = NativeModifierLifecycleHistorySource(tur)
+        context = tur.context()
+        result = adapter.replay_event(query(), context, tur_events[0])
+        assert result["fields"][FIELD]["value"][0]["country"] == "TUR"
+        assert not observation.valid_event_snapshot(eng_events[0], context)
+    finally:
+        journal.close()
 
 
 def forbidden(*_args, **_kwargs):

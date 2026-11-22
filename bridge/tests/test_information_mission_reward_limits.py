@@ -119,22 +119,27 @@ def test_normal_tools_and_reopen_preserve_current_limits_and_brief(tmp_path):
         assert service.get_result(full['result_id']) == full
 
 
-def _native_fixture(*, core=False, owned=False, subject=False, discovered=True):
+def _native_fixture(*, core=False, owned=False, subject=False, discovered=True, observer='FRA'):
     image = fixture.make_image(discovered=discovered)
+    observer_fullref = fixture._fullref(observer, fixture.FRA_SLOT)
+    observer_pointer = fixture.COUNTRY_BASE + fixture.FRA_SLOT * 0x1000
+    image.put_u64(observer_pointer + fixture.country_memory.COUNTRY_FULLREF_OFFSET, observer_fullref)
+    row = fixture.RELATION_TABLE + fixture.FRA_SLOT * fixture.admission.RELATION_ROW_STRIDE
+    image.put_u64(row + fixture.admission.RELATION_ROW_RECIPIENT_FULLREF_OFFSET, observer_fullref)
     profile = native._load_profile()
     for guard in profile['code_guards']:
         image.put(fixture.BASE + int(guard['rva'], 0), bytes.fromhex(guard['bytes']))
     image.put_i32(fixture.WORLD + 0x1DD0, 56566584)
     image.put_u64(fixture.WORLD + 0x1E60, fixture._fullref('DEN', fixture.DEN_SLOT))
-    owner_tag, owner_slot = ('FRA', fixture.FRA_SLOT) if owned else ('ENG', fixture.ENG_SLOT)
+    owner_tag, owner_slot = (observer, fixture.FRA_SLOT) if owned else ('ENG', fixture.ENG_SLOT)
     record = fixture._province_record()
     image.put_u64(record + fixture.state_memory.OWNER_FULLREF_OFFSET, fixture._fullref(owner_tag, owner_slot))
     image.put_u64(record + fixture.state_memory.CONTROLLER_FULLREF_OFFSET, fixture._fullref(owner_tag, owner_slot))
     if core:
-        fixture._put_core_vector(image, [fixture._fullref('FRA', fixture.FRA_SLOT)])
+        fixture._put_core_vector(image, [observer_fullref])
     owner_pointer = fixture.COUNTRY_BASE + owner_slot * 0x1000
     if subject:
-        parent = fixture._fullref('FRA', fixture.FRA_SLOT)
+        parent = observer_fullref
         relation_table, relation, rows, holder, kind = (0x6600000000 + i * 0x10000 for i in range(5))
         image.put_u64(owner_pointer + 0x18F0, parent)
         image.put_u64(owner_pointer + 0x1510, relation_table)
@@ -146,11 +151,11 @@ def _native_fixture(*, core=False, owned=False, subject=False, discovered=True):
         image.put_u64(holder + 0x40, kind)
         image.put(kind + 0x151, b'\x01\x00')
     reader = RecordingReader(image)
-    observation = native._observe_for(fixture.PROVINCE_ID)(reader, fixture.BASE, 'FRA', profile)
+    observation = native._observe_for(fixture.PROVINCE_ID, observer)(reader, fixture.BASE, observer, profile)
     identity = {'binding_verified': True, 'process_creation_filetime': 123,
                 'process_path_sha256': native.owner.EXE_SHA256}
     report = {'schema': native.SCHEMA, 'status': 'observed' if observation['stable'] else 'unknown',
-              'completed': observation['stable'], 'request': {'country': 'FRA', 'observer': 'FRA',
+              'completed': observation['stable'], 'request': {'country': observer, 'observer': observer,
               'session_id': 'reward-test', 'creation_filetime': 123},
               'profile_sha256': native.PROFILE_SHA256, 'identity': identity,
               'identity_after': deepcopy(identity), 'module_base': hex(fixture.BASE),
@@ -160,9 +165,19 @@ def _native_fixture(*, core=False, owned=False, subject=False, discovered=True):
                          'UI_control': False, 'date_advance': False, 'save_or_reload': False,
                          'limit_bytes': native.owner.MAX_READ_BYTES,
                          'bytes_requested': reader.bytes_requested, 'calls': reader.calls}}
-    context = {'status': 'ready', 'observer': 'FRA', 'session_id': 'reward-test',
+    context = {'status': 'ready', 'observer': observer, 'session_id': 'reward-test',
                'game_date': 56566584, 'game_version': '1.37.4', 'game_sha256': native.owner.EXE_SHA256}
     return report, context, image
+
+
+def test_turkish_reward_inputs_bind_own_core_and_full_subject_relationship():
+    report, context, _ = _native_fixture(core=True, subject=True, observer='TUR')
+    assert native.validate_capture(report, context, 123, fixture.PROVINCE_ID)
+    checks = report['observation']['backend']['after']['checks']
+    assert checks['is_core'] == {'status': 'known', 'value': True}
+    assert checks['owned_by'] == {'status': 'known', 'value': False}
+    assert checks['country_or_non_sovereign_subject_holds'] == {'status': 'known', 'value': True}
+    assert not native.validate_capture(report, dict(context, observer='FRA'), 123, fixture.PROVINCE_ID)
 
 
 @pytest.mark.parametrize('core,owned,subject', [(False, False, False), (True, True, False), (False, False, True)])

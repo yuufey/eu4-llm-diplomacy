@@ -20,7 +20,6 @@ from .sources import _copy, _result, _source_info
 from .country_state import _is_country, _parameter_schema
 from .trade_income import (
     NativeTradeIncomeSource,
-    _context_reason,
     _identity,
     _session_binding,
 )
@@ -107,11 +106,30 @@ def _public_reason(reason: str) -> str:
     return reason
 
 
-def _context_failure(context: Any, *, prefix: str = "DIPLOMAT_TASKS") -> str | None:
-    reason = _context_reason(context)
-    if reason is None:
+def _context_failure(
+        context: Any, *, country: str | None = None,
+        prefix: str = "DIPLOMAT_TASKS") -> str | None:
+    # Bind the requested country to the host observer before reading task records.
+    if not isinstance(context, dict):
+        reason = "MONARCH_POINTS_CONTEXT_UNAVAILABLE"
+    elif context.get("status") != "ready" or context.get("mode") != "live":
+        reason = "MONARCH_POINTS_LIVE_CONTEXT_UNAVAILABLE"
+    elif context.get("game_version") != _VERSION:
+        reason = "MONARCH_POINTS_GAME_VERSION_MISMATCH"
+    elif (not isinstance(context.get("game_sha256"), str)
+          or context["game_sha256"].lower() != _GAME_SHA256):
+        reason = "MONARCH_POINTS_GAME_IDENTITY_MISMATCH"
+    elif (not _is_country(context.get("observer"))
+          or country is not None and context.get("observer") != country):
+        reason = "MONARCH_POINTS_OBSERVER_SCOPE_MISMATCH"
+    elif (not isinstance(context.get("session_id"), str)
+          or not context["session_id"]):
+        reason = "MONARCH_POINTS_SESSION_ID_UNAVAILABLE"
+    elif type(context.get("game_date")) is not int:
+        reason = "MONARCH_POINTS_GAME_DATE_UNAVAILABLE"
+    else:
         return None
-    return _public_reason(reason) if reason.startswith("TRADE_INCOME_") else prefix + "_" + reason
+    return f"{prefix}_{reason}"
 
 
 def _low_level_module():
@@ -177,6 +195,18 @@ def _public_instance(instance: Any) -> dict[str, Any]:
     if not isinstance(instance, Mapping):
         raise ValueError("DIPLOMAT_TASKS_INSTANCE_INVALID")
     result = deepcopy(dict(instance))
+    diplomat_id = instance.get("raw_id_44")
+    raw_id_hex = instance.get("raw_id_44_hex")
+    if type(diplomat_id) is not int or diplomat_id < 0:
+        raise ValueError("DIPLOMAT_TASKS_DIPLOMAT_ID_INVALID")
+    try:
+        raw_id = bytes.fromhex(str(raw_id_hex))
+    except (TypeError, ValueError):
+        raise ValueError("DIPLOMAT_TASKS_DIPLOMAT_ID_INVALID") from None
+    if (len(raw_id) != 4
+            or int.from_bytes(raw_id, "little", signed=True) != diplomat_id):
+        raise ValueError("DIPLOMAT_TASKS_DIPLOMAT_ID_INVALID")
+    result["diplomat_id"] = diplomat_id
     state = _state_raw(instance)
     if state is not None:
         result["state_raw"] = state
@@ -218,14 +248,36 @@ def concise_diplomat_tasks(value: Any) -> dict[str, Any] | None:
     """Copy the task states and countries needed in a concise report."""
     if not isinstance(value, Mapping):
         return None
+    instances = value.get("instances")
+    if not isinstance(instances, list):
+        return None
+    projected = []
+    for instance in instances:
+        if not isinstance(instance, Mapping):
+            return None
+        diplomat_id = instance.get("diplomat_id", instance.get("raw_id_44"))
+        if type(diplomat_id) is not int or diplomat_id < 0:
+            return None
+        raw_id = instance.get("raw_id_44")
+        if raw_id is not None and (type(raw_id) is not int or raw_id != diplomat_id):
+            return None
+        raw_id_hex = instance.get("raw_id_44_hex")
+        if raw_id_hex is not None:
+            try:
+                raw_id_bytes = bytes.fromhex(str(raw_id_hex))
+            except (TypeError, ValueError):
+                return None
+            if (len(raw_id_bytes) != 4
+                    or int.from_bytes(raw_id_bytes, "little", signed=True) != diplomat_id):
+                return None
+        row = {"diplomat_id": diplomat_id}
+        row.update({key: instance[key] for key in ("state", "task", "actor", "recipient")
+                    if instance.get(key) is not None})
+        projected.append(row)
     return {
         "instance_count_observed": value.get("instance_count_observed"),
         "available_count_observed": value.get("available_count_observed"),
-        "instances": [
-            {key: instance[key] for key in ("state", "task", "actor", "recipient")
-             if instance.get(key) is not None}
-            for instance in value.get("instances", [])
-        ],
+        "instances": projected,
     }
 
 
@@ -237,7 +289,7 @@ def _record_sha256(record: Mapping[str, Any]) -> str | None:
 
 
 class NativeDiplomatTasksSource(NativeTradeIncomeSource):
-    """Expose only the verified FRA N05 diplomat task records."""
+    """Expose N05 diplomat task records for the host-assigned observer only."""
 
     event_types: tuple[str, ...] = ()
 
@@ -245,7 +297,21 @@ class NativeDiplomatTasksSource(NativeTradeIncomeSource):
         super().__init__(base_source, capture=capture)
 
     def catalog(self) -> list[dict[str, Any]]:
-        return [deepcopy(_CATALOG_ITEM)]
+        item = deepcopy(_CATALOG_ITEM)
+        try:
+            context = self.context()
+        except Exception:
+            context = {}
+        observer = context.get("observer") if isinstance(context, Mapping) else None
+        if isinstance(context, Mapping) and context.get("status") == "ready":
+            if _is_country(observer):
+                item["observer_scope"] = [observer]
+                item["fields"][_FIELD]["supported_countries"] = [observer]
+                item["scope_note"] = (
+                    f"仅读取可信配置的{observer}观察范围内外交官任务实例；外交官总量、"
+                    "容量、关系数量和任务日期不在本字段范围内。"
+                )
+        return [item]
 
     def validate_query(self, query: dict, context: dict | None = None) -> dict:
         if not isinstance(query, dict):
@@ -263,8 +329,8 @@ class NativeDiplomatTasksSource(NativeTradeIncomeSource):
         obj = query.get("object")
         if not isinstance(obj, dict) or set(obj) != {"type", "country"} or obj.get("type") != "country":
             raise InformationError("invalid_object", "N05 diplomat_tasks requires a country object")
-        if obj.get("country") != _COUNTRY:
-            raise InformationError("observer_scope_mismatch", "Only the verified FRA country is supported")
+        if not _is_country(obj.get("country")):
+            raise InformationError("invalid_object", "N05 diplomat_tasks requires a three-character country tag")
         fields = query.get("fields")
         if (
             not isinstance(fields, list)
@@ -296,8 +362,11 @@ class NativeDiplomatTasksSource(NativeTradeIncomeSource):
             if not isinstance(context, dict):
                 raise InformationError("invalid_context", "context must be an object")
             observer = context.get("observer")
-            if observer is not None and observer != _COUNTRY:
-                raise InformationError("observer_scope_mismatch", "N05 is outside the FRA scope")
+            if not _is_country(observer) or observer != obj["country"]:
+                raise InformationError(
+                    "observer_scope_mismatch",
+                    "N05 diplomat_tasks must match the trusted observer scope",
+                )
         normalized = {
             "topic": _TOPIC,
             "object": deepcopy(obj),
@@ -336,9 +405,10 @@ class NativeDiplomatTasksSource(NativeTradeIncomeSource):
         current = supplied if supplied is not None else self.context()
         normalized = self.validate_query(query, current)
         requested = normalized["fields"]
+        country = normalized["object"]["country"]
         provenance: dict[str, Any] = {
             "adapter": "bridge.information.diplomat_tasks_memory.capture",
-            "country": _COUNTRY,
+            "country": country,
             "read_only": True,
             "native_function_invoked": False,
             "unit": _UNIT,
@@ -355,7 +425,7 @@ class NativeDiplomatTasksSource(NativeTradeIncomeSource):
         def result(ctx, fields):
             return self._result(normalized, ctx, fields, provenance)
 
-        reason = _context_failure(current)
+        reason = _context_failure(current, country=country)
         if reason is not None:
             provenance["context_guard"]["status"] = "unavailable"
             return result(current, self._failure_fields(requested, reason, unavailable=True))
@@ -364,7 +434,7 @@ class NativeDiplomatTasksSource(NativeTradeIncomeSource):
             before = self.context()
         except Exception:
             before = {}
-        before_reason = _context_failure(before)
+        before_reason = _context_failure(before, country=country)
         if before_reason is not None:
             provenance["context_guard"]["status"] = "unavailable"
             return result(before, self._failure_fields(requested, before_reason, unavailable=True))
@@ -387,7 +457,7 @@ class NativeDiplomatTasksSource(NativeTradeIncomeSource):
         report = None
         capture_error = None
         try:
-            report = capture(installation, country=_COUNTRY)
+            report = capture(installation, country=country)
         except Exception as exc:
             capture_error = "DIPLOMAT_TASKS_CAPTURE_FAILED:" + type(exc).__name__
 
@@ -395,7 +465,7 @@ class NativeDiplomatTasksSource(NativeTradeIncomeSource):
             after = self.context()
         except Exception:
             after = {}
-        after_reason = _context_failure(after)
+        after_reason = _context_failure(after, country=country)
         if (after_reason is not None or _identity(before) != _identity(after)
                 or not dates_match(before.get('game_date'), after.get('game_date'))):
             provenance["context_guard"]["status"] = "changed"
@@ -414,7 +484,7 @@ class NativeDiplomatTasksSource(NativeTradeIncomeSource):
             reason = "DIPLOMAT_TASKS_VALIDATOR_UNAVAILABLE"
         else:
             try:
-                valid = validator(report, before, creation_filetime, _COUNTRY)
+                valid = validator(report, before, creation_filetime, country)
             except Exception as exc:
                 valid = False
                 provenance["validator_error"] = type(exc).__name__

@@ -8,11 +8,13 @@ from .rival_observation import GAME_SHA256
 
 
 CAPABILITY = 'native_land_promise_observation'
+SCOPED_CAPABILITY = 'native_land_promise_configured_observers'
 EVENT_TYPE = 'land_promise_established'
 NATIVE_EVENT = 'native_land_promise_established'
 NATIVE_GAP = 'native_land_promise_capture_gap'
 DATE_SEMANTICS = 'native_promise_command_return_game_date'
 SCOPE = 'FRA_member_in_observed_promise_war'
+CONFIGURED_SCOPE = 'configured_observer_member_in_observed_promise_war'
 SOURCES = {
     'declare_war_return_promised_participant': 'declare_war',
     'call_action_return_new_promised_participant': 'call_to_arms',
@@ -41,12 +43,18 @@ def _reference_tag(value):
 
 
 def _valid_payload(payload, date):
-    return (isinstance(payload, dict) and set(payload) == _PAYLOAD_FIELDS
+    if not isinstance(payload, dict):
+        return False
+    scope = payload.get('scope')
+    expected = _PAYLOAD_FIELDS | {'observer'} if scope == CONFIGURED_SCOPE else _PAYLOAD_FIELDS
+    return (set(payload) == expected
+            and (scope == SCOPE or (scope == CONFIGURED_SCOPE and isinstance(payload['observer'], str)
+                                   and _TAG.fullmatch(payload['observer']) is not None))
             and all(isinstance(payload.get(key), str) and _TAG.fullmatch(payload[key]) is not None
                     for key in ('promisor', 'beneficiary'))
             and payload['promisor'] != payload['beneficiary']
             and isinstance(payload.get('war_id'), str) and _WAR_ID.fullmatch(payload['war_id']) is not None
-            and payload.get('action_id') in SOURCES.values() and payload.get('scope') == SCOPE
+            and payload.get('action_id') in SOURCES.values()
             and _integer(date, 1, 2**31 - 1))
 
 
@@ -75,15 +83,18 @@ def public_observation(event, session_id):
             or not isinstance(event, dict) or set(event) != _NATIVE_FIELDS
             or event.get('event') != NATIVE_EVENT or event.get('session_id') != session_id
             or not _integer(event.get('sequence'), 1, 2**63 - 1)
-            or type(event.get('wire')) is not int or event['wire'] != 1
+            or type(event.get('wire')) is not int or event['wire'] not in (1, 2)
             or not isinstance(event.get('source'), str) or event['source'] not in SOURCES):
         return None
     promisor = _reference_tag(event['promisor_ref'])
     beneficiary = _reference_tag(event['beneficiary_ref'])
-    if promisor is None or beneficiary is None or _reference_tag(event['observer_ref']) != 'FRA':
+    observer = _reference_tag(event['observer_ref'])
+    if promisor is None or beneficiary is None or observer is None or (event['wire'] == 1 and observer != 'FRA'):
         return None
     payload = {'promisor': promisor, 'beneficiary': beneficiary, 'war_id': event['war_id'],
                'action_id': SOURCES[event['source']], 'scope': SCOPE}
+    if event['wire'] == 2:
+        payload.update(observer=observer, scope=CONFIGURED_SCOPE)
     if not _valid_payload(payload, event['date_raw']):
         return None
     return {'event_id': event_id(session_id, event['sequence']), 'native_sequence': event['sequence'],
@@ -95,13 +106,16 @@ def valid_event_snapshot(event, context):
         return False
     session_id = context.get('session_id')
     payload, source = event.get('payload'), event.get('source')
+    if not _valid_payload(payload, event.get('game_date')):
+        return False
+    observer = payload.get('observer', 'FRA')
     if (not isinstance(session_id, str) or not session_id or len(session_id) > 256
-            or event.get('session_id') != session_id or event.get('observer') != 'FRA'
-            or context.get('observer') != 'FRA' or context.get('game_sha256') != GAME_SHA256
+            or event.get('session_id') != session_id or event.get('observer') != observer
+            or context.get('observer') != observer or context.get('game_sha256') != GAME_SHA256
             or event.get('event_type') != EVENT_TYPE or event.get('complete') is not True
-            or not _valid_payload(payload, event.get('game_date')) or event.get('objects') != objects(payload)
+            or event.get('objects') != objects(payload)
             or not isinstance(source, dict) or source.get('session_id') != session_id
-            or source.get('scope') != SCOPE or source.get('mode') != 'live' or source.get('complete') is not True
+            or source.get('scope') != payload['scope'] or source.get('mode') != 'live' or source.get('complete') is not True
             or source.get('date_semantics') != DATE_SEMANTICS
             or not _integer(source.get('native_sequence'), 1, 2**63 - 1)):
         return False
@@ -113,3 +127,11 @@ class Collector(NativeChangeCollector):
         super().__init__(session_id, native_event=NATIVE_EVENT, native_gap=NATIVE_GAP,
                          health_key='land_promise_source', prefix='LAND_PROMISE',
                          decoder=public_observation, max_events=MAX_EVENTS)
+
+    def observe(self, event, *, allow_scoped=False):
+        if (isinstance(event, dict) and event.get('event') == NATIVE_EVENT
+                and event.get('session_id') == self.session_id
+                and event.get('wire') != (2 if allow_scoped else 1)):
+            self.gaps.add(self.prefix + '_OBSERVATION_INVALID')
+            return
+        super().observe(event)

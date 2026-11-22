@@ -1,4 +1,4 @@
-"""Bounded read-only FRA governing-capacity cache projection."""
+"""Bounded read-only governing-capacity cache projection."""
 from __future__ import annotations
 
 from copy import deepcopy
@@ -67,7 +67,7 @@ def _set_derived(used_field: dict, limit_field: dict) -> tuple[dict, dict]:
     return fraction_field, _known_number("headroom", _values.headroom_signed(used, limit))
 
 
-def read_fields(reader, base, target_binding, fields=FIELDS, **_unused):
+def read_fields(reader, base, target_binding, fields=FIELDS, *, observer='FRA', **_unused):
     result = {}
     if not isinstance(fields, (tuple, list)) or len(fields) > 16:
         return {FIELD: {"status": "unknown", "reason": "FIELD_REQUEST_INVALID"}}
@@ -100,7 +100,7 @@ def read_fields(reader, base, target_binding, fields=FIELDS, **_unused):
 
     try:
         module, country, retained = _binding._parse_target(base, target_binding)
-        if retained.get("tag") != "FRA":
+        if retained.get("tag") != observer:
             raise ValueError("TARGET_COUNTRY_SCOPE")
         limiter = _binding._shared._BoundedReader(trace)
         raw["target_binding_revalidation"] = _binding._validate_target_binding(

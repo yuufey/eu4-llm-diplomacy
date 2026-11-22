@@ -10,9 +10,10 @@ from .province_discovery_bitmap_memory import read_discovery
 SCHEMA = 'information.province_discovery_memory.v2'
 
 
-def read_two_pass(reader, module_base, observer='FRA'):
+def read_two_pass(reader, module_base, observer='FRA', *, observer_scoped=False):
     result = _base._read_two_pass(reader, module_base, observer,
-        discovery_reader=read_discovery, candidate_bytes=32, use_observed_country_count=True)
+        discovery_reader=read_discovery, candidate_bytes=32, use_observed_country_count=True,
+        observer_scoped=observer_scoped)
     result['schema'] = SCHEMA
     result['scope']['bitmap_words_native_length_bounded'] = True
     if result['status'] == 'known':

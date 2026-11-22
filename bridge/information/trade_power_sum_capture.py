@@ -21,6 +21,32 @@ PROFILE_SHA256 = 'acc12445e59290b2335fb5d093811f7d467b08ceef6d9401aef53b32bb5b1b
 SCHEMA = 'information.trade_power_sum_capture.v1'
 EXE_SHA256 = _trade.EXPECTED_EXE_SHA256
 
+# The immutable profiles still identify the original native evidence.
+# Accept only reviewed source revisions that preserve those layout checks.
+_REVIEWED_DEPENDENCIES = {
+    'bridge/information/country_resources_memory.py': (
+        69202, '4d600f758b682e82a4f7e26c0230dfc17e3b90ac71076a0191da4f97f9bdb3e3'),
+    'bridge/information/trade_power_sum_memory.py': (
+        23044, 'dd897541d8c8dbb52ca2a2558a3ceb73f820a66f329e5f99c07ece77c0f237ad'),
+    'bridge/information/trade_income_memory.py': (
+        49815, '94620284bf2c35efde5499763972ee69bac62a16bfad3c7b179181e8ff818f5e'),
+    'bridge/information/trade_power_memory.py': (
+        30821, '351a17b82de397438bcf057da69d62884f19686ca5e937e4ee76c2b194266f07'),
+}
+
+
+def _check_dependency(root, entry, prefix, *, reviewed=None):
+    path = (root / entry['path']).resolve()
+    path.relative_to(root)
+    size = path.stat().st_size
+    if not 0 < size <= 10 * 1024 * 1024:
+        raise ValueError(prefix + '_DEPENDENCY_SIZE')
+    with path.open('rb') as stream:
+        actual = (size, hashlib.file_digest(stream, 'sha256').hexdigest())
+    reviewed = reviewed if reviewed is not None else _REVIEWED_DEPENDENCIES
+    if actual not in ((entry['bytes'], entry['sha256']), reviewed.get(entry['path'])):
+        raise ValueError(prefix + '_DEPENDENCY_PIN')
+
 
 def _digest(value):
     return hashlib.sha256(canonical(value).encode('utf-8')).hexdigest()
@@ -38,14 +64,7 @@ def _load_profile():
             or profile.get('executable', {}).get('sha256') != EXE_SHA256):
         raise ValueError('SUM_PROFILE_IDENTITY')
     for entry in profile['source_evidence'] + profile['layout_dependencies']:
-        path = (ROOT / entry['path']).resolve()
-        path.relative_to(ROOT)
-        if not 0 < path.stat().st_size <= 10 * 1024 * 1024:
-            raise ValueError('SUM_DEPENDENCY_SIZE')
-        with path.open('rb') as stream:
-            digest = hashlib.file_digest(stream, 'sha256').hexdigest()
-        if digest != entry['sha256'] or path.stat().st_size != entry['bytes']:
-            raise ValueError('SUM_DEPENDENCY_PIN')
+        _check_dependency(ROOT, entry, 'SUM')
     if profile['layout'] != {
             'world_global_rva': '0x233fe58', 'members_pointer_offset': '0x1d08',
             'member_count_offset': '0x1d14', 'country_fullref_offset': '0x20',

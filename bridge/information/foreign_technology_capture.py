@@ -1,7 +1,7 @@
 """Own one read-only, identity-bound foreign-technology observation.
 
-The country-view condition is projected to the logical FRA observer. It does
-not require FRA to be the physical client country and never opens a UI. The
+The country-view condition uses the bound logical observer. The capture
+never changes the physical client country or opens a UI. The
 pure backend keeps its own visibility unknown; this parent adds the pinned
 predicate, ROM guards, process/session/date binding and trace replay contract.
 """
@@ -9,6 +9,7 @@ from __future__ import annotations
 
 from copy import deepcopy
 from datetime import datetime, timezone
+from functools import partial
 import hashlib
 import json
 from pathlib import Path
@@ -158,12 +159,13 @@ def _guards(reader,module_base,profile,verifier=None):
     return records
 
 
-def _observe(reader,module_base,country,profile,*,backend_reader=None,guard_verifier=None):
+def _observe(reader,module_base,country,profile,*,backend_reader=None,guard_verifier=None,
+             observer='FRA'):
     before_guard=_guards(reader,module_base,profile,guard_verifier)
     before_context=_context(reader,module_base)
     if backend_reader is None:
-        backend=_backend.read_two_pass(reader,module_base,'FRA',[country],
-            admission_reader=_bound_admission)
+        backend=_backend.read_two_pass(reader,module_base,observer,[country],
+            admission_reader=_bound_admission, observer_scoped=True)
     else:
         backend=backend_reader(reader,module_base,country)
     after_context=_context(reader,module_base)
@@ -213,7 +215,7 @@ def _bound_admission(read,module_base,bindings,observer,target):
 
 
 def _capture_common(installation, country, *, observer, schema, profile_sha256,
-                    load_profile, observe, allow_observer_target=False):
+                    load_profile, observe, allow_observer_target=False, observer_scoped=False):
     """Own the shared identity, read-only handle, ROM and trace lifecycle."""
     report={'schema':schema,'status':'unknown','completed':False,
         'request':{'country':country,'observer':observer,'installation':str(installation)},
@@ -224,7 +226,9 @@ def _capture_common(installation, country, *, observer, schema, profile_sha256,
                   'date_advance':False,'save_or_reload':False,'limit_bytes':MAX_READ_BYTES}}
     kernel=handle=reader=None
     try:
-        if (observer!='FRA' or not isinstance(country,str) or not _TAG.fullmatch(country)
+        if (not isinstance(observer,str) or not _TAG.fullmatch(observer)
+                or (not observer_scoped and observer!='FRA')
+                or not isinstance(country,str) or not _TAG.fullmatch(country)
                 or (country==observer and not allow_observer_target)):
             raise ValueError('FOREIGN_TECH_REQUEST_SCOPE')
         profile=load_profile()
@@ -269,7 +273,7 @@ def _capture_common(installation, country, *, observer, schema, profile_sha256,
 def capture(installation:Path, country:str, *, observer:str='FRA')->dict:
     return _capture_common(installation,country,observer=observer,
         schema='information.foreign_technology_capture.v1',profile_sha256=PROFILE_SHA256,
-        load_profile=_load_profile,observe=_observe)
+        load_profile=_load_profile,observe=partial(_observe, observer=observer), observer_scoped=True)
 
 
 class _Replay:
@@ -299,7 +303,8 @@ class _Replay:
 
 
 def _validate_capture_common(report,context,creation,country,*,schema,profile_sha256,
-                             load_profile,observe,allow_observer_target=False,require_access=False):
+                             load_profile,observe,allow_observer_target=False,require_access=False,
+                             observer_scoped=False):
     """Recompute every observation from its ordered raw trace; never attach."""
     try:
         if (not isinstance(report,dict) or report.get('schema')!=schema
@@ -324,9 +329,12 @@ def _validate_capture_common(report,context,creation,country,*,schema,profile_sh
                     or not 0<access['bytes_requested']<=MAX_READ_BYTES):
                 return False
         request=report['request'];identity=report['identity']
-        if (request['country']!=country or request['observer']!='FRA' or context.get('observer')!='FRA'
+        observer=context.get('observer')
+        if (request['country']!=country or request['observer']!=observer
+                or not isinstance(observer,str) or not _TAG.fullmatch(observer)
+                or (not observer_scoped and observer!='FRA')
                 or not isinstance(country,str) or not _TAG.fullmatch(country)
-                or (country=='FRA' and not allow_observer_target)
+                or (country==observer and not allow_observer_target)
                 or request['session_id']!=context.get('session_id')
                 or int(request['creation_filetime'])!=int(creation)
                 or identity.get('binding_verified') is not True
@@ -348,10 +356,13 @@ def _validate_capture_common(report,context,creation,country,*,schema,profile_sh
 
 
 def validate_capture(report:Any,context:Mapping[str,Any],creation:int,country:str)->bool:
-    """Recompute the legacy F02 observation without changing its packet shape."""
+    """Recompute the F02 observation from the configured observer's trace."""
+    if not isinstance(context,Mapping):
+        return False
     return _validate_capture_common(report,context,creation,country,
         schema='information.foreign_technology_capture.v1',profile_sha256=PROFILE_SHA256,
-        load_profile=_load_profile,observe=_observe)
+        load_profile=_load_profile,observe=partial(_observe, observer=context.get('observer')),
+        observer_scoped=True)
 
 
 __all__=['capture','validate_capture']

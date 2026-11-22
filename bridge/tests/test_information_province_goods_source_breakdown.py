@@ -49,7 +49,7 @@ def _report(*, province_id=PROVINCE_ID, value=None, field_status="known",
     gate = {
         "status": "known",
         "admitted": True,
-        "observer_nonplayer_role": {"observer": "FRA", "verified": True},
+        "observer_nonplayer_role": {"observer": observer, "verified": True},
     }
     discovery = {"status": "known", "value": True}
     field = {
@@ -90,7 +90,7 @@ def _report(*, province_id=PROVINCE_ID, value=None, field_status="known",
                 "backend": {
                     "status": "observed",
                     "consistency": {"status": "stable"},
-                    "observer": {"tag": "FRA"},
+                    "observer": {"tag": observer},
                     "targets": [target],
                 },
             },
@@ -208,7 +208,7 @@ def test_province_catalog_scope_is_explicit_and_preserves_field_set():
     assert breakdown["scope_by_object_type"] == {
         "country": "country_scope", "province": "visible_scope",
     }
-    assert "不按省份所有者过滤" in breakdown["scope_note"]
+    assert "已发现的外国省份也适用" in breakdown["scope_note"]
     assert MODIFIER_KEY in breakdown["supported_attributes"]
     assert "province_id" not in topic["parameters"]["properties"]
 
@@ -228,8 +228,8 @@ def test_unconfigured_or_invalid_province_selector_is_rejected():
             source.validate_query(_query(province_id=bad_id))
     with pytest.raises(InformationError, match="no extra parameters"):
         provider.validate_query(_query(parameters={"modifier_key": MODIFIER_KEY}))
-    with pytest.raises(InformationError, match="logical FRA"):
-        provider.validate_query(_query(), {**_context(), "observer": "POR"})
+    result = provider.read(_query(), {**_context(), "observer": "POR"})
+    assert result["fields"]["source_breakdown"]["reason"] == "PROVINCE_GOODS_SOURCES_CONTEXT_STALE"
 
 
 @pytest.mark.parametrize(("change", "expected"), [

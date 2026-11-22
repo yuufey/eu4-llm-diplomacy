@@ -138,13 +138,13 @@ def test_catalog_declares_only_two_partial_relation_fields(tmp_path):
 
     assert topic["topic_id"] == "N05"
     assert set(topic["fields"]) == {"relations_count", "relations_limit"}
+    assert topic["observer_scope"] == []
     for field in topic["fields"].values():
         assert field["coverage"] == "partial"
         assert field["complete"] is False
         assert field["unit"] == "diplomatic_relation"
         assert field["scale"] == 1
         assert field["period"] == "current"
-        assert field["supported_countries"] == ["FRA"]
         assert field["supported_object_types"] == ["country"]
     assert topic["triggers"] == ["query", "periodic"]
     assert topic["parameters"]["additionalProperties"] is False

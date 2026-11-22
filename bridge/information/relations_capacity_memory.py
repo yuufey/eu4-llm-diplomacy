@@ -143,7 +143,8 @@ def _field_request(fields: Any) -> tuple[dict[str, dict[str, Any]], list[str]]:
 
 
 def read_fields(reader: Any, base: int, target_binding: Any,
-                fields: tuple[str, ...] | list[str]) -> dict[str, dict[str, Any]]:
+                fields: tuple[str, ...] | list[str], *,
+                observer: str = OBSERVER) -> dict[str, dict[str, Any]]:
     """Read the requested FRA relation count/limit from bounded native caches.
 
     Modifier 159 is copied with the exact dense/sparse and processor checks used
@@ -171,7 +172,7 @@ def read_fields(reader: Any, base: int, target_binding: Any,
                 result[field] = _unknown(reason, raw)
         return result
 
-    if retained.get("tag") != OBSERVER:
+    if retained.get("tag") != observer:
         raw = _common_raw(base, retained, None, trace)
         raw["error"] = "TARGET_COUNTRY_SCOPE"
         for field in supported:

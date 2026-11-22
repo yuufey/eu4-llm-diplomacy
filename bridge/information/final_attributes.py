@@ -286,14 +286,14 @@ class NativeFinalAttributesSource:
             object_types.append('province')
             breakdown_object_types.append('province')
         topic.update(status='available', source=type(self).__name__,
-            object_types=object_types, observer_scope=['FRA'], observer_roles=['country'],
+            object_types=object_types, observer_scope=[], observer_roles=['country'],
             supported_versions=['1.37.4'], visibility='country_scope', context_scope='country_scope',
             triggers=['query', 'periodic', 'change'],
             change_detection='sampled_state_comparison_not_lossless_events')
         topic['fields'] = {'final_value': {
             'coverage': 'partial', 'source': type(self).__name__, 'complete': False,
             'unit': 'attribute_map', 'scale': 1, 'period': 'current',
-            'supported_object_types': ['country'], 'supported_countries': ['FRA'],
+            'supported_object_types': ['country'],
             'supported_attributes': ['discipline', 'morale.army', 'morale.navy'],
             'basis': 'existing_N03_verified_final_discipline_and_country_morale_caches',
             'description': '当前纪律计算值与陆海军国家士气缓存；各属性保留原单位、精度与缺项。',
@@ -308,7 +308,7 @@ class NativeFinalAttributesSource:
         topic['fields']['source_breakdown'] = {
             'coverage': 'partial', 'source': type(self).__name__, 'complete': False,
             'unit': 'attribute_breakdown_map', 'scale': 1, 'period': 'current',
-            'supported_object_types': breakdown_object_types, 'supported_countries': ['FRA'],
+            'supported_object_types': breakdown_object_types,
             'supported_attributes': ['discipline'],
             'basis': 'existing_N03_validated_discipline_calculation_observation',
             'description': '纪律基础值、聚合修正、已验证处理器贡献及下限钳制；尚未映射到单个修正实例。',
@@ -320,17 +320,13 @@ class NativeFinalAttributesSource:
                 visibility='adapter_managed',
                 context_scope='adapter_managed',
                 scope_note=(
-                    'N09国家属性只适用于逻辑FRA国家对象；省份source_breakdown使用逻辑FRA的准入与发现校验，'
-                    '不要求省份由FRA持有。'
+                    'N09 国家属性针对当前观察国。省份来源分解要求该国通过准入并已发现所查省份。'
                 ),
             )
             topic['fields']['final_value'].update(
                 visibility='country_scope', context_scope='country_scope',
             )
             breakdown = topic['fields']['source_breakdown']
-            breakdown.pop('supported_countries', None)
-            breakdown['supported_observers'] = ['FRA']
-            breakdown['supported_country_tags_by_object_type'] = {'country': ['FRA']}
             breakdown['supported_attributes'].append(_PROVINCE_GOODS_MODIFIER_KEY)
             breakdown.update(
                 visibility='adapter_managed', context_scope='adapter_managed',
@@ -339,8 +335,7 @@ class NativeFinalAttributesSource:
                     'province': 'visible_scope',
                 },
                 scope_note=(
-                    'country分支限逻辑FRA；province分支要求逻辑FRA的非玩家准入与省份发现，'
-                    '不按省份所有者过滤。'
+                    '国家分支读取观察国本国数据。省份分支按观察国准入与省份发现位校验，已发现的外国省份也适用。'
                 ),
             )
             breakdown['basis_by_object_type'] = {
@@ -369,7 +364,7 @@ class NativeFinalAttributesSource:
             topic['fields']['modifier_effects'] = {
                 'coverage': 'partial', 'source': type(self).__name__, 'complete': False,
                 'unit': 'modifier_effect_records', 'scale': 1, 'period': 'current',
-                'supported_object_types': ['country'], 'supported_countries': ['FRA'],
+                'supported_object_types': ['country'],
                 'visibility': 'country_scope', 'context_scope': 'country_scope',
                 'basis': 'native_direct_country_modifier_records',
                 'value_origin': 'copied_native_country_records',
@@ -390,16 +385,15 @@ class NativeFinalAttributesSource:
             raise InformationError('unsupported_topic', 'Final attributes source supports N09')
         obj = normalized['object']
         if obj.get('type') == 'country':
-            if obj.get('country') != 'FRA':
-                raise InformationError('observer_scope_mismatch', 'N09 requires the logical FRA observer')
+            observer = context.get('observer') if context else None
+            if observer is not None and obj.get('country') != observer:
+                raise InformationError('observer_scope_mismatch', 'N09 country view requires the configured observer')
         elif obj.get('type') == 'province':
             if self.province_breakdown_source is None:
                 raise InformationError('invalid_object', 'N09 province breakdown source is not configured')
             if (set(obj) != {'type', 'province_id'} or type(obj.get('province_id')) is not int
                     or not 1 <= obj['province_id'] <= 0xFFFF):
                 raise InformationError('invalid_object', 'N09 province_id must be a positive bounded integer')
-            if context is not None and context.get('observer') not in (None, 'FRA'):
-                raise InformationError('observer_scope_mismatch', 'N09 province breakdown is verified for logical FRA')
         else:
             raise InformationError('invalid_object', 'N09 requires a country or supported province')
         if normalized['parameters']:
@@ -516,6 +510,7 @@ class NativeFinalAttributesSource:
             before = self.context()
         except Exception:
             before = {}
+        self.validate_query(query, before)
         fields = {name: {'status': 'unsupported', 'reason': 'N09_FIELD_NOT_IMPLEMENTED'}
                   for name in query['fields']}
         final_selected = [name for name in query['fields']

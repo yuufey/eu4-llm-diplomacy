@@ -111,13 +111,17 @@ static void finish(Pending& pending) noexcept {
     value.date = date;
     value.actor_side = peace_war_side_for_handle(side_a, side_b, value.actor);
     value.recipient_side = peace_war_side_for_handle(side_a, side_b, value.recipient);
+    uint64_t observers[32]{};
+    unsigned observer_count=0;
     for (const auto* side : {&side_a, &side_b}) {
         for (unsigned index = 0; index < side->count; ++index) {
-            if ((side->handles[index] & 0xffffffu) == 0x415246u) value.observer = side->handles[index];
+            const auto handle=side->handles[index];
+            if (!observation_information_country_handle(handle)) continue;
+            if (observer_count==32) { note_drop(); return; }
+            observers[observer_count++]=handle;
         }
     }
-    if (!value.observer) return;
-    value.observer_side = peace_war_side_for_handle(side_a, side_b, value.observer);
+    if (!observer_count) return;
     if (!peace_war_participants_json(side_a, side_b, value.actor, value.recipient,
         nullptr, value.participants, sizeof(value.participants))) { note_drop(); return; }
     const auto war = peace_query_register_war(difference.reference);
@@ -130,10 +134,14 @@ static void finish(Pending& pending) noexcept {
     if (announcement==information::war_registry::Announcement::stale) { note_drop(); return; }
     if (announcement==information::war_registry::Announcement::duplicate) return;
     memcpy(value.war_id, war->public_id, sizeof(value.war_id));
-    Event event{value, static_cast<uint64_t>(InterlockedIncrement64(&sequence))};
     if (!TryAcquireSRWLockExclusive(&queue_lock)) { note_drop(); return; }
-    if (size < kCapacity) { events[(head + size) % kCapacity] = event; ++size; }
-    else note_drop();
+    for (unsigned index=0;index<observer_count;++index) {
+        value.observer=observers[index];
+        value.observer_side=peace_war_side_for_handle(side_a, side_b, value.observer);
+        Event event{value, static_cast<uint64_t>(InterlockedIncrement64(&sequence))};
+        if (size < kCapacity) { events[(head + size) % kCapacity] = event; ++size; }
+        else note_drop();
+    }
     ReleaseSRWLockExclusive(&queue_lock);
 }
 
@@ -162,19 +170,25 @@ static void flush() noexcept {
         event = events[head];
         ReleaseSRWLockExclusive(&queue_lock);
         const auto& value = event.value;
-        char actor[4]{}, recipient[4]{};
+        char actor[4]{}, recipient[4]{}, observer[4]{};
         tag(value.actor, actor);
         tag(value.recipient, recipient);
+        tag(value.observer, observer);
+#ifdef BRIDGE_NATIVE_COUNTRY_CONTROL
+        constexpr unsigned schema=2;
+#else
+        constexpr unsigned schema=1;
+#endif
         char message[8192]{};
         const int bytes = snprintf(message, sizeof(message),
-            "{\"event\":\"native_war_declared\",\"schema_version\":1,\"session_id\":\"%lu-%llx\","
-            "\"sequence\":%llu,\"country\":\"FRA\",\"actor\":\"%s\",\"recipient\":\"%s\","
+            "{\"event\":\"native_war_declared\",\"schema_version\":%u,\"session_id\":\"%lu-%llx\","
+            "\"sequence\":%llu,\"country\":\"%.3s\",\"actor\":\"%s\",\"recipient\":\"%s\","
             "\"actor_fullref\":\"0x%llx\",\"recipient_fullref\":\"0x%llx\",\"observer_fullref\":\"0x%llx\","
             "\"war_id\":\"%s\",\"date_raw\":%d,\"actor_side\":%u,\"recipient_side\":%u,\"observer_side\":%u,"
             "\"participants\":%s,"
             "\"source\":\"declare_war_command_return_new_pair_reference\",\"complete\":true}\n",
-            static_cast<unsigned long>(GetCurrentProcessId()), static_cast<unsigned long long>(observation_creation),
-            static_cast<unsigned long long>(event.sequence), actor, recipient,
+            schema,static_cast<unsigned long>(GetCurrentProcessId()), static_cast<unsigned long long>(observation_creation),
+            static_cast<unsigned long long>(event.sequence), observer, actor, recipient,
             static_cast<unsigned long long>(value.actor), static_cast<unsigned long long>(value.recipient),
             static_cast<unsigned long long>(value.observer), value.war_id, value.date,
             value.actor_side, value.recipient_side, value.observer_side, value.participants);

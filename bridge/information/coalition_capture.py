@@ -1,5 +1,6 @@
 """Identity-bound, two-pass current coalition capture using shared RPM."""
 from copy import deepcopy
+from functools import partial
 import hashlib
 import json
 from pathlib import Path
@@ -29,7 +30,7 @@ def _load_profile():
     return profile
 
 
-def _observe(reader, base, country, profile):
+def _observe(reader, base, country, profile, *, observer="FRA"):
     current = {}
 
     def admission(read, module_base, scan, observer, target):
@@ -42,17 +43,17 @@ def _observe(reader, base, country, profile):
 
         def admit(member):
             tag = member["tag"]
-            if tag in ("FRA", current["target"]):
+            if tag in (observer, current["target"]):
                 return current["gate"].get("admitted") is True
             selected = dict(scan, requested={**scan["requested"], tag: member})
-            gate = _owner._bound_admission(limited.read, module_base, selected, "FRA", tag)
+            gate = _owner._bound_admission(limited.read, module_base, selected, observer, tag)
             return gate.get("status") == "known" and gate.get("admitted") is True
 
         return _leaf.read_fields(limited, module_base, binding, requested,
                                  country_scan=scan, admit_country=admit)
 
     def backend(read, module_base, target):
-        return _backend.read_two_pass(read, module_base, "FRA", [target], _leaf.FIELDS,
+        return _backend.read_two_pass(read, module_base, observer, [target], _leaf.FIELDS,
                                       read_fields=fields, admission_reader=admission)
 
     return _owner._observe(reader, base, country, profile, backend_reader=backend)
@@ -62,11 +63,12 @@ def capture(installation, country, *, observer="FRA"):
     return _owner._capture_common(
         installation, country, observer=observer, schema=SCHEMA,
         profile_sha256=PROFILE_SHA256, load_profile=_load_profile,
-        observe=_observe, allow_observer_target=True)
+        observe=partial(_observe, observer=observer), allow_observer_target=True, observer_scoped=True)
 
 
 def validate_capture(report, context, creation, country):
     return _owner._validate_capture_common(
         report, context, creation, country, schema=SCHEMA,
         profile_sha256=PROFILE_SHA256, load_profile=_load_profile,
-        observe=_observe, allow_observer_target=True, require_access=True)
+        observe=partial(_observe, observer=context.get("observer")), allow_observer_target=True,
+        require_access=True, observer_scoped=True)

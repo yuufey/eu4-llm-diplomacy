@@ -49,15 +49,18 @@ def query(fields=('final_value',), country='FRA'):
             'fields': list(fields), 'parameters': {}}
 
 
-def test_values_keep_independent_units_and_partial_coverage():
+@pytest.mark.parametrize('observer', ('FRA', 'TUR'))
+def test_values_keep_independent_units_and_partial_coverage(observer):
     upstream = Upstream()
-    result = NativeFinalAttributesSource(upstream).read(query())
+    upstream.ctx['observer'] = observer
+    result = NativeFinalAttributesSource(upstream).read(query(country=observer))
     field = result['fields']['final_value']
     assert field['status'] == 'known' and field['complete'] is False
     assert field['value']['discipline'] == upstream.fields['discipline']
     assert field['value']['morale']['value'] == {'army': 3150, 'navy': 2400}
     assert result['source']['provenance']['capture_report_sha256'] == upstream.hash
     assert upstream.calls[0]['fields'] == ['discipline', 'morale']
+    assert upstream.calls[0]['object']['country'] == observer
 
 
 def test_unknown_attribute_does_not_withdraw_known_sibling():
@@ -101,7 +104,7 @@ def test_unsupported_fields_and_foreign_scope_do_not_read():
     source = NativeFinalAttributesSource(upstream)
     result = source.read(query(('modifier_effects', 'effective_status')))
     assert all(f['status'] == 'unsupported' for f in result['fields'].values())
-    with pytest.raises(InformationError, match='logical FRA'):
+    with pytest.raises(InformationError, match='configured observer'):
         source.read(query(country='POR'))
     assert upstream.calls == []
 
@@ -116,4 +119,4 @@ def test_missing_values_preserve_unknown_states_and_catalogue_scope():
     assert field['attributes']['morale']['reason'] == 'cache_missing'
     catalogue = source.catalog()[0]
     assert catalogue['fields']['final_value']['coverage'] == 'partial'
-    assert catalogue['observer_scope'] == ['FRA']
+    assert catalogue['observer_scope'] == []

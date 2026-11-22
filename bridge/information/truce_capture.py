@@ -7,6 +7,7 @@ and is not performed while reading the process.
 from __future__ import annotations
 
 from copy import deepcopy
+from functools import partial
 import hashlib
 import json
 from pathlib import Path
@@ -167,10 +168,12 @@ def _address(value: Any, reason: str) -> int:
     return _owner._pointer(value)
 
 
-def read_inputs(read: Any, base: int, bindings: Mapping[str, Any], target: str) -> dict[str, Any]:
-    """Read both FRA↔target rows without projecting a date."""
+def read_inputs(read: Any, base: int, bindings: Mapping[str, Any], target: str,
+                *, observer: str = OBSERVER) -> dict[str, Any]:
+    """Read both observed country-pair rows without projecting a date."""
     if (not isinstance(target, str) or _TAG.fullmatch(target) is None
-            or target == OBSERVER or not isinstance(bindings, Mapping)):
+            or not isinstance(observer, str) or _TAG.fullmatch(observer) is None
+            or target == observer or not isinstance(bindings, Mapping)):
         raise ValueError("TRUCE_DATE_PAIR_SCOPE")
 
     def raw(address: int, size: int, label: str) -> bytes:
@@ -191,7 +194,7 @@ def read_inputs(read: Any, base: int, bindings: Mapping[str, Any], target: str) 
         })
 
     records = []
-    for actor, recipient in ((OBSERVER, target), (target, OBSERVER)):
+    for actor, recipient in ((observer, target), (target, observer)):
         actor_binding = bindings.get(actor)
         recipient_binding = bindings.get(recipient)
         if not isinstance(actor_binding, Mapping) or not isinstance(recipient_binding, Mapping):
@@ -245,10 +248,10 @@ def _admission(read: Any, base: int, bindings: Mapping[str, Any],
     return result
 
 
-def _observe(reader: Any, base: int, country: str,
-             profile: Mapping[str, Any]) -> dict[str, Any]:
+def _observe(reader: Any, base: int, country: str, profile: Mapping[str, Any],
+             *, observer: str = OBSERVER) -> dict[str, Any]:
     if (not isinstance(country, str) or _TAG.fullmatch(country) is None
-            or country == OBSERVER):
+            or country == observer):
         raise ValueError("TRUCE_DATE_PAIR_SCOPE")
     state: dict[str, Any] = {}
 
@@ -269,10 +272,10 @@ def _observe(reader: Any, base: int, country: str,
             if (not isinstance(bindings, Mapping)
                     or target_binding != bindings.get(target)):
                 raise ValueError("TRUCE_DATE_TARGET_BINDING")
-            return {FIELD: read_inputs(limiter.read, current_base, bindings, target)}
+            return {FIELD: read_inputs(limiter.read, current_base, bindings, target, observer=observer)}
 
         return _backend.read_two_pass(
-            read, module_base, OBSERVER, [target], FIELDS,
+            read, module_base, observer, [target], FIELDS,
             read_fields=fields, admission_reader=admission,
         )
 
@@ -282,7 +285,8 @@ def _observe(reader: Any, base: int, country: str,
 def capture(installation: Path, country: str, *, observer: str = OBSERVER) -> dict[str, Any]:
     return _owner._capture_common(
         installation, country, observer=observer, schema=SCHEMA,
-        profile_sha256=PROFILE_SHA256, load_profile=_load_profile, observe=_observe,
+        profile_sha256=PROFILE_SHA256, load_profile=_load_profile,
+        observe=partial(_observe, observer=observer), observer_scoped=True,
     )
 
 
@@ -290,8 +294,9 @@ def validate_capture(report: Any, context: Mapping[str, Any],
                      creation: int, country: str) -> bool:
     return _owner._validate_capture_common(
         report, context, creation, country, schema=SCHEMA,
-        profile_sha256=PROFILE_SHA256, load_profile=_load_profile, observe=_observe,
-        require_access=True,
+        profile_sha256=PROFILE_SHA256, load_profile=_load_profile,
+        observe=partial(_observe, observer=context.get('observer')),
+        require_access=True, observer_scoped=True,
     )
 
 

@@ -90,7 +90,7 @@ def test_catalog_validation_scope_and_pure_empty_parameters():
     assert list(topic["fields"]) == [FIELD]
     assert topic["fields"][FIELD]["coverage"] == "partial"
     assert topic["fields"][FIELD]["complete"] is False
-    assert topic["observer_scope"] == ["FRA"]
+    assert topic["observer_scope"] == []
     assert topic["triggers"] == ["query", "periodic", "change"]
     assert topic["change_detection"] == "sampled_state_comparison_not_lossless_events"
     assert source.validate_query(_query())["parameters"] == {}
@@ -100,30 +100,39 @@ def test_catalog_validation_scope_and_pure_empty_parameters():
         source.validate_query(_query(parameters={"force": True}))
     assert nonempty.value.code == "invalid_parameters"
     with pytest.raises(InformationError) as foreign:
-        source.validate_query(_query(country="ENG"))
+        source.validate_query(_query(country="ENG"), _context())
     assert foreign.value.code == "observer_scope_mismatch"
 
 
-def test_validated_native_capture_projects_known_inactive_predicate():
-    report, fixture, _before_reader, _after_reader = _build_archived_capture("FRA")
+@pytest.mark.parametrize("observer", ["FRA", "HSA"])
+def test_validated_native_capture_projects_trade_league_for_selected_country(observer):
+    report, fixture, _before_reader, _after_reader = _build_archived_capture(observer)
     identity = fixture["identity"]
     creation = identity["creation_filetime"]
     context = _context(
-        session_id=identity["session_id"],
+        observer=observer, session_id=identity["session_id"],
         process_creation_filetime=creation,
         game_date=identity["game_date"], game_date_raw=identity["game_date"],
     )
     context["game_sha256"] = subject_relations._GAME_SHA256
-    assert trade_league_memory.validate_capture(report, context, creation, "FRA", None)
+    assert trade_league_memory.validate_capture(report, context, creation, observer, None)
     relation, source, capture_calls = _native_source(report, context, creation)
     assert source.relation_source is relation
 
-    result = source.read(_query(), context)
+    result = source.read(_query(country=observer), context)
 
     value = result["fields"][FIELD]["value"]
     assert result["fields"][FIELD]["status"] == "known"
-    assert value == {"country": "FRA", "active": False, "leader": None, "members": []}
-    assert capture_calls == [("FRA", None)]
+    record = report["before"]["actor_record"]
+    assert value == {"country": observer, "active": record["predicate"],
+                     "leader": record["league_leader"],
+                     "members": [member["country"] for member in record["members"]]}
+    assert capture_calls == [(observer, None)]
+    wrong_country = "HSA" if observer == "FRA" else "FRA"
+    with pytest.raises(InformationError) as cross_observer:
+        source.read(_query(country=wrong_country))
+    assert cross_observer.value.code == "observer_scope_mismatch"
+    assert capture_calls == [(observer, None)]
     assert "league_object_pointer" not in str(result)
     assert "fullref_hex" not in str(result)
 

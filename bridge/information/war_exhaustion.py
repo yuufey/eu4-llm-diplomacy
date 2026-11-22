@@ -13,6 +13,7 @@ from .sources import _result, _source_info
 
 FIELD = 'war_exhaustion'
 _SHA = re.compile(r'[0-9a-f]{64}\Z')
+_TAG = re.compile(r'[A-Z0-9]{3}\Z')
 _HEX = re.compile(r'[0-9a-fA-F]{8}\Z')
 _STATES = {'unknown', 'unavailable', 'invisible', 'not_applicable', 'stale', 'unsupported'}
 
@@ -37,14 +38,14 @@ class NativeWarExhaustionSource:
         topic = get_topic('W04')
         topic.update(source=type(self).__name__, status='available',
                      supported_versions=['1.37.4'], context_scope='country_scope',
-                     visibility='country_scope', observer_roles=['country'], observer_scope=['FRA'],
+                     visibility='country_scope', observer_roles=['country'], observer_scope=[],
                      triggers=['query', 'periodic', 'change'],
                      change_detection='sampled_state_comparison_not_lossless_events',
                      object_semantics='country_wide_value_independent_of_individual_war')
         topic['fields'] = {FIELD: {
             'coverage': 'partial', 'source': type(self).__name__, 'complete': False,
             'unit': 'war_exhaustion', 'scale': 1000, 'period': 'current',
-            'supported_object_types': ['country'], 'supported_countries': ['FRA'],
+            'supported_object_types': ['country'],
             'basis': 'verified_N04_current_country_war_exhaustion',
             'value_origin': 'delegated_native_domestic_pressure_field',
             'description': '观察国当前厌战值，复用N04同一读器；不是单场战争贡献或退出风险。',
@@ -59,7 +60,6 @@ class NativeWarExhaustionSource:
                          basis='existing_N04_and_F04_current_country_war_exhaustion',
                          description='所选国家或战争双方参战国的当前国家厌战值，范围0到20',
                          gaps=[])
-            field.pop('supported_countries', None)
             topic['object_semantics'] = 'current_national_values_grouped_by_selected_war_side'
         return [topic]
 
@@ -74,10 +74,11 @@ class NativeWarExhaustionSource:
         normalized = validate_query(query, context)
         if normalized['topic'] != 'W04':
             raise InformationError('unsupported_topic', 'War exhaustion source supports W04 only')
+        observer = context.get('observer') if context is not None else None
         if normalized['object']['type'] == 'country':
             # Validation does not acquire the capture, including for a query
             # containing only planned W04 fields.
-            if (normalized['object']['country'] == 'FRA'
+            if (normalized['object']['country'] == observer
                     or self.foreign_pressure_source is None):
                 self.domestic_pressure_source.validate_query(self._mapped(normalized), context)
             else:
@@ -85,8 +86,12 @@ class NativeWarExhaustionSource:
                 self.foreign_pressure_source.validate_query(mapped, context)
         elif self.base_source is not None:
             obj = normalized['object']
-            if obj.get('actor') != 'FRA' or obj.get('recipient') == 'FRA':
-                raise InformationError('invalid_object', 'W04 war requires FRA and an opposing country')
+            actor, opponent = obj.get('actor'), obj.get('recipient')
+            if (not isinstance(actor, str) or not _TAG.fullmatch(actor)
+                    or not isinstance(opponent, str) or not _TAG.fullmatch(opponent) or actor == opponent):
+                raise InformationError('invalid_object', 'W04 war requires the observer and an opposing country')
+            if observer is not None and actor != observer:
+                raise InformationError('observer_scope_mismatch', 'W04 war actor must be the configured observer country')
         return normalized
 
     def _foreign_country(self, query, context):
@@ -117,6 +122,9 @@ class NativeWarExhaustionSource:
             if identity.get('status') != 'known' or participants.get('status') != 'known':
                 field = identity if identity.get('status') != 'known' else participants
                 return deepcopy(field), objects
+            requested = query['object'].get('war_id')
+            if requested is not None and identity.get('value') != requested:
+                raise ValueError('WAR_DISCOVERY_ID_MISMATCH')
             members = project_war_participants(
                 participants['value'], query['object']['actor'], query['object']['recipient'])
             if members is None or members['status'] != 'available':
@@ -128,7 +136,8 @@ class NativeWarExhaustionSource:
                  'opposing_side': members[members['recipient_side']]}
         countries = list(dict.fromkeys(country for side in sides.values() for country in side))
         batch_reader = getattr(self.foreign_pressure_source, 'read_war_exhaustion_batch', None)
-        foreign = [country for country in countries if country != 'FRA']
+        observer = context.get('observer')
+        foreign = [country for country in countries if country != observer]
         foreign_values = None
         if callable(batch_reader):
             try:
@@ -139,7 +148,7 @@ class NativeWarExhaustionSource:
         for side, countries in sides.items():
             values[side] = {}
             for country in countries:
-                if country != 'FRA' and foreign_values is not None:
+                if country != observer and foreign_values is not None:
                     try:
                         field = self._project(foreign_values[country])
                         if field['status'] == 'known':
@@ -179,8 +188,8 @@ class NativeWarExhaustionSource:
                 'unit': 'war_exhaustion', 'scale': 1000, 'period': 'current', 'complete': True}
 
     def read(self, query, context=None):
-        query = self.validate_query(query, context)
         before = self.context()
+        query = self.validate_query(query, before if context is None else context)
         objects = [deepcopy(query['object'])]
         fields = {name: {'status': 'unsupported', 'reason': 'W04_FIELD_NOT_IMPLEMENTED'}
                   for name in query['fields']}
@@ -198,7 +207,7 @@ class NativeWarExhaustionSource:
             elif query['object']['type'] != 'country':
                 fields[FIELD] = {'status': 'unsupported',
                                  'reason': 'WAR_PARTICIPANT_WAR_EXHAUSTION_NOT_IMPLEMENTED'}
-            elif query['object']['country'] != 'FRA':
+            elif query['object']['country'] != before.get('observer'):
                 fields[FIELD] = self._foreign_country(query, before)
                 provenance.update(delegated_topic='F04', shared_reader='NativeForeignPressureSource')
             else:

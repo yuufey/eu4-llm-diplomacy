@@ -76,12 +76,13 @@ def _payer_eligible(reader, payer):
 
 
 def read_fields(reader, module_base, observer, target, requested, *, observed_date):
-    """Read one FRA/target pair and project active subsidy terms and expiry.
+    """Read one observer/target pair and project active subsidy terms and expiry.
 
     Registered terms remain available when a subject-definition read fails.
     No contract is a known empty current obligation for this selected pair.
     """
-    state = _subsidies.read_state(reader, module_base, observer, target)
+    options = {'logical_observer': observer['tag']} if observer['tag'] != 'FRA' else {}
+    state = _subsidies.read_state(reader, module_base, observer, target, **options)
     if state["status"] != "known":
         return {field: {"status": "unknown", "reason": state.get("reason", "SUBSIDY_STATE_UNKNOWN")}
                 for field in requested}

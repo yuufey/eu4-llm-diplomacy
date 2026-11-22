@@ -174,7 +174,8 @@ def test_python_analysis_reference_preserves_fixed_evidence_validation(tmp_path,
         memory._source_evidence({"source_evidence": [{**python_reference, "path": "../reader.py"}]})
 
 
-def test_normal_information_query_uses_current_force_profile(tmp_path, monkeypatch):
+@pytest.mark.parametrize("country", ["FRA", "TUR", "D01"])
+def test_normal_information_query_uses_current_force_profile(tmp_path, monkeypatch, country):
     from bridge.information import InformationService
     from bridge.information.composite import CompositeSource
     from bridge.information.country_forces import NativeCountryForcesSource
@@ -183,17 +184,20 @@ def test_normal_information_query_uses_current_force_profile(tmp_path, monkeypat
     from bridge.tests import test_information_country_forces as source_fixture
 
     reader = capture_fixture._reader()
+    layout = memory._profile_layout(memory._load_profile())
+    reader.qword(capture_fixture.COUNTRY + layout["country_fullref_offset"], _fullref(country, 5))
     capture_fixture._fake_capture_environment(monkeypatch, reader)
-    base, session, diplomacy_tools = source_fixture._base(tmp_path)
+    base, session, diplomacy_tools = source_fixture._base(tmp_path, observer=country)
     session.session_id = capture_fixture.SESSION
     session.record["session_id"] = session.session_id
     source = NativeCountryForcesSource(base)
     service = InformationService(CompositeSource(base, [source]), tmp_path / "current-forces.sqlite3")
     try:
         tools = InformationTools(service)
+        query = source_fixture._query(["army_size", "navy_size", "army_composition"])
+        query["object"]["country"] = country
         result = tools.call("information_query", {
-            "request_id": "current-force-profile",
-            "queries": [source_fixture._query(["army_size", "navy_size", "army_composition"])],
+            "request_id": "current-force-profile", "queries": [query],
         })
         assert result["items"][0]["army_regiments"]["current"] == 1
         assert result["items"][0]["navy_ships"]["current"] == 1

@@ -42,6 +42,7 @@ MAX_DECLARATION_AST_DEPTH = 64
 MAX_DECLARATION_JSON_BYTES = 2 * 1024 * 1024
 RELIGION_KEY_RE = re.compile(r"[A-Za-z0-9][A-Za-z0-9_.:-]{0,127}\Z")
 VENDOR_PATH = ROOT / "third_party/cwtools-eu4-config/VENDOR.json"
+SIDECAR_VENDOR_PATH = ROOT / "third_party/cwtools-eu4-config.vendor.json"
 CWT_PATH = ROOT / "third_party/cwtools-eu4-config/common/religions_and_related.cwt"
 EXPECTED_VENDOR_COMMIT = "a85622d368bbb7afca938ed70fdd5eda44aec769"
 EXPECTED_CWT_BYTES = 22541
@@ -50,6 +51,10 @@ EXPECTED_CWT_SHA256 = "bc7e80059f6b71acd12b8af9d8bf2d98850b891073326d845a1d62aa8
 # children from type[religion] recognition.
 NON_RELIGION_GROUP_CHILDREN = frozenset({"religious_schools", "flag_emblem_index_range"})
 _INVALID_PATH_CHARS = ("\x00",)
+
+
+def _vendor_manifest_path() -> Path:
+    return VENDOR_PATH if VENDOR_PATH.is_file() else SIDECAR_VENDOR_PATH
 
 
 def _reason(code: str, message: str) -> dict[str, str]:
@@ -228,7 +233,7 @@ class ReligionDefinitionIndex:
 
     def _read_cwt_contract(self) -> None:
         try:
-            vendor_raw = _read_bounded(VENDOR_PATH, 256 * 1024)
+            vendor_raw = _read_bounded(_vendor_manifest_path(), 256 * 1024)
             vendor = json.loads(vendor_raw.decode("utf-8-sig"))
             if (not isinstance(vendor, dict)
                     or vendor.get("schema") != "cwtools-eu4-config.vendored-scope-rules.v1"
@@ -552,7 +557,7 @@ class ReligionDefinitionIndex:
         except Exception as exc:
             errors.append(_reason("INPUT_CHANGED", f"CWTools parser changed: {exc}"))
         try:
-            vendor_raw = _read_bounded(VENDOR_PATH, 256 * 1024)
+            vendor_raw = _read_bounded(_vendor_manifest_path(), 256 * 1024)
             vendor = json.loads(vendor_raw.decode("utf-8-sig"))
             cwt = _pin(CWT_PATH, expected_bytes=EXPECTED_CWT_BYTES,
                        expected_sha256=EXPECTED_CWT_SHA256)

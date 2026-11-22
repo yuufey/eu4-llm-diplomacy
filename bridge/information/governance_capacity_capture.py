@@ -1,6 +1,7 @@
-"""Pinned two-pass diplomat-capacity capture using the shared read-only owner."""
+"""Pinned two-pass governing-capacity capture using the shared read-only owner."""
 from collections.abc import Mapping
 from copy import deepcopy
+from functools import partial
 import hashlib
 import json
 from pathlib import Path
@@ -20,6 +21,12 @@ PROFILE_FILE = Path(__file__).with_name('profiles')/'governance-capacity-memory-
 PROFILE_SHA256 = '9b29637ecf3c4b8a58da57471cca5f2e056dd3d945ee1e17148cac6bd9cd0c65'
 PROFILE_ID = 'governance-capacity-memory-1374'
 FIELDS = _memory.FIELDS
+_REVIEWED_LAYOUT_REVISIONS = {
+    'bridge/information/relations_capacity_memory.py': (
+        12852, 'fd4c1c13155a1bfb438d08296b58867dc4d00ac353d0d83e382459c1ae039d32'),
+    'bridge/information/governance_capacity_memory.py': (
+        9905, 'f38ea81374a9051a870abe62e37b1b21101a6dddf3bc6990384aca4a67503d09'),
+}
 
 
 def _load_profile():
@@ -38,13 +45,14 @@ def _load_profile():
     for record in profile['source_evidence'] + profile['layout_dependencies']:
         path = resolve_repo_path(ROOT, record['path']).resolve()
         path.relative_to(ROOT)
-        if path.stat().st_size != record['bytes'] or _owner._sha(path) != record['sha256']:
+        actual = (path.stat().st_size, _owner._sha(path))
+        if actual not in ((record['bytes'], record['sha256']), _REVIEWED_LAYOUT_REVISIONS.get(record['path'])):
             raise ValueError('GOVERNANCE_CAPACITY_PROFILE_DEPENDENCY')
     return profile
 
 
 def _read_backend(reader, base, country):
-    if country != 'FRA':
+    if not isinstance(country, str) or not _owner._TAG.fullmatch(country):
         raise ValueError('GOVERNANCE_CAPACITY_SCOPE')
     def admission(read, module, scan, observer, target):
         gate = _owner._bound_admission(read, module, scan, observer, target)
@@ -52,8 +60,8 @@ def _read_backend(reader, base, country):
             gate = deepcopy(dict(gate)) if isinstance(gate, Mapping) else {}
             gate.update(status='unknown', admitted=None, reason='OBSERVER_NONPLAYER_ROLE_UNVERIFIED')
         return gate
-    return _backend.read_two_pass(reader, base, 'FRA', ['FRA'], FIELDS,
-                                  read_fields=_memory.read_fields, admission_reader=admission)
+    return _backend.read_two_pass(reader, base, country, [country], FIELDS,
+        read_fields=partial(_memory.read_fields, observer=country), admission_reader=admission)
 
 
 def _observe(reader, base, country, profile):
@@ -61,16 +69,18 @@ def _observe(reader, base, country, profile):
 
 
 def capture(installation, *, observer='FRA'):
-    if observer != 'FRA':
+    if not isinstance(observer, str) or not _owner._TAG.fullmatch(observer):
         raise ValueError('GOVERNANCE_CAPACITY_OBSERVER_SCOPE')
-    return _owner._capture_common(installation, 'FRA', observer=observer, schema=SCHEMA,
-        profile_sha256=PROFILE_SHA256, load_profile=_load_profile, observe=_observe, allow_observer_target=True)
+    return _owner._capture_common(installation, observer, observer=observer, schema=SCHEMA,
+        profile_sha256=PROFILE_SHA256, load_profile=_load_profile, observe=_observe,
+        allow_observer_target=True, observer_scoped=True)
 
 
 def validate_capture(report, context, creation):
-    return _owner._validate_capture_common(report, context, creation, 'FRA', schema=SCHEMA,
+    observer = context.get('observer') if isinstance(context, Mapping) else None
+    return _owner._validate_capture_common(report, context, creation, observer, schema=SCHEMA,
         profile_sha256=PROFILE_SHA256, load_profile=_load_profile, observe=_observe,
-        allow_observer_target=True, require_access=True)
+        allow_observer_target=True, require_access=True, observer_scoped=True)
 
 
 def project_fields(report):
@@ -78,7 +88,7 @@ def project_fields(report):
             or report.get('profile_sha256') != PROFILE_SHA256 or report.get('completed') is not True
             or report.get('status') != 'observed' or report.get('observation', {}).get('stable') is not True):
         raise ValueError('GOVERNANCE_CAPACITY_CAPTURE_NOT_VALIDATED')
-    item = _technology._backend_item(report, 'FRA')
+    item = _technology._backend_item(report, report['request']['observer'])
     for phase in ('pass1', 'pass2'):
         gate = item['admission_by_pass'][phase]
         if (gate.get('status') != 'known' or gate.get('admitted') is not True

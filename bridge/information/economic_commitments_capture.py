@@ -24,6 +24,9 @@ _SUBSIDY_ENTRY_RVA = 0xA62DF0
 _SUBSIDY_OBSERVER_HOOKS = {
     'f05d9eb9209e8d35f512bd1d066cf5fc6585d66f58786527a86ef27cbddd64e6': 0xBE260,
     '4238740233dbb3415c3151e5eace7f41b517a90d8b8843c9b6cff0e6c579dbc8': 0xBF260,
+    '632e99535d85dce8b2a9e68ce0a1adcca9ccbb220dc30b8ead854fcc56632bd4': 0xC4030,
+    '945d9ce8ecf6ac4f487ccc65f8a90554ef4c1e46b4e082fea454688eb68fe194': 0xC4130,
+    '396f48c807b646eeed7786fcd7bd7a3ab6357f2357eebad2cf6538d0a31d8553': 0xC41F0,
 }
 
 
@@ -106,7 +109,7 @@ def _load_profile():
     return profile
 
 
-def _observe(reader, base, country, profile, *, installation=None, observer_binding=None):
+def _observe(reader, base, country, profile, *, observer="FRA", installation=None, observer_binding=None):
     current = {}
 
     def admission(read, module_base, scan, observer, target):
@@ -122,7 +125,7 @@ def _observe(reader, base, country, profile, *, installation=None, observer_bind
                                  requested, observed_date=now)
 
     def backend(read, module_base, target):
-        return _backend.read_two_pass(read, module_base, "FRA", [target], FIELDS,
+        return _backend.read_two_pass(read, module_base, observer, [target], FIELDS,
                                       read_fields=fields, admission_reader=admission)
 
     return _observe_guarded(reader, base, country, profile, backend_reader=backend,
@@ -133,14 +136,14 @@ def capture(installation, country, *, observer="FRA"):
     return _owner._capture_common(
         installation, country, observer=observer, schema=SCHEMA,
         profile_sha256=PROFILE_SHA256, load_profile=_load_profile,
-        observe=partial(_observe, installation=installation))
+        observe=partial(_observe, observer=observer, installation=installation), observer_scoped=True)
 
 
 def validate_capture(report, context, creation, country):
     return _owner._validate_capture_common(
         report, context, creation, country, schema=SCHEMA,
         profile_sha256=PROFILE_SHA256, load_profile=_load_profile,
-        observe=partial(_observe, observer_binding=_capture_binding(report)), require_access=True)
+        observe=partial(_observe, observer=context.get('observer'), observer_binding=_capture_binding(report)), require_access=True, observer_scoped=True)
 
 
 def project_fields(report):

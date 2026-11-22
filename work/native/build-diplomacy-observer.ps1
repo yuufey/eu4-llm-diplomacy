@@ -412,7 +412,7 @@ if ($LandPromiseObservation) {
         'information-land-promise-observer.inc')
 }
 if ($NativeCountryControl) {
-    $sourceNames += @('control-country-policy.h')
+    $sourceNames += @('control-country-policy.h','diplomat-recall-mcp.inc')
 }
 $sources = foreach ($name in $sourceNames) {
     $source = Join-Path $PSScriptRoot $name
@@ -434,7 +434,20 @@ $manifest = [ordered]@{ version = $observerVersion; experiment_id = $Experiment;
     dll = $dll; sources = @($sources); compiler_arguments = $arguments }
 $manifest.native_war_participants_query = $true
 $manifest.native_territorial_interest_query = $true
-$manifest.native_territorial_interest_query_wire = 23
+$manifest.native_territorial_interest_query_wire = 24
+if ($NativeCountryControl) {
+    $manifest.native_information_observer_configuration = $true
+    $manifest.native_information_observer_protocol = "EU4INFO1"
+    $manifest.native_country_modifier_scoped_schema = 2
+    $manifest.native_relation_change_scoped_schema = 6
+    $manifest.native_war_declaration_scoped_schema = 2
+    $manifest.native_land_promise_scoped_schema = 2
+    $manifest.native_mission_completion_scoped_schema = 3
+    $manifest.native_mission_availability_scoped_schema = 2
+    $manifest.native_mission_condition_scoped_schema = 4
+    $manifest.native_expiry_scoped_wire = 2
+    $manifest.native_rival_change_scoped_schema = 4
+}
 if ($BattleEndState) {
     $manifest.information_battle_end_state = $true
     $manifest.information_battle_end_state_wire = 9
@@ -668,6 +681,8 @@ if ($NativeCountryControl) {
     $manifest.native_country_control_protocol = 'EU4CONTROL1'
     $manifest.native_country_control_ack = 'native_controlled_countries_set'
     $manifest.native_country_control_request = 'controlled-countries.req'
+    $manifest.native_diplomat_recall_by_id = $true
+    $manifest.native_diplomat_recall_protocol = 'EU4RECALL1'
 }
 $manifest | ConvertTo-Json -Depth 8 | Set-Content -LiteralPath (Join-Path $outputDirectory 'build-manifest.json') -Encoding UTF8
 Get-FileHash -LiteralPath $dll -Algorithm SHA256

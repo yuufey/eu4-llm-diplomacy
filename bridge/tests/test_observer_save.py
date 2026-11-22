@@ -20,9 +20,9 @@ def _sha(path: Path) -> str:
     return digest.hexdigest()
 
 
-def _make_save(path: Path, *, date: str = "1445.2.5", seed: int = 0) -> None:
+def _make_save(path: Path, *, date: str = "1445.2.5", seed: int = 0, player: str = "POR") -> None:
     payload = bytes(((index * 37 + seed) % 251 for index in range(125_000)))
-    meta = f'date="{date}"\nplayer="POR"\n'.encode("utf-8")
+    meta = f'date="{date}"\nplayer="{player}"\n'.encode("utf-8")
     with zipfile.ZipFile(path, "w", compression=zipfile.ZIP_STORED) as archive:
         archive.writestr("meta", meta)
         archive.writestr("gamestate", payload)
@@ -32,7 +32,7 @@ class _FakeSession:
     def __init__(self, installation: Path, executable: Path):
         self.health_calls = 0
 
-    def health(self) -> dict:
+    def physical_player_health(self) -> dict:
         self.health_calls += 1
         return {"status": "ready", "state_id": f"state-{self.health_calls}", "date_raw": 56459040}
 
@@ -53,6 +53,7 @@ class ObserverSaveExperimentTests(unittest.TestCase):
             "game_sha256": "game",
             "dll_sha256": "dll",
             "installation_returncode": 0,
+            "preflight_player_tag": "POR",
         }), encoding="utf-8")
         (experiment / "control-probe.jsonl").write_text(
             '{"event":"diplomacy_observer_health","session_id":"1234-162e",'
@@ -71,8 +72,9 @@ class ObserverSaveExperimentTests(unittest.TestCase):
         }
 
     @staticmethod
-    def _probe(_pid, output, _deadline):
-        state = {"date_raw": 56459040, "player_slot": 189, "paused_flag": 1}
+    def _probe(pid, output, _deadline, player="POR", slot=189):
+        state = {"pid": pid, "read_only": True, "date_raw": 56459040,
+                 "player_tag": player, "player_slot": slot, "paused_flag": 1}
         output.write_text(json.dumps(state), encoding="utf-8")
         return state
 
@@ -117,6 +119,11 @@ class ObserverSaveExperimentTests(unittest.TestCase):
                          report["log_offsets"]["start"])
 
     def test_success_archives_stable_save_and_restores_native_changes_without_deleting_unknown(self):
+        for player, slot in (("POR", 189), ("ENG", 50), ("O00", 1370), ("D01", 1400)):
+            with self.subTest(player=player):
+                self._verify_archived_player(player, slot)
+
+    def _verify_archived_player(self, player, slot):
         temp, root, experiment, saves, installation = self._setup()
         self.addCleanup(temp.cleanup)
         autosave = saves / "autosave.eu4"
@@ -135,7 +142,7 @@ class ObserverSaveExperimentTests(unittest.TestCase):
             if request.exists() and not acted[0]:
                 self.assertEqual(request.read_bytes(), subject.AUTOSAVE_TOKEN)
                 request.unlink()
-                _make_save(autosave, seed=9)
+                _make_save(autosave, seed=9, player=player)
                 _make_save(old_autosave, seed=10)
                 _make_save(older_autosave, seed=11)
                 (saves / "native_unknown.eu4").write_text("leave me", encoding="utf-8")
@@ -149,14 +156,15 @@ class ObserverSaveExperimentTests(unittest.TestCase):
              patch.object(subject, "user_data", lambda: root), \
              patch.object(subject.time, "monotonic", lambda: clock[0]), \
              patch.object(subject.time, "sleep", fake_sleep), \
-             patch.object(subject, "_probe_control_state", self._probe), \
+             patch.object(subject, "_probe_control_state", lambda *args: self._probe(*args, player, slot)), \
              patch.object(subject, "_emit"):
             report = subject.run_experiment(installation, "llm_diplomacy_ok.eu4", timeout=10)
 
         target = saves / "llm_diplomacy_ok.eu4"
         self.assertEqual(report["status"], "success")
         self.assertTrue(target.is_file())
-        self.assertEqual(report["save"]["inspection"]["player"], "POR")
+        self.assertEqual(report["save"]["inspection"]["player"], player)
+        self.assertEqual(json.loads(installation.read_text(encoding="utf-8"))["preflight_player_tag"], "POR")
         self.assertGreater(report["save"]["inspection"]["payload_size"], 100_000)
         self.assertEqual({path.name: _sha(path) for path in (autosave, old_autosave, older_autosave)}, originals)
         self.assertTrue((saves / "native_unknown.eu4").is_file())
@@ -168,6 +176,47 @@ class ObserverSaveExperimentTests(unittest.TestCase):
             "autosave.eu4", "old_autosave.eu4", "older_autosave.eu4",
         })
         self.assertEqual(report["restore"]["unknown_new_save_files"], ["native_unknown.eu4"])
+
+    def test_candidate_must_match_player_and_date(self):
+        temp, _, _, saves, _ = self._setup()
+        self.addCleanup(temp.cleanup)
+        save = saves / "autosave.eu4"
+        _make_save(save, player="ENG")
+        self.assertFalse(subject._inspect_save(save, expected_player="POR")["valid"])
+        self.assertFalse(subject._inspect_save(save, expected_player="ENG", expected_date="1445.2.6")["valid"])
+        self.assertTrue(subject._inspect_save(save, expected_player="ENG", expected_date="1445.2.5")["valid"])
+
+    def test_observer_fallback_is_rewritten_only_when_no_player_country_is_present(self):
+        temp, _, _, saves, _ = self._setup()
+        self.addCleanup(temp.cleanup)
+        native = saves / "autosave.eu4"
+        archive = saves / "checkpoint.eu4"
+        header = b'EU4txt\ndate=1445.2.5\nplayer="SWE"\ndisplayed_country_name="Sweden"\n'
+        roster = b'players_countries={\n\t"Player"\n\t"SWE"\n}\n'
+        body = b'gameplaysettings={\n}\n' + b' ' * 125_000
+        inspect_observer = {"expected_player": "O00", "expected_date": "1445.2.5",
+                            "allow_observer_fallback": True}
+        native.write_bytes(header + roster + body)
+        self.assertFalse(subject._inspect_save(native, **inspect_observer)["valid"])
+
+        native.write_bytes(header + body)
+        candidate = subject._inspect_save(native, **inspect_observer)
+        self.assertTrue(candidate["valid"])
+        self.assertTrue(candidate["observer_autosave_fallback"])
+        self.assertEqual(subject._copy_observer_archive(native, archive, "SWE"), _sha(archive))
+        self.assertEqual(native.read_bytes(), header + body)
+        self.assertEqual(archive.read_bytes(), header.replace(b'SWE', b'O00').replace(b'Sweden', b'Observer') + body)
+        self.assertTrue(subject._inspect_save(archive, expected_player="O00")["valid"])
+
+    def test_shared_rotation_is_locked_before_saving(self):
+        temp, root, experiment, saves, installation = self._setup()
+        self.addCleanup(temp.cleanup)
+        with subject.CollectionLock(saves / ".eu4-autosave").acquire() as acquired:
+            self.assertTrue(acquired)
+            with patch.object(subject, "user_data", return_value=root), \
+                 self.assertRaisesRegex(subject.ExperimentError, "AUTOSAVE_ARCHIVE_ALREADY_RUNNING"):
+                subject.run_experiment(installation, "llm_diplomacy_locked.eu4")
+        self.assertFalse((experiment / "game-control.request").exists())
 
     def test_named_save_is_metadata_only_and_never_backed_up_or_overwritten(self):
         temp, root, experiment, saves, installation = self._setup()
@@ -377,7 +426,10 @@ class ObserverSaveExperimentTests(unittest.TestCase):
                 return (1, 1)
             return (2, 2) if stat_calls[0] == 1 else (3, 3)
 
-        def fake_inspect(_path: Path) -> dict[str, object]:
+        def fake_inspect(_path: Path, *, expected_player: str, expected_date: str,
+                         allow_observer_fallback: bool) -> dict[str, object]:
+            self.assertEqual((expected_player, expected_date), ("POR", "1445.2.5"))
+            self.assertFalse(allow_observer_fallback)
             inspection_calls[0] += 1
             if inspection_calls[0] == 2:
                 return {"valid": False, "reason": "FILE_ROTATED"}
@@ -403,7 +455,7 @@ class ObserverSaveExperimentTests(unittest.TestCase):
              patch.object(subject.time, "monotonic", lambda: clock[0]), \
              patch.object(subject.time, "sleep", fake_sleep):
             result = subject._wait_for_autosave(
-                saves, baseline, log, 0, deadline=10.0, emit=capture
+                saves, baseline, log, 0, deadline=10.0, player="POR", date="1445.2.5", emit=capture
             )
 
         self.assertEqual(result[0], candidate)

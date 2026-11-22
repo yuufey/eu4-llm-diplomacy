@@ -56,7 +56,7 @@ class NativeReligiousSchoolsSource(NativeTradeIncomeSource):
             'coverage': 'partial', 'complete': False, 'unit': UNIT,
             'scale': 1, 'period': 'current', 'basis': BASIS, 'value_origin': ORIGIN,
             'source': 'bridge.information.school_relations_capture.capture',
-            'supported_observers': ['FRA'], 'triggers': ['query', 'periodic'],
+            'triggers': ['query', 'periodic'],
             'component_scopes': {
                 'invited_scholars': {
                     'scope': 'observer_country',
@@ -162,7 +162,7 @@ class NativeReligiousSchoolsSource(NativeTradeIncomeSource):
         target = normalized['object']['country']
         provenance = {
             'read_only': True, 'native_function_invoked': False,
-            'observer': 'FRA', 'target': target, 'actual_UI_observed': False,
+            'observer': current.get('observer'), 'target': target, 'actual_UI_observed': False,
             'configured_rules_are_applied_effects': False,
         }
 
@@ -195,7 +195,7 @@ class NativeReligiousSchoolsSource(NativeTradeIncomeSource):
         try:
             module = import_module('.school_relations_capture', __package__)
             capture = self.capture if self.capture is not None else module.capture
-            report = capture(installation, country=target, observer='FRA')
+            report = capture(installation, country=target, observer=before['observer'])
         except Exception as exc:
             error = 'RELIGIOUS_SCHOOLS_CAPTURE_FAILED:' + type(exc).__name__
 

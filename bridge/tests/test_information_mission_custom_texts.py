@@ -69,9 +69,9 @@ def _report(methods=None, *, context=CONTEXT):
             "installation_session_id": context["session_id"],
             "process_path_sha256": context["game_sha256"],
         },
-        "request": {"country": "FRA", "methods": list(methods)},
+        "request": {"country": context["observer"], "methods": list(methods)},
         "query_scope": {
-            "country": "FRA",
+            "country": context["observer"],
             "root_kind": "country",
             "binding": "explicit_query_observer",
             "ui_root_scope_verified": False,
@@ -85,6 +85,17 @@ def _report(methods=None, *, context=CONTEXT):
         "cleanup": {"handle_close": {"closed": True}},
         "methods": methods,
     }
+
+
+def test_custom_texts_bind_the_request_and_root_to_the_configured_observer():
+    context = {**CONTEXT, "observer": "TUR"}
+    report = _report(context=context)
+    methods = report["request"]["methods"]
+    result = normalize_methods(report, context, methods)
+    assert result["provenance"]["country"] == "TUR"
+    with pytest.raises(InformationError) as mismatch:
+        normalize_methods(report, CONTEXT, methods)
+    assert mismatch.value.code == "custom_localization_request_invalid"
 
 
 def _dynamic_entry(method):

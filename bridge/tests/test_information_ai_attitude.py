@@ -8,7 +8,7 @@ from bridge.information.composite import CompositeSource
 from bridge.information.tools import InformationTools
 from bridge.tests.test_information_foreign_technology import Base
 from bridge.tests.test_information_foreign_technology_capture import (
-    MODULE_BASE, RELATION_OWNER, RecordingReader, make_valid_capture,
+    MODULE_BASE, RELATION_OWNER, RecordingReader, make_valid_capture, _write_capture_context, backend_fixture,
 )
 
 
@@ -17,16 +17,23 @@ def query(actor='ENG', recipient='FRA'):
             'fields': ['ai_attitude'], 'parameters': {}}
 
 
-def make_capture(actor='ENG', recipient='FRA', *, admitted=True, absent=False):
+def make_capture(actor='ENG', recipient='FRA', *, admitted=True, absent=False, observer='FRA'):
     report, context, creation, fixture = make_valid_capture(admitted=admitted)
     image = fixture['image']
+    if observer != 'FRA':
+        image, bindings, _ = backend_fixture.make_reader({
+            observer: (122, 0x1200, 5), 'POR': (189, 0x5500, 3), 'ENG': (300, 0x4500, 9),
+        }, count=310)
+        fixture = {'bindings': bindings, **_write_capture_context(
+            image, country='ENG', admitted=admitted, observer=observer)}
+    context['observer'] = report['request']['observer'] = observer
     row = fixture['relation_row']
     image.put(row, bytes(0x48))
     image.put_u64(row, RELATION_OWNER)
     image.put_u64(row + 0x10, fixture['target_fullref'])
     other_table = 0x6900000000
     image.put_u64(fixture['target_pointer'] + 0x1510, other_table)
-    reverse_row = other_table + fixture['bindings']['FRA']['slot'] * 0x48
+    reverse_row = other_table + fixture['bindings'][observer]['slot'] * 0x48
     image.put(reverse_row, bytes(0x48))
     image.put_u64(reverse_row, 0x6910000000)
     image.put_u64(reverse_row + 0x10, fixture['observer_fullref'])
@@ -48,7 +55,7 @@ def make_capture(actor='ENG', recipient='FRA', *, admitted=True, absent=False):
     report['schema'] = attitude.SCHEMA
     report['profile_sha256'] = attitude.PROFILE_SHA256
     report['request'].update(actor=actor, recipient=recipient)
-    report['observation'] = attitude._observe_for(actor, recipient)(reader, MODULE_BASE, 'ENG', profile)
+    report['observation'] = attitude._observe_for(actor, recipient, observer=observer)(reader, MODULE_BASE, 'ENG', profile)
     report['raw_reads'] = deepcopy(reader.read_log)
     report['access'] = {'read_only': True, 'native_function_invoked': False,
         'writes': False, 'UI_control': False, 'date_advance': False, 'save_or_reload': False,
@@ -75,6 +82,16 @@ def test_invisible_and_missing_attitudes_have_no_invented_value(admitted, absent
     value = report['observation']['backend']['targets'][0]['fields'][attitude.FIELD]
     assert value['status'] == status
     assert 'value' not in value
+
+
+def test_own_pair_replays_with_non_french_observer_and_foreign_actor(tmp_path):
+    report, context, creation = make_capture('ENG', 'TUR', observer='TUR')
+    assert attitude.validate_capture(report, context, creation, 'ENG', 'TUR')
+    assert not attitude.validate_capture(report, context | {'observer': 'FRA'}, creation, 'ENG', 'TUR')
+    base = Base(tmp_path, context, creation)
+    adapter = attitude.NativeAiAttitudeSource(base, capture=lambda *args: deepcopy(report))
+    result = adapter.read(query('ENG', 'TUR'))
+    assert result['fields']['ai_attitude']['value'] == 'hostile'
 
 
 def test_normal_query_and_full_recall_preserve_attitude_direction(tmp_path):

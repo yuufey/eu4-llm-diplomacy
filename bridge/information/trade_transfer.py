@@ -15,7 +15,6 @@ from .sources import _copy, _result, _source_info
 from .trade_details import (
     NativeTradeDetailsSource,
     _CONTEXT_KEYS,
-    _COUNTRY,
     _GAME_SHA256,
     _NODE_ID,
     _PERIOD,
@@ -34,6 +33,7 @@ _FIELD = "transfer"
 _BASIS = "native_trade_power_transfer_relations"
 _COMPLETE = False
 _HEX = re.compile(r"[0-9a-fA-F]+\Z")
+_COUNTRY_TAG = re.compile(r"[A-Z0-9]{3}\Z")
 
 
 _CATALOG_ITEM = {
@@ -58,7 +58,7 @@ _CATALOG_ITEM = {
                 "trade_details.nodes[].transfer_sources.to",
                 "trade_details.nodes[].transfer_sources.from",
             ],
-            "supported_countries": [_COUNTRY],
+            "supported_countries": [],
             "period": _PERIOD,
             "basis": _BASIS,
             "value_origin": _VALUE_ORIGIN,
@@ -74,7 +74,7 @@ _CATALOG_ITEM = {
     },
     "object_types": ["country", "trade_node"],
     "observer_roles": ["country"],
-    "observer_scope": [_COUNTRY],
+    "observer_scope": [],
     "parameters": {
         "type": "object", "properties": {}, "required": [],
         "additionalProperties": False,
@@ -86,7 +86,7 @@ _CATALOG_ITEM = {
     "visibility": "country_scope",
     "context_scope": "country_scope",
     "scope_note": (
-        "仅读取固定1.37.4、FRA观察者的原生贸易权转移容器；" 
+        "读取 1.37.4 中已配置观察国的原生贸易权转移容器。"
         "该字段表示转出/转入关系，不表示商人任务、节点价值流量或收入。"
     ),
 }
@@ -138,8 +138,9 @@ class NativeTradeTransferSource(NativeTradeDetailsSource):
                 "invalid_object", "T05 transfer requires a country or trade_node object",
             )
         if obj.get("type") == "country":
-            if set(obj) != {"type", "country"} or obj.get("country") != _COUNTRY:
-                raise InformationError("observer_scope_mismatch", "Only the verified FRA country is supported")
+            if (set(obj) != {"type", "country"} or not isinstance(obj.get("country"), str)
+                    or _COUNTRY_TAG.fullmatch(obj["country"]) is None):
+                raise InformationError("invalid_object", "T05 transfer country must be a valid tag")
         elif obj.get("type") == "trade_node":
             if (
                 set(obj) != {"type", "node_id"}
@@ -167,8 +168,9 @@ class NativeTradeTransferSource(NativeTradeDetailsSource):
             if not isinstance(context, dict):
                 raise InformationError("invalid_context", "context must be an object")
             observer = context.get("observer")
-            if observer is not None and observer != _COUNTRY:
-                raise InformationError("observer_scope_mismatch", "T05 transfer is outside the FRA scope")
+            if (obj["type"] == "country" and observer is not None
+                    and obj["country"] != observer):
+                raise InformationError("observer_scope_mismatch", "T05 transfer is limited to the configured observer")
         normalized = {
             "topic": _TOPIC,
             "object": deepcopy(obj),
@@ -220,7 +222,7 @@ class NativeTradeTransferSource(NativeTradeDetailsSource):
         node_id = obj.get("node_id") if obj.get("type") == "trade_node" else None
         provenance: dict[str, Any] = {
             "adapter": "bridge.information.country_resources_memory.capture",
-            "country": _COUNTRY,
+            "country": current.get("observer"),
             "read_only": True,
             "native_function_invoked": False,
             "period": _PERIOD,

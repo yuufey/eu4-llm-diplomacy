@@ -34,28 +34,30 @@ def _fullref(tag: str, slot: int, generation: int) -> int:
     return ((generation & 0xFFFF) << 48) | (slot << 32) | int.from_bytes(tag.encode("ascii"), "little")
 
 
-def _make_image(country: str, profile: dict[str, Any], *, admitted: bool = True):
+def _make_image(country: str, profile: dict[str, Any], *, admitted: bool = True,
+                observer: str = "FRA"):
+    observer_slot = 122
     entries = {
-        "FRA": (122, 0x1200, 5),
+        observer: (observer_slot, 0x1200, 5),
         "POR": (189, 0x5500, 3),
     }
-    if country != "FRA":
+    if country != observer:
         entries[country] = (300, 0x4500, 9)
     image, bindings, _technology_values = backend_fixture.make_reader(entries, count=310)
     refs = {tag: _fullref(tag, row[0], row[1]) for tag, row in entries.items()}
 
-    # The physical player stays POR; FRA is the separate logical observer.
+    # Keep the physical POR seat separate from the observer under test.
     image.put_u64(MODULE_BASE + 0x233FE58, WORLD)
     image.put_i32(WORLD + 0x1DD0, GAME_DATE)
     image.put_u64(WORLD + 0x1E60, refs["POR"])
     image.put_u64(WORLD + 0x1E68, 0)
     image.put_i32(WORLD + 0xA60, 1)
     image.put_u64(WORLD + 0x1D48, CONTROLLER_TYPES)
-    image.put_i32(CONTROLLER_TYPES + 122 * 4, 0)
+    image.put_i32(CONTROLLER_TYPES + observer_slot * 4, 0)
     for index, (_name, rva) in enumerate(admission.SPECIAL_TARGET_SLOT_RVAS):
         image.put_i32(MODULE_BASE + rva, -10 - index)
 
-    observer_pointer = bindings["FRA"]["country_pointer"]
+    observer_pointer = bindings[observer]["country_pointer"]
     target_pointer = bindings[country]["country_pointer"]
     target_slot = entries[country][0]
     row = RELATION_TABLE + target_slot * admission.RELATION_ROW_STRIDE
@@ -70,7 +72,7 @@ def _make_image(country: str, profile: dict[str, Any], *, admitted: bool = True)
         image.put_u64(target_pointer + admission.COUNTRY_CAPITAL_OFFSET, CAPITAL)
         image.put(CAPITAL + admission.CAPITAL_VIEW_FLAGS_OFFSET, b"\x10")
         image.put_u64(CAPITAL + admission.CAPITAL_OBSERVER_BITSET_OFFSET, OBSERVER_BITSET)
-        bit_word = OBSERVER_BITSET + (122 >> 5) * admission.CAPITAL_OBSERVER_BITSET_WORD_STRIDE
+        bit_word = OBSERVER_BITSET + (observer_slot >> 5) * admission.CAPITAL_OBSERVER_BITSET_WORD_STRIDE
         image.put(bit_word, b"\x00" * admission.CAPITAL_OBSERVER_BITSET_WORD_STRIDE)
 
     religion_pointer = RELIGION_BASE + target_slot * 0x1000
@@ -100,12 +102,12 @@ def _make_image(country: str, profile: dict[str, Any], *, admitted: bool = True)
     return image, fixture
 
 
-def _bundle(country: str = "ENG", *, admitted: bool = True,
+def _bundle(country: str = "ENG", *, admitted: bool = True, observer: str = "FRA",
             profile: dict[str, Any] | None = None):
     profile = capture._load_profile() if profile is None else profile
-    image, fixture = _make_image(country, profile, admitted=admitted)
+    image, fixture = _make_image(country, profile, admitted=admitted, observer=observer)
     reader = parent_fixture.RecordingReader(image)
-    observation = capture._observe(reader, MODULE_BASE, country, profile)
+    observation = capture._observe(reader, MODULE_BASE, country, profile, observer=observer)
     identity = {
         "binding_verified": True,
         "process_creation_filetime": CREATION,
@@ -116,7 +118,7 @@ def _bundle(country: str = "ENG", *, admitted: bool = True,
         "schema": capture.SCHEMA,
         "status": "observed" if observation.get("stable") is True else "unknown",
         "completed": observation.get("stable") is True,
-        "request": {"country": country, "observer": "FRA", "creation_filetime": CREATION,
+        "request": {"country": country, "observer": observer, "creation_filetime": CREATION,
                     "session_id": SESSION_ID},
         "profile_sha256": capture.PROFILE_SHA256,
         "identity": deepcopy(identity),
@@ -132,11 +134,20 @@ def _bundle(country: str = "ENG", *, admitted: bool = True,
         "errors": [],
     }
     context = {
-        "observer": "FRA", "session_id": SESSION_ID,
+        "observer": observer, "session_id": SESSION_ID,
         "game_version": "1.37.4", "game_sha256": capture._owner.EXE_SHA256,
         "game_date": GAME_DATE,
     }
     return report, context, CREATION, {"image": image, "reader": reader, **fixture}
+
+
+def test_turkey_reads_admitted_foreign_faith_and_rejects_cross_observer_replay():
+    report, context, creation, _fixture = _bundle("ENG", observer="TUR")
+    assert capture.validate_capture(report, context, creation, "ENG")
+    target = report["observation"]["backend"]["targets"][0]
+    assert target["admission_by_pass"]["pass2"]["admitted"] is True
+    assert target["fields"]["S02.faith"]["value"]["primary_religion_name"]["text"] == FAITH_NAME_TEXT
+    assert not capture.validate_capture(report, {**context, "observer": "FRA"}, creation, "ENG")
 
 
 @pytest.fixture(scope="module")

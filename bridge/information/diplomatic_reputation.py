@@ -1,8 +1,9 @@
-"""Current native diplomatic reputation, limited to the bound FRA observer."""
+"""Current native diplomatic reputation of the configured observer country."""
 from .scalar_capture_source import ScalarCaptureSource
 
 
 class NativeDiplomaticReputationSource(ScalarCaptureSource):
+    observer_scoped = True
     TOPIC = 'N06'
     FIELD = 'diplomatic_reputation'
     UNIT = 'diplomatic_reputation'

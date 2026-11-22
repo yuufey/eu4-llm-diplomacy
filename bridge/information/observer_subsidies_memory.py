@@ -192,11 +192,15 @@ def _permission_template(module_base: Any, observer_binding: Any,
 
 
 def read_permission(reader: Any, module_base: Any, observer_binding: Any,
-                    target_binding: Any) -> dict[str, Any]:
+                    target_binding: Any, *, logical_observer="FRA") -> dict[str, Any]:
     """Bind FRA and one other country to own-fiscal rows and one live date."""
     result = _permission_template(module_base, observer_binding, target_binding)
     raw = result["raw_inputs"]
     request = raw["request"]
+    if logical_observer != "FRA":
+        request["logical_observer"] = logical_observer
+        raw["scope_evidence"]["logical_observer"] = logical_observer
+        raw["scope_evidence"]["scope_limit"] = "selected_pair_in_bound_observer_fiscal_rows"
     if request["observer_binding"] is None or request["target_binding"] is None:
         result["reason"] = "BINDING_INPUT_NOT_JSON_SAFE"
         return result
@@ -212,10 +216,10 @@ def read_permission(reader: Any, module_base: Any, observer_binding: Any,
         base = _common._pointer(module_base, "MODULE_BASE", alignment=0x1000)
         observer = _common._parse_binding(observer_binding, "observer")
         target = _common._parse_binding(target_binding, "target")
-        if observer["tag"] != "FRA":
-            raise _Unknown("OBSERVER_MUST_BE_FRA")
-        if target["tag"] == "FRA":
-            raise _Unknown("TARGET_MUST_DIFFER_FROM_FRA")
+        if observer["tag"] != logical_observer:
+            raise _Unknown("OBSERVER_MUST_BE_FRA" if logical_observer == "FRA" else "OBSERVER_BINDING_MISMATCH")
+        if target["tag"] == logical_observer:
+            raise _Unknown("TARGET_MUST_DIFFER_FROM_FRA" if logical_observer == "FRA" else "FOREIGN_TARGET_REQUIRED")
         if (observer["country_pointer"] == target["country_pointer"]
                 or observer["slot"] == target["slot"]
                 or observer["fullref"] == target["fullref"]):
@@ -372,6 +376,7 @@ def _validate_permission(record: Any) -> bool:
             request.get("module_base"),
             request.get("observer_binding"),
             request.get("target_binding"),
+            **({"logical_observer": request["logical_observer"]} if "logical_observer" in request else {}),
         )
     except Exception:
         return False
@@ -472,11 +477,12 @@ def read_fields(reader: Any, module_base: Any, observer_binding: Any,
 
         # Rebind this exact permission on the same reader before entering the
         # pair leaf. Any changed binding, owner, world pointer, or date denies it.
-        fresh = read_permission(reader, base, observer_binding, target_binding)
+        scope = {"logical_observer": request["logical_observer"]} if "logical_observer" in request else {}
+        fresh = read_permission(reader, base, observer_binding, target_binding, **scope)
         if not _strict_equal(permission, fresh):
             raise _Unknown("SUBSIDIES_PERMISSION_STALE")
 
-        state = _leaf.read_state(reader, base, observer_binding, target_binding)
+        state = _leaf.read_state(reader, base, observer_binding, target_binding, **scope)
         contract = state.get("contract") if type(state) is dict else None
         if state.get("status") != "known" or type(contract) is not dict:
             return {FIELD: _unknown_field("BILATERAL_SUBSIDIES_STATE_UNKNOWN",

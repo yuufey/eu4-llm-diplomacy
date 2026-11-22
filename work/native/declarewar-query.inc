@@ -104,9 +104,8 @@ static void declarewar_query_run(const char* id,const char* actor_tag,
     DeclareWarCandidateSelection selection{};
     selection.casus_belli=casus_belli;
     selection.province_id=province_id;
-    if (selection_requested && beneficiary_tag && strcmp(beneficiary_tag,"---")
-        && strcmp(beneficiary_tag,actor_tag)
-        && !alliance_query_country(beneficiary_tag,selection.beneficiary_handle)) {
+    if (selection_requested && !declarewar_candidates_resolve_beneficiary(
+            selection,beneficiary_tag,actor_tag,actor,no_cb)) {
         reinterpret_cast<Destroy>(destructor)(action,1);
         alliance_query_failure(id,"QUERY_DECLARE_WAR_BENEFICIARY_UNAVAILABLE"); return;
     }

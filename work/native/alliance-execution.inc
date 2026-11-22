@@ -80,6 +80,7 @@ struct ExecutionBinding {
     bool submission_queued=false;
     bool response_queued=false;
     bool inbound_response_request=false;
+    bool pending_reservation=false;
     bool peace_handler_returned=false;
     bool alliance_before=false;
     bool alliance_before_verified=false;
@@ -113,8 +114,7 @@ struct ExecutionBinding {
     bool diplomat_context_verified=false;
     unsigned diplomat_available_count=0;
     bool diplomat_assignment_verified=false;
-    unsigned parent_slot=kInvalidBinding;
-    unsigned response_slot=kInvalidBinding;
+    bool response_bound=false;
     ExecutionRequest request{};
     bridge::peace_execution_wire::PeaceExecutionRequest peace_request{};
     bool peace_effects_supported=false;
@@ -286,6 +286,7 @@ static unsigned execution_response_head=0,execution_response_size=0;
 static volatile LONG execution_result_dropped=0;
 static thread_local SenderScope execution_sender_scope{};
 static thread_local ResponseScope execution_response_scope{};
+static thread_local bool execution_entry_in_progress=false;
 static void execution_peace_submission(const ExecutionBinding& binding,
     const ProtocolWrapperShape& entry) noexcept;
 static void execution_peace_response(const ExecutionBinding& binding,
@@ -313,6 +314,10 @@ static uint64_t execution_next_generation() noexcept {
 
 static Context execution_context() noexcept {
     return Context{observation_creation,GetTickCount64()};
+}
+
+static bool execution_on_frame_thread() noexcept {
+    return !thread_changed && frame_thread && frame_thread==GetCurrentThreadId();
 }
 
 static ExecutionGameDate execution_game_date() noexcept {
@@ -455,8 +460,11 @@ static bool execution_world_dispatcher(uintptr_t& dispatcher,
 }
 
 static bool execution_target_allowed(const char* recipient,const char* action_id) noexcept {
-    // Every resolved canonical recipient uses the native Dissolve selector
-    // and rules. Offer's previously reviewed target scope is unchanged.
+#ifdef BRIDGE_NATIVE_COUNTRY_CONTROL
+    // Apply the same canonical recipient and native rule checks to alliance
+    // offers from configured control countries as to the other actions below.
+    if (action_id && strcmp(action_id,"offer_alliance")==0) return recipient!=nullptr;
+#endif
     if (action_id && (strcmp(action_id,"declare_war")==0
         || strcmp(action_id,"dissolve_alliance")==0
         || strcmp(action_id,"offer_royal_marriage")==0
@@ -499,7 +507,8 @@ static bool execution_binding_matches(const ExecutionBinding& binding,
     const ProtocolWrapperShape& shape) noexcept {
     return binding.used && shape.identity && shape.readable
         && shape.address==binding.target_wrapper.address
-        && shape.action==binding.target_action.address;
+        && shape.action==binding.target_action.address
+        && execution_header(shape)==binding.final_entry_header;
 }
 
 static int execution_find_target(const ProtocolWrapperShape& shape) noexcept {
@@ -974,11 +983,8 @@ static void execution_queue_response(const ExecutionBinding& binding,
 
 static void execution_make_ledger_id(char (&destination)[65],
     const ExecutionBinding& parent,uint64_t serial) noexcept {
-    int written=snprintf(destination,sizeof(destination),"%.48s-r%llu",
+    snprintf(destination,sizeof(destination),"%.42s-r%llu",
         parent.request.request_id,static_cast<unsigned long long>(serial));
-    if (written<0 || static_cast<unsigned>(written)>=sizeof(destination)) {
-        snprintf(destination,sizeof(destination),"r%llu",static_cast<unsigned long long>(serial));
-    }
 }
 
 static bool execution_response_endpoint(const AlliancePayload& parent,
@@ -993,9 +999,24 @@ static bool execution_response_endpoint(const AlliancePayload& parent,
         || (response.actor10==parent.recipient20 && response.recipient20==parent.actor10));
 }
 
+static bool execution_release_pending(ExecutionBinding& binding) noexcept {
+    if (!binding.pending_reservation) return true;
+    if (!inbound_pending_release(binding.pending_proposal_id,binding.pending_generation))
+        return false;
+    binding.pending_reservation=false;
+    return true;
+}
+
+static bool execution_commit_pending(ExecutionBinding& binding) noexcept {
+    if (!binding.pending_reservation
+        || !inbound_pending_commit(binding.pending_proposal_id,binding.pending_generation))
+        return false;
+    binding.pending_reservation=false;
+    return true;
+}
+
 static void execution_mark_invalid(ExecutionBinding& binding) noexcept {
-    if (binding.inbound_response_request && !binding.consumed)
-        inbound_pending_release(binding.pending_proposal_id,binding.pending_generation);
+    execution_release_pending(binding);
     binding.invalidated=true;
     binding.transport_verified=false;
 }
@@ -1050,6 +1071,7 @@ static bool execution_bind_inbound_response(const ResponseRequest& request,
     binding.sender=true;
     binding.response=true;
     binding.inbound_response_request=true;
+    binding.pending_reservation=true;
     binding.response_request=request;
     binding.phase=phase;
     binding.pending_proposal_id=pending.proposal_id;
@@ -1119,7 +1141,7 @@ static bool execution_bind_response(const TransportCompletedEvent& event,
     const TransportLoadedRecord& record,unsigned parent_slot) noexcept {
     if (parent_slot>=kBindingCapacity || !execution_bindings[parent_slot].used) return false;
     ExecutionBinding& parent=execution_bindings[parent_slot];
-    if (parent.response_slot!=kInvalidBinding) return false;
+    if (parent.response_bound) return false;
     if (!record.caller_verified || record.native_return!=base+kLoadReturnRva
         || !record.header_equal || !record.payload_equal
         || !record.peer_readable || !record.world_transport_readable
@@ -1138,7 +1160,6 @@ static bool execution_bind_response(const TransportCompletedEvent& event,
     binding=ExecutionBinding{};
     binding.used=true;
     binding.response=true;
-    binding.parent_slot=parent_slot;
     binding.request=parent.request;
     binding.peace_request=parent.peace_request;
     binding.peace_effects_before=parent.peace_effects_before;
@@ -1161,8 +1182,7 @@ static bool execution_bind_response(const TransportCompletedEvent& event,
     binding.expected_action=ObjectRef{event.source.action,execution_next_generation()};
     binding.incoming_wrapper=ObjectRef{record.loaded.address,execution_next_generation()};
     binding.incoming_action=ObjectRef{record.loaded.action,execution_next_generation()};
-    execution_make_ledger_id(binding.ledger_request_id,parent,
-        static_cast<uint64_t>(slot)+1u);
+    execution_make_ledger_id(binding.ledger_request_id,parent,execution_next_generation());
     Context context=execution_context();
     bridge::alliance_authority::SeedResult seeded=execution_ledger.seed(context,
         binding.ledger_request_id,payload,binding.phase,binding.expected_wrapper,
@@ -1181,7 +1201,7 @@ static bool execution_bind_response(const TransportCompletedEvent& event,
     binding.claim=claimed.ticket;
     binding.claim_bound=true;
     binding.transport_verified=true;
-    parent.response_slot=slot;
+    parent.response_bound=true;
     return true;
 }
 
@@ -1200,7 +1220,8 @@ static bool execution_transport_pipeline_ok(const TransportCompletedEvent& event
 
 static void execution_transport_loaded(const TransportCompletedEvent& event,
     const TransportLoadedRecord& record) {
-    if (!execution_initialized || !execution_handler_enabled) return;
+    if (!execution_initialized || !execution_handler_enabled
+        || !execution_on_frame_thread()) return;
     if (!execution_transport_pipeline_ok(event,record)) return;
     if (execution_sender_scope.active
         && execution_sender_scope.binding_slot<kBindingCapacity) {
@@ -1235,7 +1256,7 @@ static void execution_transport_loaded(const TransportCompletedEvent& event,
 }
 
 static void execution_protocol_clone_completed(const ProtocolCloneEvent& event) {
-    if (!execution_initialized || !execution_handler_enabled
+    if (!execution_initialized || !execution_handler_enabled || !execution_on_frame_thread()
         || event.caller_return!=base+kCloneReturnRva
         || !event.caller_return_matches || !event.receiver_readable
         || !event.world_transport_readable || !event.receiver_is_world_transport
@@ -1301,7 +1322,8 @@ static void execution_lifecycle_source_destroyed(void* source,
     const LifecycleActionShape& snapshot,unsigned flags) {
     (void)source; (void)flags;
     bridge_inbound_pending_destroyed(source,snapshot,flags);
-    if (!execution_initialized || !execution_handler_enabled || !snapshot.readable) return;
+    if (!execution_initialized || !execution_handler_enabled
+        || !execution_on_frame_thread() || !snapshot.readable) return;
     int found=execution_find_action(snapshot.address);
     if (found<0) return;
     ExecutionBinding& binding=execution_bindings[static_cast<unsigned>(found)];
@@ -1806,20 +1828,20 @@ static bool execution_submit_inbound_response(const ResponseRequest& request,
         execution_queue_response_unknown(request,response_state,false,false);
         return false;
     }
+    ExecutionBinding& binding=execution_bindings[slot];
     if (!execution_bind_inbound_response(request,pending,source,payload,slot,
             reinterpret_cast<uintptr_t>(response_action))) {
         execution_release_constructed(wrapper,
             reinterpret_cast<unsigned char*>(response_action),true);
-        release_reservation();
+        if (binding.used) execution_release_pending(binding);
+        else release_reservation();
         execution_queue_response_unknown(request,response_state,false,false);
         return false;
     }
     uintptr_t dispatcher=0,transport=0;
     if (!execution_world_dispatcher(dispatcher,transport) || !dispatcher || !transport) {
-        ExecutionBinding& binding=execution_bindings[slot];
         execution_ledger.revoke_request(execution_context(),binding.seed,binding.phase);
         execution_mark_invalid(binding);
-        inbound_pending_release(pending.proposal_id,pending.generation);
         execution_release_constructed(wrapper,
             reinterpret_cast<unsigned char*>(response_action),true);
         execution_queue_response_unknown(request,response_state,false,false);
@@ -1831,12 +1853,10 @@ static bool execution_submit_inbound_response(const ResponseRequest& request,
     const bool accepted=reinterpret_cast<Submit>(base+kDispatcherRva)(
         reinterpret_cast<void*>(dispatcher),&outgoing);
     execution_sender_scope=SenderScope{};
-    ExecutionBinding& binding=execution_bindings[slot];
     const bool proven=accepted && binding.claim_bound && binding.transport_verified;
     if (!proven) {
         execution_ledger.revoke_request(execution_context(),binding.seed,binding.phase);
         execution_mark_invalid(binding);
-        inbound_pending_release(pending.proposal_id,pending.generation);
         if (outgoing) execution_release_constructed(outgoing,nullptr,false);
         execution_destroy_temp_action(response_action);
         execution_queue_response_unknown(request,response_state,false,false);
@@ -1844,7 +1864,7 @@ static bool execution_submit_inbound_response(const ResponseRequest& request,
     }
     // Peace retains the reservation until its bound target is consumed.
     // A transport receipt alone must not permanently mark it responded.
-    if (!pending.peace_offer && !inbound_pending_commit(pending.proposal_id,pending.generation)) {
+    if (!pending.peace_offer && !execution_commit_pending(binding)) {
         execution_ledger.revoke_request(execution_context(),binding.seed,binding.phase);
         execution_mark_invalid(binding);
         if (outgoing) execution_release_constructed(outgoing,nullptr,false);
@@ -2086,15 +2106,20 @@ extern "C" int bridge_execution_execute(void* value) {
         }
         execution_call_original(value); return 1;
     }
-    int target_slot=execution_find_target(entry);
+    const int target_slot=execution_on_frame_thread()?execution_find_target(entry):-1;
     if (target_slot>=0) {
+        struct EntryScope {
+            const bool previous=execution_entry_in_progress;
+            EntryScope() noexcept { execution_entry_in_progress=true; }
+            ~EntryScope() { execution_entry_in_progress=previous; }
+        } entry_scope;
         ExecutionBinding& binding=execution_bindings[static_cast<unsigned>(target_slot)];
         if (!execution_consume_target(binding,entry)) {
             execution_mark_invalid(binding);
             return 0;
         }
         if (binding.inbound_response_request && payload.family==ActionFamily::peace
-            && !inbound_pending_commit(binding.pending_proposal_id,binding.pending_generation)) {
+            && !execution_commit_pending(binding)) {
             execution_mark_invalid(binding);
             execution_peace_inbound_unknown(binding.response_request,static_cast<int32_t>(payload.state34),true,false);
             return 0;
@@ -2281,6 +2306,37 @@ extern "C" int bridge_execution_execute(void* value) {
 #include "declarewar-execution-preflight.inc"
 #include "peace-execution-preflight.inc"
 #include "peace-execution.inc"
+
+static void execution_reclaim_bindings(const Context& context) noexcept {
+    // A nested frame must not recycle a slot while an enclosing native call
+    // still holds its reference. Other threads never access this table.
+    if (execution_entry_in_progress || execution_sender_scope.active
+        || execution_response_scope.active) return;
+
+    execution_ledger.invalidate_expired(context);
+    execution_peace_pending_results();
+    using bridge::alliance_authority::State;
+    for (auto& binding:execution_bindings) {
+        if (!binding.used) continue;
+        if (binding.seed.seed_serial) {
+            if (binding.invalidated && !binding.consumed)
+                execution_ledger.revoke_request(context,binding.seed,binding.phase);
+            const auto record=execution_ledger.inspect(context,binding.seed);
+            if (!record.result.ok()
+                || (record.view.state!=State::consumed && record.view.state!=State::invalidated))
+                continue;
+        }
+        if (!execution_release_pending(binding)) continue;
+        if (binding.consumed && !binding.invalidated && !binding.response_queued
+            && binding.inbound_response_request && binding.payload.family==ActionFamily::peace) {
+            if (!execution_peace_defer_result(binding)) continue;
+            binding.response_queued=true;
+        }
+        if (!binding.seed.seed_serial
+            || execution_ledger.release_terminal(context,binding.seed).ok())
+            binding=ExecutionBinding{};
+    }
+}
 
 static bool execution_preflight(const ExecutionRequest& request,
     uint64_t& actor,uint64_t& recipient,int32_t& date,
@@ -2631,9 +2687,8 @@ static void execution_authority_test_tick() noexcept {
 
 static void execution_tick() {
     if (!execution_initialized || !execution_handler_enabled || !control_ready()) return;
+    execution_reclaim_bindings(execution_context());
     execution_authority_test_tick();
-    Context context=execution_context();
-    execution_ledger.invalidate_expired(context);
     execution_peace_tick();
     ExecutionRequest request{};
     if (!execution_read_wire(request)) return;

@@ -145,7 +145,7 @@ def test_node_cash_capture_scope_checks_precede_profile_and_capture_work(monkeyp
     with pytest.raises(ValueError, match="NODE_CASH_SCOPE"):
         capture_module.capture(object(), 0, observer="FRA")
     with pytest.raises(ValueError, match="NODE_CASH_SCOPE"):
-        capture_module.capture(object(), PROVINCE_ID, observer="POR")
+        capture_module.capture(object(), PROVINCE_ID, observer="por")
     assert capture_module.validate_capture({}, g02.make_context(), g02.CREATION, 0) is False
     assert capture_calls == []
 

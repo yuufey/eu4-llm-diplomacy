@@ -26,6 +26,9 @@ DLL_SHA256 = "4238740233dbb3415c3151e5eace7f41b517a90d8b8843c9b6cff0e6c579dbc8"
 BUILD_PATH = ROOT / "work/runtime/diplomacy-observer-20261116-country-control-v65-002"
 MANIFEST_SHA256 = "fa142d40ed7f79ab4e509d94dea5b1666eb92bc3f754760ad5340d94fbdaa9ab"
 OLD_EVIDENCE = ROOT / "work/runtime/information-mission-guard-subsidy-monthly-sol-20261115-001/pe-review-v64-mission.json"
+SCOPED_DLL_SHA256 = "632e99535d85dce8b2a9e68ce0a1adcca9ccbb220dc30b8ead854fcc56632bd4"
+EXPIRY_DLL_SHA256 = "945d9ce8ecf6ac4f487ccc65f8a90554ef4c1e46b4e082fea454688eb68fe194"
+LIFECYCLE_DLL_SHA256 = "396f48c807b646eeed7786fcd7bd7a3ab6357f2357eebad2cf6538d0a31d8553"
 RVAS = (guard.ENTRY_RVA, guard.CONDITION_RVA, guard.PROVINCE_RVA)
 
 
@@ -158,8 +161,9 @@ def test_v65_asset_matches_final_manifest_symbols_pdata_and_unwind():
                         if entry[0] < end and entry[0] + entry[1] > begin]
 
 
-def test_v65_all_three_guards_retain_original_bytes_and_exact_runtime_proof():
-    reader, _, _, _, _ = _v65_fixture()
+@pytest.mark.parametrize("dll_sha256", [DLL_SHA256, SCOPED_DLL_SHA256, EXPIRY_DLL_SHA256, LIFECYCLE_DLL_SHA256])
+def test_v65_all_three_guards_retain_original_bytes_and_exact_runtime_proof(dll_sha256):
+    reader, _, _, _, _ = observer_fixture(65, dll_sha256=dll_sha256)
     reports = prerequisite._validate_code_guards(reader, reader.module_base, _sources())
     assert len(reports) == 3
     assert {row["observer_patch"]["kind"] for row in reports} == {
@@ -169,15 +173,16 @@ def test_v65_all_three_guards_retain_original_bytes_and_exact_runtime_proof():
     }
     for row in reports:
         assert not row["matches"] and row["raw_hex"] != row["expected_raw_hex"]
-        assert row["observer_patch"]["dll_sha256"] == DLL_SHA256
-        assert row["observer_patch"]["build_manifest_sha256"] == MANIFEST_SHA256
+        assert row["observer_patch"]["dll_sha256"] == dll_sha256
+        assert row["observer_patch"]["build_manifest_sha256"] == guard._BUILDS[dll_sha256]["manifest_sha256"]
 
 
 @pytest.mark.parametrize("kind", ["availability", "condition", "province"])
 @pytest.mark.parametrize("damage", ["binding", "manifest", "entry", "body", "unwind", "game_base"])
-def test_v65_rejects_unowned_or_changed_guard_components(kind, damage):
-    reader, _, _, dll_base, gateway = _v65_fixture()
-    contract = guard._BUILDS[DLL_SHA256]
+@pytest.mark.parametrize("dll_sha256", [DLL_SHA256, SCOPED_DLL_SHA256, EXPIRY_DLL_SHA256, LIFECYCLE_DLL_SHA256])
+def test_v65_rejects_unowned_or_changed_guard_components(kind, damage, dll_sha256):
+    reader, _, _, dll_base, _ = observer_fixture(65, dll_sha256=dll_sha256)
+    contract = guard._BUILDS[dll_sha256]
     full_asset = json.loads(contract["asset_file"].read_bytes())
     asset = full_asset if kind == "availability" else full_asset[kind]
     rva = {"availability": guard.ENTRY_RVA, "condition": guard.CONDITION_RVA,

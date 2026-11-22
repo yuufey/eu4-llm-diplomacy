@@ -69,17 +69,17 @@ def _field(family: str, owner: int, row_address: int, recipient_fullref: int, be
     }
 
 
-def _valid_report(*, marriage_unknown: bool = False) -> dict:
+def _valid_report(*, marriage_unknown: bool = False, actor_tag: str = "FRA") -> dict:
     actor_pointer = 0x100000
     recipient_pointer = 0x100100
     relation_table = 0x180000
     owner = 0x200000
     row_address = relation_table + 7 * 0x48
-    actor_handle = (5 << 32) | int.from_bytes(b"FRA", "little")
+    actor_handle = (5 << 32) | int.from_bytes(actor_tag.encode("ascii"), "little")
     recipient_handle = (7 << 32) | int.from_bytes(b"SAV", "little")
-    actor = {"index": 5, "pointer": {"va": hex(actor_pointer)}, "fullref": {"value": actor_handle, "raw_hex": actor_handle.to_bytes(8, "little").hex()}, "tag": "FRA", "slot": 5}
+    actor = {"index": 5, "pointer": {"va": hex(actor_pointer)}, "fullref": {"value": actor_handle, "raw_hex": actor_handle.to_bytes(8, "little").hex()}, "tag": actor_tag, "slot": 5}
     recipient = {"index": 7, "pointer": {"va": hex(recipient_pointer)}, "fullref": {"value": recipient_handle, "raw_hex": recipient_handle.to_bytes(8, "little").hex()}, "tag": "SAV", "slot": 7}
-    context = {"status": "observed", "database": {"value": 0x500000, "raw_hex": "0000500000000000", "address": {"va": "0x140233d8b0"}}, "game": {"value": 0x600000, "raw_hex": "0000600000000000", "address": {"va": "0x140233fe58"}}, "game_date": {"value": 56557728, "raw_hex": "a0f4?".replace("?", ""), "address": {"va": "0x600000"}}, "country_scan": {"status": "observed", "matches": {"FRA": actor, "SAV": recipient}}, "actor": actor, "recipient": recipient, "unknown_conditions": []}
+    context = {"status": "observed", "database": {"value": 0x500000, "raw_hex": "0000500000000000", "address": {"va": "0x140233d8b0"}}, "game": {"value": 0x600000, "raw_hex": "0000600000000000", "address": {"va": "0x140233fe58"}}, "game_date": {"value": 56557728, "raw_hex": "a0f4?".replace("?", ""), "address": {"va": "0x600000"}}, "country_scan": {"status": "observed", "matches": {actor_tag: actor, "SAV": recipient}}, "actor": actor, "recipient": recipient, "unknown_conditions": []}
     # The validator compares date values and relation bindings, not a date
     # encoding guessed by the test; use a valid four-byte raw representation.
     context["game_date"]["raw_hex"] = (56557728).to_bytes(4, "little", signed=True).hex()
@@ -92,7 +92,7 @@ def _valid_report(*, marriage_unknown: bool = False) -> dict:
     before = {"status": "observed", "runtime_code_guard": {"status": "observed", "checks": {}}, "context": deepcopy(context), "relation_row": deepcopy(relation_row), "fields": deepcopy(fields), "complete": not marriage_unknown}
     after = deepcopy(before)
     identity = {"binding_verified": True, "process_path_sha256_matches_expected": True, "process_creation_matches_installation": True, "process_creation_filetime": 123, "installation_session_id": "session-1"}
-    return {"schema": "information_relation_current_runtime.v1", "status": "observed", "completed": True, "profile": {"profile_id": subject.EXPECTED_PROFILE_ID, "sha256": subject.EXPECTED_PROFILE_SHA256}, "target_build": {"expected_exe_sha256": subject.EXPECTED_EXE_SHA256}, "request": {"installation": "fixture", "actor": "FRA", "recipient": "SAV", "families": ["alliance", "royal_marriage"]}, "identity": identity, "static_contract_guard": {"status": "observed"}, "runtime_code_guard": {"status": "observed"}, "context_before": deepcopy(context), "context_after": deepcopy(context), "before": before, "after": after, "fields": fields, "relation_row": relation_row, "doublepass": {"performed": True, "consistent": True, "mismatches": []}, "access": {"native_game_calls": False, "target_memory_writes": False}, "cleanup": {"handle_close": {"status": "closed", "success": True, "closed": True}}}
+    return {"schema": "information_relation_current_runtime.v1", "status": "observed", "completed": True, "profile": {"profile_id": subject.EXPECTED_PROFILE_ID, "sha256": subject.EXPECTED_PROFILE_SHA256}, "target_build": {"expected_exe_sha256": subject.EXPECTED_EXE_SHA256}, "request": {"installation": "fixture", "actor": actor_tag, "recipient": "SAV", "families": ["alliance", "royal_marriage"]}, "identity": identity, "static_contract_guard": {"status": "observed"}, "runtime_code_guard": {"status": "observed"}, "context_before": deepcopy(context), "context_after": deepcopy(context), "before": before, "after": after, "fields": fields, "relation_row": relation_row, "doublepass": {"performed": True, "consistent": True, "mismatches": []}, "access": {"native_game_calls": False, "target_memory_writes": False}, "cleanup": {"handle_close": {"status": "closed", "success": True, "closed": True}}}
 
 
 def test_profile_and_static_source_pins_are_observed():
@@ -125,6 +125,13 @@ def test_validate_real_shape_with_row_owner_distinct_from_country():
     assert subject.validate_capture(report)
 
 
+def test_validate_non_french_actor_with_real_fullref_shape():
+    report = _valid_report(actor_tag="TUR")
+    assert subject.validate_capture(report, {"actor": "TUR"}, actor="TUR", recipient="SAV")
+    assert not subject.validate_capture(report, {"actor": "FRA"}, actor="TUR")
+    assert not subject.validate_capture(report, actor="FRA")
+
+
 def test_unknown_sibling_does_not_invalidate_identity_bound_capture():
     report = _valid_report(marriage_unknown=True)
     assert subject.validate_capture(report)
@@ -152,14 +159,14 @@ def test_retract_withdraws_both_current_values():
 
 
 def test_invalid_actor_is_rejected_before_installation_open():
-    report = subject.capture(Path("does-not-exist.json"), "ORL", "SAV", ["alliance"])
+    report = subject.capture(Path("does-not-exist.json"), "orleans", "SAV", ["alliance"])
     assert report["status"] == "unsupported_request"
     assert report["completed"] is True
     assert report["cleanup"]["handle_close"]["status"] == "not_opened"
 
 
 def test_network_invalid_actor_is_rejected_before_installation_open():
-    report = subject.capture_network(Path("does-not-exist.json"), "ORL", ["alliance", "royal_marriage"])
+    report = subject.capture_network(Path("does-not-exist.json"), "orleans", ["alliance", "royal_marriage"])
     assert report["status"] == "unsupported_request"
     assert report["completed"] is True
     assert report["cleanup"]["handle_close"]["status"] == "not_opened"

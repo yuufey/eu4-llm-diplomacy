@@ -5,6 +5,7 @@ from .scalar_capture_source import ScalarCaptureSource
 
 
 class NativeGovernanceCapacitySource(ScalarCaptureSource):
+    observer_scoped = True
     TOPIC = 'N06'
     FIELD = 'governance_capacity'
     UNIT = 'governing_capacity_summary'

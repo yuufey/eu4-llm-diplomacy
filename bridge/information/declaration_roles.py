@@ -6,7 +6,7 @@ from copy import deepcopy
 from . import subject_pressure
 from . import observation_time
 from .relation_state import NativeRelationSource
-from .trade_income import _context_reason, _identity, _session_binding
+from .trade_income import _observer_context_reason, _identity, _session_binding
 
 
 _ROLE_FIELDS = ("guarantors", "subjects")
@@ -46,7 +46,8 @@ class DeclarationParticipantRoles:
         for offset in range(0, len(countries), size):
             batch = countries[offset:offset + size]
             try:
-                report = (self.subject_capture or subject_pressure.capture_bindings)(installation, batch)
+                report = (self.subject_capture(installation, batch) if self.subject_capture is not None
+                          else subject_pressure.capture_bindings(installation, batch, observer=context['observer']))
                 valid = subject_pressure.validate_binding_capture(report, context, creation, batch)
                 targets = report["observation"]["backend"]["targets"] if valid else []
                 bindings = {target["tag"]: target["fields"][subject_pressure._BINDING_FIELD]
@@ -76,7 +77,7 @@ class DeclarationParticipantRoles:
         def failure(reason):
             return {name: {"status": "unknown", "reason": reason} for name in requested}
 
-        reason = _context_reason(context)
+        reason = _observer_context_reason(context)
         if reason:
             return failure(reason)
         candidates = participants.get("candidates")
@@ -107,7 +108,7 @@ class DeclarationParticipantRoles:
             after = self.base_source.context()
         except Exception:
             return failure("PARTICIPANT_RELATION_CONTEXT_UNAVAILABLE")
-        if (_context_reason(after) or _identity(context) != _identity(after)
+        if (_observer_context_reason(after) or _identity(context) != _identity(after)
                 or not observation_time.dates_match(context["game_date"], after["game_date"])):
             return failure("PARTICIPANT_RELATION_CONTEXT_CHANGED")
         result = {}

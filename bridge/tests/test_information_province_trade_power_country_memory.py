@@ -61,7 +61,7 @@ def _admit_swe(image) -> None:
     image.put_i32(counter, 1)
 
 
-def _run(monkeypatch, image, *, leaf=None):
+def _run(monkeypatch, image, *, leaf=None, observer="FRA"):
     parent_reads = []
     leaf_reads = []
 
@@ -80,7 +80,7 @@ def _run(monkeypatch, image, *, leaf=None):
 
     monkeypatch.setattr(memory._inputs, "read_fields", parent_reader)
     monkeypatch.setattr(memory._country_leaf, "read_fields", country_reader)
-    result = memory.read_two_pass(image, BASE, PROVINCE_ID)
+    result = memory.read_two_pass(image, BASE, PROVINCE_ID, observer=observer)
     return result, leaf_reads, parent_reads
 
 
@@ -137,6 +137,20 @@ def test_same_controller_and_observer_country_is_read_once_per_pass(monkeypatch)
     assert target["fields"][memory.CONTROLLER_FIELD]["value"]["country"] == "FRA"
     assert target["fields"][memory.OBSERVER_FIELD]["value"]["country"] == "FRA"
     assert [item[0] for item in leaf_reads] == ["FRA", "FRA"]
+
+
+def test_turkish_observer_reuses_its_admitted_country_in_both_passes(monkeypatch):
+    image = parent_fixture.make_turkish_image()
+    reference = parent_fixture._fullref("TUR", parent_fixture.ENG_SLOT)
+    record = parent_fixture.RECORDS + PROVINCE_ID * province_memory.RECORD_STRIDE
+    image.put_u64(record + memory._province.CONTROLLER_FULLREF_OFFSET, reference)
+
+    result, leaf_reads, _ = _run(monkeypatch, image, observer="TUR")
+    target = _target(result)
+    assert result["status"] == "observed"
+    assert target["fields"][memory.OBSERVER_FIELD]["value"]["country"] == "TUR"
+    assert target["fields"][memory.CONTROLLER_FIELD]["value"]["country"] == "TUR"
+    assert [item[0] for item in leaf_reads] == ["TUR", "TUR"]
 
 
 @pytest.mark.parametrize("denial", ["discovery", "role"])

@@ -34,7 +34,8 @@ def _round(limiter, base, province_id, anchor, countries, allocation, read_field
 
 
 def extend(reader, base, province_id, *, observer='FRA', parent_reader, read_fields=_leaf.read_fields):
-    if (observer != 'FRA' or type(province_id) is not int or not 1 <= province_id <= 65535
+    if (not isinstance(observer, str) or not _country._owner._TAG.fullmatch(observer)
+            or type(province_id) is not int or not 1 <= province_id <= 65535
             or not callable(parent_reader) or not callable(read_fields)):
         raise ValueError('NODE_CASH_PARENT_SCOPE_INVALID')
     limiter = _shared._BoundedReader(_country._province._ReaderAdapter(reader))

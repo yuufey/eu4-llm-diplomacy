@@ -132,14 +132,10 @@ def test_catalog_exposes_only_verified_country_fields() -> None:
             assert "diplomats_available" in topic["parameters"]["properties"]["reference_recipient"]["description"]
             assert "diplomat_tasks" in topic["parameters"]["properties"]["reference_recipient"]["description"]
         elif topic["topic_id"] == "N02":
-            # The shared catalog schema admits forces-only N02 reads.  The
-            # state adapter still requires a recipient when its manpower
-            # field is selected; that route-level rule is covered below.
+            # Own resources use the live cache. Pair inspection is optional.
             assert topic["parameters"]["required"] == []
             description = topic["parameters"]["properties"]["reference_recipient"]["description"]
             assert "manpower" in description
-            for field in ("army_size", "navy_size", "army_composition", "navy_composition"):
-                assert field in description
         else:
             assert topic["parameters"]["required"] == ["reference_recipient"]
         assert topic["triggers"] == ["query", "periodic", "change"]
@@ -233,9 +229,7 @@ def test_country_scope_and_reference_recipient_are_explicit() -> None:
 
     missing_reference = _query("N02", ["manpower"])
     missing_reference["parameters"] = {}
-    with pytest.raises(InformationError) as missing:
-        source.validate_query(missing_reference, source.context())
-    assert missing.value.code == "invalid_parameters"
+    assert source.validate_query(missing_reference, source.context())["parameters"] == {}
 
     with pytest.raises(InformationError) as same:
         source.validate_query(_query("N02", ["manpower"], "FRA"), source.context())

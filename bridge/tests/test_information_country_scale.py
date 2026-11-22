@@ -710,13 +710,25 @@ def test_query_rejects_unimplemented_fields_and_unbounded_requests(
     assert captures == []
 
 
+@pytest.mark.parametrize('observer', ['TUR', 'D01'])
+def test_scale_fields_use_the_configured_observer_tag(tmp_path, monkeypatch, observer):
+    source, base, _, captures, validations = make_source(
+        tmp_path, monkeypatch, report=make_report(observer=observer))
+    base.current['observer'] = observer
+    result = source.read(make_query(fields=['development']), base.context())
+    assert result['fields']['development']['status'] == 'known'
+    assert captures == [(tmp_path / 'installation.json', 'ENG', observer)]
+    assert validations[0][1]['observer'] == observer
+
+
 def test_observer_mismatch_stale_context_and_session_changes_do_not_publish_values(
         tmp_path, monkeypatch):
     source, base, _, captures, _ = make_source(tmp_path, monkeypatch)
     wrong_observer = base.context()
     wrong_observer["observer"] = "POR"
-    with pytest.raises(InformationError):
-        source.read(make_query(), wrong_observer)
+    rejected = source.read(make_query(), wrong_observer)
+    assert all(field['reason'] == 'COUNTRY_SCALE_CONTEXT_STALE' for field in rejected['fields'].values())
+    assert captures == []
 
     stale = base.context()
     stale["game_date"] += 1

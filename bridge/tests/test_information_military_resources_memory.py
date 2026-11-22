@@ -136,19 +136,19 @@ def _observed(reader: MemoryReader, *, country_pointer: int = COUNTRY) -> dict:
     return m.read_fields(reader, BASE, country_pointer, profile=m._load_profile())
 
 
-def _capture_like(reader: MemoryReader) -> tuple[dict, dict, dict]:
+def _capture_like(reader: MemoryReader, country: str = "FRA") -> tuple[dict, dict, dict]:
     profile = m._load_profile()
     static = m._static_contract_guard(profile)
-    first = m._snapshot(reader, BASE, "FRA", profile, static, m._ReadBudget())
-    second = m._snapshot(reader, BASE, "FRA", profile, static, m._ReadBudget())
+    first = m._snapshot(reader, BASE, country, profile, static, m._ReadBudget())
+    second = m._snapshot(reader, BASE, country, profile, static, m._ReadBudget())
     report = {
-        "status": "observed", "completed": True, "read_only": True, "country": "FRA",
+        "status": "observed", "completed": True, "read_only": True, "country": country,
         "module_base": hex(BASE), "country_pointer": first["private"]["country_pointer"],
         "before": first, "after": second,
         "country_scan": {"before": first["private"]["country_scan"], "after": second["private"]["country_scan"]},
         "fields": deepcopy(second["fields"]), "values": deepcopy(second["values"]), "raw_hex": deepcopy(second["raw_hex"]),
         "identity": {"installation_path": "synthetic-installation.json", "installation_pid": 91, "installation_creation_filetime": 92, "installation_session_id": "synthetic-session", "process_path_sha256": m.EXPECTED_EXE_SHA256, "process_path_sha256_matches_expected": True, "process_creation_filetime": 92, "process_creation_matches_installation": True, "binding_verified": True},
-        "request": {"installation": "synthetic-installation.json", "country": "FRA", "pid": 91, "creation_filetime": 92, "session_id": "synthetic-session", "game_sha256": m.EXPECTED_EXE_SHA256},
+        "request": {"installation": "synthetic-installation.json", "country": country, "pid": 91, "creation_filetime": 92, "session_id": "synthetic-session", "game_sha256": m.EXPECTED_EXE_SHA256},
         "cleanup": {"handle_close": {"status": "closed", "success": True, "closed": True}},
         "access": {
             "native_game_calls": False, "target_memory_writes": False, "mcp_query": False,
@@ -301,10 +301,13 @@ def test_validate_capture_rejects_raw_binding_or_outer_identity_tamper() -> None
     assert not m.validate_capture(tampered, {"game_date": 56_562_768, "session_id": "synthetic-session", "game_sha256": m.EXPECTED_EXE_SHA256}, 92)
 
 
-def test_real_capture_validation_reaches_military_resources_adapter(tmp_path: Path) -> None:
-    report, _first, _second = _capture_like(_make_reader())
+@pytest.mark.parametrize("country", ["FRA", "TUR", "D01"])
+def test_real_capture_validation_reaches_military_resources_adapter(tmp_path: Path, country: str) -> None:
+    reader = _make_reader()
+    reader.put(COUNTRY + 0x20, _u64(int.from_bytes(country.encode("ascii"), "little")))
+    report, _first, _second = _capture_like(reader, country)
     context = {
-        "status": "ready", "complete": True, "mode": "live", "observer": "FRA",
+        "status": "ready", "complete": True, "mode": "live", "observer": country,
         "game_version": "1.37.4", "game_sha256": m.EXPECTED_EXE_SHA256,
         "session_id": "synthetic-session", "game_date": 56_562_768,
         "game_date_raw": 56_562_768,
@@ -313,7 +316,7 @@ def test_real_capture_validation_reaches_military_resources_adapter(tmp_path: Pa
                               record={"session_id": "synthetic-session", "creation_filetime": 92})
     base = SimpleNamespace(session=session, context=lambda: deepcopy(context))
     source = NativeMilitaryResourcesSource(base, capture=lambda *_args, **_kwargs: deepcopy(report))
-    query = {"topic": "N02", "object": {"type": "country", "country": "FRA"},
+    query = {"topic": "N02", "object": {"type": "country", "country": country},
              "fields": ["sailors", "force_limits"], "parameters": {}}
     result = source.read(query, context)
     assert result["fields"]["sailors"]["value"] == 2_597_984

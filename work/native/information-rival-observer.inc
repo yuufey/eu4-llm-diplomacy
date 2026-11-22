@@ -7,7 +7,7 @@ namespace rival_change_observer {
 
 namespace owned = information::rival_change;
 constexpr unsigned kCapacity = 64;
-struct Event final { owned::Change value{}; uint64_t sequence = 0; unsigned char path = 0; };
+struct Event final { owned::Change value{}; uint64_t sequence = 0, observer = 0; unsigned char path = 0; };
 struct Pending final {
     owned::Change value{};
     uintptr_t actor_country = 0;
@@ -23,6 +23,14 @@ static volatile LONG dropped = 0, total_dropped = 0;
 static void note_drop() noexcept {
     InterlockedIncrement(&dropped);
     InterlockedIncrement(&total_dropped);
+}
+
+static bool observes(uint64_t reference) noexcept {
+#ifdef BRIDGE_NATIVE_COUNTRY_CONTROL
+    return observation_information_country_handle(reference);
+#else
+    return (reference & 0xffffffu) == 0x415246u;
+#endif
 }
 
 static bool valid_tag(uint64_t reference) noexcept {
@@ -58,9 +66,7 @@ using SnapshotReader = bool(*)(const owned::Change&, uintptr_t, owned::Snapshot&
 static Pending begin(unsigned kind, uint64_t actor, uint64_t target, uint64_t old_rival,
     bool command_verified, SnapshotReader read_snapshot = &snapshot) noexcept {
     Pending pending{};
-    constexpr uint64_t france = 0x415246u;
-    pending.relevant = installed && ((actor & 0xffffffu) == france || (target & 0xffffffu) == france
-        || (kind == 2 && (old_rival & 0xffffffu) == france));
+    pending.relevant = installed && (observes(actor) || observes(target) || (kind == 2 && observes(old_rival)));
     if (!pending.relevant || transport_fault || !command_verified) return pending;
     auto& value = pending.value;
     value.kind = static_cast<owned::Kind>(kind);
@@ -79,12 +85,23 @@ static Pending begin(unsigned kind, uint64_t actor, uint64_t target, uint64_t ol
 
 static bool enqueue(const owned::Change& value, unsigned char path = 0) noexcept {
     if (path > 2) return false;
-    Event event{value, static_cast<uint64_t>(InterlockedIncrement64(&sequence)), path};
-    if (!TryAcquireSRWLockExclusive(&queue_lock)) return false;
-    const bool available = size < kCapacity;
-    if (available) { events[(head + size) % kCapacity] = event; ++size; }
+    const uint64_t endpoints[] = {value.actor, value.target, value.old_rival};
+    uint64_t observers[3]{};
+    unsigned count = 0;
+    for (const auto handle : endpoints) {
+        if (handle && observes(handle)) observers[count++] = handle;
+    }
+    if (!count || !TryAcquireSRWLockExclusive(&queue_lock)) return false;
+    bool complete = true;
+    for (unsigned index = 0; index < count; ++index) {
+        const auto id = static_cast<uint64_t>(InterlockedIncrement64(&sequence));
+        if (size < kCapacity) {
+            events[(head + size) % kCapacity] = {value, id, observers[index], path};
+            ++size;
+        } else complete = false;
+    }
     ReleaseSRWLockExclusive(&queue_lock);
-    return available;
+    return complete;
 }
 
 static void finish(Pending& pending, SnapshotReader read_snapshot = &snapshot) noexcept {
@@ -113,7 +130,7 @@ static bool append(const char* message, size_t bytes) noexcept {
     return true;
 }
 
-using RecordFormatter = int(*)(const owned::Change&, unsigned char, uint64_t, char*, size_t) noexcept;
+using RecordFormatter = int(*)(const owned::Change&, unsigned char, uint64_t, uint64_t, char*, size_t) noexcept;
 
 static void flush(RecordFormatter formatter = nullptr) noexcept {
     if (!installed || transport_fault) return;
@@ -125,25 +142,31 @@ static void flush(RecordFormatter formatter = nullptr) noexcept {
         ReleaseSRWLockExclusive(&queue_lock);
         const auto& value = event.value;
         const char* kind = value.kind == owned::Kind::set ? "set" : value.kind == owned::Kind::replace ? "replace" : "remove";
-        char actor[4]{}, target[4]{}, old[4]{};
+        char actor[4]{}, target[4]{}, old[4]{}, observer[4]{};
         for (unsigned byte = 0; byte < 3; ++byte) {
             actor[byte] = static_cast<char>(value.actor >> (byte * 8));
             target[byte] = static_cast<char>(value.target >> (byte * 8));
             old[byte] = value.old_rival ? static_cast<char>(value.old_rival >> (byte * 8)) : '-';
+            observer[byte] = static_cast<char>(event.observer >> (byte * 8));
         }
+#ifdef BRIDGE_NATIVE_COUNTRY_CONTROL
+        constexpr unsigned schema = 3;
+#else
+        constexpr unsigned schema = 1;
+#endif
         char message[1400]{};
         const int bytes = event.path
-            ? (formatter ? formatter(value,event.path,event.sequence,message,sizeof(message)) : 0)
+            ? (formatter ? formatter(value,event.path,event.sequence,event.observer,message,sizeof(message)) : 0)
             : snprintf(message, sizeof(message),
-            "{\"event\":\"native_rival_changed\",\"schema_version\":1,\"session_id\":\"%lu-%llx\","
-            "\"sequence\":%llu,\"country\":\"FRA\",\"actor\":\"%s\",\"target\":\"%s\",\"old_rival\":\"%s\","
+            "{\"event\":\"native_rival_changed\",\"schema_version\":%u,\"session_id\":\"%lu-%llx\","
+            "\"sequence\":%llu,\"country\":\"%.3s\",\"actor\":\"%s\",\"target\":\"%s\",\"old_rival\":\"%s\","
             "\"actor_fullref\":\"0x%llx\",\"target_fullref\":\"0x%llx\",\"old_rival_fullref\":\"0x%llx\","
             "\"operation\":\"%s\",\"date_raw\":%d,\"before\":{\"count\":%d,\"target_active\":%s,"
             "\"target_since_date_raw\":%d,\"old_active\":%s,\"old_since_date_raw\":%d},"
             "\"after\":{\"count\":%d,\"target_active\":%s,\"target_since_date_raw\":%d,"
             "\"old_active\":%s,\"old_since_date_raw\":%d},\"source\":\"rival_command_normal_return\",\"complete\":true}\n",
-            static_cast<unsigned long>(GetCurrentProcessId()), static_cast<unsigned long long>(observation_creation),
-            static_cast<unsigned long long>(event.sequence), actor, target, old,
+            schema, static_cast<unsigned long>(GetCurrentProcessId()), static_cast<unsigned long long>(observation_creation),
+            static_cast<unsigned long long>(event.sequence), observer, actor, target, old,
             static_cast<unsigned long long>(value.actor), static_cast<unsigned long long>(value.target),
             static_cast<unsigned long long>(value.old_rival), kind, value.date,
             value.before.count, value.before.target.active ? "true" : "false", value.before.target.since_date,

@@ -110,6 +110,33 @@ def test_native_malformed_records_rejected(changes):
     assert observation.public_observation(relation(**changes), SESSION_ID) is None
 
 
+def test_configured_relation_receipts_preserve_each_observing_endpoint(tmp_path, monkeypatch):
+    events = [relation(sequence=1, actor="ENG", recipient="TUR", country="ENG", schema_version=6,
+                       observation_path="command_return", source=observation.SUPPORT_SUBJECT_RECORD_SOURCE),
+              relation(sequence=2, actor="ENG", recipient="TUR", country="TUR", schema_version=6,
+                       observation_path="command_return", source=observation.SUPPORT_SUBJECT_RECORD_SOURCE)]
+    assert observation.public_observation(events[0] | {"country": "FRA"}, SESSION_ID) is None
+    session, journal, _ = make_source(tmp_path, events=events)
+    session.observed_countries = ("ENG", "TUR")
+    monkeypatch.setattr(session, "installation_capabilities", lambda: frozenset({
+        observation.CAPABILITY, observation.RECORD_CAPABILITY, observation.ROYAL_RECORD_CAPABILITY,
+        observation.DIRECTED_RECORD_CAPABILITY, observation.SUPPORT_SUBJECT_RECORD_CAPABILITY,
+        observation.SCOPED_CAPABILITY,
+    }))
+    try:
+        sources = [DiplomacySource(DiplomacyTools(journal, session), observer=country) for country in ("ENG", "TUR")]
+        for source in sources:
+            context = source.context()
+            batch = source.poll_events(context, None)
+            selected = [event for event in batch["events"] if event["event_type"] == observation.EVENT_TYPE]
+            assert len(selected) == 1
+            assert selected[0]["observer"] == selected[0]["payload"]["country"] == context["observer"]
+            assert selected[0]["payload"]["scope"] == observation.CONFIGURED_RECORD_SCOPE
+            assert observation.valid_event_snapshot(selected[0], context)
+    finally:
+        journal.close()
+
+
 def test_pair_scope_support_roles_and_bounded_collector(monkeypatch):
     assert observation.public_observation(relation(actor='FRA', recipient='CAS'), SESSION_ID)
     assert observation.public_observation(relation(actor='ENG', recipient='CAS'), SESSION_ID) is None

@@ -8,7 +8,13 @@ body = '''
         server = qword(game+0x1e00)
         vt = qword(server)
         getter = qword(vt+0x100)
+        player_tag = None
+        if player_country and player_object_handle == player_handle:
+            tag_bytes = (player_handle & 0xffffff).to_bytes(3, 'little')
+            if all(48 <= value <= 57 or 65 <= value <= 90 for value in tag_bytes):
+                player_tag = tag_bytes.decode('ascii')
         report = {'pid': args.pid, 'read_only': True, 'player_slot': player_slot,
+                  'player_tag': player_tag,
                   'date_raw': int.from_bytes(read(game+0x1dd0,4),'little',signed=True),
                   'speed': int.from_bytes(read(game+0x1e08,4),'little',signed=True),
                   'server': hex(server), 'server_vtable_rva': hex(vt-base),

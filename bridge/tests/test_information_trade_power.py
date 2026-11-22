@@ -33,8 +33,9 @@ class _Session:
 
 
 class _Base:
-    def __init__(self, directory: Path):
+    def __init__(self, directory: Path, observer='FRA'):
         self.session = _Session(directory)
+        self.observer = observer
         self.calls = 0
         self.after_context = None
 
@@ -47,7 +48,7 @@ class _Base:
             "session_id": SESSION_ID,
             "game_sha256": GAME_SHA256,
             "game_version": "1.37.4",
-            "observer": "FRA",
+            "observer": self.observer,
             "game_date": GAME_DATE,
             "game_date_raw": GAME_DATE,
         }
@@ -90,8 +91,8 @@ def _set_power_components(reader, table: int, values: tuple[int, int, int, int, 
     reader.data[(address, 0xC0)] = bytes(raw)
 
 
-def _records(reader):
-    trade_record = trade.read_fields(reader, MODULE_BASE, COUNTRY_POINTER)
+def _records(reader, country='FRA'):
+    trade_record = trade.read_fields(reader, MODULE_BASE, COUNTRY_POINTER, country)
     assert trade_record["status"] == "observed"
     assert trade.validate_record(trade_record)
     power_record = power.read_fields(reader, MODULE_BASE, trade_record)
@@ -116,11 +117,11 @@ def _report(trade_record: dict, power_record: dict, base: _Base) -> dict:
         "status": "observed",
         "read_only": True,
         "native_function_invoked": False,
-        "country": "FRA",
+        "country": trade_record['country'],
         "target_build": {"version": "1.37.4", "expected_exe_sha256": GAME_SHA256},
         "request": {
             "installation": str(base.session.directory / "installation.json"),
-            "country": "FRA",
+            "country": trade_record['country'],
             "include_trade_income": True,
             "include_trade_power": True,
         },
@@ -144,8 +145,8 @@ def _report(trade_record: dict, power_record: dict, base: _Base) -> dict:
     }
 
 
-def _source(tmp_path: Path, report=None):
-    base = _Base(tmp_path)
+def _source(tmp_path: Path, report=None, *, observer='FRA'):
+    base = _Base(tmp_path, observer=observer)
     calls = []
 
     def capture(installation, country, *, include_trade_income=False, include_trade_power=False):
@@ -153,6 +154,23 @@ def _source(tmp_path: Path, report=None):
         return deepcopy(report)
 
     return NativeTradePowerSource(base, capture=capture), base, calls
+
+
+def test_public_power_binds_turkish_source_fullref_and_rejects_french_replay(tmp_path, configured):
+    _, power_profile = configured
+    reader = _reader_with_power_guard(power_profile)
+    fullref_at = (COUNTRY_POINTER + 0x20, 8)
+    reader.data[fullref_at] = b'TUR\0' + reader.data[fullref_at][4:]
+    _set_power_components(reader, trade_fixture.TABLE_ONE, (1000, 2000, 3000, 4000, 5000))
+    trade_record, power_record = _records(reader, 'TUR')
+    packet = _report(trade_record, power_record, _Base(tmp_path, observer='TUR'))
+    source, base, calls = _source(tmp_path, packet, observer='TUR')
+    result = source.read(_query('alpha'), base.context())
+    assert result['fields']['country_power']['status'] == 'known'
+    assert result['fields']['total_power']['value'] == 746110
+    assert calls == [(tmp_path / 'installation.json', 'TUR', True, True)]
+    french, base, _ = _source(tmp_path, packet, observer='FRA')
+    assert french.read(_query('alpha'), base.context())['fields']['total_power']['status'] == 'unknown'
 
 
 def _query(node_id: str, fields=None, parameters=None) -> dict:

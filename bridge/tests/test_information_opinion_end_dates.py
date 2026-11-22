@@ -59,7 +59,8 @@ def test_unknown_record_does_not_remove_a_known_sibling(tmp_path):
 @pytest.mark.parametrize('actor,recipient',[('ENG','POR'),('FRA','FRA')])
 def test_scope_is_the_same_explicit_observer_pair(actor,recipient,tmp_path):
     provider,_,_=source(tmp_path)
-    with pytest.raises(InformationError):provider.validate_query(query(actor,recipient))
+    with pytest.raises(InformationError):
+        provider.validate_query(query(actor, recipient), provider.context())
 
 def test_replay_rejection_withdraws_field(tmp_path):
     provider,_,_=source(tmp_path,validator_result=False)
@@ -74,6 +75,7 @@ def test_capture_profile_and_strict_owner_contract(monkeypatch):
     assert capture._load_profile()['profile_id']==capture.PROFILE_ID
     monkeypatch.setattr(capture.owner,'_capture_common',lambda *a,**k:k)
     result=capture.capture('installation','ENG')
-    assert result['observe'] is capture.records._observe and result['schema']==capture.SCHEMA
+    assert result['observe'].func is capture.records._observe and result['schema'] == capture.SCHEMA
+    assert result['observe'].keywords == {'observer': 'FRA'} and result['observer_scoped'] is True
     with pytest.raises(ValueError):capture.capture('installation','FRA')
     assert not capture.validate_capture({'schema':'wrong'},{},1,'ENG')

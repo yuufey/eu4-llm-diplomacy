@@ -12,6 +12,7 @@ from __future__ import annotations
 from . import observation_time as _time
 
 from copy import deepcopy
+from functools import partial
 import hashlib
 from pathlib import Path
 import re
@@ -27,7 +28,6 @@ _PRESTIGE_GAME_SHA256 = (
     "b23fa0e1f698d31b01cdd1c3817a675805d8c6286cb66f9c231e6e2a42544d77"
 )
 _MONARCH_POINTS_COUNTRY = "FRA"
-_MONTHLY_ECONOMY_COUNTRY = "FRA"
 _MONTHLY_ECONOMY_FIELDS = (
     "monthly_income", "monthly_expenses", "monthly_balance",
 )
@@ -106,9 +106,7 @@ def _parameter_schema(topic_id: str) -> dict[str, Any]:
         )
     elif topic_id == "N02":
         schema["properties"]["reference_recipient"]["description"] = (
-            "manpower 单独请求或与其它字段混合时必填；只请求 max_manpower，或只组合 "
-            "manpower 与 max_manpower 时可省略；army_size/navy_size/army_composition/"
-            "navy_composition/sailors/force_limits 也可单独请求而省略"
+            "本国军事字段可省略。显式提供时，manpower 缓存不可用可沿用国家对预览。"
         )
     elif topic_id == "N05":
         schema["properties"]["reference_recipient"]["description"] = (
@@ -136,7 +134,6 @@ def _field_metadata(topic_id: str, field: str) -> dict[str, Any]:
             "value_origin": "projected_named_native_income_slots",
             "paths": ["monthly_economy.income_slots"],
             "source": "NativeCountryStateSource",
-            "supported_countries": [_MONTHLY_ECONOMY_COUNTRY],
             "complete": False,
             "gaps": ["WAR_INCOME_CATEGORY_COVERAGE_NOT_EXHAUSTIVE",
                      "CURRENT_WAR_ATTRIBUTION_NOT_ESTABLISHED",
@@ -155,7 +152,6 @@ def _field_metadata(topic_id: str, field: str) -> dict[str, Any]:
             "value_origin": _MONTHLY_ECONOMY_VALUE_ORIGIN,
             "paths": ["monthly_economy.fields.monthly_income.raw"],
             "source": "NativeCountryStateSource",
-            "supported_countries": [_MONTHLY_ECONOMY_COUNTRY],
             "gaps": ["GUI_DYNAMIC_MONTHLY_ESTIMATE_NOT_CLOSED"],
         },
         ("N01", "monthly_expenses"): {
@@ -171,7 +167,6 @@ def _field_metadata(topic_id: str, field: str) -> dict[str, Any]:
             "value_origin": _MONTHLY_ECONOMY_VALUE_ORIGIN,
             "paths": ["monthly_economy.fields.monthly_expenses.raw"],
             "source": "NativeCountryStateSource",
-            "supported_countries": [_MONTHLY_ECONOMY_COUNTRY],
             "gaps": ["GUI_DYNAMIC_MONTHLY_ESTIMATE_NOT_CLOSED"],
         },
         ("N01", "monthly_balance"): {
@@ -187,7 +182,6 @@ def _field_metadata(topic_id: str, field: str) -> dict[str, Any]:
             "value_origin": _MONTHLY_ECONOMY_VALUE_ORIGIN,
             "paths": ["monthly_economy.fields.monthly_balance.raw"],
             "source": "NativeCountryStateSource",
-            "supported_countries": [_MONTHLY_ECONOMY_COUNTRY],
             "gaps": ["GUI_DYNAMIC_MONTHLY_ESTIMATE_NOT_CLOSED"],
         },
         ("N02", "manpower"): {
@@ -201,7 +195,6 @@ def _field_metadata(topic_id: str, field: str) -> dict[str, Any]:
             "basis": "native_country_max_manpower_cache",
             "paths": ["own_resource_cache.N02.max_manpower"],
             "source": "bridge.information.own_resource_caches.capture",
-            "supported_countries": ["FRA"],
         },
         ("N02", "max_sailors"): {
             "description": "本国最大水手数，从原生最大水手缓存读取",
@@ -209,7 +202,6 @@ def _field_metadata(topic_id: str, field: str) -> dict[str, Any]:
             "basis": "native_country_max_sailors_cache",
             "paths": ["own_resource_cache.N02.max_sailors"],
             "source": "bridge.information.own_resource_caches.capture",
-            "supported_countries": ["FRA"],
         },
         ("N05", "diplomats_available"): {
             "description": "本国当前可用外交官数量；实时宏观查询复用已验证任务图中状态为0的实例计数",
@@ -236,7 +228,6 @@ def _field_metadata(topic_id: str, field: str) -> dict[str, Any]:
             "raw_semantics": "values.administrative/diplomatic/military / 1",
             "paths": ["values"],
             "source": "bridge.information.country_resources_memory.capture",
-            "supported_countries": ["FRA"],
         },
     }
     return {
@@ -394,27 +385,9 @@ class NativeCountryStateSource:
                 "invalid_parameters", "parameters must be an object"
             )
         points_only = topic_id == "N06" and fields == ["monarch_points"]
-        max_resource_cache_only = (
-            topic_id == "N02"
-            and bool(set(fields) & {"max_manpower", "max_sailors"})
-            and set(fields) <= {"manpower", "max_manpower", "max_sailors"}
-        )
-        finance_query = topic_id == "N01"
-        if points_only or finance_query or max_resource_cache_only:
-            if set(parameters) not in (set(), {"reference_recipient"}):
-                raise InformationError(
-                    "invalid_parameters",
-                    (
-                        "points-only parameters may be empty or contain "
-                        "reference_recipient"
-                        if points_only else
-                        "max-resource cache-only parameters may be empty or contain "
-                        "reference_recipient"
-                        if max_resource_cache_only else
-                        "finance parameters may be empty or contain "
-                        "reference_recipient"
-                    ),
-                )
+        if points_only or topic_id in ("N01", "N02"):
+            if set(parameters) - {"reference_recipient"}:
+                raise InformationError("invalid_parameters", "Only reference_recipient is supported")
         elif set(parameters) != {"reference_recipient"}:
             raise InformationError(
                 "invalid_parameters",
@@ -548,12 +521,14 @@ class NativeCountryStateSource:
         return _time.context_identity(context, _PRESTIGE_CONTEXT_KEYS)
 
     @staticmethod
-    def _monarch_points_context_reason(context: dict[str, Any], country: str) -> str | None:
+    def _monarch_points_context_reason(context: dict[str, Any], country: str, *,
+                                       observer_scoped: bool = False) -> str | None:
         """Validate the live identity required by the native points reader."""
 
         if not isinstance(context, dict):
             return "MONARCH_POINTS_CONTEXT_UNAVAILABLE"
-        if country != _MONARCH_POINTS_COUNTRY:
+        if (not isinstance(country, str) or not _COUNTRY.fullmatch(country)
+                or (not observer_scoped and country != _MONARCH_POINTS_COUNTRY)):
             return "MONARCH_POINTS_COUNTRY_UNSUPPORTED"
         if context.get("status") != "ready" or context.get("mode") != "live":
             return "MONARCH_POINTS_LIVE_CONTEXT_UNAVAILABLE"
@@ -875,7 +850,7 @@ class NativeCountryStateSource:
                              complete=False, provenance=provenance),
             )
 
-        reason = self._monarch_points_context_reason(current, actor)
+        reason = self._monarch_points_context_reason(current, actor, observer_scoped=True)
         if reason is not None:
             return unavailable(reason)
 
@@ -885,7 +860,7 @@ class NativeCountryStateSource:
                 before = self.context()
             except Exception:
                 before = {}
-            reason = self._monarch_points_context_reason(before, actor)
+            reason = self._monarch_points_context_reason(before, actor, observer_scoped=True)
             if reason is not None:
                 return unavailable(reason)
             if (self._monarch_points_context_identity(current)
@@ -924,9 +899,10 @@ class NativeCountryStateSource:
         capture = self.monarch_points_capture
         if capture is None:
             try:
-                from .country_resources_memory import capture as capture
+                from .country_resources_memory import capture as capture_country_resources
             except Exception:
                 return unavailable("MONARCH_POINTS_CAPTURE_UNAVAILABLE", before)
+            capture = partial(capture_country_resources, observer_scoped=True)
         if not callable(capture):
             return unavailable("MONARCH_POINTS_CAPTURE_UNAVAILABLE", before)
         try:
@@ -959,7 +935,7 @@ class NativeCountryStateSource:
             after = self.context()
         except Exception:
             after = {}
-        after_reason = self._monarch_points_context_reason(after, actor)
+        after_reason = self._monarch_points_context_reason(after, actor, observer_scoped=True)
         if (after_reason is not None
                 or self._monarch_points_context_identity(before)
                 != self._monarch_points_context_identity(after)):
@@ -988,7 +964,7 @@ class NativeCountryStateSource:
     ) -> str | None:
         """Validate the live identity required by the monthly ledger reader."""
         reason = NativeCountryStateSource._monarch_points_context_reason(
-            context, country
+            context, country, observer_scoped=True
         )
         if reason is None:
             return None
@@ -1720,7 +1696,7 @@ class NativeCountryStateSource:
         if topic_id == "N02":
             return self._read_public_projection_topic(
                 normalized, current, context_supplied=context_supplied)
-        if topic_id == 'N05' and _time.active() and normalized['object']['country'] == 'FRA':
+        if topic_id == 'N05' and _time.active() and normalized['object']['country'] == current.get('observer'):
             from .diplomat_tasks import NativeDiplomatTasksSource
             task_query = dict(normalized, fields=['diplomat_tasks'], parameters={})
             sample = NativeDiplomatTasksSource(self.base_source).read(task_query, current)

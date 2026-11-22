@@ -529,7 +529,7 @@ def _build_catalog() -> list[dict]:
             topic_result["response_preview"] = {
                 "phases": ["accept", "reject"], "required_parameter": "proposal_id",
                 "binding": "original_observed_proposal", "read_only": True,
-                "supported_observers": ["FRA"], "supported_versions": ["1.37.4"],
+                "supported_versions": ["1.37.4"],
                 "response_authority": False}
         if topic_id == "A04":
             # An inbound offer is visible to its recipient.  The actor may be
@@ -543,7 +543,7 @@ def _build_catalog() -> list[dict]:
             topic_result["fields"]["currently_pending"].update(
                 complete=False, unit="boolean", scale=1, period="current",
                 description="按明确proposal_id和fresh_pending只读复查当前是否待处理；变化订阅沿配置间隔轮询。",
-                supported_modes=["live"], supported_observers=["FRA"],
+                supported_modes=["live"],
                 current_state_parameter="fresh_pending")
             topic_result["fields"]["proposal_status"].update(
                 complete=False, unit="proposal_state", scale=1,
@@ -563,7 +563,7 @@ def _build_catalog() -> list[dict]:
             topic_result["fields"]["deadline"].update(
                 unit="game_date_raw", scale=1, period="proposal",
                 description="原生待办创建日期加3天的期限阈值，清理条件为当前日期严格大于该值；实际过期时间沿事件。",
-                supported_modes=["live"], supported_observers=["FRA"],
+                supported_modes=["live"],
                 expiry_comparison="current_game_date > value",
                 event_occurrence_date_derived=False)
         result.append(topic_result)

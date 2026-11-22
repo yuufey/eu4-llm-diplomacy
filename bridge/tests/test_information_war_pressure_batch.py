@@ -24,13 +24,13 @@ COUNTRIES = ['AMG', 'AUV', 'BOU', 'FOI', 'HAB', 'HES', 'ORL', 'SAV', 'TTL',
 VALUES = {tag: index * 137 - 100 for index, tag in enumerate(COUNTRIES)}
 
 
-def image_fixture(*, denied=False):
-    entries = {'FRA': (122, 0x1200, 5), 'POR': (189, 0x5500, 3)}
+def image_fixture(*, denied=False, observer='FRA'):
+    entries = {observer: (122, 0x1200, 5), 'POR': (189, 0x5500, 3)}
     entries.update({tag: (300 + index, 0x4500, 9) for index, tag in enumerate(COUNTRIES)})
     image, bindings, _ = country_fixture.make_reader(entries, count=320)
-    fixture._write_capture_context(image, country=COUNTRIES[0], admitted=not denied)
+    fixture._write_capture_context(image, country=COUNTRIES[0], admitted=not denied,
+                                   observer=observer)
     admission = fixture.admission
-    observer = bindings['FRA']['country_pointer']
     for tag in COUNTRIES:
         slot = bindings[tag]['slot']
         row = fixture.RELATION_TABLE + slot * admission.RELATION_ROW_STRIDE
@@ -40,17 +40,18 @@ def image_fixture(*, denied=False):
                    + slot * admission.RELATION_COUNTER_STRIDE)
         image.put_i32(counter, 0 if denied and tag == COUNTRIES[0] else 1)
         image.put_i32(bindings[tag]['country_pointer'] + 0xD10, VALUES[tag])
-    assert observer == country_fixture.COUNTRY_BASE + 122 * 0x1000
+    assert bindings[observer]['country_pointer'] == country_fixture.COUNTRY_BASE + 122 * 0x1000
     for guard in single._load_profile()['code_guards']:
         image.put(fixture.MODULE_BASE + int(guard['rva'], 0), bytes.fromhex(guard['bytes']))
-    context = {'status': 'ready', 'complete': True, 'mode': 'live', 'observer': 'FRA',
+    context = {'status': 'ready', 'complete': True, 'mode': 'live', 'observer': observer,
                'session_id': fixture.SESSION_ID, 'game_version': '1.37.4',
                'game_sha256': single._owner.EXE_SHA256, 'game_date': fixture.GAME_DATE}
     return image, context
 
 
-def capture_fixture(countries, *, single_country=False, denied=False, changed=False, advance=False):
-    image, context = image_fixture(denied=denied)
+def capture_fixture(countries, *, single_country=False, denied=False, changed=False, advance=False,
+                    observer='FRA'):
+    image, context = image_fixture(denied=denied, observer=observer)
     first_address = country_fixture.COUNTRY_BASE + 300 * 0x1000 + 0xD10
     first_reads = [0]
     if changed or advance:
@@ -64,16 +65,16 @@ def capture_fixture(countries, *, single_country=False, denied=False, changed=Fa
         image.on_read = change
     reader = fixture.RecordingReader(image)
     if single_country:
-        observation = single._observe_for(['war_exhaustion'])(
+        observation = single._observe_for(['war_exhaustion'], observer)(
             reader, fixture.MODULE_BASE, countries[0], single._load_profile())
         schema, profile_sha = single.SCHEMA, single.PROFILE_SHA256
     else:
-        observation = batch._observe_for(countries)(
+        observation = batch._observe_for(countries, observer)(
             reader, fixture.MODULE_BASE, countries[0], single._load_legacy_profile())
         schema, profile_sha = batch.SCHEMA, batch.PROFILE_SHA256
     identity = {'binding_verified': True, 'process_creation_filetime': fixture.CREATION,
                 'process_path': 'synthetic-eu4.exe', 'process_path_sha256': single._owner.EXE_SHA256}
-    request = {'country': countries[0], 'observer': 'FRA', 'creation_filetime': fixture.CREATION,
+    request = {'country': countries[0], 'observer': observer, 'creation_filetime': fixture.CREATION,
                'session_id': fixture.SESSION_ID, 'countries': list(countries)}
     if single_country:
         request['fields'] = ['war_exhaustion']
@@ -93,11 +94,12 @@ def projected(report):
             for target in report['observation']['backend']['targets']}
 
 
-def test_eight_countries_match_single_captures_with_one_shared_table_scan():
+@pytest.mark.parametrize('observer', ['FRA', 'TUR'])
+def test_eight_countries_match_single_captures_with_one_shared_table_scan(observer):
     countries = COUNTRIES[:8]
-    report, context = capture_fixture(countries)
+    report, context = capture_fixture(countries, observer=observer)
     assert batch.validate_capture(report, context, fixture.CREATION, countries)
-    singles = [capture_fixture([tag], single_country=True)[0] for tag in countries]
+    singles = [capture_fixture([tag], single_country=True, observer=observer)[0] for tag in countries]
     assert all(single.validate_capture(one, context, fixture.CREATION, tag)
                for tag, one in zip(countries, singles))
     assert projected(report) == {tag: projected(one)[tag] for tag, one in zip(countries, singles)}
@@ -159,7 +161,8 @@ def test_source_chunks_fifteen_members_and_preserves_injected_single_capture(tmp
     source = single.NativeForeignPressureSource(Base(tmp_path, context, fixture.CREATION))
     calls = []
 
-    def capture(installation, countries):
+    def capture(installation, countries, *, observer):
+        assert observer == context['observer']
         calls.append(list(countries))
         return capture_fixture(countries)[0]
 
@@ -221,7 +224,7 @@ def test_normal_war_tool_uses_two_batches_and_retains_all_sixteen_members(tmp_pa
     source, pressure, base = make_war_source(tmp_path)
     calls = []
 
-    def capture(installation, countries):
+    def capture(installation, countries, *, observer):
         calls.append(list(countries))
         return capture_fixture(countries)[0]
 

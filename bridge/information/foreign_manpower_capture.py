@@ -1,13 +1,14 @@
 """Identity-bound capture for foreign manpower and its stats permission.
 
 The shared parent owns process/session identity, ROM guards, the full country
-scan, FRA non-player admission and ordered two-pass replay.  The military
+scan, observer-role admission and ordered two-pass replay. The military
 stats predicate is retained inside its two dependent fields; it is not folded
 into the shared admission used by unrelated country observations.
 """
 from __future__ import annotations
 
 from copy import deepcopy
+from functools import partial
 import hashlib
 import json
 from pathlib import Path
@@ -22,7 +23,7 @@ from . import mission_memory as _mm
 
 ROOT = Path(__file__).resolve().parents[2]
 PROFILE_FILE = Path(__file__).with_name("profiles") / "foreign-manpower-memory-1374-sampling-r1.json"
-PROFILE_SHA256 = "a2951ba02805db29f898b334dbe2a65262107ba5135b89cec21cc33fde8e2ff2"
+PROFILE_SHA256 = "275948fd2b392659075f61e5e657a4925e82220e90b15c130d20d545da4b7cd3"
 PROFILE_ID = "foreign-manpower-memory-1374"
 EXE_SHA256 = _owner.EXE_SHA256
 SCHEMA = "information.foreign_manpower_capture.v1"
@@ -125,7 +126,7 @@ def _restore_stable_manpower_invisible(backend: dict[str, Any], country: str) ->
         "status": "invisible", "reason": denied.get("reason", "stats_permission_denied")}
 
 
-def _read_backend(reader: Any, module_base: int, country: str) -> dict[str, Any]:
+def _read_backend(reader: Any, module_base: int, country: str, observer: str) -> dict[str, Any]:
     scan_for_target: dict[str, Mapping[str, Any]] = {}
 
     def admission_reader(read, base, full_scan, observer, target):
@@ -145,7 +146,7 @@ def _read_backend(reader: Any, module_base: int, country: str) -> dict[str, Any]
     def read_fields(limiter, base, target_binding, fields):
         full_scan = scan_for_target.get(country)
         requested = full_scan.get("requested") if isinstance(full_scan, Mapping) else None
-        observer_binding = requested.get(OBSERVER) if isinstance(requested, Mapping) else None
+        observer_binding = requested.get(observer) if isinstance(requested, Mapping) else None
         if not isinstance(observer_binding, Mapping):
             return {field: {"status": "unknown", "reason": "OBSERVER_BINDING_MISSING"}
                     for field in fields}
@@ -153,42 +154,46 @@ def _read_backend(reader: Any, module_base: int, country: str) -> dict[str, Any]
         # This field-specific predicate is evidence for the two F02 fields,
         # not part of the shared country-view admission.
         permission = _visibility.read_permission(
-            limiter, base, observer_binding, target_binding)
+            limiter, base, observer_binding, target_binding, observer_tag=observer)
         output: dict[str, dict[str, Any]] = {}
         if _manpower.FIELD_ID in fields:
             output.update(_manpower.read_fields(
-                limiter, base, target_binding, (_manpower.FIELD_ID,), permission=permission))
+                limiter, base, target_binding, (_manpower.FIELD_ID,), permission=permission,
+                observer_tag=observer))
         if VISIBILITY_FIELD in fields:
             output[VISIBILITY_FIELD] = _visibility_field(permission)
         return output
 
     backend = _backend.read_two_pass(
-        reader, module_base, OBSERVER, [country], FIELDS,
+        reader, module_base, observer, [country], FIELDS,
         read_fields=read_fields, admission_reader=admission_reader)
     _restore_stable_manpower_invisible(backend, country)
     return backend
 
 
 def _observe(reader: Any, module_base: int, country: str,
-             profile: Mapping[str, Any]) -> dict[str, Any]:
+             profile: Mapping[str, Any], *, observer: str = OBSERVER) -> dict[str, Any]:
     return _owner._observe(
         reader, module_base, country, profile,
-        backend_reader=_read_backend)
+        backend_reader=lambda r, base, target: _read_backend(r, base, target, observer))
 
 
 def capture(installation: Path, country: str, *, observer: str = OBSERVER) -> dict[str, Any]:
     return _owner._capture_common(
         installation, country, observer=observer, schema=SCHEMA,
         profile_sha256=PROFILE_SHA256, load_profile=_load_profile,
-        observe=_observe)
+        observe=partial(_observe, observer=observer), observer_scoped=True)
 
 
 def validate_capture(report: Any, context: Mapping[str, Any], creation: int,
                      country: str) -> bool:
+    if not isinstance(context, Mapping):
+        return False
     return _owner._validate_capture_common(
         report, context, creation, country, schema=SCHEMA,
         profile_sha256=PROFILE_SHA256, load_profile=_load_profile,
-        observe=_observe, require_access=True)
+        observe=partial(_observe, observer=context.get('observer')), require_access=True,
+        observer_scoped=True)
 
 
 __all__ = ["capture", "validate_capture", "SCHEMA", "PROFILE_FILE",

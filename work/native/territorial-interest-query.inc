@@ -34,12 +34,12 @@ static bool territorial_interest_discovery(uintptr_t province,unsigned slot,bool
 }
 
 static void territorial_interest_query(const char* id,const char* actor_tag,
-    const char* recipient_tag,const char* csv,int expected_date) {
+    const char* recipient_tag,const char* observer_tag,const char* csv,int expected_date) {
     unsigned ids[32]{},count=0;
     uint64_t observer=0,actor=0,recipient=0;
     if (!territorial_interest_parse(csv,ids,count)
-        || (strcmp(actor_tag,"FRA") && strcmp(recipient_tag,"FRA"))
-        || !alliance_query_country("FRA",observer)
+        || (strcmp(actor_tag,observer_tag) && strcmp(recipient_tag,observer_tag))
+        || !alliance_query_country(observer_tag,observer)
         || !alliance_query_country(actor_tag,actor)
         || !alliance_query_country(recipient_tag,recipient) || actor==recipient) {
         alliance_query_failure(id,"QUERY_INTEREST_SCOPE_INVALID"); return;
@@ -118,16 +118,18 @@ static void territorial_interest_query(const char* id,const char* actor_tag,
         }
         used+=static_cast<size_t>(written);
     }
+    uintptr_t after_world=0;
     int32_t after_date=0;
-    if (!read(world+0x1dd0,after_date) || after_date!=date) {
+    if (!read(base+0x233fe58,after_world) || after_world!=world
+        || !read(world+0x1dd0,after_date) || after_date!=date) {
         alliance_query_failure(id,"QUERY_INTEREST_DATE_CHANGED"); return;
     }
     char message[7168]{};
     snprintf(message,sizeof(message),
         "{\"event\":\"native_territorial_interest_query\",\"session_id\":\"%lu-%llx\",\"query_id\":\"%s\","
-        "\"actor\":\"%.3s\",\"recipient\":\"%.3s\",\"observer\":\"FRA\",\"date_raw\":%d,"
+        "\"actor\":\"%.3s\",\"recipient\":\"%.3s\",\"observer\":\"%.3s\",\"date_raw\":%d,"
         "\"provinces\":[%s],\"submitted\":false,\"frame_thread\":%lu}\n",
         static_cast<unsigned long>(GetCurrentProcessId()),static_cast<unsigned long long>(observation_creation),
-        id,actor_tag,recipient_tag,date,rows,static_cast<unsigned long>(GetCurrentThreadId()));
+        id,actor_tag,recipient_tag,observer_tag,date,rows,static_cast<unsigned long>(GetCurrentThreadId()));
     line(message);
 }

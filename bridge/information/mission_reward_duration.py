@@ -148,10 +148,13 @@ def _pin_file(path: Path, expected_bytes: int, maximum: int) -> dict[str, Any]:
 
 def _schema_evidence() -> dict[str, Any]:
     effects = _pin_file(EFFECTS_CWT_PATH, EFFECTS_CWT_BYTES, 512 * 1024)
-    vendor = _pin_file(VENDOR_JSON_PATH, VENDOR_JSON_BYTES, 8 * 1024)
+    vendor_path = VENDOR_JSON_PATH
+    if not vendor_path.exists():
+        vendor_path = vendor_path.parent.with_name(vendor_path.parent.name + '.vendor.json')
+    vendor = _pin_file(vendor_path, VENDOR_JSON_BYTES, 8 * 1024)
     if effects["sha256"] != EFFECTS_CWT_SHA256 or vendor["sha256"] != VENDOR_JSON_SHA256:
         raise ValueError("CWT_EVIDENCE_PIN_MISMATCH")
-    vendor_document = json.loads(VENDOR_JSON_PATH.read_text(encoding="utf-8"))
+    vendor_document = json.loads(vendor_path.read_text(encoding="utf-8"))
     if (not isinstance(vendor_document, dict)
             or vendor_document.get("repository_url") != VENDOR_REPOSITORY
             or vendor_document.get("commit") != VENDOR_COMMIT

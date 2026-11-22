@@ -2,7 +2,7 @@
 
 The foreign-technology owner supplies process identity, RPM, pinned code
 guards, strict replay, and handle cleanup.  The existing province-state owner
-supplies FRA role, canonical province binding, discovery admission, and two
+supplies the observer role, canonical province binding, discovery admission, and two
 passes.  This wrapper binds an ordered key request and projects the internal
 modifier leaf without turning any per-key unknown into false.
 """
@@ -16,6 +16,7 @@ import re
 from typing import Any
 
 from . import foreign_technology_capture as _owner
+from . import province_state_capture as _base
 from . import province_modifiers_memory as _leaf
 from . import province_state_memory as _province
 
@@ -36,7 +37,7 @@ _KEY_RE = re.compile(r"[A-Za-z0-9_-]{1,255}\Z", re.ASCII)
 _GAPS = [
     "ONLY_LITERAL_KEYS_AND_TWO_SUPPORTED_KIND_METHODS",
     "EFFECTIVE_SCRIPTED_ESTUARY_OR_VOCABULARY_NOT_BOUND",
-    "PARENT_FRA_ADMISSION_DISCOVERY_AND_NONATOMIC_TWO_PASS",
+    "PARENT_OBSERVER_ADMISSION_DISCOVERY_AND_NONATOMIC_TWO_PASS",
     "NO_FULL_MODIFIER_EFFECT_EXPIRATION_OR_RENDERING",
 ]
 
@@ -131,9 +132,7 @@ def _load_profile() -> dict[str, Any]:
                 or not re.fullmatch(r"[0-9a-f]{64}", item["sha256"])):
             raise ValueError("PROVINCE_MODIFIERS_PROFILE_DEPENDENCY_SHAPE")
         try:
-            path = (ROOT / item["path"]).resolve()
-            path.relative_to(ROOT)
-            if path.stat().st_size != item["bytes"] or _owner._sha(path) != item["sha256"]:
+            if not _base._matches_reviewed_layout(item):
                 raise ValueError("PROVINCE_MODIFIERS_PROFILE_DEPENDENCY")
         except (OSError, ValueError) as exc:
             if isinstance(exc, ValueError) and str(exc) == "PROVINCE_MODIFIERS_PROFILE_DEPENDENCY":
@@ -208,21 +207,22 @@ def _read_fields_for(keys: tuple[str, ...]):
     return read_fields
 
 
-def _observe_for(province_id: int, keys: tuple[str, ...]):
+def _observe_for(province_id: int, keys: tuple[str, ...], observer: str = "FRA"):
     read_fields = _read_fields_for(keys)
 
     def observe(reader, module_base, country, profile):
-        if country != "FRA" or not _valid_id(province_id):
+        if country != observer or not _valid_id(province_id):
             raise ValueError("PROVINCE_MODIFIERS_OBSERVER_SCOPE")
 
         def backend(read, base, observer_country):
-            if observer_country != "FRA":
+            if observer_country != observer:
                 raise ValueError("PROVINCE_MODIFIERS_OBSERVER_SCOPE")
             return _province.read_two_pass(
                 read,
                 base,
                 province_id,
-                observer="FRA",
+                observer=observer,
+                observer_scoped=True,
                 fields=(FIELD,),
                 read_fields=read_fields,
             )
@@ -245,22 +245,22 @@ def capture(
     *,
     observer: str = "FRA",
 ) -> dict[str, Any]:
-    if not _valid_id(province_id) or observer != "FRA":
+    if not _valid_id(province_id) or not isinstance(observer, str) or not _owner._TAG.fullmatch(observer):
         raise ValueError("PROVINCE_MODIFIERS_REQUEST_SCOPE")
     normalized_keys = _keys(keys)
     inner = _owner._capture_common(
         installation,
-        "FRA",
+        observer,
         observer=observer,
         schema=INNER_SCHEMA,
         profile_sha256=PROFILE_SHA256,
         load_profile=_load_profile,
-        observe=_observe_for(province_id, normalized_keys),
-        allow_observer_target=True,
+        observe=_observe_for(province_id, normalized_keys, observer),
+        allow_observer_target=True, observer_scoped=True,
     )
     return {
         "schema": SCHEMA,
-        "observer": "FRA",
+        "observer": observer,
         "object": {"type": "province", "province_id": province_id},
         "modifier_keys": list(normalized_keys),
         "capture": inner,
@@ -283,7 +283,9 @@ def validate_capture(
         return False
     if set(report) != {"schema", "observer", "object", "modifier_keys", "capture"}:
         return False
-    if report.get("schema") != SCHEMA or report.get("observer") != "FRA":
+    observer = context.get("observer")
+    if (not isinstance(observer, str) or not _owner._TAG.fullmatch(observer)
+            or report.get("schema") != SCHEMA or report.get("observer") != observer):
         return False
     expected_object = {"type": "province", "province_id": province_id}
     if not _owner._same(report.get("object"), expected_object):
@@ -296,12 +298,12 @@ def validate_capture(
         report["capture"],
         context,
         creation,
-        "FRA",
+        observer,
         schema=INNER_SCHEMA,
         profile_sha256=PROFILE_SHA256,
         load_profile=_load_profile,
-        observe=_observe_for(province_id, normalized_keys),
-        allow_observer_target=True,
+        observe=_observe_for(province_id, normalized_keys, observer),
+        allow_observer_target=True, observer_scoped=True,
         require_access=True,
     )
 

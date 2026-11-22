@@ -747,6 +747,11 @@ def _has_rival_record_features(manifest: dict) -> bool:
                 and row["name"].startswith("information-rival-record-") for row in records)))
 
 
+_RECALL_SOURCE = "diplomat-recall-mcp.inc"
+_RECALL_FLAG = "native_diplomat_recall_by_id"
+_RECALL_PROTOCOL = "native_diplomat_recall_protocol"
+
+
 def _has_native_country_control_features(manifest: dict) -> bool:
     records = manifest.get("sources", [])
     return (
@@ -756,12 +761,15 @@ def _has_native_country_control_features(manifest: dict) -> bool:
             "native_country_control_ack",
             "native_country_control_request",
             "native_country_control_file",
+            _RECALL_FLAG,
+            _RECALL_PROTOCOL,
         ))
         or bool(_compiler_define_values(
             manifest.get("compiler_arguments"), NATIVE_COUNTRY_CONTROL_DEFINE))
         or (isinstance(records, list) and any(
             isinstance(row, dict) and isinstance(row.get("name"), str)
-            and row["name"].lower().startswith("control-country-policy")
+            and (row["name"].lower().startswith("control-country-policy")
+                 or row["name"] == _RECALL_SOURCE)
             for row in records)))
 
 
@@ -805,6 +813,34 @@ def _project_v65_country_control_selector(text: str) -> str:
         NATIVE_COUNTRY_CONTROL_V65_VERSION_BLOCK,
         LAND_PROMISE_V64_VERSION_BLOCK,
     )
+
+
+def _validate_native_recall_delta(manifest: dict, directory: Path, source_text: str) -> bool:
+    rows = [row for row in manifest["sources"]
+            if isinstance(row, dict) and row.get("name") == _RECALL_SOURCE]
+    if not rows and _RECALL_FLAG not in manifest and _RECALL_PROTOCOL not in manifest:
+        if _RECALL_FLAG in source_text or _RECALL_SOURCE in source_text:
+            raise SystemExit("BUILD_MANIFEST_MISMATCH")
+        return False
+    required_source = (
+        '#ifdef BRIDGE_NATIVE_COUNTRY_CONTROL\n#include "diplomat-recall-mcp.inc"\n#endif',
+        "#ifdef BRIDGE_NATIVE_COUNTRY_CONTROL\n"
+        "        if (frame_count>=100) native_diplomat_recall_mcp_tick();\n#endif",
+        "if (!native_diplomat_recall_set_paths(module_path)) return 27;",
+        r',\"native_diplomat_recall_by_id\":true,\"native_diplomat_recall_protocol\":\"EU4RECALL1\"',
+    )
+    if (manifest.get(_RECALL_FLAG) is not True or manifest.get(_RECALL_PROTOCOL) != "EU4RECALL1"
+            or len(rows) != 1 or not _is_sha256(rows[0].get("sha256"))
+            or any(source_text.count(marker) != 1 for marker in required_source)):
+        raise SystemExit("BUILD_MANIFEST_MISMATCH")
+    path = directory / _RECALL_SOURCE
+    try:
+        if (not path.is_file() or path.stat().st_size > 128 * 1024
+                or file_hash(path, refresh=True) != rows[0]["sha256"].lower()):
+            raise SystemExit("BUILD_MANIFEST_MISMATCH")
+    except OSError:
+        raise SystemExit("BUILD_MANIFEST_MISMATCH") from None
+    return True
 
 
 def _validate_native_country_control_manifest(manifest: dict, directory: Path) -> None:
@@ -886,12 +922,42 @@ def _validate_native_country_control_manifest(manifest: dict, directory: Path) -
             or policy_text.count('"EU4CONTROL1"') == 0):
         raise SystemExit("BUILD_MANIFEST_MISMATCH")
 
+    information_scope_keys = ("native_information_observer_configuration",
+                              "native_information_observer_protocol", "native_country_modifier_scoped_schema")
+    if any(key in manifest for key in information_scope_keys):
+        if (manifest.get(information_scope_keys[0]) is not True
+                or manifest.get(information_scope_keys[1]) != "EU4INFO1"
+                or type(manifest.get(information_scope_keys[2])) is not int
+                or manifest[information_scope_keys[2]] != 2
+                or "native_information_observers_set" not in source_text
+                or not all(key in source_text for key in information_scope_keys[::2])):
+            raise SystemExit("BUILD_MANIFEST_MISMATCH")
+    scoped_event_schemas = {"native_relation_change_scoped_schema": 6,
+                            "native_war_declaration_scoped_schema": 2,
+                            "native_land_promise_scoped_schema": 2,
+                            "native_mission_completion_scoped_schema": 3,
+                            "native_mission_availability_scoped_schema": 2,
+                            "native_mission_condition_scoped_schema": 4,
+                            "native_expiry_scoped_wire": 2,
+                            "native_rival_change_scoped_schema": 4}
+    for key, schema in scoped_event_schemas.items():
+        if key in manifest and (manifest.get(information_scope_keys[0]) is not True
+                or type(manifest[key]) is not int or manifest[key] != schema or key not in source_text):
+            raise SystemExit("BUILD_MANIFEST_MISMATCH")
+    has_recall = _validate_native_recall_delta(manifest, directory, source_text)
     source_text = _project_v65_country_control_selector(source_text)
     inherited = dict(manifest, version=64)
+    for key in (*information_scope_keys, *scoped_event_schemas):
+        inherited.pop(key, None)
+    delta_sources = {NATIVE_COUNTRY_CONTROL_SOURCE}
+    if has_recall:
+        delta_sources.add(_RECALL_SOURCE)
+        for key in (_RECALL_FLAG, _RECALL_PROTOCOL):
+            inherited.pop(key)
     inherited["sources"] = [dict(row) if isinstance(row, dict) else row
                             for row in records
                             if not (isinstance(row, dict)
-                                    and row.get("name") == NATIVE_COUNTRY_CONTROL_SOURCE)]
+                                    and row.get("name") in delta_sources)]
     inherited["compiler_arguments"] = _remove_compiler_define(
         list(arguments), NATIVE_COUNTRY_CONTROL_DEFINE)
     for key in (
@@ -1169,7 +1235,7 @@ def _validate_information_battle_manifest(manifest: dict, directory: Path) -> No
             or 'native_territorial_interest_query_wire' in manifest):
         if (len(interest_rows) != 1 or manifest.get('native_territorial_interest_query') is not True
                 or type(manifest.get('native_territorial_interest_query_wire')) is not int
-                or manifest['native_territorial_interest_query_wire'] != 23
+                or manifest['native_territorial_interest_query_wire'] not in (23, 24)
                 or not _is_sha256(interest_rows[0].get('sha256'))
                 or not (directory / interest_source).is_file()
                 or file_hash(directory / interest_source, refresh=True) != interest_rows[0]['sha256'].lower()):

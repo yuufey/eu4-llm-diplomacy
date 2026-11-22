@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from copy import deepcopy
+from functools import partial
 import hashlib
 import json
 from pathlib import Path
@@ -15,6 +16,13 @@ PROFILE_FILE = Path(__file__).with_name('profiles')/'opinion-memory-1374-v1-samp
 PROFILE_SHA256 = '813cf74947f2a825a313b5520ae716661014d2a019326990346f92e03d014d0a'
 SCHEMA = 'information.opinion_capture.v1'
 FIELDS = _fields.FIELDS
+_REVIEWED_RECORD_BINDING = (26952, 'dce150a1147dfe72e1f4225c6366c6ec49a74afd4aaf7cfc2ad3367e6e6d3c48')
+
+
+def _record_layout_matches(item, size, digest):
+    return (size, digest) == (item['bytes'], item['sha256']) or (
+        item['path'] == 'bridge/information/opinion_modifiers_memory.py'
+        and (size, digest) == _REVIEWED_RECORD_BINDING)
 
 
 def _load_profile():
@@ -60,7 +68,7 @@ def _admission(read, base, bindings, observer, target):
     return gate
 
 
-def _backend_read(reader, base, country, *, admission_reader=None):
+def _backend_read(reader, base, country, *, admission_reader=None, observer='FRA'):
     current = {}
     admission = admission_reader or _admission
 
@@ -75,20 +83,23 @@ def _backend_read(reader, base, country, *, admission_reader=None):
             raise ValueError('OPINION_PASS_BINDING_CHANGED')
         return _fields.read_fields(read, current['observer'], binding, requested)
 
-    return _backend.read_two_pass(reader, base, 'FRA', [country], FIELDS,
+    return _backend.read_two_pass(reader, base, observer, [country], FIELDS,
                                   read_fields=fields, admission_reader=admit)
 
 
-def _observe(reader, base, country, profile):
-    return _owner._observe(reader, base, country, profile, backend_reader=_backend_read)
+def _observe(reader, base, country, profile, *, observer='FRA'):
+    return _owner._observe(reader, base, country, profile,
+                           backend_reader=partial(_backend_read, observer=observer))
 
 
 def capture(installation: Path, country: str, *, observer='FRA'):
     return _owner._capture_common(installation, country, observer=observer, schema=SCHEMA,
-        profile_sha256=PROFILE_SHA256, load_profile=_load_profile, observe=_observe)
+        profile_sha256=PROFILE_SHA256, load_profile=_load_profile,
+        observe=partial(_observe, observer=observer), observer_scoped=True)
 
 
 def validate_capture(report, context, creation, country):
     return _owner._validate_capture_common(report, context, creation, country,
         schema=SCHEMA, profile_sha256=PROFILE_SHA256, load_profile=_load_profile,
-        observe=_observe, require_access=True)
+        observe=partial(_observe, observer=context.get('observer')),
+        require_access=True, observer_scoped=True)

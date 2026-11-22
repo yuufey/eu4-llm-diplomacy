@@ -336,7 +336,7 @@ def _safe_contract_date(value: Any) -> tuple[int, dict[str, Any]] | None:
     return raw, {key: expected[key] for key in safe_keys}
 
 
-def _validate_reparations_contract_field(item: Mapping[str, Any], target: str
+def _validate_reparations_contract_field(item: Mapping[str, Any], target: str, observer_tag: str = "FRA"
                                          ) -> dict[str, Any]:
     if not _stable(item, _PRIVATE_REPARATIONS_FIELD):
         return _unknown_contract_component("OBSERVER_REPARATIONS_FIELD_NOT_STABLE")
@@ -369,9 +369,9 @@ def _validate_reparations_contract_field(item: Mapping[str, Any], target: str
     target_binding = permission.get("target")
     if (not isinstance(observer_binding, Mapping)
             or not isinstance(target_binding, Mapping)
-            or observer_binding.get("tag") != "FRA"
+            or observer_binding.get("tag") != observer_tag
             or target_binding.get("tag") != target
-            or target_binding.get("tag") == "FRA"):
+            or target == observer_tag):
         return _unknown_contract_component("OBSERVER_REPARATIONS_PAIR_INVALID")
 
     request = permission.get("raw_inputs", {}).get("request")
@@ -407,7 +407,7 @@ def _validate_reparations_contract_field(item: Mapping[str, Any], target: str
             or not isinstance(observed_pair, Mapping)
             or observed_pair.get("fullref_echo_verified") is not True
             or not _private_binding_matches(observed_pair.get("observer"),
-                                            observer_binding, "FRA")
+                                            observer_binding, observer_tag)
             or not _private_binding_matches(observed_pair.get("target"),
                                             target_binding, target)):
         return _unknown_contract_component("OBSERVER_REPARATIONS_STATE_BINDING_INVALID")
@@ -484,11 +484,11 @@ def _validate_reparations_contract_field(item: Mapping[str, Any], target: str
     payer_tag = payer_value.get("tag") if isinstance(payer_value, Mapping) else None
     claimant_tag = claimant_value.get("tag") if isinstance(claimant_value, Mapping) else None
     payer = _safe_contract_party(payer_value,
-        observer_binding if payer_tag == "FRA" else target_binding)
+        observer_binding if payer_tag == observer_tag else target_binding)
     claimant = _safe_contract_party(claimant_value,
-        observer_binding if claimant_tag == "FRA" else target_binding)
+        observer_binding if claimant_tag == observer_tag else target_binding)
     if (payer is None or claimant is None or payer["tag"] == claimant["tag"]
-            or {payer["tag"], claimant["tag"]} != {"FRA", target}):
+            or {payer["tag"], claimant["tag"]} != {observer_tag, target}):
         return _unknown_contract_component("OBSERVER_REPARATIONS_PARTIES_INVALID")
     start = _safe_contract_date(contract.get("start_date"))
     end = _safe_contract_date(contract.get("end_date"))
@@ -563,7 +563,7 @@ def _known_unknown_status(value: Any, reason: str) -> bool:
             and value.get("status") == "unknown" and value.get("reason") == reason)
 
 
-def _validate_subsidies_contract_field(item: Mapping[str, Any], target: str
+def _validate_subsidies_contract_field(item: Mapping[str, Any], target: str, observer_tag: str = "FRA"
                                        ) -> dict[str, Any]:
     """Validate and whitelist the FRA/target subsidy relation component.
 
@@ -615,9 +615,9 @@ def _validate_subsidies_contract_field(item: Mapping[str, Any], target: str
     target_binding = permission.get("target")
     if (not isinstance(observer_binding, Mapping)
             or not isinstance(target_binding, Mapping)
-            or observer_binding.get("tag") != "FRA"
+            or observer_binding.get("tag") != observer_tag
             or target_binding.get("tag") != target
-            or target_binding.get("tag") == "FRA"):
+            or target == observer_tag):
         return _unknown_subsidies_contract_component(
             "OBSERVER_SUBSIDIES_PAIR_INVALID")
 
@@ -659,12 +659,12 @@ def _validate_subsidies_contract_field(item: Mapping[str, Any], target: str
             or not isinstance(observed_pair, Mapping)
             or observed_pair.get("fullref_echo_verified") is not True
             or not _private_binding_matches(observed_pair.get("observer"),
-                                            observer_binding, "FRA")
+                                            observer_binding, observer_tag)
             or not _private_binding_matches(observed_pair.get("target"),
                                             target_binding, target)
             or not isinstance(state_raw.get("bindings"), Mapping)
             or not _private_binding_matches(state_raw["bindings"].get("observer"),
-                                            observer_binding, "FRA")
+                                            observer_binding, observer_tag)
             or not _private_binding_matches(state_raw["bindings"].get("target"),
                                             target_binding, target)):
         return _unknown_subsidies_contract_component(
@@ -707,7 +707,6 @@ def _validate_subsidies_contract_field(item: Mapping[str, Any], target: str
     if not isinstance(contract, Mapping) or contract.get("scope") != "explicit_observer_target_pair_only":
         return _unknown_subsidies_contract_component(
             "OBSERVER_SUBSIDIES_CONTRACT_INVALID")
-    observer_tag = "FRA"
     target_tag = target
     if contract.get("status") == "absent":
         if (set(contract) != {"status", "present", "scope", "reason",
@@ -1021,7 +1020,7 @@ def _subsidies_visibility(view: Mapping[str, Any],
 
 
 def _project_reparations(item: Mapping[str, Any], target: str,
-                         view: Mapping[str, Any]) -> dict[str, Any]:
+                         view: Mapping[str, Any], observer: str) -> dict[str, Any]:
     try:
         received_permission = _page_permission(item, PAGE_INCOME)
     except Exception:
@@ -1031,7 +1030,7 @@ def _project_reparations(item: Mapping[str, Any], target: str,
     except Exception:
         received = _unknown("REPARATIONS_RECEIVED_PRIVATE_FIELD_INVALID")
     try:
-        contracts = _validate_reparations_contract_field(item, target)
+        contracts = _validate_reparations_contract_field(item, target, observer)
     except Exception:
         contracts = _unknown_contract_component("OBSERVER_REPARATIONS_PRIVATE_FIELD_INVALID")
     visibility = _reparations_visibility(view, received_permission)
@@ -1062,7 +1061,7 @@ def _project_reparations(item: Mapping[str, Any], target: str,
 
 
 def _project_subsidies(item: Mapping[str, Any], target: str,
-                       view: Mapping[str, Any]) -> dict[str, Any]:
+                       view: Mapping[str, Any], observer: str) -> dict[str, Any]:
     try:
         received_permission = _page_permission(item, PAGE_INCOME)
     except Exception:
@@ -1072,7 +1071,7 @@ def _project_subsidies(item: Mapping[str, Any], target: str,
     except Exception:
         received = _unknown("SUBSIDIES_RECEIVED_PRIVATE_FIELD_INVALID")
     try:
-        contracts = _validate_subsidies_contract_field(item, target)
+        contracts = _validate_subsidies_contract_field(item, target, observer)
     except Exception:
         contracts = _unknown_subsidies_contract_component(
             "OBSERVER_SUBSIDIES_PRIVATE_FIELD_INVALID")
@@ -1151,7 +1150,7 @@ def _due_record(value: Any) -> dict[str, Any] | None:
                          "date": calendar["date"]}}
 
 
-def _project_debt(record: Mapping[str, Any], target: str) -> dict[str, Any]:
+def _project_debt(record: Mapping[str, Any], target: str, observer: str = "FRA") -> dict[str, Any]:
     if (record.get("status") != "known" or record.get("basis") != _loans.BASIS
             or record.get("partial") is not True or record.get("complete") is not False
             or record.get("unit") != "observed_loan_records"
@@ -1182,7 +1181,7 @@ def _project_debt(record: Mapping[str, Any], target: str) -> dict[str, Any]:
     for loan in records:
         if (not isinstance(loan, Mapping)
                 or set(loan) != {"lender", "borrower", "principal", "interest", "due", "source_list_ordinal"}
-                or loan.get("lender") != "FRA" or loan.get("borrower") != target
+                or loan.get("lender") != observer or loan.get("borrower") != target
                 or type(loan.get("source_list_ordinal")) is not int
                 or loan.get("source_list_ordinal") < 0
                 or loan.get("source_list_ordinal") in ordinals):
@@ -1194,7 +1193,7 @@ def _project_debt(record: Mapping[str, Any], target: str) -> dict[str, Any]:
         if principal is None or interest is None or due is None:
             return _unknown("DEBT_RECORD_VALUE_INVALID")
         principal_sum += principal["raw"]
-        projected_records.append({"lender": "FRA", "borrower": target,
+        projected_records.append({"lender": observer, "borrower": target,
                                   "principal": principal, "interest": interest, "due": due})
     sum_record = subset.get("observed_principal_sum")
     if (not isinstance(sum_record, Mapping)
@@ -1314,13 +1313,14 @@ def failure_field(name: str, reason: Any) -> dict[str, Any]:
 
 
 def project(item: Any, target: str, requested: list[str] | tuple[str, ...], *,
-            debt_scope: Any = None) -> dict[str, dict[str, Any]]:
+            debt_scope: Any = None, observer: str = "FRA") -> dict[str, dict[str, Any]]:
     """Project selected F03 fields using independent page scopes.
 
     ``item`` is one strict-capture backend target.  The capture validator and
     parent own raw trace replay, installation identity, role, ROM and session.
     """
-    if not isinstance(item, Mapping) or not isinstance(target, str) or not _TAG.fullmatch(target):
+    if (not isinstance(item, Mapping) or not isinstance(target, str) or not _TAG.fullmatch(target)
+            or not isinstance(observer, str) or not _TAG.fullmatch(observer) or target == observer):
         return {field: failure_field(field, "ECONOMY_CAPTURE_TARGET_INVALID") for field in requested}
     view = _country_view_public(_country_view(item))
     result: dict[str, dict[str, Any]] = {}
@@ -1361,14 +1361,18 @@ def project(item: Any, target: str, requested: list[str] | tuple[str, ...], *,
                 country_view=view, page=page, page_permission=not_evaluated)
             continue
         if name == "reparations":
-            result[name] = _project_reparations(item, target, view)
+            result[name] = _project_reparations(item, target, view, observer)
             continue
         if name == "subsidies":
-            result[name] = _project_subsidies(item, target, view)
+            result[name] = _project_subsidies(item, target, view, observer)
             continue
         if name == "debt":
-            result[name] = _debt_projection_module(item).project(
-                item, target, view, scope_record=debt_scope)
+            if observer == "FRA":
+                result[name] = _debt_projection_module(item).project(
+                    item, target, view, scope_record=debt_scope)
+            else:
+                from . import foreign_debt_projection_v34
+                result[name] = foreign_debt_projection_v34.project(item, target, view, observer=observer)
             continue
         permission = _page_permission(item, page)
         page_public = _page_permission_public(permission)
@@ -1391,7 +1395,7 @@ def project(item: Any, target: str, requested: list[str] | tuple[str, ...], *,
             if name == "income":
                 projected = _project_income(record)
             elif name == "debt":
-                projected = _project_debt(record, target)
+                projected = _project_debt(record, target, observer)
             else:
                 projected = _project_received(record, index=_income.SUBSIDIES_INDEX,
                     label="SUBSIDIES",

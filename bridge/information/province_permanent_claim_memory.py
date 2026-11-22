@@ -623,15 +623,16 @@ def _invalid_result(province_id: Any, observer: Any) -> dict[str, Any]:
 
 def read_two_pass(reader: Any, base: int, province_id: int, *,
                   observer: str = "FRA",
-                  fields: list[str] | tuple[str, ...] = FIELDS) -> dict[str, Any]:
-    """Read the one r3 field behind the existing FRA/discovery two-pass gate."""
+                  fields: list[str] | tuple[str, ...] = FIELDS,
+                  observer_scoped=False) -> dict[str, Any]:
+    """Read the permanent-claim predicate after both discovery checks."""
     selected = _valid_fields(fields)
     if selected is None:
         return _invalid_result(province_id, observer)
     aliases = tuple(_PUBLIC_TO_ALIAS[field] for field in selected)
     result = _state.read_two_pass(
         reader, base, province_id, observer=observer,
-        fields=aliases, read_fields=_read_fields)
+        fields=aliases, read_fields=_read_fields, observer_scoped=observer_scoped)
     result = deepcopy(result)
     result["schema"] = SCHEMA
     targets = result.get("targets")

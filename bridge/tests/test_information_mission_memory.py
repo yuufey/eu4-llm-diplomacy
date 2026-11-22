@@ -250,9 +250,9 @@ class MissionMemoryTests(unittest.TestCase):
             with self.assertRaises(mm.ProfileError):
                 mm._load_profile(oversized, mm.EXPECTED_PROFILE_SHA256)
 
-    def test_scope_is_fra_only_and_snapshot_does_not_write(self):
+    def test_bad_country_scope_is_rejected_without_opening_a_handle(self):
         with tempfile.TemporaryDirectory() as directory:
-            report = mm.capture(Path(directory) / "missing-installation.json", "ENG")
+            report = mm.capture(Path(directory) / "missing-installation.json", "eng")
             self.assertEqual(report["status"], "unsupported_country")
             self.assertEqual(report["cleanup"]["handle_close"]["status"], "not_opened")
             self.assertEqual(list(Path(directory).iterdir()), [])

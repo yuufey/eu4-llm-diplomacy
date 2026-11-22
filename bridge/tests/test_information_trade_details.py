@@ -37,8 +37,9 @@ class _Session:
 
 
 class _Base:
-    def __init__(self, directory: Path):
+    def __init__(self, directory: Path, observer: str = "FRA"):
         self.session = _Session(directory)
+        self.observer = observer
         self.calls = 0
         self.after_context = None
 
@@ -51,7 +52,7 @@ class _Base:
             "session_id": SESSION_ID,
             "game_sha256": GAME_SHA256,
             "game_version": "1.37.4",
-            "observer": "FRA",
+            "observer": self.observer,
             "game_date": GAME_DATE,
             "game_date_raw": GAME_DATE,
         }
@@ -159,8 +160,8 @@ def _install_transfer(reader, table: int, *, to_element: int, from_element: int,
     reader.data[(country_pointer + 0x20, 8)] = fullref
 
 
-def _records(reader, *, include_power=False):
-    trade_record = trade.read_fields(reader, MODULE_BASE, COUNTRY_POINTER)
+def _records(reader, *, include_power=False, country="FRA"):
+    trade_record = trade.read_fields(reader, MODULE_BASE, COUNTRY_POINTER, country)
     assert trade_record["status"] == "observed"
     assert trade.validate_record(trade_record)
     details_record = details.read_fields(reader, MODULE_BASE, trade_record)
@@ -190,7 +191,7 @@ def _snapshot(trade_record, details_record, power_record=None):
 def _report(trade_record, details_record, base, power_record=None):
     request = {
         "installation": str(base.session.directory / "installation.json"),
-        "country": "FRA",
+        "country": trade_record["country"],
         "include_trade_income": True,
         "include_trade_details": True,
     }
@@ -201,7 +202,7 @@ def _report(trade_record, details_record, base, power_record=None):
         "status": "observed",
         "read_only": True,
         "native_function_invoked": False,
-        "country": "FRA",
+        "country": trade_record["country"],
         "target_build": {"version": "1.37.4", "expected_exe_sha256": GAME_SHA256},
         "request": request,
         "identity": {
@@ -227,8 +228,8 @@ def _report(trade_record, details_record, base, power_record=None):
     return result
 
 
-def _source(tmp_path: Path, report=None):
-    base = _Base(tmp_path)
+def _source(tmp_path: Path, report=None, *, observer="FRA"):
+    base = _Base(tmp_path, observer)
     calls = []
 
     def capture(installation, country, *, include_trade_income=False, include_trade_details=False):
@@ -413,7 +414,7 @@ def test_capital_dynamic_and_transfer_containers_preserve_raw_contract(configure
     assert to_item["country"] == "ENG"
 
     beta = next(node for node in details_record["nodes"] if node["node_id"] == "beta")
-    beta_value = NativeTradeDetailsSource._field_from_node(beta, "sources")["value"]["FRA"]
+    beta_value = NativeTradeDetailsSource._field_from_node(beta, "sources", country="FRA")["value"]["FRA"]
     assert beta_value["capital_status"]["status"] == "known"
     assert beta_value["capital_status"]["included"] is False
 

@@ -33,7 +33,8 @@ OUTPUTS = {
 CACHE = {"income_before_multiplier_raw": 3762, "income_raw": 4589}
 INCOME_VALUE = {"inputs": INPUTS, "outputs": OUTPUTS, "cache": CACHE, "matches_cache": True}
 PROFILE_SHA256 = "d" * 64
-TRADE_RECORD = {"status": "observed", "nodes": [{"node_id": NODE_ID, "income_raw": 1000}]}
+TRADE_RECORD = {"status": "observed", "country": "FRA",
+                "nodes": [{"node_id": NODE_ID, "income_raw": 1000}]}
 COUNTRY_SCAN = {"status": "observed", "requested_country": "FRA", "fixture": "canonical-country"}
 SUM_RECORD = {
     "status": "observed",

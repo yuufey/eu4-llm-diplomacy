@@ -68,7 +68,12 @@ static bool date_now(int32_t& date) noexcept {
 
 static Pending begin(void* definition, uint64_t country) noexcept {
     Pending pending{};
-    if (!installed || transport_fault || (country & 0xffffffu) != 0x415246u) return pending;
+    if (!installed || transport_fault) return pending;
+#ifdef BRIDGE_NATIVE_COUNTRY_CONTROL
+    if (!observation_information_country_handle(country)) return pending;
+#else
+    if ((country & 0xffffffu) != 0x415246u) return pending;
+#endif
     pending.observed = true;
     pending.value.country = country;
     pending.value.definition = reinterpret_cast<uintptr_t>(definition);
@@ -243,14 +248,21 @@ static void flush() noexcept {
         char name_hex[names::kMaxName*2+1]{};
         for (unsigned byte = 0; byte < value.mission.length; ++byte)
             std::snprintf(name_hex+byte*2, 3, "%02x", static_cast<unsigned char>(value.mission.text[byte]));
+        const char country[4]={static_cast<char>(value.country),static_cast<char>(value.country>>8),
+                               static_cast<char>(value.country>>16),0};
+#ifdef BRIDGE_NATIVE_COUNTRY_CONTROL
+        constexpr unsigned schema=2;
+#else
+        constexpr unsigned schema=1;
+#endif
         char message[1400]{};
         const int bytes = std::snprintf(message, sizeof(message),
-            "{\"event\":\"native_mission_availability_changed\",\"schema_version\":1,\"session_id\":\"%lu-%llx\","
-            "\"sequence\":%llu,\"country\":\"FRA\",\"country_fullref\":\"0x%llx\",\"date_raw\":%d,"
+            "{\"event\":\"native_mission_availability_changed\",\"schema_version\":%u,\"session_id\":\"%lu-%llx\","
+            "\"sequence\":%llu,\"country\":\"%.3s\",\"country_fullref\":\"0x%llx\",\"date_raw\":%d,"
             "\"previous_observed_date_raw\":%d,\"mission_id_hex\":\"%s\",\"eligible_before\":%s,\"eligible_after\":%s,"
             "\"source\":\"mission_eligibility_native_return\",\"complete\":true}\n",
-            static_cast<unsigned long>(GetCurrentProcessId()), static_cast<unsigned long long>(observation_creation),
-            static_cast<unsigned long long>(event.sequence), static_cast<unsigned long long>(value.country),
+            schema,static_cast<unsigned long>(GetCurrentProcessId()), static_cast<unsigned long long>(observation_creation),
+            static_cast<unsigned long long>(event.sequence),country,static_cast<unsigned long long>(value.country),
             value.date, event.change.previous_date, name_hex,
             event.change.before ? "true" : "false", value.eligible ? "true" : "false");
         if (bytes <= 0 || static_cast<size_t>(bytes) >= sizeof(message)) { transport_fault = true; return; }

@@ -128,11 +128,11 @@ def _group_gate(reader: Any, module_base: int, group_object: int, index: int) ->
     return _constant_bool(method_bytes)
 
 
-def _land_force_limit_raw(observed: Any, country_pointer: int) -> int:
+def _land_force_limit_raw(observed: Any, country_pointer: int, country: str) -> int:
     if not isinstance(observed, Mapping) or observed.get("status") != "observed":
         reason = observed.get("reason", observed.get("error", "not_observed")) if isinstance(observed, Mapping) else "invalid_result"
         raise ValueError(f"MILITARY_RESOURCES_UNAVAILABLE:{reason}")
-    if observed.get("country") != "FRA":
+    if observed.get("country") != country:
         raise ValueError("MILITARY_RESOURCES_COUNTRY_MISMATCH")
     returned_pointer = observed.get("country_pointer")
     if returned_pointer is None and isinstance(observed.get("private"), Mapping):
@@ -155,7 +155,8 @@ def _land_force_limit_raw(observed: Any, country_pointer: int) -> int:
     return raw
 
 
-def count_army_ratio_inputs(reader: Any, module_base: int, country_pointer: int) -> dict[str, Any]:
+def count_army_ratio_inputs(reader: Any, module_base: int, country_pointer: int,
+                           *, country: str = "FRA") -> dict[str, Any]:
     """Return fixed-milli army count and land force-limit raw inputs.
 
     The numerator counts group vector entries only for groups whose native
@@ -169,11 +170,11 @@ def count_army_ratio_inputs(reader: Any, module_base: int, country_pointer: int)
                 or not _valid_pointer(country_pointer)):
             raise ValueError("REQUEST_POINTER_INVALID")
 
-        force_result = forces.read_fields(reader, module_base, country_pointer, country="FRA")
+        force_result = forces.read_fields(reader, module_base, country_pointer, country=country)
         if not isinstance(force_result, Mapping) or force_result.get("status") != "observed":
             reason = force_result.get("reason", "not_observed") if isinstance(force_result, Mapping) else "invalid_result"
             raise ValueError(f"COUNTRY_FORCES_UNAVAILABLE:{reason}")
-        if force_result.get("country") != "FRA":
+        if force_result.get("country") != country:
             raise ValueError("COUNTRY_FORCES_COUNTRY_MISMATCH")
         returned_pointer = force_result.get("country_pointer")
         if returned_pointer is None and isinstance(force_result.get("private"), Mapping):
@@ -201,8 +202,8 @@ def count_army_ratio_inputs(reader: Any, module_base: int, country_pointer: int)
                 army_count = _wrap_s32(army_count + vector_length)
 
         army_raw_fixed_milli = _wrap_s32(army_count * 1000)
-        military_result = military_resources.read_fields(reader, module_base, country_pointer, country="FRA")
-        land_force_limit_raw = _land_force_limit_raw(military_result, country_pointer)
+        military_result = military_resources.read_fields(reader, module_base, country_pointer, country=country)
+        land_force_limit_raw = _land_force_limit_raw(military_result, country_pointer, country)
         return {
             "status": "known",
             "army_raw_fixed_milli": army_raw_fixed_milli,

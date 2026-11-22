@@ -229,12 +229,21 @@ def test_empty_or_invalid_support_count_does_not_read_a_vector(count):
             pressure._read_support_partners(reader, country, {}, spec)
 
 
-def _declaration_subject_report(overlord, *, game_date=None, session_id=None, creation=None, countries=None):
+def _declaration_subject_report(overlord, *, game_date=None, session_id=None, creation=None, countries=None,
+                                observer='FRA'):
     countries = ['ENG'] if countries is None else countries
     profile = pressure._load_profile()
     report, context, captured_creation, fixture = capture_fixture._make_fixture('ENG', profile=profile)
     creation = captured_creation if creation is None else creation
     image, bindings = fixture['image'], fixture['bindings']
+    if observer != 'FRA':
+        image, bindings, _ = capture_fixture.backend_fixture.make_reader({
+            observer: (122, 0x1200, 5), 'POR': (189, 0x5500, 3), 'ENG': (300, 0x4500, 9),
+        }, count=310)
+        capture_fixture._write_capture_context(image, country='ENG', observer=observer, admitted=True)
+        for guard in profile['code_guards']:
+            image.put(capture_fixture.MODULE_BASE + int(guard['rva'], 0), bytes.fromhex(guard['bytes']))
+    context['observer'] = report['request']['observer'] = observer
     if 'POR' in countries:
         spec = capture_fixture.admission
         slot = bindings['POR']['slot']
@@ -257,7 +266,8 @@ def _declaration_subject_report(overlord, *, game_date=None, session_id=None, cr
     image.put_u64(bindings['ENG']['country_pointer'] + 0x18f0,
                   bindings[overlord]['fullref'] if overlord else 0)
     reader = capture_fixture.RecordingReader(image)
-    observation = pressure._binding_observation(countries)(reader, capture_fixture.MODULE_BASE, countries[0], profile)
+    observation = pressure._binding_observation(countries, observer)(
+        reader, capture_fixture.MODULE_BASE, countries[0], profile)
     report.update(schema=pressure.BINDING_SCHEMA, profile_sha256=pressure.PROFILE_SHA256,
                   observation=observation, raw_reads=deepcopy(reader.read_log),
                   status='observed', completed=True)
@@ -268,6 +278,14 @@ def _declaration_subject_report(overlord, *, game_date=None, session_id=None, cr
         'calls': reader.calls, 'bytes_requested': reader.bytes_requested}
     assert pressure.validate_binding_capture(report, context, creation, countries)
     return report, context, creation
+
+
+def test_configured_turkish_overlord_binds_canonical_english_subject():
+    report, context, creation = _declaration_subject_report('TUR', observer='TUR')
+    binding = report['observation']['backend']['targets'][0]['fields'][pressure._BINDING_FIELD]
+    assert binding == {'status': 'known', 'value': {'subject': 'ENG', 'overlord': 'TUR'}}
+    assert pressure.validate_binding_capture(report, context, creation, ['ENG'])
+    assert not pressure.validate_binding_capture(report, dict(context, observer='FRA'), creation, ['ENG'])
 
 
 @pytest.mark.parametrize('overlord', ['FRA', 'POR', None])

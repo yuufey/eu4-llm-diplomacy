@@ -3,6 +3,7 @@ from .scalar_capture_source import ScalarCaptureSource
 
 
 class NativeDiplomatsTotalSource(ScalarCaptureSource):
+    observer_scoped = True
     TOPIC = 'N05'
     FIELD = 'diplomats_total'
     UNIT = 'diplomats'

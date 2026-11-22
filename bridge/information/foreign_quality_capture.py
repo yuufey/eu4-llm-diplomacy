@@ -1,13 +1,14 @@
-"""Identity-bound, two-pass foreign quality observations for logical FRA.
+"""Identity-bound, two-pass foreign quality observations for the logical observer.
 
 The shared owner supplies the read-only handle and process/session guards.
-Country-view admission and FRA's non-player role remain independent of the
+Country-view admission and the bound observer's role remain independent of the
 quality-ledger permission. No physical UI selection is changed or assumed.
 """
 from __future__ import annotations
 
 from collections.abc import Mapping
 from copy import deepcopy
+from functools import partial
 import hashlib
 import json
 from pathlib import Path
@@ -78,7 +79,7 @@ def _permission_field(permission: Any) -> dict[str, Any]:
 
 
 def _read_backend(reader: Any, base: int, country: str,
-                  profile: Mapping[str, Any]) -> dict[str, Any]:
+                  profile: Mapping[str, Any], observer: str) -> dict[str, Any]:
     scans: dict[str, Mapping[str, Any]] = {}
 
     def admission(read, module_base, scan, observer, target):
@@ -93,10 +94,10 @@ def _read_backend(reader: Any, base: int, country: str,
 
     def fields(read, module_base, target_binding, requested):
         scan = scans.get(country)
-        observer = scan.get("requested", {}).get(OBSERVER) if isinstance(scan, Mapping) else None
+        observer_binding = scan.get("requested", {}).get(observer) if isinstance(scan, Mapping) else None
         permission = None
-        if isinstance(observer, Mapping):
-            permission = _visibility.read_permission(read, module_base, observer, target_binding)
+        if isinstance(observer_binding, Mapping):
+            permission = _visibility.read_permission(read, module_base, observer_binding, target_binding)
         output: dict[str, Any] = {}
         if QUALITY_FIELD in requested:
             try:
@@ -113,24 +114,28 @@ def _read_backend(reader: Any, base: int, country: str,
             output[VISIBILITY_FIELD] = _permission_field(permission)
         return output
 
-    return _backend.read_two_pass(reader, base, OBSERVER, [country], FIELDS,
+    return _backend.read_two_pass(reader, base, observer, [country], FIELDS,
                                   read_fields=fields, admission_reader=admission)
 
 
-def _observe(reader, base, country, profile):
+def _observe(reader, base, country, profile, *, observer=OBSERVER):
     return _owner._observe(reader, base, country, profile,
-        backend_reader=lambda read, module_base, target: _read_backend(read, module_base, target, profile))
+        backend_reader=lambda read, module_base, target: _read_backend(read, module_base, target, profile, observer))
 
 
 def capture(installation: Path, country: str, *, observer: str = OBSERVER) -> dict[str, Any]:
     return _owner._capture_common(installation, country, observer=observer, schema=SCHEMA,
-        profile_sha256=PROFILE_SHA256, load_profile=_load_profile, observe=_observe)
+        profile_sha256=PROFILE_SHA256, load_profile=_load_profile,
+        observe=partial(_observe, observer=observer), observer_scoped=True)
 
 
 def validate_capture(report: Any, context: Mapping[str, Any], creation: int,
                      country: str) -> bool:
+    if not isinstance(context, Mapping):
+        return False
     return _owner._validate_capture_common(report, context, creation, country, schema=SCHEMA,
-        profile_sha256=PROFILE_SHA256, load_profile=_load_profile, observe=_observe, require_access=True)
+        profile_sha256=PROFILE_SHA256, load_profile=_load_profile, require_access=True,
+        observe=partial(_observe, observer=context.get('observer')), observer_scoped=True)
 
 
 __all__ = ["capture", "validate_capture", "SCHEMA", "PROFILE_FILE", "PROFILE_SHA256",

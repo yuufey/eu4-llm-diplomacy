@@ -660,7 +660,8 @@ def _capital_context(ctx: _Budget, module_base: int, source_record: Mapping[str,
         if country_pointer is None:
             raise ReadError("capital_country_pointer_invalid")
         fullref_hex = source_record.get("country_fullref_raw_hex")
-        if not _valid_hex(fullref_hex, QWORD_WIDTH) or bytes.fromhex(fullref_hex)[:4] != b"FRA\0":
+        if (not _valid_hex(fullref_hex, QWORD_WIDTH)
+                or bytes.fromhex(fullref_hex)[:4] != source_record["country"].encode("ascii") + b"\0"):
             raise ReadError("capital_country_fullref_invalid")
         slot = source_record.get("country_slot")
         if not isinstance(slot, int) or isinstance(slot, bool) or slot < 0 or slot > 32767:
@@ -1051,7 +1052,7 @@ def read_fields(reader: Any, module_base: int, trade_income_record: Any) -> dict
         nodes.append(_make_node(base, capital_node, dynamic, transfers))
     dynamic_unknown = sum(node["dynamic_sources"]["status"] == "unknown" for node in nodes)
     transfer_unknown = sum(node["transfer_sources"][direction]["status"] == "unknown" for node in nodes for direction in ("to", "from"))
-    return {"status": "observed", "profile_sha256": EXPECTED_PROFILE_SHA256, "static_contract_guard": static_guard, "runtime_code_guard": guard, "module_base": _hex(module_base), "country_pointer": trade_income_record.get("country_pointer"), "country": EXPECTED_COUNTRY, "country_fullref_raw_hex": trade_income_record.get("country_fullref_raw_hex"), "country_slot": trade_income_record.get("country_slot"), "source_trade_record_canonical_sha256": source_digest, "share_offset": _hex(layout["share_offset"]), "source_offsets": {key: _hex(layout["source_offsets"][key]) for key in SOURCE_KEYS}, "capital_context": capital, "transfer_lookup": transfer_lookup, "nodes": nodes, "basis": BASIS, "unit": UNIT, "scale": SCALE, "period": PERIOD, "value_origin": VALUE_ORIGIN, "complete": COMPLETE, "unimplemented_source_kinds": list(UNIMPLEMENTED_SOURCE_KINDS), "limits": limits, "read_budget": {"bytes_requested": ctx.bytes_requested, "calls": ctx.calls, "max_bytes": ctx.limit}, "observation": {"status": "observed", "module_base": _hex(module_base), "country_pointer": trade_income_record.get("country_pointer"), "country": EXPECTED_COUNTRY, "country_slot": trade_income_record.get("country_slot"), "node_count": len(nodes), "graph_reused": True, "entry_reads": 0, "capital_status": capital.get("status"), "dynamic_unknown_count": dynamic_unknown, "transfer_lookup_status": transfer_lookup.get("status"), "transfer_unknown_count": transfer_unknown}}
+    return {"status": "observed", "profile_sha256": EXPECTED_PROFILE_SHA256, "static_contract_guard": static_guard, "runtime_code_guard": guard, "module_base": _hex(module_base), "country_pointer": trade_income_record.get("country_pointer"), "country": trade_income_record["country"], "country_fullref_raw_hex": trade_income_record.get("country_fullref_raw_hex"), "country_slot": trade_income_record.get("country_slot"), "source_trade_record_canonical_sha256": source_digest, "share_offset": _hex(layout["share_offset"]), "source_offsets": {key: _hex(layout["source_offsets"][key]) for key in SOURCE_KEYS}, "capital_context": capital, "transfer_lookup": transfer_lookup, "nodes": nodes, "basis": BASIS, "unit": UNIT, "scale": SCALE, "period": PERIOD, "value_origin": VALUE_ORIGIN, "complete": COMPLETE, "unimplemented_source_kinds": list(UNIMPLEMENTED_SOURCE_KINDS), "limits": limits, "read_budget": {"bytes_requested": ctx.bytes_requested, "calls": ctx.calls, "max_bytes": ctx.limit}, "observation": {"status": "observed", "module_base": _hex(module_base), "country_pointer": trade_income_record.get("country_pointer"), "country": trade_income_record["country"], "country_slot": trade_income_record.get("country_slot"), "node_count": len(nodes), "graph_reused": True, "entry_reads": 0, "capital_status": capital.get("status"), "dynamic_unknown_count": dynamic_unknown, "transfer_lookup_status": transfer_lookup.get("status"), "transfer_unknown_count": transfer_unknown}}
 
 
 def _validate_static_guard(record: Mapping[str, Any], profile: Mapping[str, Any]) -> bool:
@@ -1366,7 +1367,7 @@ def validate_record(record: Any, trade_income_record: Any) -> bool:
     for key in ("country_pointer", "country", "country_fullref_raw_hex", "country_slot"):
         if record.get(key) != trade_income_record.get(key):
             return False
-    if record.get("country") != EXPECTED_COUNTRY or record.get("source_trade_record_canonical_sha256") != _canonical_digest(trade_income_record):
+    if record.get("source_trade_record_canonical_sha256") != _canonical_digest(trade_income_record):
         return False
     if record.get("share_offset") != _hex(layout["share_offset"]) or record.get("source_offsets") != {key: _hex(layout["source_offsets"][key]) for key in SOURCE_KEYS} or record.get("basis") != BASIS or record.get("unit") != UNIT or record.get("scale") != SCALE or record.get("period") != PERIOD or record.get("value_origin") != VALUE_ORIGIN or record.get("complete") is not COMPLETE or record.get("unimplemented_source_kinds") != UNIMPLEMENTED_SOURCE_KINDS or record.get("limits") != limits:
         return False
@@ -1398,7 +1399,7 @@ def validate_record(record: Any, trade_income_record: Any) -> bool:
         if node.get("source_rows") != expected_rows:
             return False
     observation = record.get("observation")
-    if not isinstance(observation, Mapping) or observation.get("status") != "observed" or observation.get("module_base") != _hex(module) or observation.get("country_pointer") != trade_income_record.get("country_pointer") or observation.get("country") != EXPECTED_COUNTRY or observation.get("country_slot") != trade_income_record.get("country_slot") or observation.get("node_count") != len(source_nodes) or observation.get("graph_reused") is not True or observation.get("entry_reads") != 0 or observation.get("capital_status") != record["capital_context"].get("status"):
+    if not isinstance(observation, Mapping) or observation.get("status") != "observed" or observation.get("module_base") != _hex(module) or observation.get("country_pointer") != trade_income_record.get("country_pointer") or observation.get("country") != trade_income_record.get("country") or observation.get("country_slot") != trade_income_record.get("country_slot") or observation.get("node_count") != len(source_nodes) or observation.get("graph_reused") is not True or observation.get("entry_reads") != 0 or observation.get("capital_status") != record["capital_context"].get("status"):
         return False
     budget = record.get("read_budget")
     return isinstance(budget, Mapping) and isinstance(budget.get("bytes_requested"), int) and 0 <= budget["bytes_requested"] <= limits["max_child_read_bytes"] and budget.get("max_bytes") == limits["max_child_read_bytes"]

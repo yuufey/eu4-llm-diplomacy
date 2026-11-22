@@ -192,6 +192,27 @@ def _labels(image: MemoryImage, prefix: str) -> list[str]:
     return [label for _, _, label in image.reads if label.startswith(prefix)]
 
 
+def test_scoped_memberships_follow_the_selected_observers_discovery_and_fullref():
+    image = make_image(discovered=False)
+    ref = _fullref('TUR', ENG_SLOT)
+    turkey = COUNTRY_BASE + ENG_SLOT * 0x1000
+    image.put_u64(turkey + country_memory.COUNTRY_FULLREF_OFFSET, ref)
+    image.put_u64(turkey + admission.RELATION_TABLE_OFFSET, RELATION_TABLE)
+    row = RELATION_TABLE + ENG_SLOT * admission.RELATION_ROW_STRIDE
+    image.put_u64(row + admission.RELATION_ROW_OWNER_OFFSET, RELATION_OWNER)
+    image.put_u64(row + admission.RELATION_ROW_RECIPIENT_FULLREF_OFFSET, ref)
+    image.put_i32(RELATION_COUNTERS + admission.RELATION_COUNTER_FIRST_OFFSET
+                  + ENG_SLOT * admission.RELATION_COUNTER_STRIDE, 1)
+    image.put_u32(DISCOVERY_BITS, 1 << ENG_SLOT)
+    _put_core_vector(image, [ref])
+    _put_claim_chain(image, [_fullref('SWE', SWE_SLOT)])
+    scoped = memory.read_two_pass(image, BASE, PROVINCE_ID, observer='TUR', observer_scoped=True)
+    assert _field(scoped, 'G01.cores')['value'] == ['TUR']
+    assert _field(scoped, 'G01.claims')['value'] == ['SWE']
+    french = memory.read_two_pass(image, BASE, PROVINCE_ID, observer='FRA', observer_scoped=True)
+    assert _field(french, 'G01.cores')['status'] == 'unknown'
+
+
 def test_reads_canonical_core_and_claim_tags_without_reading_node_payloads():
     image = make_image()
     _put_core_vector(image, [_fullref("FRA", FRA_SLOT), _fullref("ENG", ENG_SLOT)])

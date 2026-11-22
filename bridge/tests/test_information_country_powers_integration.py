@@ -195,7 +195,8 @@ def test_recorded_fixture_is_not_implicitly_bound_to_a_current_source(
 
     calls: list[tuple[Path, str]] = []
 
-    def fake_unbound_capture(installation: Path, country: str) -> dict:
+    def fake_unbound_capture(installation: Path, country: str, *, observer_scoped: bool) -> dict:
+        assert observer_scoped is True
         calls.append((installation, country))
         return {}
 

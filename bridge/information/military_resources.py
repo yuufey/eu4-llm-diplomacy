@@ -12,7 +12,7 @@ from .country_state import _parameter_schema
 from .model import InformationError, canonical
 from .observation_time import context_identity, dates_match
 from .sources import _result, _source_info
-from .trade_income import NativeTradeIncomeSource, _COUNTRY, _VERSION, _context_reason, _session_binding
+from .trade_income import NativeTradeIncomeSource, _VERSION, _observer_context_reason, _session_binding
 
 
 FIELDS = ("sailors", "force_limits")
@@ -35,7 +35,7 @@ def _metadata(field):
             "description": "本国当前水手储备；保留千分位原值及界面整数" if water else
                            "本国原生陆军与海军上限，分别标明团与舰船单位",
             "unit": "sailors" if water else "force_limit_counts", "scale": 1000 if water else 1,
-            "period": "current", "supported_countries": [_COUNTRY],
+            "period": "current",
             "basis": "native_country_sailors_reserve" if water else "native_country_land_naval_force_limits",
             "gaps": [] if water else list(_FORCE_GAPS)}
 
@@ -86,7 +86,7 @@ class NativeMilitaryResourcesSource(NativeTradeIncomeSource):
         return [{"topic_id": "N02", "catalog_ids": ["N02"], "title": "本国军队与人力（资源与上限）",
                  "status": "available", "fields": {f: _metadata(f) for f in FIELDS},
                  "parameters": _parameter_schema("N02"), "object_types": ["country"],
-                 "observer_roles": ["country"], "observer_scope": [_COUNTRY],
+                 "observer_roles": ["country"], "observer_scope": [],
                  "supported_versions": [_VERSION], "triggers": ["query", "periodic"],
                  "context_scope": "country_scope", "visibility": "country_scope",
                  "source": type(self).__name__}]
@@ -98,8 +98,9 @@ class NativeMilitaryResourcesSource(NativeTradeIncomeSource):
         obj, fields = query.get("object"), query.get("fields")
         if not isinstance(obj, dict) or set(obj) != {"type", "country"} or obj.get("type") != "country":
             raise InformationError("invalid_object", "A country object is required")
-        if obj.get("country") != _COUNTRY:
-            raise InformationError("observer_scope_mismatch", "Only the verified FRA observer is supported")
+        country = obj.get("country")
+        if not isinstance(country, str) or not re.fullmatch(r"[A-Z0-9]{3}", country):
+            raise InformationError("invalid_object", "Expected a country tag")
         if (not isinstance(fields, list) or not fields or any(not isinstance(f, str) for f in fields)
                 or len(set(fields)) != len(fields) or set(fields) - set(FIELDS)):
             raise InformationError("invalid_fields", "Expected unique supported military resource fields")
@@ -108,17 +109,18 @@ class NativeMilitaryResourcesSource(NativeTradeIncomeSource):
             raise InformationError("invalid_parameters", "Unknown military resource parameters")
         if "reference_recipient" in parameters:
             ref = parameters["reference_recipient"]
-            if not isinstance(ref, str) or not re.fullmatch(r"[A-Z0-9]{3}", ref) or ref == _COUNTRY:
+            if not isinstance(ref, str) or not re.fullmatch(r"[A-Z0-9]{3}", ref) or ref == country:
                 raise InformationError("invalid_parameters", "reference_recipient must be a distinct country tag")
-        if context is not None and (not isinstance(context, dict) or context.get("observer", _COUNTRY) != _COUNTRY):
-            raise InformationError("observer_scope_mismatch", "Invalid FRA observer context")
+        if context is not None and (not isinstance(context, dict) or context.get("observer", country) != country):
+            raise InformationError("observer_scope_mismatch", "N02 military resources are limited to the configured observer country")
         return {"topic": "N02", "object": deepcopy(obj), "fields": list(fields), "parameters": deepcopy(parameters)}
 
     def read(self, query, context=None):
         current = deepcopy(context) if isinstance(context, dict) else self.context()
         normalized = self.validate_query(query, current)
+        country = normalized["object"]["country"]
         provenance = {"read_only": True, "native_function_invoked": False,
-                      "adapter": "bridge.information.military_resources_memory.capture", "country": _COUNTRY}
+                      "adapter": "bridge.information.military_resources_memory.capture", "country": country}
 
         def result(fields):
             complete = bool(fields) and all(f.get("status") == "known" and f.get("complete") is True
@@ -131,14 +133,14 @@ class NativeMilitaryResourcesSource(NativeTradeIncomeSource):
             return result({f: {"status": "unavailable" if unavailable else "unknown", "reason": reason}
                            for f in normalized["fields"]})
 
-        reason = _context_reason(current)
+        reason = _observer_context_reason(current)
         if reason:
             return failure(reason.replace("TRADE_INCOME", "MILITARY_RESOURCES"), True)
         try:
             before = self.context()
         except Exception:
             before = {}
-        if (_context_reason(before) or
+        if (_observer_context_reason(before) or
                 context_identity(before, _CONTEXT_IDENTITY_KEYS) !=
                 context_identity(current, _CONTEXT_IDENTITY_KEYS)):
             return failure("MILITARY_RESOURCES_CONTEXT_STALE", True)
@@ -148,21 +150,21 @@ class NativeMilitaryResourcesSource(NativeTradeIncomeSource):
         try:
             module = import_module(".military_resources_memory", __package__)
             capture = self.capture if self.capture is not None else module.capture
-            report = capture(installation, country=_COUNTRY)
+            report = capture(installation, country=country)
         except Exception as exc:
             return failure("MILITARY_RESOURCES_CAPTURE_FAILED:" + type(exc).__name__)
         try:
             after = self.context()
         except Exception:
             after = {}
-        if (_context_reason(after) or
+        if (_observer_context_reason(after) or
                 context_identity(after, _CONTEXT_IDENTITY_KEYS) !=
                 context_identity(before, _CONTEXT_IDENTITY_KEYS) or
                 not dates_match(current.get("game_date"), before.get("game_date"),
                                 after.get("game_date"))):
             return failure("MILITARY_RESOURCES_CONTEXT_CHANGED_DURING_CAPTURE")
         try:
-            valid = module.validate_capture(report, before, creation, _COUNTRY)
+            valid = module.validate_capture(report, before, creation, country)
         except Exception:
             valid = False
         if valid is not True:

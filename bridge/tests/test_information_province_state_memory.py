@@ -192,6 +192,31 @@ def test_two_pass_projects_only_canonically_bound_tags_when_discovery_bit_is_set
     assert max(size for _, size, _ in image.reads) <= shared.MAX_SINGLE_READ_BYTES
 
 
+def make_turkish_image():
+    image = make_image(discovered=False)
+    ref = _fullref("TUR", ENG_SLOT)
+    pointer = COUNTRY_BASE + ENG_SLOT * 0x1000
+    image.put_u64(pointer + country_memory.COUNTRY_FULLREF_OFFSET, ref)
+    image.put_u64(pointer + admission.RELATION_TABLE_OFFSET, RELATION_TABLE)
+    row = RELATION_TABLE + ENG_SLOT * admission.RELATION_ROW_STRIDE
+    image.put_u64(row + admission.RELATION_ROW_OWNER_OFFSET, RELATION_OWNER)
+    image.put_u64(row + admission.RELATION_ROW_RECIPIENT_FULLREF_OFFSET, ref)
+    image.put_i32(RELATION_COUNTERS + admission.RELATION_COUNTER_FIRST_OFFSET
+                  + ENG_SLOT * admission.RELATION_COUNTER_STRIDE, 1)
+    image.put_i32(CONTROLLERS + ENG_SLOT * 4, 0)
+    image.put_u64(_field_address("G02.owner"), ref)
+    image.put_u32(DISCOVERY_BITS, 1 << ENG_SLOT)
+    return image
+
+
+def test_configured_turkish_slot_uses_its_own_discovery_gate():
+    image = make_turkish_image()
+    turkey = memory.read_two_pass(image, BASES[0], PROVINCE_ID, observer="TUR", observer_scoped=True)
+    france = memory.read_two_pass(image, BASES[0], PROVINCE_ID)
+    assert _field(turkey, "G02.owner")["value"] == "TUR"
+    assert _field(france, "G02.owner")["status"] == "unknown"
+
+
 def test_clear_discovery_bit_stays_unknown_and_does_not_read_owner_or_controller():
     image = make_image(discovered=False)
     result = memory.read_two_pass(image.read, BASES[0], PROVINCE_ID)

@@ -26,6 +26,7 @@ struct DebtQuoteContext {
     uintptr_t actor_country=0;
     uintptr_t recipient_country=0;
     uintptr_t physical_country=0;
+    uintptr_t controllers=0;
     uintptr_t actor_relations=0;
     uintptr_t target_relation_row=0;
     uintptr_t target_relation_owner=0;
@@ -35,6 +36,8 @@ struct DebtQuoteContext {
     uint64_t physical_player=0;
     uint64_t relation_recipient=0;
     int32_t date_raw=0;
+    int32_t human_count=0;
+    int32_t recipient_controller=0;
 };
 
 struct DebtQuoteObservation {
@@ -87,6 +90,7 @@ static bool debt_quote_read_at(uintptr_t address,uintptr_t offset,T& output) noe
     return debt_quote_add(address,offset,resolved) && read(resolved,output);
 }
 
+#ifndef BRIDGE_NATIVE_COUNTRY_CONTROL
 static uint32_t debt_quote_tag_value(const char* tag) noexcept {
     return static_cast<uint32_t>(static_cast<unsigned char>(tag[0]))
         | (static_cast<uint32_t>(static_cast<unsigned char>(tag[1]))<<8)
@@ -98,6 +102,7 @@ static bool debt_quote_exact_tag(const char* tag,const char* expected) noexcept 
         && tag[0]==expected[0] && tag[1]==expected[1]
         && tag[2]==expected[2] && expected[3]=='\0';
 }
+#endif
 
 static bool debt_quote_lookup_country(uintptr_t table,uint32_t country_count,
     uint64_t expected_ref,uintptr_t& country) noexcept {
@@ -121,6 +126,12 @@ static bool debt_quote_context_read(const char* actor_tag,const char* recipient_
     uint64_t actor,uint64_t recipient,int32_t expected_date,
     DebtQuoteContext& output) noexcept {
     output=DebtQuoteContext{};
+#ifdef BRIDGE_NATIVE_COUNTRY_CONTROL
+    if (actor==recipient || !observation_country_tag_matches_handle(actor_tag,actor)
+        || !observation_country_tag_matches_handle(recipient_tag,recipient)
+        || !observation_control_country_handle_tag_only(actor)
+        || observation_control_country_handle_tag_only(recipient)) return false;
+#else
     if (!debt_quote_exact_tag(actor_tag,"FRA")
         || !recipient_tag || recipient_tag[0]=='\0' || recipient_tag[1]=='\0'
         || recipient_tag[2]=='\0' || recipient_tag[3]!='\0'
@@ -128,6 +139,7 @@ static bool debt_quote_context_read(const char* actor_tag,const char* recipient_
         || debt_quote_exact_tag(recipient_tag,"FRA")
         || actor==recipient || (actor&0xffffffu)!=debt_quote_tag_value(actor_tag)
         || (recipient&0xffffffu)!=debt_quote_tag_value(recipient_tag)) return false;
+#endif
 
     uintptr_t world_slot=0;
     if (!debt_quote_add(base,0x233fe58,world_slot)
@@ -135,8 +147,15 @@ static bool debt_quote_context_read(const char* actor_tag,const char* recipient_
         || !debt_quote_read_at(output.game,0x1dd0,output.date_raw)
         || output.date_raw!=expected_date
         || !debt_quote_read_at(output.game,0x1e60,output.physical_player)
+#ifdef BRIDGE_NATIVE_COUNTRY_CONTROL
+        || output.physical_player==recipient
+        || !debt_quote_read_at(output.game,0xa60,output.human_count) || output.human_count!=1
+        || !debt_quote_read_at(output.game,0x1d48,output.controllers)
+        || !debt_quote_pointer(output.controllers)) return false;
+#else
         || (output.physical_player&0xffffffu)!=0x524f50u
         || output.physical_player==actor) return false;
+#endif
 
     uintptr_t database_slot=0;
     if (!debt_quote_add(base,0x233d8b0,database_slot)
@@ -152,9 +171,15 @@ static bool debt_quote_context_read(const char* actor_tag,const char* recipient_
         || !debt_quote_lookup_country(output.country_table,output.country_count,
             output.physical_player,output.physical_country)
         || output.actor_country==output.recipient_country
+#ifndef BRIDGE_NATIVE_COUNTRY_CONTROL
         || output.actor_country==output.physical_country
+#endif
         || output.recipient_country==output.physical_country) return false;
     const unsigned recipient_slot=static_cast<unsigned>((recipient>>32)&0xffffu);
+#ifdef BRIDGE_NATIVE_COUNTRY_CONTROL
+    if (!debt_quote_read_at(output.controllers,recipient_slot*sizeof(int32_t),output.recipient_controller)
+        || output.recipient_controller!=0) return false;
+#endif
     uintptr_t row_offset=0;
     if (recipient_slot>=output.country_count
         || !debt_quote_read_at(output.actor_country,0x1510,output.actor_relations)
@@ -185,6 +210,8 @@ static bool debt_quote_context_equal(const DebtQuoteContext& left,
         && left.actor==right.actor && left.recipient==right.recipient
         && left.relation_recipient==right.relation_recipient
         && left.physical_player==right.physical_player
+        && left.controllers==right.controllers && left.human_count==right.human_count
+        && left.recipient_controller==right.recipient_controller
         && left.date_raw==right.date_raw;
 }
 

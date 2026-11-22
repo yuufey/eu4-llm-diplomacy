@@ -8,6 +8,7 @@ visibility.
 from __future__ import annotations
 
 from collections.abc import Mapping
+from functools import partial
 from copy import deepcopy
 import hashlib
 import json
@@ -113,8 +114,7 @@ def _repo_pin_rows(profile: dict[str, Any], name: str) -> set[str]:
         path.relative_to(ROOT)
         if type(row["bytes"]) is not int or row["bytes"] < 0:
             raise ValueError("EMPIRE_V3_DEPENDENCY_SIZE_TYPE")
-        size, digest = _sha(path)
-        if size != row["bytes"] or digest != row["sha256"]:
+        if not _v1_capture._matches_reviewed_layout(row):
             raise ValueError("EMPIRE_V3_DEPENDENCY_PIN")
         paths.add(rel.as_posix())
     if len(paths) != len(rows):
@@ -382,12 +382,12 @@ def _binding_public(profile: dict[str, Any], snapshot: dict[str, Any]) -> dict[s
 
 
 def _observe(reader: Any, module_base: int, country: str,
-             profile: dict[str, Any]) -> dict[str, Any]:
+             profile: dict[str, Any], *, observer: str = _OBSERVER) -> dict[str, Any]:
     expected = _expected_ui_binding_snapshot(profile)
     binding_before = _current_ui_binding_snapshot(profile["ui_binding"])
     if not _owner._same(binding_before, expected):
         raise ValueError("EMPIRE_V3_UI_BINDING_CHANGED_BEFORE_READ")
-    observation = _v2._observe(reader, module_base, country, profile)
+    observation = _v2._observe(reader, module_base, country, profile, observer=observer)
     binding_after = _current_ui_binding_snapshot(profile["ui_binding"])
     binding_stable = (
         _owner._same(binding_after, expected)
@@ -409,7 +409,7 @@ def _observe(reader: Any, module_base: int, country: str,
 
 
 def capture(installation: Path, *, observer: str = _OBSERVER) -> dict[str, Any]:
-    if observer != _OBSERVER:
+    if not _v1_capture._valid_observer(observer):
         raise ValueError("EMPIRE_V3_OBSERVER_SCOPE")
     loaded: dict[str, Any] = {}
 
@@ -420,7 +420,9 @@ def capture(installation: Path, *, observer: str = _OBSERVER) -> dict[str, Any]:
 
     inner = _owner._capture_common(
         installation, "HRE", observer=observer, schema=INNER_SCHEMA,
-        profile_sha256=PROFILE_SHA256, load_profile=load_profile, observe=_observe,
+        profile_sha256=PROFILE_SHA256, load_profile=load_profile,
+        observe=partial(_observe, observer=observer), observer_scoped=True,
+        allow_observer_target=True,
     )
     profile = loaded.get("profile")
     if (inner.get("status") == "observed" and inner.get("completed") is True
@@ -440,8 +442,10 @@ def capture(installation: Path, *, observer: str = _OBSERVER) -> dict[str, Any]:
 
 def validate_capture(report: Any, context: Mapping[str, Any], creation: int) -> bool:
     try:
-        if (not isinstance(report, dict) or set(report) != {"schema", "observer", "object", "capture"}
-                or report.get("schema") != SCHEMA or report.get("observer") != _OBSERVER
+        observer = context.get("observer") if isinstance(context, Mapping) else None
+        if (not _v1_capture._valid_observer(observer) or not isinstance(report, dict)
+                or set(report) != {"schema", "observer", "object", "capture"}
+                or report.get("schema") != SCHEMA or report.get("observer") != observer
                 or not _owner._same(report.get("object"), _OBJECT)
                 or type(creation) is not int or creation <= 0
                 or not isinstance(context, Mapping)):
@@ -462,7 +466,7 @@ def validate_capture(report: Any, context: Mapping[str, Any], creation: int) -> 
                 if type(row.get(key)) is not int or row[key] <= 0:
                     return False
         if (inner.get("profile_sha256") != PROFILE_SHA256
-                or request.get("observer") != _OBSERVER or request.get("country") != "HRE"
+                or request.get("observer") != observer or request.get("country") != "HRE"
                 or request.get("creation_filetime") != creation):
             return False
         profile = _load_profile()
@@ -473,7 +477,8 @@ def validate_capture(report: Any, context: Mapping[str, Any], creation: int) -> 
         return _owner._validate_capture_common(
             inner, context, creation, "HRE", schema=INNER_SCHEMA,
             profile_sha256=PROFILE_SHA256, load_profile=lambda: profile,
-            observe=_observe, require_access=True,
+            observe=partial(_observe, observer=observer), observer_scoped=True,
+            allow_observer_target=True, require_access=True,
         )
     except Exception:
         return False
@@ -483,13 +488,14 @@ def _v2_projection_report(report: dict[str, Any]) -> dict[str, Any]:
     inner = deepcopy(report["capture"])
     inner["schema"] = _v2.INNER_SCHEMA
     inner["profile_sha256"] = _v2.PROFILE_SHA256
-    return {"schema": _v2.SCHEMA, "observer": _OBSERVER,
+    return {"schema": _v2.SCHEMA, "observer": report["observer"],
             "object": dict(_OBJECT), "capture": inner}
 
 
 def project_fields(report: Any) -> dict[str, Any]:
     if (not isinstance(report, dict) or set(report) != {"schema", "observer", "object", "capture"}
-            or report.get("schema") != SCHEMA or report.get("observer") != _OBSERVER
+            or report.get("schema") != SCHEMA
+            or not _v1_capture._valid_observer(report.get("observer"))
             or not _owner._same(report.get("object"), _OBJECT)):
         raise ValueError("EMPIRE_V3_PROJECTION_SCOPE")
     profile = _load_profile()

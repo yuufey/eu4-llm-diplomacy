@@ -1,4 +1,4 @@
-"""Read-only adapter for the FRA observer's bounded discovery bitmap.
+"""Read-only adapter for the configured observer's bounded discovery bitmap.
 
 The bitmap reports positive province-ID candidates only.  Its finite native
 range is not proof that every province ID in the game has been enumerated.
@@ -15,7 +15,7 @@ from .catalog import get_topic
 from .empire_live import _context_identity
 from .model import InformationError, canonical
 from .sources import _result, _source_info
-from .trade_income import _context_reason as _base_reason, _session_binding
+from .trade_income import _observer_context_reason as _base_reason, _session_binding
 
 
 FIELD = "discovered_provinces"
@@ -115,7 +115,7 @@ class NativeProvinceDiscoverySource:
 
     @staticmethod
     def _context_reason(context: Any) -> str | None:
-        reason = _base_reason(context, "FRA")
+        reason = _base_reason(context)
         return reason.replace("TRADE_INCOME_", "C02_", 1) if reason else None
 
     def _binding(self, context: dict) -> tuple[Any, int | None, str | None]:
@@ -193,7 +193,7 @@ class NativeProvinceDiscoverySource:
         fields = {name: {"status": "unsupported", "reason": "C02_DISCOVERY_FIELD_NOT_IMPLEMENTED"}
                   for name in query["fields"]}
         provenance = {
-            "observer": "FRA",
+            "observer": current.get("observer"),
             "read_only": True,
             "native_function_invoked": False,
             "actual_UI_observed": False,
@@ -222,7 +222,7 @@ class NativeProvinceDiscoverySource:
             return result(current)
 
         obj = query["object"]
-        if obj.get("type") == "country" and obj.get("country") != "FRA":
+        if obj.get("type") == "country" and obj.get("country") != current.get("observer"):
             fields[FIELD] = {"status": "not_applicable",
                              "reason": "C02_OBSERVER_DISCOVERY_VIEW_ONLY",
                              "period": "current", "complete": False}
@@ -247,7 +247,7 @@ class NativeProvinceDiscoverySource:
 
         try:
             module, capture = self._backend()
-            report = capture(installation, observer="FRA")
+            report = capture(installation, observer=before["observer"])
         except Exception:
             return failure("C02_CAPTURE_FAILED", before)
 

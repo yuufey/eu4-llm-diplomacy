@@ -12,6 +12,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import re
 from pathlib import Path
 import struct
 from typing import Any, Mapping
@@ -24,7 +25,6 @@ EXPECTED_PROFILE_SHA256 = "1375800668ed0ddec29d2e5f8efe8e1369d1e4da8b0aa6916b5b9
 EXPECTED_EXE_SHA256 = "b23fa0e1f698d31b01cdd1c3817a675805d8c6286cb66f9c231e6e2a42544d77"
 EXPECTED_VERSION = "1.37.4"
 EXPECTED_COUNTRY = "FRA"
-COUNTRY_FULLREF_PREFIX = b"FRA\0"
 
 BASIS = "native_trade_node_country_income_cache"
 UNIT = "ducats"
@@ -433,7 +433,8 @@ def _node_key(ctx: _Budget, definition: int, layout: Mapping[str, int], index: i
     return payload[:length].decode("ascii"), payload.hex(), length, raw.hex()
 
 
-def read_fields(reader: Any, module_base: int, country_pointer: int) -> dict[str, Any]:
+def read_fields(reader: Any, module_base: int, country_pointer: int,
+                country: str = EXPECTED_COUNTRY) -> dict[str, Any]:
     """Read the bounded native graph and return one JSON-shaped record."""
     try:
         profile = _active_profile()
@@ -452,9 +453,11 @@ def read_fields(reader: Any, module_base: int, country_pointer: int) -> dict[str
         result["read_budget"] = {"bytes_requested": ctx.bytes_requested, "calls": ctx.calls}
         return result
     try:
+        if not isinstance(country, str) or re.fullmatch(r"[A-Z0-9]{3}", country) is None:
+            raise ReadError("country_tag_invalid")
         fullref_address = _address_add(country_pointer, layout["country_fullref_offset"], "country.fullref")
         fullref_raw = ctx.read(fullref_address, QWORD_WIDTH, "country.fullref")
-        if fullref_raw[:len(COUNTRY_FULLREF_PREFIX)] != COUNTRY_FULLREF_PREFIX:
+        if fullref_raw[:4] != country.encode("ascii") + b"\0":
             raise ReadError("country_fullref_prefix_mismatch")
         slot_offset = layout["country_slot_offset"]
         if slot_offset + 2 > len(fullref_raw):
@@ -639,7 +642,7 @@ def read_fields(reader: Any, module_base: int, country_pointer: int) -> dict[str
             "runtime_code_guard": guard,
             "module_base": _hex(module_base),
             "country_pointer": _hex(country_pointer),
-            "country": EXPECTED_COUNTRY,
+            "country": country,
             "country_fullref_address": _hex(fullref_address),
             "country_fullref_raw_hex": fullref_raw.hex(),
             "country_slot": slot,
@@ -658,7 +661,7 @@ def read_fields(reader: Any, module_base: int, country_pointer: int) -> dict[str
             "read_budget": {"bytes_requested": ctx.bytes_requested, "calls": ctx.calls},
             "observation": {
                 "module_base": _hex(module_base), "country_pointer": _hex(country_pointer),
-                "country": EXPECTED_COUNTRY, "country_slot": slot, "special_slot": special_slot,
+                "country": country, "country_slot": slot, "special_slot": special_slot,
                 "node_count": count, "real_node_count": len(nodes), "placeholder_count": placeholders,
             },
         }
@@ -748,7 +751,8 @@ def validate_record(record: Any) -> bool:
             return False
     if runtime.get("module_base") != _hex(module_base):
         return False
-    if record.get("country") != EXPECTED_COUNTRY or record.get("basis") != BASIS:
+    country = record.get("country")
+    if not isinstance(country, str) or re.fullmatch(r"[A-Z0-9]{3}", country) is None or record.get("basis") != BASIS:
         return False
     if record.get("unit") != UNIT or record.get("scale") != SCALE or record.get("period") != PERIOD or record.get("value_origin") != VALUE_ORIGIN:
         return False
@@ -756,7 +760,7 @@ def validate_record(record: Any) -> bool:
     if not _valid_hex(fullref_hex, QWORD_WIDTH):
         return False
     fullref = bytes.fromhex(fullref_hex)
-    if fullref[:len(COUNTRY_FULLREF_PREFIX)] != COUNTRY_FULLREF_PREFIX:
+    if fullref[:4] != country.encode("ascii") + b"\0":
         return False
     if record.get("country_fullref_address") != _hex(
         _address_add(country_pointer, layout["country_fullref_offset"], "country.fullref")
@@ -990,7 +994,7 @@ def validate_record(record: Any) -> bool:
     if (
         observation.get("module_base") != _hex(module_base)
         or observation.get("country_pointer") != _hex(country_pointer)
-        or observation.get("country") != EXPECTED_COUNTRY
+        or observation.get("country") != country
         or observation.get("country_slot") != slot
         or observation.get("special_slot") != special
         or observation.get("node_count") != count

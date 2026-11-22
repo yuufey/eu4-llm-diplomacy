@@ -105,6 +105,7 @@ def _normalize_request(
     observer: Any,
     targets: Any,
     expected_refs: Any,
+    observer_scoped: bool = False,
 ) -> tuple[str | None, list[str], dict[str, str], list[dict[str, Any]]]:
     errors: list[dict[str, Any]] = []
     observer_tag = observer if isinstance(observer, str) else None
@@ -113,7 +114,7 @@ def _normalize_request(
 
     if not _valid_tag(observer):
         errors.append({"code": "observer_tag_invalid", "path": "observer", "detail": "expected uppercase three-character tag"})
-    elif observer != OBSERVER_TAG:
+    elif observer != OBSERVER_TAG and not observer_scoped:
         errors.append({"code": "observer_not_supported", "path": "observer", "detail": "this private reader currently accepts observer FRA only"})
 
     if not isinstance(targets, (list, tuple)):
@@ -437,6 +438,7 @@ def read_two_pass(
     *,
     expected_refs: Mapping[str, int | str] | None = None,
     admission_reader: Any = None,
+    observer_scoped: bool = False,
 ) -> dict[str, Any]:
     """Read bounded technology-cache values for up to eight foreign targets.
 
@@ -448,7 +450,7 @@ def read_two_pass(
     passes but never makes this leaf public-export-ready.
     """
     observer_tag, target_tags, normalized_expected, input_errors = _normalize_request(
-        observer, targets, expected_refs
+        observer, targets, expected_refs, observer_scoped
     )
     if input_errors:
         return _base_result(

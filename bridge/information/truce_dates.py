@@ -7,7 +7,7 @@ import re
 from .catalog import get_topic, validate_query
 from .model import InformationError, canonical
 from .sources import _result, _source_info
-from .trade_income import NativeTradeIncomeSource, _context_reason, _identity as _base_identity, _session_binding
+from .trade_income import NativeTradeIncomeSource, _observer_context_reason, _identity as _base_identity, _session_binding
 from .truce_date_math import direct_truce_expiry
 
 _FIELD = 'truce_until'
@@ -30,7 +30,7 @@ class NativeTruceDatesSource(NativeTradeIncomeSource):
     def catalog(self):
         topic = get_topic('R03')
         topic.update(source=type(self).__name__, status='available', object_types=['country_pair'],
-                     observer_roles=['actor', 'recipient'], observer_scope=['FRA'],
+                     observer_roles=['actor', 'recipient'], observer_scope=[],
                      context_scope='visible_scope', visibility='visible_scope',
                      supported_versions=['1.37.4'], triggers=['query', 'periodic'])
         topic['fields'] = {_FIELD: {
@@ -38,7 +38,7 @@ class NativeTruceDatesSource(NativeTradeIncomeSource):
             'unit': 'eu4_hour_tick', 'scale': 1, 'period': 'current',
             'supported_object_types': ['country_pair'], 'direction': 'actor_to_recipient',
             'basis': 'direct_pair_flag_and_native_calendar_expiry_projection',
-            'description': '选定方向的直接停战记录截止日期；FRA须参与国家对，关联国家停战与完整UI可知范围未实现。',
+            'description': '指定方向的直接停战截止日期，观察国须为参与方。',
             'gaps': ['LINKED_COUNTRY_TRUCES_NOT_ENUMERATED', 'ACTUAL_UI_RENDERING_NOT_OBSERVED',
                      'NONATOMIC_SAMPLED_CACHE_INPUTS', 'PRE_REFERENCE_AND_DATE_OVERFLOW_UNSUPPORTED'],
         }}
@@ -52,20 +52,20 @@ class NativeTruceDatesSource(NativeTradeIncomeSource):
         normalized = validate_query(query)
         if normalized['topic'] != 'R03':
             raise InformationError('unsupported_topic', 'Truce dates support R03 only')
-        if context is not None and context.get('observer') != 'FRA':
-            raise InformationError('observer_scope_mismatch', 'The verified observer is FRA')
+        observer = context.get('observer') if context is not None else None
         obj = normalized['object']
         if (context is not None and obj.get('session_id') is not None
                 and context.get('session_id') is not None
                 and obj['session_id'] != context['session_id']):
             raise InformationError('context_mismatch', 'The query belongs to another session')
         if obj['type'] == 'country_pair':
-            if obj['actor'] == obj['recipient'] or 'FRA' not in (obj['actor'], obj['recipient']):
-                raise InformationError('observer_scope_mismatch', 'A distinct pair involving FRA is required')
+            if (obj['actor'] == obj['recipient']
+                    or (observer is not None and observer not in (obj['actor'], obj['recipient']))):
+                raise InformationError('observer_scope_mismatch', 'A distinct pair involving the observer is required')
         return normalized
 
     @staticmethod
-    def _project(report, obj, target):
+    def _project(report, obj, target, observer):
         targets = report['observation']['backend']['targets']
         if not isinstance(targets, list) or len(targets) != 1 or targets[0].get('tag') != target:
             raise ValueError('TRUCE_TARGET_INVALID')
@@ -92,7 +92,7 @@ class NativeTruceDatesSource(NativeTradeIncomeSource):
         records = values['directed_records']
         if not isinstance(records, list) or len(records) != 2:
             raise ValueError('TRUCE_DIRECTIONS_INVALID')
-        if {(row.get('actor'), row.get('target')) for row in records} != {('FRA', target), (target, 'FRA')}:
+        if {(row.get('actor'), row.get('target')) for row in records} != {(observer, target), (target, observer)}:
             raise ValueError('TRUCE_DIRECTIONS_INVALID')
         selected = next(row for row in records if row['actor'] == obj['actor'] and row['target'] == obj['recipient'])
         flag = selected['direct_flag']
@@ -109,6 +109,7 @@ class NativeTruceDatesSource(NativeTradeIncomeSource):
     def read(self, query, context=None):
         query = self.validate_query(query, context)
         before = self.context()
+        observer = before.get('observer')
         fields = {name: {'status': 'unsupported', 'reason': 'R03_FIELD_NOT_IMPLEMENTED'}
                   for name in query['fields']}
         provenance = {'read_only': True, 'native_function_invoked': False,
@@ -118,7 +119,8 @@ class NativeTruceDatesSource(NativeTradeIncomeSource):
             obj = query['object']
             if obj['type'] != 'country_pair':
                 fields[_FIELD] = {'status': 'unsupported', 'reason': 'TRUCE_COUNTRY_ENUMERATION_NOT_IMPLEMENTED'}
-            elif _context_reason(before, 'FRA') or (context is not None and _identity(context) != _identity(before)):
+            elif (_observer_context_reason(before) or observer not in (obj['actor'], obj['recipient'])
+                  or (context is not None and _identity(context) != _identity(before))):
                 fields[_FIELD] = {'status': 'unavailable', 'reason': 'TRUCE_CONTEXT_MISMATCH'}
             else:
                 try:
@@ -126,11 +128,11 @@ class NativeTruceDatesSource(NativeTradeIncomeSource):
                     if reason:
                         raise ValueError('TRUCE_SESSION_UNAVAILABLE')
                     module = self.capture_module or import_module('bridge.information.truce_capture')
-                    target = obj['recipient'] if obj['actor'] == 'FRA' else obj['actor']
-                    report = module.capture(installation, target, observer='FRA')
+                    target = obj['recipient'] if obj['actor'] == observer else obj['actor']
+                    report = module.capture(installation, target, observer=observer)
                     if module.validate_capture(report, before, creation, target) is not True:
                         raise ValueError('TRUCE_CAPTURE_INVALID')
-                    projected = self._project(report, obj, target)
+                    projected = self._project(report, obj, target, observer)
                     if (_identity(self.context()) != _identity(before)
                             or _session_binding(self.base_source) != (installation, creation, reason)):
                         raise ValueError('TRUCE_CONTEXT_CHANGED')

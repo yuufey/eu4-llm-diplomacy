@@ -24,6 +24,7 @@ from datetime import datetime, timezone
 import hashlib
 import json
 from pathlib import Path
+import re
 import sys
 from typing import Any, Mapping
 
@@ -31,6 +32,7 @@ if not __package__:
     sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
     __package__ = "bridge.information"
 
+from . import country_reference_memory as _countries
 from . import observation_time as _time
 
 
@@ -118,8 +120,6 @@ PROCESS_ACCESS = 0x0400 | 0x0010  # PROCESS_QUERY_INFORMATION | PROCESS_VM_READ
 MAX_TOTAL_RPM = _profile_int(PROFILE["limits"]["max_total_rpm"], "limits.max_total_rpm")
 MAX_SINGLE_RPM = _profile_int(PROFILE["limits"]["max_single_rpm"], "limits.max_single_rpm")
 MAX_USER_ADDRESS = 0x0000800000000000
-MAX_TABLE_ENTRIES = _profile_int(PROFILE["limits"]["max_table_entries"], "limits.max_table_entries")
-INITIAL_TABLE_ENTRIES = _profile_int(PROFILE["limits"]["initial_table_entries"], "limits.initial_table_entries")
 MAX_MISSION_SLOTS = _profile_int(PROFILE["limits"]["max_mission_slots"], "limits.max_mission_slots")
 MAX_ROOTS_PER_SLOT = _profile_int(PROFILE["limits"]["max_roots_per_slot"], "limits.max_roots_per_slot")
 MAX_ASCII_ROOT_LENGTH = _profile_int(PROFILE["string32"]["max_ascii_length"], "string32.max_ascii_length")
@@ -189,13 +189,6 @@ def _address(value: int | None, module_base: int | None = None, *, known_rva: in
     else:
         result["rva_identity"] = "runtime_va_or_heap"
     return result
-
-
-def _tag_and_slot(handle: int) -> tuple[str | None, int | None]:
-    raw = (handle & 0xFFFFFF).to_bytes(3, "little")
-    if not all(0x41 <= byte <= 0x5A or 0x30 <= byte <= 0x39 for byte in raw):
-        return None, (handle >> 32) & 0xFFFF
-    return raw.decode("ascii"), (handle >> 32) & 0xFFFF
 
 
 def _load_installation(path: Path) -> dict[str, Any]:
@@ -698,83 +691,48 @@ def _decode_string32(reader: BoundedRPM, header_address: int, header: bytes, lab
 
 
 def _country_scan(reader: BoundedRPM, database: int, requested_country: str) -> dict[str, Any]:
-    table_address = database + COUNTRY_TABLE_OFFSET
-    table, table_raw = reader.qword(table_address, "database.country_table")
+    """Bind a canonical mission owner across the live B23 country manager."""
     result: dict[str, Any] = {
         "status": "unknown",
         "requested_country": requested_country,
-        "table_field": _field_address(reader, table_address, table_raw, table, offset=COUNTRY_TABLE_OFFSET),
-        "max_entries": MAX_TABLE_ENTRIES,
+        "table_field": None,
+        "max_entries": _countries.MAX_COUNTRY_SLOTS,
         "scanned_entries": 0,
-        "initial_scan_limit": INITIAL_TABLE_ENTRIES,
-        "tail_not_claimed": True,
-        "entries": [],
         "matches": [],
         "country_pointer": None,
         "country_handle": None,
     }
-    if not _valid_pointer(table):
-        result["unknown_reason"] = "country_table_pointer_invalid"
+    try:
+        scan = _countries.resolve_countries(reader.read_code, reader.module_base, [requested_country])
+    except _countries.CountryReferenceError as exc:
+        result["unknown_reason"] = str(exc)
         return result
-    table_raw_bytes = reader.read(table, INITIAL_TABLE_ENTRIES * 8, "country_table.first_256_pointers")
-    matches: list[dict[str, Any]] = []
-    for index in range(INITIAL_TABLE_ENTRIES):
-        pointer_raw = table_raw_bytes[index * 8:(index + 1) * 8]
-        pointer = int.from_bytes(pointer_raw, "little")
-        entry: dict[str, Any] = {
-            "table_index": index,
-            "pointer": _address(pointer, reader.module_base),
-            "pointer_raw_hex": pointer_raw.hex(),
-            "status": "empty" if pointer == 0 else "unknown",
-            "handle": None,
-        }
-        if pointer == 0:
-            result["entries"].append(entry)
-            continue
-        if not _valid_pointer(pointer):
-            entry["unknown_reason"] = "country_pointer_invalid"
-            result["entries"].append(entry)
-            continue
-        try:
-            handle, handle_raw = reader.qword(pointer + COUNTRY_HANDLE_OFFSET, f"country[{index}].handle")
-        except Exception as exc:
-            entry["unknown_reason"] = f"handle_read_failed:{exc}"
-            result["entries"].append(entry)
-            continue
-        tag, slot = _tag_and_slot(handle)
-        entry["handle"] = {
-            "address": _address(pointer + COUNTRY_HANDLE_OFFSET, reader.module_base),
+    if int(scan["database"], 16) != database:
+        result["unknown_reason"] = "country_database_changed_during_scan"
+        return result
+    row = scan["requested"][requested_country]
+    table = int(scan["table"], 16)
+    match = {
+        "table_index": row["slot"],
+        "country_pointer": _address(int(row["country_pointer"], 16), reader.module_base),
+        "country_handle": {
+            "address": _address(int(row["country_fullref_address"], 16), reader.module_base),
             "field_offset": _hex(COUNTRY_HANDLE_OFFSET),
-            "raw_hex": handle_raw.hex(),
-            "value": _hex(handle),
-            "tag": tag,
-            "slot": slot,
-        }
-        if tag == requested_country and slot == index:
-            entry["status"] = "tag_and_slot_match"
-            matches.append({
-                "table_index": index,
-                "country_pointer": _address(pointer, reader.module_base),
-                "country_handle": dict(entry["handle"]),
-            })
-        elif tag == requested_country:
-            entry["status"] = "tag_match_slot_mismatch"
-            entry["unknown_reason"] = "handle_slot_does_not_match_table_index"
-        else:
-            entry["status"] = "other_country_or_unknown_tag"
-        result["entries"].append(entry)
-    result["scanned_entries"] = INITIAL_TABLE_ENTRIES
-    result["matches"] = matches
-    if len(matches) == 1:
-        result["status"] = "observed"
-        result["country_pointer"] = matches[0]["country_pointer"]
-        result["country_handle"] = matches[0]["country_handle"]
-    elif len(matches) > 1:
-        result["status"] = "unknown"
-        result["unknown_reason"] = "duplicate_tag_and_slot_matches"
-    else:
-        result["status"] = "unknown"
-        result["unknown_reason"] = "country_not_found_within_fixed_256_entry_bound"
+            "raw_hex": row["fullref_raw_hex"],
+            "value": row["fullref"],
+            "tag": requested_country,
+            "slot": row["slot"],
+        },
+    }
+    result.update(
+        status="observed",
+        table_field=_field_address(reader, database + COUNTRY_TABLE_OFFSET,
+                                   bytes.fromhex(scan["table_pointer_raw_hex"]), table,
+                                   offset=COUNTRY_TABLE_OFFSET),
+        scanned_entries=scan["count"],
+        matches=[match],
+        **match,
+    )
     return result
 
 
@@ -1169,6 +1127,7 @@ def _snapshot(
                         result['mission_conditions'] = {key: value for key, value in conditions.items() if key != '_compare'}
                         result['_mission_conditions_compare'] = conditions.get('_compare')
                     if trigger_profile is not None:
+                        from functools import partial
                         from .mission_trigger_memory import capture_triggers
                         from .mission_trigger_galleys import count_galleys
                         from .mission_trigger_provinces import make_province_reader
@@ -1181,15 +1140,16 @@ def _snapshot(
                         from .mission_trigger_count_domain import read_count_domain
                         def country_condition_inputs(tracked_reader, base, pointer, kind):
                             if kind == 'army_ratio':
-                                return count_army_ratio_inputs(tracked_reader, base, pointer)
+                                return count_army_ratio_inputs(tracked_reader, base, pointer, country=country)
                             return read_country_state(tracked_reader, base, pointer, kind)
                         triggers=capture_triggers(reader,module_base,country_pointer,prerequisites,
-                            code_guards=trigger_profile['code_guards'],galley_counter=count_galleys,
-                            province_reader=make_province_reader(),country_state_reader=country_condition_inputs,
+                            code_guards=trigger_profile['code_guards'],
+                            galley_counter=partial(count_galleys, country=country),
+                            province_reader=make_province_reader(observer=country),country_state_reader=country_condition_inputs,
                             task_selector=trigger_selector,
                             geographic_reader=read_geographic_state,country_scope_reader=bind_country_scope,
                             dlc_reader=read_dlc_state,dynamic_scope_reader=read_scope_selector,
-                            count_domain_reader=read_count_domain)
+                            count_domain_reader=read_count_domain,country=country)
                         result['mission_triggers']={key:value for key,value in triggers.items() if key!='_compare'}
                         result['_mission_triggers_compare']=triggers.get('_compare')
             except Exception as exc:
@@ -1469,9 +1429,9 @@ def capture(
                 "status": "unknown",
                 "error": "Loaded-task profile/vector/parser guards did not match",
             })
-    if country != EXPECTED_COUNTRY:
+    if not isinstance(country, str) or re.fullmatch(r"[A-Z0-9]{3}", country) is None:
         report["status"] = "unsupported_country"
-        report["errors"].append({"stage": "request", "status": "unknown", "error": "Only FRA is permitted"})
+        report["errors"].append({"stage": "request", "status": "unknown", "error": "Invalid country tag"})
         if include_tasks:
             report["loaded_tasks"] = task_memory.unknown_loaded_tasks("unsupported_country")
         _apply_cleanup(report, None, None)
@@ -1722,7 +1682,7 @@ def capture(
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--installation", required=True, type=Path)
-    parser.add_argument("--country", choices=(EXPECTED_COUNTRY,), default=EXPECTED_COUNTRY)
+    parser.add_argument("--country", default=EXPECTED_COUNTRY)
     parser.add_argument("--include-completed", action="store_true", help="Read the separately contracted completed-list candidate with the same double pass")
     parser.add_argument("--include-tasks", action="store_true", help="Read each already observed root's bounded loaded-task vector with a separate double pass")
     parser.add_argument('--include-prerequisites', action='store_true', help='Read loaded required_missions vectors; requires --include-tasks')

@@ -622,7 +622,7 @@ def _tag_from_fullref(value: int) -> str | None:
 
 def _find_country(reader: Any, module_base: int, country: str, profile: Mapping[str, Any], budget: _ReadBudget) -> tuple[int, dict[str, Any]]:
     layout = _profile_layout(profile)
-    if country != EXPECTED_COUNTRY:
+    if not isinstance(country, str) or re.fullmatch(r"[A-Z0-9]{3}", country) is None:
         raise ReadError("unsupported_country")
     database, database_raw = _read_u64(reader, _add_address(module_base, layout["database_global_rva"], layout), "country_forces.database", budget, layout)
     if not _valid_address(database, layout):
@@ -1089,7 +1089,7 @@ def _diff_paths(left: Any, right: Any, path: str = "$") -> list[str]:
 
 def capture(installation: Path, country: str = EXPECTED_COUNTRY, *,
            include_type_keys: bool = False) -> dict[str, Any]:
-    """Capture FRA's direct linked records using read-only bounded RPM."""
+    """Capture a country's direct linked records using read-only bounded RPM."""
     if type(include_type_keys) is not bool:
         raise TypeError("include_type_keys must be bool")
     installation = Path(installation)
@@ -1124,9 +1124,9 @@ def capture(installation: Path, country: str = EXPECTED_COUNTRY, *,
     budget = _ReadBudget()
     try:
         report["probe_script_sha256"] = hashlib.sha256(Path(__file__).read_bytes()).hexdigest()
-        if country != EXPECTED_COUNTRY:
+        if not isinstance(country, str) or re.fullmatch(r"[A-Z0-9]{3}", country) is None:
             report["status"] = "unsupported_country"
-            report["errors"].append({"stage": "request", "status": "unknown", "error": "Only FRA is permitted"})
+            report["errors"].append({"stage": "request", "status": "unknown", "error": "Invalid country tag"})
             return report
         profile = _load_profile()
         report["static_contract_guard"] = _static_contract_guard(profile)
@@ -1716,10 +1716,12 @@ def _unit_type_proof_valid(row: Mapping[str, Any], unit_type: Mapping[str, Any],
         return False
 
 
-def validate_record(record: Any, *, type_key_enhancement: Mapping[str, Any] | None = None,
+def validate_record(record: Any, *, country: str = EXPECTED_COUNTRY,
+                    type_key_enhancement: Mapping[str, Any] | None = None,
                     pass_index: int | None = None) -> bool:
     """Validate raw record identity and graph shape without deriving public meanings."""
-    if not isinstance(record, Mapping) or record.get("status") != "observed":
+    if (not isinstance(record, Mapping) or record.get("status") != "observed"
+            or not isinstance(country, str) or re.fullmatch(r"[A-Z0-9]{3}", country) is None):
         return False
     try:
         profile = _load_profile()
@@ -1733,7 +1735,7 @@ def validate_record(record: Any, *, type_key_enhancement: Mapping[str, Any] | No
             return False
         handle = int(str(record.get("country_handle")), 0)
         handle_raw_hex = record.get("country_handle_raw_hex")
-        if (_tag_from_fullref(handle) != EXPECTED_COUNTRY or not isinstance(handle_raw_hex, str) or len(handle_raw_hex) != 16 or
+        if (_tag_from_fullref(handle) != country or not isinstance(handle_raw_hex, str) or len(handle_raw_hex) != 16 or
                 int.from_bytes(bytes.fromhex(handle_raw_hex), "little", signed=False) != handle):
             return False
         game_pointer = int(str(record.get("game_pointer")), 0)
@@ -1979,7 +1981,9 @@ def validate_record(record: Any, *, type_key_enhancement: Mapping[str, Any] | No
 
 def validate_capture(report: Any, context: Mapping[str, Any] | None, creation_filetime: int, country: str = EXPECTED_COUNTRY) -> bool:
     """Validate identity, fixed date, cleanup, and raw two-pass equality."""
-    if (not isinstance(report, Mapping) or report.get("status") != "observed" or report.get("completed") is not True or report.get("country") != country or country != EXPECTED_COUNTRY or report.get("read_only") is not True):
+    if (not isinstance(report, Mapping) or report.get("status") != "observed" or report.get("completed") is not True
+            or report.get("country") != country or not isinstance(country, str)
+            or re.fullmatch(r"[A-Z0-9]{3}", country) is None or report.get("read_only") is not True):
         return False
     identity = report.get("identity")
     request = report.get("request")
@@ -1996,7 +2000,8 @@ def validate_capture(report: Any, context: Mapping[str, Any] | None, creation_fi
         return False
     if type(creation_filetime) is not int or identity.get("installation_creation_filetime") != creation_filetime or identity.get("process_creation_filetime") != creation_filetime:
         return False
-    if not isinstance(context, Mapping) or type(context.get("game_date")) is not int:
+    if (not isinstance(context, Mapping) or type(context.get("game_date")) is not int
+            or context.get("observer", country) != country):
         return False
     expected_session = context.get("session_id", context.get("installation_session_id"))
     if expected_session is not None and identity.get("installation_session_id") != expected_session:
@@ -2021,13 +2026,14 @@ def validate_capture(report: Any, context: Mapping[str, Any] | None, creation_fi
                 for row in rows
             )
     if enhancement is None:
-        if carries_type_data or not validate_record(before_record) or not validate_record(after_record):
+        if (carries_type_data or not validate_record(before_record, country=country)
+                or not validate_record(after_record, country=country)):
             return False
     else:
         header_ok, _profile = _type_enhancement_header_valid(enhancement)
         if (not header_ok
-                or not validate_record(before_record, type_key_enhancement=enhancement, pass_index=0)
-                or not validate_record(after_record, type_key_enhancement=enhancement, pass_index=1)):
+                or not validate_record(before_record, country=country, type_key_enhancement=enhancement, pass_index=0)
+                or not validate_record(after_record, country=country, type_key_enhancement=enhancement, pass_index=1)):
             return False
         before_rows = before_record.get("records")
         after_rows = after_record.get("records")

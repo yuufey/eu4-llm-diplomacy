@@ -63,12 +63,18 @@ def _same_database_file(left: Path | str, right: Path | str) -> bool:
 
 def _build_runtime(args: argparse.Namespace):
     from bridge.diplomacy_control import DiplomacyControl
+    from bridge.game_time_control import bind_game_time_control
 
     controlled_country = getattr(args, "controlled_country", None) or args.observer
     control = DiplomacyControl(args.owner, controlled_country)
     managed_countries = getattr(args, "managed_countries", None)
     if managed_countries is None:
         managed_countries = [controlled_country] if controlled_country is not None else []
+    information_observers = getattr(args, "information_observers", None)
+    if information_observers is None:
+        information_observers = [args.observer] if args.observer is not None else []
+    if args.observer is not None and args.observer not in information_observers:
+        raise InformationError("invalid_observer_scope", "The complete observation scope must include the configured observer")
     for country in managed_countries:
         DiplomacyControl(args.owner, country)
     if controlled_country is not None and controlled_country not in managed_countries:
@@ -200,6 +206,12 @@ def _build_runtime(args: argparse.Namespace):
     journal = None
     diplomacy_tools = None
     session = None
+    game_time_control = None
+    game_time_control_error = None
+    diplomacy_execution_error = None
+    allow_time_control = getattr(args, "allow_time_control", False)
+    if allow_time_control and not args.operator_session:
+        raise ValueError("--allow-time-control requires --operator-session with an O00 observer")
     if args.operator_session:
         # One session and journal serve both the read-only information source
         # and explicit diplomacy tool calls. Sources still call query methods.
@@ -208,11 +220,29 @@ def _build_runtime(args: argparse.Namespace):
         from work.local_config import game_exe
 
         session = ObserverSession(args.operator_session, game_exe())
+        if allow_time_control:
+            try:
+                game_time_control = bind_game_time_control(session)
+            except InformationError as error:
+                game_time_control_error = (error.code, str(error))
+                logging.warning("Game clock unavailable: %s", error)
         session.controlled_country = controlled_country
-        configure_control = getattr(session, "configure_controlled_countries", None)
-        if controlled_country is not None and callable(configure_control):
-            configure_control(managed_countries)
         if not battle_only:
+            configure_observation = getattr(session, "configure_information_observers", None)
+            if information_observers and callable(configure_observation):
+                try:
+                    configure_observation(information_observers)
+                except (OSError, ValueError, RuntimeError) as error:
+                    logging.warning("Native information event observation unavailable: %s", error)
+            configure_control = getattr(session, "configure_controlled_countries", None)
+            if controlled_country is not None and callable(configure_control):
+                try:
+                    configure_control(managed_countries)
+                except (OSError, RuntimeError) as error:
+                    message = (str(error) if isinstance(error, RuntimeError)
+                               else "Native country-control request channel unavailable")
+                    diplomacy_execution_error = ("native_country_control_unavailable", message)
+                    logging.warning("Diplomacy execution unavailable: %s", message)
             journal_path = args.journal or DEFAULT_JOURNAL
             journal_path.parent.mkdir(parents=True, exist_ok=True)
             journal = DurableJournal(
@@ -586,6 +616,9 @@ def _build_runtime(args: argparse.Namespace):
         setattr(service, "battle_ingestor", battle_ingestor)
     service.diplomacy_tools = diplomacy_tools
     service.diplomacy_control = control
+    service.game_time_control = game_time_control
+    service.game_time_control_error = game_time_control_error
+    service.diplomacy_execution_error = diplomacy_execution_error
     return service, journal
 
 
@@ -630,12 +663,16 @@ def build_parser() -> argparse.ArgumentParser:
                         help="SQLite database for reports, subscriptions and outbox")
     parser.add_argument("--operator-session", type=Path,
                         help="Verified observer installation.json; omit for offline discovery")
+    parser.add_argument("--allow-time-control", action="store_true",
+                        help="Expose clock control for a no-player test with a verified O00 observer")
     parser.add_argument("--observer", default=None,
                         help="Trusted operator country tag; kept distinct from the game's player tag")
     parser.add_argument("--controlled-country", default=None,
                         help="Country this LLM may control; defaults to --observer, omitting both leaves diplomacy read-only")
     parser.add_argument("--managed-countries", nargs="+", default=None,
                         help="Complete native managed-country set shared by LLM connections; defaults to the controlled country")
+    parser.add_argument("--information-observers", nargs="+", default=None,
+                        help="Complete native information event scope; defaults to the configured observer")
     parser.add_argument("--battle-only", action="store_true",
                         help="Serve session context and battles for a native-verified non-player observer")
     parser.add_argument("--static-game-data", action="store_true",

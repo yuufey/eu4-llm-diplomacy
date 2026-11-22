@@ -76,7 +76,7 @@ def transfer_result(context, *, field=None, node_id=NODE):
             "name": "FakeNativeTradeTransferSource",
             "mode": "live",
             "status": "observed",
-            "observer": "FRA",
+            "observer": context["observer"],
             "session_id": context["session_id"],
             "complete": False,
         },
@@ -232,8 +232,9 @@ def province_query(province_id=1298):
     }
 
 
-def test_trade_node_delegates_once_and_preserves_signed_and_known_empty_rows():
-    context = live_context()
+@pytest.mark.parametrize("observer", ("FRA", "TUR"))
+def test_trade_node_delegates_once_and_preserves_signed_and_known_empty_rows(observer):
+    context = live_context(observer=observer)
     transfers = FakeTransfers(context)
     source = make_source(transfers=transfers, context=context)
     query = node_query()
@@ -247,6 +248,7 @@ def test_trade_node_delegates_once_and_preserves_signed_and_known_empty_rows():
     assert len(transfers.validate_calls) == 1
     assert field["status"] == "known"
     assert field["value"]["node_id"] == NODE
+    assert field["value"]["observer"] == observer
     assert field["value"]["to"] == upstream_before["fields"]["transfer"]["value"]["to"]
     assert field["value"]["to"]["items"][1]["raw"] == -275
     assert field["value"]["from"] == {"status": "empty", "items": []}

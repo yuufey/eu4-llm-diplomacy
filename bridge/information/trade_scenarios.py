@@ -245,7 +245,7 @@ class TradeScenarioSource:
     def catalog(self):
         topic = get_topic('T06')
         topic.update(status='available', source=type(self).__name__, object_types=['trade_node'],
-            observer_roles=[], supported_countries=['FRA'], supported_versions=['1.37.4'],
+            observer_roles=['country'], supported_versions=['1.37.4'],
             context_scope='country_scope', visibility='conditional_analysis',
             parameters=_schema(self.cost_reader is not None, self.target_reader is not None), triggers=['query', 'periodic'])
         topic['fields'] = {name: {'coverage': 'partial', 'source': type(self).__name__, 'complete': False,
@@ -294,7 +294,7 @@ class TradeScenarioSource:
                     'calculation_cache_freshness_proven': False,
                     'province_node_allocation': bool(getattr(power_reader, 'with_node_allocation', False)),
                     'node_allocation_path': 'rows[].current_trade_power.node_allocation',
-                    'node_allocation_observer': 'FRA',
+                    'node_allocation_observer': 'configured_observer',
                     'node_allocation_component': 'TP_PROVINCE_POWER',
                     'province_value_calculation': bool(getattr(power_reader, 'with_value_calculation', False)),
                     'province_value_path': 'rows[].current_trade_power.value_calculation',
@@ -363,17 +363,18 @@ class TradeScenarioSource:
                 raise ValueError('input_limit')
         except (ValueError, TypeError, UnicodeError) as exc:
             raise InformationError('invalid_parameters', 'T06 parameters exceed JSON bounds') from exc
-        if isinstance(context, dict) and context.get('observer') not in (None, 'FRA'):
-            raise InformationError('observer_scope_mismatch', 'T06 baseline is verified for FRA')
-        if (any(f in fields for f in ('costs', 'targets')) and isinstance(context, dict) and context.get('status') == 'ready'
-                and context.get('observer') != 'FRA'):
-            raise InformationError('observer_scope_mismatch', 'T06 cost previews require the FRA observer binding')
+        if context is None and 'costs' in fields:
+            context = self.context()
+        observer = context.get('observer') if isinstance(context, dict) else None
+        observer_bound = isinstance(observer, str) and re.fullmatch(r'[A-Z0-9]{3}', observer) is not None
+        if isinstance(context, dict) and context.get('status') == 'ready' and not observer_bound:
+            raise InformationError('observer_scope_mismatch', 'T06 requires a configured country observer')
         normalized = deepcopy(query)
         normalized['parameters'] = deepcopy(params)
-        if 'costs' in fields:
+        if 'costs' in fields and observer_bound:
             from .candidate_action_costs import normalize_plans
             plans = normalize_plans([{'id': row['id'], 'actions': row.get('actions')}
-                for row in scenarios], 'FRA', plan_id_pattern=re.compile(_ID))
+                for row in scenarios], observer, plan_id_pattern=re.compile(_ID))
             for row, plan in zip(normalized['parameters']['scenarios'], plans):
                 row['actions'] = plan['actions']
         return normalized

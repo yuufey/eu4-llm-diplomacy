@@ -8,13 +8,14 @@ from copy import deepcopy
 import hashlib
 import re
 
-from . import mission_availability_observation
+from . import mission_availability_observation, mission_observation
 from .country_control_ack import supports_observer_version
 from .native_change_observation import NativeChangeCollector
 
 GAME_SHA256 = mission_availability_observation.GAME_SHA256
 CAPABILITY = 'native_mission_condition_observation'
 PROVINCE_CAPABILITY = 'native_mission_province_condition_observation'
+SCOPED_CAPABILITY = 'native_mission_condition_configured_observers'
 EVENT_TYPE = 'mission_condition_changed'
 NATIVE_EVENT = 'native_mission_condition_changed'
 NATIVE_GAP = 'native_mission_condition_capture_gap'
@@ -24,10 +25,14 @@ SCOPE = 'FRA_root_conjunction_child_returns'
 PROVINCE_SOURCE = 'mission_direct_area_province_holding_return'
 PROVINCE_SCOPE = 'FRA_direct_root_area_ROOT_province_holding_returns'
 COMBINED_SCOPE = 'FRA_root_and_direct_area_province_holding_returns'
+CONFIGURED_ROOT_SCOPE = 'configured_observer_root_conjunction_child_returns'
+CONFIGURED_PROVINCE_SCOPE = 'configured_observer_direct_root_area_ROOT_province_holding_returns'
+CONFIGURED_COMBINED_SCOPE = 'configured_observer_root_and_direct_area_province_holding_returns'
+_CONFIGURED_SCOPES = (CONFIGURED_ROOT_SCOPE, CONFIGURED_PROVINCE_SCOPE)
 MAX_EVENTS = 1024
 _HEX_NAME = re.compile(r'(?:[0-9a-f]{2}){1,256}')
 _HEX_VALUE = re.compile(r'0x[0-9a-f]{1,16}')
-_FRA_FULLREF_LOW = int.from_bytes(b'FRA', 'little')
+_TAG = re.compile(r'[A-Z0-9]{3}')
 _MIN_USER_ADDRESS = 0x10000
 _MAX_USER_ADDRESS_EXCLUSIVE = 0x800000000000
 _NATIVE_FIELDS = {
@@ -53,14 +58,6 @@ def _integer(value, minimum, maximum):
     return type(value) is int and minimum <= value <= maximum
 
 
-def _canonical_fra_fullref(value):
-    if not isinstance(value, str) or _HEX_VALUE.fullmatch(value) is None:
-        return False
-    reference = int(value, 16)
-    return (reference & 0xffffff == _FRA_FULLREF_LOW
-            and ((reference >> 32) & 0xffff) < 4096)
-
-
 def _valid_user_pointer(value):
     if not isinstance(value, str) or _HEX_VALUE.fullmatch(value) is None:
         return False
@@ -80,14 +77,17 @@ def _valid_name(value):
 def _valid_payload(payload, date, scope):
     if not isinstance(payload, dict):
         return False
-    if scope == SCOPE:
+    province_scope = scope in (PROVINCE_SCOPE, CONFIGURED_PROVINCE_SCOPE)
+    if scope in (SCOPE, CONFIGURED_ROOT_SCOPE):
         expected_fields = _PAYLOAD_FIELDS
-    elif scope == PROVINCE_SCOPE:
+    elif province_scope:
         expected_fields = _PROVINCE_PAYLOAD_FIELDS
     else:
         return False
+    country = payload.get('country')
     if (set(payload) != expected_fields
-            or payload.get('country') != 'FRA' or payload.get('scope') != scope
+            or not isinstance(country, str) or _TAG.fullmatch(country) is None
+            or (scope not in _CONFIGURED_SCOPES and country != 'FRA') or payload.get('scope') != scope
             or not _integer(date, 1, 2**31 - 1)
             or not _integer(payload.get('previous_observed_date_raw'), 1, 2**31 - 1)
             or payload['previous_observed_date_raw'] > date
@@ -97,7 +97,7 @@ def _valid_payload(payload, date, scope):
             or payload['observed_condition_count'] < payload['condition_index'] + 1
             or payload['observed_condition_count'] > payload['root_condition_count']
             or not _integer(payload.get('condition_method_rva'), 0x1000, 0x1bfffff)
-            or (scope == PROVINCE_SCOPE and payload['condition_method_rva'] != 0xbe9300)
+            or (province_scope and payload['condition_method_rva'] != 0xbe9300)
             or not _valid_user_pointer(payload.get('condition_node'))
             or type(payload.get('satisfied_before')) is not bool
             or type(payload.get('satisfied_after')) is not bool
@@ -105,7 +105,7 @@ def _valid_payload(payload, date, scope):
             or not _valid_native_return(payload.get('native_return_before'))
             or not _valid_native_return(payload.get('native_return_after'))):
         return False
-    if scope == PROVINCE_SCOPE:
+    if province_scope:
         child_index = payload.get('child_index')
         child_count = payload.get('child_count')
         if (not _integer(child_count, 1, 128)
@@ -160,18 +160,20 @@ def public_observation(event, session_id):
     schema_version = event.get('schema_version')
     if type(schema_version) is not int:
         return None
-    if schema_version == 1:
-        fields, scope, expected_source = _NATIVE_FIELDS, SCOPE, SOURCE
-    elif schema_version == 2:
-        fields, scope, expected_source = _PROVINCE_NATIVE_FIELDS, PROVINCE_SCOPE, PROVINCE_SOURCE
+    if schema_version in (1, 3):
+        fields, expected_source = _NATIVE_FIELDS, SOURCE
+        scope = SCOPE if schema_version == 1 else CONFIGURED_ROOT_SCOPE
+    elif schema_version in (2, 4):
+        fields, expected_source = _PROVINCE_NATIVE_FIELDS, PROVINCE_SOURCE
+        scope = PROVINCE_SCOPE if schema_version == 2 else CONFIGURED_PROVINCE_SCOPE
     else:
         return None
     if (set(event) != fields
             or event.get('event') != NATIVE_EVENT or event.get('session_id') != session_id
-            or event.get('country') != 'FRA'
+            or (schema_version < 3 and event.get('country') != 'FRA')
             or not _integer(event.get('sequence'), 1, 2**63 - 1)
             or event.get('source') != expected_source or event.get('complete') is not False
-            or not _canonical_fra_fullref(event.get('country_fullref'))):
+            or not mission_observation._valid_fullref(event.get('country_fullref'), event.get('country'))):
         return None
     date = event.get('date_raw')
     if (not _integer(date, 1, 2**31 - 1)
@@ -186,7 +188,7 @@ def public_observation(event, session_id):
     except UnicodeError:
         return None
     payload = {
-        'country': 'FRA',
+        'country': event['country'],
         'mission_id': name,
         'condition_index': event.get('condition_index'),
         'condition_node': event.get('condition_node'),
@@ -200,7 +202,7 @@ def public_observation(event, session_id):
         'previous_observed_date_raw': event.get('previous_observed_date_raw'),
         'scope': scope,
     }
-    if schema_version == 2:
+    if schema_version in (2, 4):
         payload.update({
             'child_index': event.get('child_index'),
             'child_count': event.get('child_count'),
@@ -224,12 +226,12 @@ def valid_event_snapshot(event, context):
         return False
     session_id = context.get('session_id')
     payload, source = event.get('payload'), event.get('source')
+    if not isinstance(payload, dict) or not _valid_payload(payload, event.get('game_date'), payload.get('scope')):
+        return False
     if (not isinstance(session_id, str) or not session_id or len(session_id) > 256
-            or event.get('session_id') != session_id or event.get('observer') != 'FRA'
-            or context.get('observer') != 'FRA' or context.get('game_sha256') != GAME_SHA256
+            or event.get('session_id') != session_id or event.get('observer') != payload['country']
+            or context.get('observer') != payload['country'] or context.get('game_sha256') != GAME_SHA256
             or event.get('event_type') != EVENT_TYPE or event.get('complete') is not False
-            or not isinstance(payload, dict)
-            or not _valid_payload(payload, event.get('game_date'), payload.get('scope'))
             or event.get('objects') != objects(payload)
             or not isinstance(source, dict) or source.get('session_id') != session_id
             or source.get('scope') != payload.get('scope') or source.get('mode') != 'live'
@@ -244,3 +246,11 @@ class Collector(NativeChangeCollector):
         super().__init__(session_id, native_event=NATIVE_EVENT, native_gap=NATIVE_GAP,
             health_key='mission_condition_source', prefix='MISSION_CONDITION',
             decoder=public_observation, max_events=MAX_EVENTS)
+
+    def observe(self, event, *, allow_scoped=False):
+        if (isinstance(event, dict) and event.get('event') == NATIVE_EVENT
+                and event.get('session_id') == self.session_id
+                and event.get('schema_version') not in ((3, 4) if allow_scoped else (1, 2))):
+            self.gaps.add(self.prefix + '_OBSERVATION_INVALID')
+            return
+        super().observe(event)

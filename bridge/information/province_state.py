@@ -1,4 +1,4 @@
-"""Expose bounded province fields for provinces known to logical FRA."""
+"""Expose bounded province fields for provinces discovered by the configured observer."""
 from __future__ import annotations
 
 from copy import deepcopy
@@ -11,7 +11,7 @@ from ..native_text import decode_native_text_hex
 from . import mission_texts
 from .model import InformationError,canonical
 from .sources import _result,_source_info
-from .trade_income import NativeTradeIncomeSource,_context_reason as _base_reason,_identity,_session_binding
+from .trade_income import NativeTradeIncomeSource,_observer_context_reason as _base_reason,_identity,_session_binding
 
 FIELDS=('owner','controller','culture','religion','autonomy','development','resource','center_of_trade')
 BASIS='native_actor_discovery_bit_positive_and_canonical_province_country_references'
@@ -149,15 +149,15 @@ class NativeProvinceStateSource(NativeTradeIncomeSource):
     def catalog(self):
         return [{'topic_id':'G02','catalog_ids':['G02'],'title':'省份状态与资源（部分）',
             'status':'available','object_types':['province'],'observer_roles':[],
-            'observer_scope':['FRA'],'parameters':{'type':'object','properties':{},'required':[],
+            'observer_scope':[],'parameters':{'type':'object','properties':{},'required':[],
                 'additionalProperties':False},'supported_versions':['1.37.4'],'triggers':['query','periodic'],
             'source':type(self).__name__,'context_scope':'visible_scope','visibility':'visible_scope',
-            'scope_note':'仅支持已确认FRA发现位为1的省份；位为0返回unknown。八字段均partial：文化/宗教名称不含接受度颜色；发展度含已确认的所有者部落分量；资源提供本地化键、图标索引及可用时的缓存字面名称；贸易中心提供存在、级别、类型和sprite请求键。缓存名称不证明完整UI可见或渲染，FNV1哈希碰撞未排除；不按物理玩家切换视角。',
+            'scope_note':'按已配置观察国的省份发现位检查可见性。发现位为 0 时返回 unknown。八个字段均为部分证据。文化和宗教仅含名称。发展度包含已确认的所有者部落分量。资源和贸易中心字段可含缓存字面名称、图标或 sprite 键，界面渲染另需证据。',
             'fields':{name:{'coverage':'partial','complete':False,'unit':UNITS[name][0],'scale':UNITS[name][1],
                 'period':'current','basis':_basis(name)[0],'value_origin':_basis(name)[1],
                 'source':'bridge.information.province_state_capture.capture',
                 'paths':["capture.observation.backend.targets[0].fields['G02."+name+"']"],
-                'supported_observers':['FRA'],'supported_province_id_range':[1,65535],
+                'supported_observers':[],'supported_province_id_range':[1,65535],
                 'runtime_validation':'province_state_capture.validate_capture',
                 'gaps':['FULL_PROVINCE_VISIBILITY_NOT_COMPLETE','ZERO_DISCOVERY_BIT_NOT_CLASSIFIED',
                     'UNOWNED_AND_SPECIAL_REFERENCES_UNSUPPORTED','NONATOMIC_READ_AND_CACHE_FRESHNESS']+
@@ -186,19 +186,19 @@ class NativeProvinceStateSource(NativeTradeIncomeSource):
             raise InformationError('invalid_fields','G02 source supports '+', '.join(FIELDS))
         params=query.get('parameters',{})
         if not isinstance(params,dict) or params:raise InformationError('invalid_parameters','G02 has no extra parameters')
-        if context is not None and (not isinstance(context,dict) or context.get('observer')!='FRA'):
-            raise InformationError('observer_scope_mismatch','Logical observer is FRA')
+        if context is not None and not isinstance(context,dict):
+            raise InformationError('invalid_context','Province context must be an object')
         return {'topic':'G02','object':deepcopy(obj),'fields':list(fields),'parameters':{}}
 
     @staticmethod
     def _context_reason(context):
-        reason=_base_reason(context,'FRA')
+        reason=_base_reason(context)
         return reason.replace('TRADE_INCOME_','PROVINCE_STATE_',1) if reason else None
 
     def read(self,query,context=None):
         current=deepcopy(context) if isinstance(context,dict) else self.context()
         query=self.validate_query(query,current);province_id=query['object']['province_id']
-        provenance={'observer':'FRA','province_id':province_id,'read_only':True,
+        provenance={'observer':current.get('observer'),'province_id':province_id,'read_only':True,
             'native_function_invoked':False,'actual_UI_observed':False,'basis':BASIS,
             'full_province_visibility_complete':False}
         def result(fields,ctx=current):
@@ -223,7 +223,7 @@ class NativeProvinceStateSource(NativeTradeIncomeSource):
         capture=self.capture if self.capture is not None else getattr(module,'capture',None)
         if not callable(capture):return failure('PROVINCE_STATE_CAPTURE_UNAVAILABLE',before,True)
         report=None;error=None
-        try:report=capture(installation,province_id=province_id,observer='FRA')
+        try:report=capture(installation,province_id=province_id,observer=before['observer'])
         except Exception as exc:error='PROVINCE_STATE_CAPTURE_FAILED:'+type(exc).__name__
         try:after=self.context()
         except Exception:after={}
@@ -238,7 +238,7 @@ class NativeProvinceStateSource(NativeTradeIncomeSource):
         if valid is not True:return failure('PROVINCE_STATE_CAPTURE_INVALID',before)
         try:
             if not isinstance(report,Mapping) or not isinstance(report.get('object'),Mapping):raise ValueError('object')
-            if report.get('schema')!='information.province_state_capture.v1' or report.get('observer')!='FRA':
+            if report.get('schema')!='information.province_state_capture.v1' or report.get('observer')!=before['observer']:
                 raise ValueError('capture schema or observer')
             if (set(report['object'])!={'type','province_id'}
                     or report['object']['type']!='province'
@@ -246,7 +246,7 @@ class NativeProvinceStateSource(NativeTradeIncomeSource):
                     or report['object']['province_id']!=province_id):raise ValueError('object')
             backend=report['capture']['observation']['backend']
             if not isinstance(backend,Mapping):raise ValueError('backend')
-            if not isinstance(backend.get('observer'),Mapping) or backend['observer'].get('tag')!='FRA':
+            if not isinstance(backend.get('observer'),Mapping) or backend['observer'].get('tag')!=before['observer']:
                 raise ValueError('observer')
             targets=backend['targets']
             if not isinstance(targets,list) or len(targets)!=1:raise ValueError('targets')

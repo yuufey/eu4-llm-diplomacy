@@ -14,6 +14,7 @@ from .information.collection_lock import CollectionLock
 CAPABILITY = "native_country_control_configuration"
 REQUEST_NAME = "controlled-countries.req"
 ACK_EVENT = "native_controlled_countries_set"
+OBSERVATION_CAPABILITY = "native_information_observer_configuration"
 MAX_MANAGED_COUNTRIES = 32
 
 
@@ -24,6 +25,21 @@ def configure_native_control(session, countries, *, timeout: float = 10.0) -> di
     The native scope persists across short-lived Python clients. A new host
     must confirm its complete managed set before submitting diplomatic work.
     """
+    return _configure_countries(session, countries, timeout, capability=CAPABILITY,
+                                wire="EU4CONTROL1", request_name=REQUEST_NAME, ack_event=ACK_EVENT,
+                                legacy_fra=True, error_prefix="COUNTRY_CONTROL")
+
+
+def configure_native_observation(session, countries, *, timeout: float = 10.0) -> dict:
+    """Assign countries for observation callbacks without changing execution policy."""
+    return _configure_countries(session, countries, timeout, capability=OBSERVATION_CAPABILITY,
+                                wire="EU4INFO1", request_name="information-observers.req",
+                                ack_event="native_information_observers_set", legacy_fra=False,
+                                error_prefix="INFORMATION_OBSERVER")
+
+
+def _configure_countries(session, countries, timeout, *, capability, wire, request_name,
+                         ack_event, legacy_fra, error_prefix):
     if not isinstance(countries, (list, tuple)) or any(
             not isinstance(country, str) or re.fullmatch(r"[A-Z0-9]{3}", country) is None
             for country in countries):
@@ -34,21 +50,21 @@ def configure_native_control(session, countries, *, timeout: float = 10.0) -> di
     if not isinstance(timeout, (int, float)) or not 0 <= timeout <= 60:
         raise ValueError("INVALID_COUNTRY_CONTROL_TIMEOUT")
     if session.health().get("status") != "ready":
-        raise RuntimeError("COUNTRY_CONTROL_SESSION_UNREADY")
-    if CAPABILITY not in session.installation_capabilities():
-        if countries == ["FRA"]:
+        raise RuntimeError(f"{error_prefix}_SESSION_UNREADY")
+    if capability not in session.installation_capabilities():
+        if legacy_fra and countries == ["FRA"]:
             return {"mode": "legacy", "countries": countries, "session_id": session.session_id}
-        raise RuntimeError("NATIVE_COUNTRY_CONTROL_CONFIGURATION_UNAVAILABLE: install the country-control DLL")
+        raise RuntimeError(f"NATIVE_{error_prefix}_CONFIGURATION_UNAVAILABLE")
 
     directory = Path(session.directory)
-    request = directory / REQUEST_NAME
+    request = directory / request_name
     log = directory / "control-probe.jsonl"
-    with CollectionLock(directory / "controlled-countries").acquire():
+    with CollectionLock(request.with_suffix("")).acquire():
         revision = time.time_ns()
         try:
             with request.open("rb") as stream:
                 previous = stream.read(4096).decode("ascii").strip().split("\t")
-            if len(previous) == 4 and previous[:2] == ["EU4CONTROL1", session.session_id]:
+            if len(previous) == 4 and previous[:2] == [wire, session.session_id]:
                 revision = max(revision, int(previous[2]) + 1)
         except (OSError, UnicodeError, ValueError):
             pass
@@ -56,8 +72,8 @@ def configure_native_control(session, countries, *, timeout: float = 10.0) -> di
             offset = log.stat().st_size
         except FileNotFoundError:
             offset = 0
-        temporary = directory / (REQUEST_NAME + "." + uuid.uuid4().hex + ".pending")
-        line = f"EU4CONTROL1\t{session.session_id}\t{revision}\t{','.join(countries) or '-'}\n"
+        temporary = directory / (request_name + "." + uuid.uuid4().hex + ".pending")
+        line = f"{wire}\t{session.session_id}\t{revision}\t{','.join(countries) or '-'}\n"
         try:
             with temporary.open("x", encoding="ascii", newline="\n") as stream:
                 stream.write(line)
@@ -100,14 +116,17 @@ def configure_native_control(session, countries, *, timeout: float = 10.0) -> di
                     event = json.loads(raw)
                 except (ValueError, UnicodeError):
                     continue
-                if (not isinstance(event, dict) or event.get("event") != ACK_EVENT
+                if (not isinstance(event, dict) or event.get("event") != ack_event
                         or event.get("session_id") != session.session_id
                         or event.get("revision") != revision):
                     continue
                 if event.get("accepted") is not True or event.get("countries") != countries:
-                    raise RuntimeError("NATIVE_COUNTRY_CONTROL_CONFIGURATION_REJECTED")
+                    reason = event.get("reason")
+                    known_reasons = ("country_unavailable", "session_mismatch", "stale_revision")
+                    suffix = f": {reason}" if reason in known_reasons else ""
+                    raise RuntimeError(f"NATIVE_{error_prefix}_CONFIGURATION_REJECTED" + suffix)
                 return {"mode": "configured", "session_id": session.session_id,
                         "revision": revision, "countries": countries}
             if time.monotonic() >= deadline:
-                raise RuntimeError("NATIVE_COUNTRY_CONTROL_CONFIGURATION_TIMEOUT")
+                raise RuntimeError(f"NATIVE_{error_prefix}_CONFIGURATION_TIMEOUT")
             time.sleep(min(0.05, max(0, deadline - time.monotonic())))

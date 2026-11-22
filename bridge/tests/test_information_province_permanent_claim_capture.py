@@ -10,7 +10,7 @@ def packet(tags):
     target={'fields':{'G01.permanent_claims':{'status':'known','value':tags}},
         'admission_by_pass':{'pass1':deepcopy(gate),'pass2':deepcopy(gate)},
         'discovery_by_pass':{'pass1':deepcopy(discovery),'pass2':deepcopy(discovery)}}
-    return {'capture':{'observation':{'backend':{'observer':{'tag':'FRA'},'targets':[target]}}}}
+    return {'observer':'FRA','capture':{'observation':{'backend':{'observer':{'tag':'FRA'},'targets':[target]}}}}
 
 
 @pytest.mark.parametrize('tags',[[],['ORL','BUR']])

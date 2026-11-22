@@ -1,4 +1,4 @@
-"""Project validated native bilateral opinion-modifier records for an FRA pair."""
+"""Project validated native bilateral opinion-modifier records."""
 from __future__ import annotations
 
 from copy import deepcopy
@@ -107,7 +107,7 @@ class NativeOpinionModifiersSource:
             visibility="visible_scope", context_scope="adapter_managed",
             parameters=_parameters(),
             scope_note=(
-                "仅投射逻辑FRA参与的选定国家对；非玩家角色与国家选择准入由采集端验证。"
+                "读取观察国参与的国家对，由采集端验证观察国角色和查询准入。"
                 "记录中的日期、多倍率及标志仍未解释。"
             ),
             fields={self.field: _field_metadata()},
@@ -127,16 +127,16 @@ class NativeOpinionModifiersSource:
                 or not _is_country(obj.get("actor")) or not _is_country(obj.get("recipient"))
                 or obj["actor"] == obj["recipient"]):
             raise InformationError("invalid_object", "R04 requires two distinct country_pair endpoints")
-        if _OBSERVER not in (obj["actor"], obj["recipient"]):
-            raise InformationError("observer_scope_mismatch", "R04 pair must include logical FRA")
+        observer = context.get("observer") if isinstance(context, dict) else None
+        if observer is not None and observer not in (obj["actor"], obj["recipient"]):
+            raise InformationError("observer_scope_mismatch", "R04 pair must include the observer")
         if query.get("fields") != [self.field]:
             raise InformationError("invalid_fields", f"{type(self).__name__} supports only {self.field}")
         parameters = query.get("parameters")
         if not isinstance(parameters, dict) or parameters:
             raise InformationError("invalid_parameters", f"R04 {self.field} parameters must be empty")
-        if context is not None and (
-                not isinstance(context, dict) or context.get("observer") != _OBSERVER):
-            raise InformationError("observer_scope_mismatch", "R04 requires logical observer FRA")
+        if context is not None and not isinstance(context, dict):
+            raise InformationError("invalid_context", "R04 context must be an object")
         normalized = {
             "topic": _TOPIC, "object": deepcopy(obj), "fields": [self.field], "parameters": {},
         }
@@ -318,7 +318,7 @@ class NativeOpinionModifiersSource:
             "records": [self._project_record(row) for row in value["records"]],
         }
 
-    def _project_backend(self, report: Any, other: str, actor: str, recipient: str) -> dict[str, Any]:
+    def _project_backend(self, report: Any, other: str, actor: str, recipient: str, observer=_OBSERVER) -> dict[str, Any]:
         try:
             observation = report["observation"]
             backend = observation["backend"]
@@ -336,7 +336,7 @@ class NativeOpinionModifiersSource:
                 raise ValueError
             rows = []
             for holder, target in ((actor, recipient), (recipient, actor)):
-                field = _FIELDS[0] if holder == _OBSERVER else _FIELDS[1]
+                field = _FIELDS[0] if holder == observer else _FIELDS[1]
                 rows.append(self._project_direction(internal[field], holder, target))
             self._attach_definitions(rows)
 
@@ -363,7 +363,7 @@ class NativeOpinionModifiersSource:
         provenance = {
             "adapter": "NativeOpinionModifiersSource", "read_only": True,
             "native_function_invoked": False, "scope": "selected_country_pair",
-            "observer": _OBSERVER, "target": target,
+            "observer": context.get("observer"), "target": target,
             "capture_status": capture_status,
             "modifier_records_only": True, "total_opinion_reconstructed": False,
             "record_date_interpreted": False, "multiplier_interpreted": False,
@@ -406,7 +406,10 @@ class NativeOpinionModifiersSource:
                                     reason=reason, unavailable=True)
 
         actor, recipient = normalized["object"]["actor"], normalized["object"]["recipient"]
-        other = recipient if actor == _OBSERVER else actor
+        observer = before["observer"]
+        if observer not in (actor, recipient):
+            raise InformationError("observer_scope_mismatch", "R04 pair must include the observer")
+        other = recipient if actor == observer else actor
         installation, creation, binding_error = _session_binding(self.base_source)
         if binding_error is not None or installation is None or creation is None:
             reason = binding_error or "OPINION_MODIFIERS_INSTALLATION_UNAVAILABLE"
@@ -420,7 +423,8 @@ class NativeOpinionModifiersSource:
             capture_fn, validator = self._capture_functions()
             if not callable(capture_fn) or not callable(validator):
                 raise TypeError
-            report = capture_fn(installation, other)
+            report = (capture_fn(installation, other) if self._capture is not None
+                      else capture_fn(installation, other, observer=observer))
             capture_status = "captured"
         except Exception:
             report = None
@@ -450,7 +454,7 @@ class NativeOpinionModifiersSource:
                                 reason=_CAPTURE_INVALID, target=other,
                                 capture_status="validation_failed")
 
-        field = self._project_backend(report, other, actor, recipient)
+        field = self._project_backend(report, other, actor, recipient, observer=observer)
         return self._result(normalized, after, {self.field: field}, target=other,
                             capture_status="validated")
 

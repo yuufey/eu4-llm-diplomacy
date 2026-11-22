@@ -198,6 +198,12 @@ class InformationMCPServer:
     def _handle_method(self, request_id: Any, method: str, params: Any, *, has_id: bool) -> dict[str, Any] | None:
         if self._closed:
             raise MCPProtocolError(-32600, "Server is closed")
+        if isinstance(params, dict) and "_meta" in params:
+            if not isinstance(params["_meta"], dict):
+                raise MCPProtocolError(-32602, "_meta must be an object")
+            # MCP clients may attach progress tokens or tracing metadata to
+            # protocol requests. Only the method arguments reach game tools.
+            params = {key: value for key, value in params.items() if key != "_meta"}
         if method == "initialize":
             if not has_id:
                 raise MCPProtocolError(-32600, "initialize must be a request")

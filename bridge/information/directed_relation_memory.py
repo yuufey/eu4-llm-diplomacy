@@ -729,8 +729,6 @@ def capture(installation: Path, actor: str = EXPECTED_COUNTRY, recipient: str | 
         return _invalid_request_report(installation, actor, recipient, list(FIELDS) if families is None else [], "invalid_request", str(exc))
     if not _valid_tag(actor) or (recipient is not None and (not _valid_tag(recipient) or recipient == actor)):
         return _invalid_request_report(installation, actor, recipient, selected, "invalid_request", "actor_or_recipient_tag_invalid")
-    if recipient is None and actor != EXPECTED_COUNTRY:
-        return _invalid_request_report(installation, actor, recipient, selected, "unsupported_request", "Only FRA is permitted as public network actor")
     report = _base_report(installation, actor, recipient, selected)
     try:
         report["probe_script_sha256"] = _sha256_file(Path(__file__).resolve())
@@ -1113,8 +1111,6 @@ def validate_capture(report: Mapping[str, Any], context: Mapping[str, Any] | Non
             return False
         request = report.get("request")
         if not isinstance(request, Mapping) or not _valid_tag(request.get("actor")) or request.get("recipient") == request.get("actor"):
-            return False
-        if request.get("recipient") is None and request.get("actor") != EXPECTED_COUNTRY:
             return False
         if actor is not None and request.get("actor") != actor:
             return False

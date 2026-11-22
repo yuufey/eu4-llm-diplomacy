@@ -588,7 +588,7 @@ def test_t02_collection_catalog_and_strict_owner_contract(fake_trade_memory, tmp
         _collection_query({"type": "country", "country": "FRA"}), base.context()
     )["parameters"] == {}
     with pytest.raises(InformationError):
-        source.validate_query(_collection_query({"type": "country", "country": "POR"}))
+        source.validate_query(_collection_query({"type": "country", "country": "POR"}), base.context())
     with pytest.raises(InformationError):
         source.validate_query(_collection_query({"type": "trade_node", "node_id": "alpha"}))
     with pytest.raises(InformationError):

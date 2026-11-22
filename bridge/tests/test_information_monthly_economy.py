@@ -67,15 +67,16 @@ def _monthly_record(values: dict[str, int]) -> dict:
 class _Session:
     observer = "FRA"
 
-    def __init__(self, directory: Path, *, after: dict | None = None):
+    def __init__(self, directory: Path, *, after: dict | None = None, observer: str = "FRA"):
+        self.observer = observer
         self.directory = directory
         self.session_id = "31460-1dd653f69242d7b"
         self.creation_filetime = CREATION_FILETIME
         self.after = deepcopy(after)
         self.health_calls = 0
         self.record = {
-            "observer": "FRA",
-            "controlled_countries": ["FRA"],
+            "observer": observer,
+            "controlled_countries": [observer],
             "game_sha256": GAME_SHA256,
             "game_version": "1.37.4",
             "session_id": self.session_id,
@@ -90,7 +91,7 @@ class _Session:
             "date_raw": GAME_DATE,
             "game_version": "1.37.4",
             "game_sha256": GAME_SHA256,
-            "observer": "FRA",
+            "observer": self.observer,
             "reasons": [],
         }
         if self.after and self.health_calls >= 2:
@@ -124,8 +125,8 @@ class _Tools:
         }
 
 
-def _source(tmp_path: Path, *, capture=None, after: dict | None = None):
-    session = _Session(tmp_path, after=after)
+def _source(tmp_path: Path, *, capture=None, after: dict | None = None, observer: str = "FRA"):
+    session = _Session(tmp_path, after=after, observer=observer)
     tools = _Tools(session)
     return (
         NativeCountryStateSource(
@@ -136,10 +137,10 @@ def _source(tmp_path: Path, *, capture=None, after: dict | None = None):
     )
 
 
-def _query(fields: list[str], parameters: dict | None = None) -> dict:
+def _query(fields: list[str], parameters: dict | None = None, *, observer: str = "FRA") -> dict:
     return {
         "topic": "N01",
-        "object": {"type": "country", "country": "FRA"},
+        "object": {"type": "country", "country": observer},
         "fields": fields,
         "parameters": {} if parameters is None else parameters,
     }
@@ -151,7 +152,7 @@ def _report(session: _Session, record: dict, *, mutate: dict | None = None) -> d
         "status": "observed",
         "read_only": True,
         "native_function_invoked": False,
-        "country": "FRA",
+        "country": session.observer,
         "unit": "monarch_points",
         "scale": 1,
         "values": {"administrative": 1, "diplomatic": 2, "military": 3},
@@ -261,8 +262,9 @@ def test_composite_planned_loan_probe_uses_monthly_field_without_side_effect(
     assert tools.inspect_calls == []
 
 
+@pytest.mark.parametrize("observer", ("FRA", "TUR"))
 def test_one_capture_maps_negative_zero_and_balance_as_partial(
-    tmp_path: Path,
+    tmp_path: Path, observer: str,
 ) -> None:
     values = {
         "monthly_income": -12,
@@ -272,14 +274,14 @@ def test_one_capture_maps_negative_zero_and_balance_as_partial(
     calls: list[tuple] = []
     record = _monthly_record(values)
     assert monthly_economy_memory.validate_record(record) is True
-    source, session, tools = _source(tmp_path)
+    source, session, tools = _source(tmp_path, observer=observer)
 
     def capture(installation, country, *, include_monthly_economy):
         calls.append((installation, country, include_monthly_economy))
         return _report(session, record)
 
     source.monthly_economy_capture = capture
-    result = source.read(_query(list(values)))
+    result = source.read(_query(list(values), observer=observer))
 
     for field, value in values.items():
         assert result["fields"][field] == {
@@ -294,13 +296,13 @@ def test_one_capture_maps_negative_zero_and_balance_as_partial(
     assert result["source"]["complete"] is False
     assert result["game_date"] == GAME_DATE
     assert result["source"]["session_id"] == session.session_id
-    assert result["source"]["observer"] == "FRA"
+    assert result["source"]["observer"] == observer
     assert len(result["source"]["provenance"]["monthly_economy"]["raw_ledger_hex"]) == 456
     assert result["source"]["provenance"]["reference_period"] == "previous_month"
     assert result["source"]["provenance"]["value_semantics"] == (
         "previous_month_recurring_ledger"
     )
-    assert calls == [(tmp_path / "installation.json", "FRA", True)]
+    assert calls == [(tmp_path / "installation.json", observer, True)]
     assert tools.inspect_calls == []
 
 

@@ -48,18 +48,50 @@ def test_information_source_uses_the_read_only_health_entry_point():
 
 
 @pytest.mark.parametrize('second_date', [100, 124])
-def test_running_health_finds_the_pair_behind_a_busy_log_tail(tmp_path, monkeypatch, second_date):
+@pytest.mark.parametrize(('installed_player', 'player'), [(None, 'POR'), ('O00', 'O00'), ('O00', 'O01'), ('O00', 'SWE')])
+def test_running_health_finds_the_pair_behind_a_busy_log_tail(
+        tmp_path, monkeypatch, second_date, installed_player, player):
     import bridge.diplomacy as diplomacy
     session = object.__new__(ObserverSession)
     session.session_id = 'running-test'
     session.record = {'session_id': 'running-test', 'pid': 1, 'installation_returncode': 0, 'dll_sha256': 'test-dll'}
+    if installed_player is not None:
+        session.record['preflight_player_tag'] = installed_player
     session.directory = tmp_path
     session.game_exe = tmp_path / 'eu4.exe'
     monkeypatch.setattr(diplomacy, 'probe_identity', lambda *_: {
         'session_id': 'running-test', 'modules': [{'sha256': 'test-dll'}]})
     monkeypatch.setattr(diplomacy, '_RESPONSE_LOG_CHUNK_BYTES', 256)
     monkeypatch.setattr(diplomacy, '_HEALTH_LOG_MAX_TAIL_BYTES', 512)
-    lines = [json.dumps(heartbeat(100, 1)), 'x' * 700, json.dumps(heartbeat(second_date, 2)), 'x' * 700]
+    first = {**heartbeat(100, 1), 'player': player}
+    second = {**heartbeat(second_date, 2), 'player': player}
+    lines = [json.dumps(first), 'x' * 700, json.dumps(second), 'x' * 700]
     (tmp_path / 'control-probe.jsonl').write_text('\n'.join(lines) + '\n', encoding='utf-8')
     assert session.health()['status'] == ('ready' if second_date == 100 else 'unready')
     assert session.information_health()['status'] == 'ready'
+    assert session.physical_player_health(allow_date_progress=True)['status'] == (
+        'ready' if player == (installed_player or 'POR') else 'unready')
+    lines[2] = json.dumps({**second, 'player': 'TUR'})
+    (tmp_path / 'control-probe.jsonl').write_text('\n'.join(lines) + '\n', encoding='utf-8')
+    assert session.information_health()['status'] == 'unready'
+
+
+@pytest.mark.parametrize('player', ['---', '', 'swe', None])
+def test_stable_menu_or_invalid_player_does_not_establish_a_loaded_world(player):
+    events = [{**heartbeat(100, frames), 'player': player} for frames in (1, 2)]
+    assert _stable_matching_heartbeat(events, 'running-test') is None
+
+
+def test_explicit_observer_is_independent_from_controlled_country():
+    session = SimpleNamespace(
+        record={'game_version': '1.37.4', 'game_sha256': 'a' * 64,
+                'preflight_player_tag': 'O00', 'controlled_country': 'FRA'},
+        session_id='running-test', controlled_country='ENG',
+        health=lambda: {'status': 'ready', 'date_raw': 124, 'complete': True},
+        _installation_ack=lambda: {'authority_scope': 'outbound FRA Alliance'})
+    tools = SimpleNamespace(session=session, controlled_country='ENG')
+
+    assert DiplomacySource(tools).context()['observer'] == 'ENG'
+    context = DiplomacySource(tools, observer='TUR').context()
+    assert context['status'] == 'ready'
+    assert context['observer'] == 'TUR'

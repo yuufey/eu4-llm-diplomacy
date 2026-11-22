@@ -304,13 +304,13 @@
     },
     {
       "path": "bridge/information/province_discovery_memory.py",
-      "bytes": 19753,
-      "sha256": "a1e78587cf787c5de996232c6b1fce2bf885499b9da7c6bfce7e6a2d177c3355"
+      "bytes": 19972,
+      "sha256": "35a1bb0dfec016f3253723da5d0747aeeb9e9bcbb33f521fd508ceb3fbff8a99"
     },
     {
       "path": "bridge/information/province_discovery_memory_v2.py",
-      "bytes": 972,
-      "sha256": "6c85f2eb4563f51af59bd57c744970297fba7f557cbef24c7032d0b3ac67504c"
+      "bytes": 1039,
+      "sha256": "c416ba852b54e996df9fe48e96cca1d619375a0f1228fea648c59963fbcaa45d"
     }
   ],
   "semantics": {

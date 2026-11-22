@@ -1,7 +1,7 @@
 """Identity-bound observation of foreign army and navy statistic inputs.
 
 The shared parent owns process/session identity, ROM guards, the complete
-country scan, FRA non-player admission, and ordered two-pass replay. The
+country scan, observer-role admission, and ordered two-pass replay. The
 military-stat permission and the two force leaves remain field-local; they do
 not alter admission for unrelated fields. This module does not call game
 functions or open process handles itself.
@@ -9,6 +9,7 @@ functions or open process handles itself.
 from __future__ import annotations
 
 from copy import deepcopy
+from functools import partial
 import hashlib
 import json
 from pathlib import Path
@@ -24,7 +25,7 @@ from . import mission_memory as _mm
 
 ROOT = Path(__file__).resolve().parents[2]
 PROFILE_FILE = Path(__file__).with_name("profiles") / "foreign-force-statistics-memory-1374-sampling-r1.json"
-PROFILE_SHA256 = "eaede9a7159181fb55e46d7d0a48fc29e4122cd12cb24f7df25a3c441e0e024e"
+PROFILE_SHA256 = "ed5b14e9f35661a8e1fac996bff23f94410dfbbef3ea677b0a8a64593b43386c"
 PROFILE_ID = "foreign-force-statistics-memory-1374"
 EXE_SHA256 = _owner.EXE_SHA256
 SCHEMA = "information.foreign_forces_capture.v1"
@@ -86,7 +87,7 @@ def _field_unknown(reason: str, permission: Any) -> dict[str, Any]:
 
 
 def _read_backend(reader: Any, module_base: int, country: str,
-                  profile: Mapping[str, Any]) -> dict[str, Any]:
+                  profile: Mapping[str, Any], observer: str) -> dict[str, Any]:
     # Retain the exact full scan supplied to this pass. The force leaf receives
     # its observer binding from this scan; no synthetic or second scan is made.
     scan_for_target: dict[str, Mapping[str, Any]] = {}
@@ -108,7 +109,7 @@ def _read_backend(reader: Any, module_base: int, country: str,
     def read_fields(limiter, base, target_binding, fields):
         full_scan = scan_for_target.get(country)
         requested = full_scan.get("requested") if isinstance(full_scan, Mapping) else None
-        observer_binding = requested.get(OBSERVER) if isinstance(requested, Mapping) else None
+        observer_binding = requested.get(observer) if isinstance(requested, Mapping) else None
         if not isinstance(observer_binding, Mapping):
             permission: dict[str, Any] = {
                 "schema": _visibility.SCHEMA,
@@ -119,7 +120,7 @@ def _read_backend(reader: Any, module_base: int, country: str,
         else:
             try:
                 permission = _visibility.read_permission(
-                    limiter, base, observer_binding, target_binding)
+                    limiter, base, observer_binding, target_binding, observer_tag=observer)
             except Exception:
                 # Keep permission failure field-local. The trace records the
                 # failed read; neither force leaf is allowed to read resources
@@ -139,6 +140,7 @@ def _read_backend(reader: Any, module_base: int, country: str,
                     limiter, base, target_binding, requested_force,
                     permission=permission,
                     predicate_profile=profile["force_predicates"],
+                    observer_tag=observer,
                 )
             except Exception:
                 values = {
@@ -158,7 +160,7 @@ def _read_backend(reader: Any, module_base: int, country: str,
         return output
 
     backend = _backend.read_two_pass(
-        reader, module_base, OBSERVER, [country], FIELDS,
+        reader, module_base, observer, [country], FIELDS,
         read_fields=read_fields,
         admission_reader=admission_reader,
     )
@@ -206,10 +208,10 @@ def _restore_stable_force_invisible(backend: dict[str, Any], country: str) -> No
 
 
 def _observe(reader: Any, module_base: int, country: str,
-             profile: Mapping[str, Any]) -> dict[str, Any]:
+             profile: Mapping[str, Any], *, observer: str = OBSERVER) -> dict[str, Any]:
     return _owner._observe(
         reader, module_base, country, profile,
-        backend_reader=lambda r, base, target: _read_backend(r, base, target, profile),
+        backend_reader=lambda r, base, target: _read_backend(r, base, target, profile, observer),
     )
 
 
@@ -221,12 +223,15 @@ def capture(installation: Path, country: str, *, observer: str = OBSERVER) -> di
         schema=SCHEMA,
         profile_sha256=PROFILE_SHA256,
         load_profile=_load_profile,
-        observe=_observe,
+        observe=partial(_observe, observer=observer),
+        observer_scoped=True,
     )
 
 
 def validate_capture(report: Any, context: Mapping[str, Any], creation: int,
                      country: str) -> bool:
+    if not isinstance(context, Mapping):
+        return False
     return _owner._validate_capture_common(
         report,
         context,
@@ -235,8 +240,9 @@ def validate_capture(report: Any, context: Mapping[str, Any], creation: int,
         schema=SCHEMA,
         profile_sha256=PROFILE_SHA256,
         load_profile=_load_profile,
-        observe=_observe,
+        observe=partial(_observe, observer=context.get('observer')),
         require_access=True,
+        observer_scoped=True,
     )
 
 

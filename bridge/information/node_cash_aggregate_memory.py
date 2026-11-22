@@ -196,7 +196,8 @@ def read_fields(reader, base, province_scan, observer_binding, country_scan, all
     result = {'status': 'unknown', 'basis': BASIS, 'period': 'current', 'partial': True, 'complete': False}
     try:
         _quality._valid_pointer(base, 'BASE')
-        _require(observer_binding.get('tag') == 'FRA', 'NODE_CASH_OBSERVER_INVALID')
+        _require(allocation.get('value', {}).get('observer_country') == observer_binding.get('tag'),
+                 'NODE_CASH_OBSERVER_INVALID')
         observer = _country._rebind(limiter, base, country_scan,
             bytes.fromhex(observer_binding['fullref_raw_hex']), 'node_cash.observer')
         gate = _country._admit(limiter, base, country_scan, observer)

@@ -18,10 +18,10 @@ from bridge.tests.test_information_pending_matters import (
 from bridge.tests.test_information_service import FakeClock, subscription_config
 
 
-def inventory(count=0):
+def inventory(count=0, observer='FRA'):
     entries = [] if count == 0 else [{
         'entry_id': 'pending-entry-' + 'a' * 32, 'recognition': 'recognized',
-        'action_id': 'offer_alliance', 'actor': 'SAV', 'recipient': 'FRA', 'phase': 'initiate',
+        'action_id': 'offer_alliance', 'actor': 'SAV', 'recipient': observer, 'phase': 'initiate',
     }]
     return {
         'scope': native.SCOPE, 'native_queue_count': count, 'recognized_entry_count': count,
@@ -33,12 +33,12 @@ def inventory(count=0):
 
 def capture_report(context, count=0):
     return {
-        'schema': native.SCHEMA, 'status': 'observed', 'country': 'FRA',
+        'schema': native.SCHEMA, 'status': 'observed', 'country': context['observer'],
         'game_sha256': native.GAME_SHA256, 'profile_sha256': native.PROFILE_SHA256,
         'read_only': True, 'native_function_invoked': False, 'target_memory_written': False,
         'consistent': True, 'cleanup': {'closed': True},
         'identity': {'binding_verified': True, 'installation_session_id': SESSION},
-        'game_date': context['game_date'], 'player_country': 'POR', 'value': inventory(count),
+        'game_date': context['game_date'], 'player_country': 'POR', 'value': inventory(count, context['observer']),
         'private': {'node': 'private-address-secret', 'token': 'private-token-secret'},
         'access': {'rpm_bytes': 47016, 'rpm_calls': 10, 'rpm_limit': 1048576,
                    'open_process_mask': 1040, 'node': 'private-access-secret'},
@@ -116,17 +116,28 @@ def test_bad_native_report_preserves_valid_journal(setup, damage):
     assert 'private-' not in json.dumps(result)
 
 
-@pytest.mark.parametrize('mode', ['unready', 'foreign_observer', 'disabled'])
+@pytest.mark.parametrize('mode', ['unready', 'invalid_observer', 'disabled'])
 def test_ineligible_context_does_not_capture(setup, mode):
     source, base, state, _journal = setup
     if mode == 'unready':
         base._contexts = [_context(status='unready')]
-    elif mode == 'foreign_observer':
-        base._contexts = [_context(observer='ENG')]
+    elif mode == 'invalid_observer':
+        base._contexts = [_context(observer='eng')]
     else:
         source.native_pending = False
     source.read(_query(), base.context())
     assert state['calls'] == []
+
+
+def test_native_inventory_reads_the_configured_recipient(setup):
+    source, base, state, _journal = setup
+    base._contexts = [_context(observer='TUR')]
+    state['count'] = 1
+    result = source.read(_query(), base.context())
+    native_entry = result['fields']['pending_matters']['value']['native_inbound_pending']['value']['entries'][0]
+    assert native_entry['recipient'] == 'TUR'
+    assert state['calls'][0][1] == 'TUR'
+    assert source.change_comparison(_query(), result, base.context()) is not None
 
 
 def test_context_change_retracts_inventory(setup):

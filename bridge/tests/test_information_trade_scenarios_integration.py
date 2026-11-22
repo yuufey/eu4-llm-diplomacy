@@ -401,18 +401,16 @@ def test_catalog_keeps_unowned_t06_fields_planned_and_rejects_bad_scope_or_param
     finally:
         service.close()
 
-    wrong_observer_reader = FakeTradeBaseline(context=live_context(observer="ENG"))
-    wrong_observer_service, _composite, wrong_observer_reader = make_service(
-        tmp_path / "wrong-observer", reader=wrong_observer_reader, observer="ENG",
+    other_observer_reader = FakeTradeBaseline(context=live_context(observer="ENG"))
+    service, _composite, other_observer_reader = make_service(
+        tmp_path / "eng-observer", reader=other_observer_reader, observer="ENG",
     )
     try:
-        result = wrong_observer_service.query(
-            "trade-scenario-wrong-observer",
-            queries=[scenario_query([scenario("wrong-observer")])],
+        result = service.query(
+            "trade-scenario-eng-observer",
+            queries=[scenario_query([scenario("eng-observer")])],
         )
-        expected = _field(result, "expected_trade")
-        assert expected["status"] == "unavailable"
-        assert "value" not in expected
-        assert wrong_observer_reader.read_calls == []
+        assert _field(result, "expected_trade")["status"] == "known"
+        assert len(other_observer_reader.read_calls) == 1
     finally:
-        wrong_observer_service.close()
+        service.close()

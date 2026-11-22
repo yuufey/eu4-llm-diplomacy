@@ -127,7 +127,7 @@ def test_wire2_direct_area_province_return_decodes_and_snapshots():
 
 @pytest.mark.parametrize('changes', [
     {'schema_version': True},
-    {'schema_version': 3},
+    {'schema_version': 5},
     {'source': observation.SOURCE},
     {'condition_method_rva': 0xbe9301},
     {'child_index': True},

@@ -22,6 +22,12 @@ PUBLIC_OLD_FIELDS = v1_memory.FIELDS[:-1]
 ALL_FIELDS = v1_memory.FIELDS
 
 
+def test_production_profile_keeps_audited_source_and_native_guard_pins():
+    profile = v2_capture._load_profile()
+    assert profile["trade_collected_profile_sha256"] == v2_memory.PROFILE_SHA256
+    assert profile["code_guards"]
+
+
 def _guard_rows():
     return [{"name": "fixture_retention_guard", "rva": GUARD_RVA,
              "bytes": GUARD_BYTES.hex()}]

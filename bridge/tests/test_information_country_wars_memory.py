@@ -541,11 +541,11 @@ class CountryWarsMemoryTests(unittest.TestCase):
         self.assertEqual(field["status"], "unknown")
         self.assertIn("WAR_TARGET_NOT_EXACTLY_ONCE", field["reason"])
 
-    def test_observer_must_be_fra(self):
+    def test_observer_must_match_expected_binding(self):
         fixture = WarFixture()
         field = self._field(fixture.read(observer="BUR")[0])
         self.assertEqual(field["status"], "unknown")
-        self.assertEqual(field["reason"], "OBSERVER_MUST_BE_FRA")
+        self.assertEqual(field["reason"], "OBSERVER_BINDING_SCOPE_MISMATCH")
 
 
 if __name__ == "__main__":

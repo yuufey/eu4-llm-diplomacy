@@ -12,16 +12,16 @@ from copy import deepcopy
 import importlib
 from typing import Any, Mapping
 
-from .country_state import NativeCountryStateSource
+from .country_state import NativeCountryStateSource, _is_country
 from .model import InformationError, canonical
 from .sources import _copy, _result, _source_info
 from .trade_income import (
     NativeTradeIncomeSource,
     _CONTEXT_KEYS,
-    _COUNTRY,
     _GAME_SHA256,
     _VERSION,
     _identity,
+    _observer_context_reason,
     _session_binding,
 )
 
@@ -96,7 +96,6 @@ def _catalog_field(field: str, spec: Mapping[str, Any], *, raw_semantics: str,
         "raw": True,
         "raw_semantics": raw_semantics,
         "paths": [f"{spec['record_key']}.fields.{field}.value"],
-        "supported_countries": [_COUNTRY],
         "period": _PERIOD,
         "basis": spec["basis"],
         "value_origin": spec["value_origin"],
@@ -168,7 +167,7 @@ _CATALOG_ITEM = {
     },
     "object_types": ["country"],
     "observer_roles": ["country"],
-    "observer_scope": [_COUNTRY],
+    "observer_scope": [],
     "parameters": {
         "type": "object", "properties": {}, "required": [],
         "additionalProperties": False,
@@ -180,7 +179,7 @@ _CATALOG_ITEM = {
     "visibility": "country_scope",
     "context_scope": "country_scope",
     "scope_note": (
-        "读取固定1.37.4、FRA观察者的军事科技等级、陆军传统、陆海军士气、陆军职业度缓存及有界纪律计算。"
+        "读取 1.37.4 观察国的军事科技等级、陆军传统、陆海军士气、陆军职业度和纪律。"
         "纪律在修正缓存正常且已识别处理器的结果不依赖未知线程标志时可读；"
         "其余线程路径、主线程原子性、外国国家可见性及其他军事修正继续开发。"
     ),
@@ -196,10 +195,8 @@ def _unavailable(reason: str) -> dict[str, Any]:
 
 
 def _context_reason(context: Any) -> str | None:
-    reason = NativeCountryStateSource._monarch_points_context_reason(
-        context, _COUNTRY
-    )
-    return reason.replace("MONARCH_POINTS_", "MILITARY_QUALITY_", 1) if reason else None
+    reason = _observer_context_reason(context)
+    return reason.replace("TRADE_INCOME_", "MILITARY_QUALITY_", 1) if reason else None
 
 
 def _pointer_value(value: Any) -> int | None:
@@ -271,8 +268,9 @@ def _snapshot_country_pointer(snapshot: Any) -> str | None:
 def _parent_reason(report: Any, context: Mapping[str, Any], creation: int) -> str | None:
     """Validate the existing monarch-points parent without trade flags."""
 
+    country = context.get('observer')
     reason = NativeCountryStateSource._capture_report_reason(
-        report, dict(context), _COUNTRY, creation
+        report, dict(context), country, creation
     )
     if reason is not None:
         return reason.replace("MONARCH_POINTS_", "MILITARY_QUALITY_PARENT_", 1)
@@ -288,7 +286,7 @@ def _parent_reason(report: Any, context: Mapping[str, Any], creation: int) -> st
     request = report.get("request")
     if (
         not isinstance(request, Mapping)
-        or request.get("country") != _COUNTRY
+        or request.get("country") != country
         or request.get("include_military_quality") is not True
     ):
         return "MILITARY_QUALITY_PARENT_REQUEST_INVALID"
@@ -349,7 +347,7 @@ def _child_reason(report: Any, field: str) -> str | None:
 
 
 class NativeMilitaryQualitySource(NativeTradeIncomeSource):
-    """Expose the closed native FRA military-quality scalars."""
+    """Expose verified native military-quality scalars for the observer country."""
 
     event_types: tuple[str, ...] = ()
 
@@ -375,8 +373,9 @@ class NativeMilitaryQualitySource(NativeTradeIncomeSource):
         obj = query.get("object")
         if not isinstance(obj, dict) or set(obj) != {"type", "country"} or obj.get("type") != "country":
             raise InformationError("invalid_object", "N03 queries require a country object")
-        if obj.get("country") != _COUNTRY:
-            raise InformationError("observer_scope_mismatch", "N03 supports the verified FRA observer only")
+        country = obj.get("country")
+        if not _is_country(country):
+            raise InformationError("invalid_object", "N03 requires a country tag")
         fields = query.get("fields")
         if (
             not isinstance(fields, list)
@@ -394,8 +393,8 @@ class NativeMilitaryQualitySource(NativeTradeIncomeSource):
         if context is not None:
             if not isinstance(context, dict):
                 raise InformationError("invalid_context", "context must be an object")
-            if context.get("observer") is not None and context.get("observer") != _COUNTRY:
-                raise InformationError("observer_scope_mismatch", "N03 is outside the verified FRA observer scope")
+            if context.get("observer") is not None and context.get("observer") != country:
+                raise InformationError("observer_scope_mismatch", "N03 is limited to the configured observer country")
         normalized = {
             "topic": _TOPIC,
             "object": deepcopy(obj),
@@ -452,7 +451,7 @@ class NativeMilitaryQualitySource(NativeTradeIncomeSource):
 
         provenance: dict[str, Any] = {
             "adapter": "bridge.information.country_resources_memory.capture",
-            "country": _COUNTRY,
+            "country": normalized['object']['country'],
             "read_only": True,
             "native_function_invoked": False,
             "unit": shared_spec("unit"),
@@ -510,7 +509,7 @@ class NativeMilitaryQualitySource(NativeTradeIncomeSource):
             # not add include_trade_income to the request as a parent shortcut.
             report = capture(
                 installation,
-                _COUNTRY,
+                normalized['object']['country'],
                 include_military_quality=True,
             )
         except Exception as exc:

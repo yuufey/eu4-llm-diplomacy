@@ -352,9 +352,9 @@ class MissionBranchMemoryTests(unittest.TestCase):
             with self.assertRaises(br.ProfileError):
                 br._load_profile(oversized, br.EXPECTED_PROFILE_SHA256)
 
-    def test_scope_is_fra_only_without_opening_a_handle(self) -> None:
+    def test_invalid_country_scope_is_rejected_without_opening_a_handle(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
-            report = br.capture_inputs(Path(directory) / "missing-installation.json", "ENG")
+            report = br.capture_inputs(Path(directory) / "missing-installation.json", "eng")
             self.assertEqual(report["status"], "unsupported_country")
             self.assertEqual(report["cleanup"]["handle_close"]["status"], "not_opened")
             self.assertTrue(all(not item["known"] for item in report["inputs"]["country_flags"].values()))

@@ -11,7 +11,7 @@ from typing import Any
 from .model import canonical
 from .trade_income import (
     NativeTradeIncomeSource,
-    _context_reason as _base_context_reason,
+    _observer_context_reason as _base_context_reason,
     _identity,
     _session_binding,
 )
@@ -82,7 +82,7 @@ def _valid_rule_context(value: Any) -> tuple[dict[str, Any] | None, tuple[str, .
     return context, tuple(raw_keys)
 
 
-def _positive_admission(value: Any) -> bool:
+def _positive_admission(value: Any, observer: str) -> bool:
     if not isinstance(value, Mapping):
         return False
     role = value.get("observer_nonplayer_role")
@@ -91,7 +91,7 @@ def _positive_admission(value: Any) -> bool:
         and type(value.get("admitted")) is bool
         and value["admitted"] is True
         and isinstance(role, Mapping)
-        and role.get("observer") == "FRA"
+        and role.get("observer") == observer
         and role.get("verified") is True
     )
 
@@ -139,7 +139,8 @@ def _capture_target(
         "schema", "observer", "object", "modifier_keys", "capture",
     }:
         return None, None, "PROVINCE_ESTUARY_CAPTURE_ENVELOPE_INVALID"
-    if report.get("schema") != CAPTURE_SCHEMA or report.get("observer") != "FRA":
+    observer = context.get("observer")
+    if report.get("schema") != CAPTURE_SCHEMA or report.get("observer") != observer:
         return None, None, "PROVINCE_ESTUARY_CAPTURE_IDENTITY_INVALID"
     object_value = report.get("object")
     if (not isinstance(object_value, Mapping) or set(object_value) != {"type", "province_id"}
@@ -168,10 +169,10 @@ def _capture_target(
         return None, None, "PROVINCE_ESTUARY_CAPTURE_DATE_MISMATCH"
     backend = observation.get("backend")
     consistency = backend.get("consistency") if isinstance(backend, Mapping) else None
-    observer = backend.get("observer") if isinstance(backend, Mapping) else None
+    backend_observer = backend.get("observer") if isinstance(backend, Mapping) else None
     if (not isinstance(backend, Mapping) or backend.get("status") != "observed"
             or not isinstance(consistency, Mapping) or consistency.get("status") != "stable"
-            or not isinstance(observer, Mapping) or observer.get("tag") != "FRA"):
+            or not isinstance(backend_observer, Mapping) or backend_observer.get("tag") != observer):
         return None, None, "PROVINCE_ESTUARY_BACKEND_UNSTABLE"
     targets = backend.get("targets")
     if not isinstance(targets, list) or len(targets) != 1 or not isinstance(targets[0], Mapping):
@@ -182,7 +183,7 @@ def _capture_target(
     admissions = target.get("admission_by_pass")
     discoveries = target.get("discovery_by_pass")
     if (not isinstance(admissions, Mapping) or not isinstance(discoveries, Mapping)
-            or any(not _positive_admission(admissions.get(phase)) for phase in _PASSPHASES)
+            or any(not _positive_admission(admissions.get(phase), observer) for phase in _PASSPHASES)
             or any(not _positive_discovery(discoveries.get(phase)) for phase in _PASSPHASES)):
         return None, None, "PROVINCE_ESTUARY_ADMISSION_OR_DISCOVERY_UNVERIFIED"
     field_consistency = target.get("field_consistency")
@@ -222,14 +223,14 @@ def _typed_predicates(field: Any, keys: tuple[str, ...]) -> tuple[dict[str, bool
 
 
 class NativeProvinceEstuaryReader(NativeTradeIncomeSource):
-    """Classify one FRA-visible province against its bound static estuary OR."""
+    """Classify one province visible to the observer using the bound estuary rule."""
 
     def __init__(self, base_source: Any, rule_source: Any, *, capture=None):
         super().__init__(base_source, capture=capture)
         self.rule_source = rule_source
 
     def _live_reason(self, context: Any) -> str | None:
-        reason = _base_context_reason(context, "FRA")
+        reason = _base_context_reason(context)
         return reason.replace("TRADE_INCOME_", "PROVINCE_ESTUARY_", 1) if reason else None
 
     def _rule_context(self) -> tuple[dict[str, Any] | None, tuple[str, ...] | None]:
@@ -269,10 +270,10 @@ class NativeProvinceEstuaryReader(NativeTradeIncomeSource):
                 "name": "NativeProvinceEstuaryReader",
                 "status": "observed" if status == "known" else status,
                 "mode": "live",
-                "observer": "FRA",
+                "observer": context.get("observer"),
                 "session_id": context.get("session_id"),
                 "provenance": {
-                    "observer": "FRA",
+                    "observer": context.get("observer"),
                     "session_id": context.get("session_id"),
                     "game_date": context.get("game_date"),
                     "province_id": province_id,
@@ -358,7 +359,7 @@ class NativeProvinceEstuaryReader(NativeTradeIncomeSource):
             )
         report = None
         try:
-            report = capture(installation, province_id=province_id, keys=keys, observer="FRA")
+            report = capture(installation, province_id=province_id, keys=keys, observer=before["observer"])
         except Exception:
             pass
         try:

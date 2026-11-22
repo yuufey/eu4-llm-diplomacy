@@ -409,6 +409,93 @@ static void test_context_deadline_and_claims() {
         ErrorCode::claim_mismatch),"reset_drops_old_receipts");
 }
 
+static void test_terminal_slot_reclamation() {
+    const Context context{0xa001u,100u,42};
+    const RivalPayload value=payload(0xa101u,0xa202u,CommandKind::set_rival,42);
+    RivalCommandAuthorityLedger ledger(context.session_epoch);
+    bridge::rival_command_authority::SeedReceipt first_receipt{};
+    bridge::rival_command_authority::ClaimTicket first_claim{};
+    NativeHeader first_header{};
+
+    for (std::uint32_t index=0;index<130u;++index) {
+        char request_id[32]{};
+        std::snprintf(request_id,sizeof(request_id),"rival_seq_%u",index);
+        const std::uint64_t base=0x100000u+static_cast<std::uint64_t>(index)*0x1000u;
+        const ObjectRef source=ref(base,1u);
+        const ObjectRef loaded=ref(base+0x100u,2u);
+        const ObjectRef target=ref(base+0x200u,3u);
+        const NativeHeader native_header=header(1000u+index);
+        const auto seeded=ledger.seed(context,request_id,value,source,500u);
+        check(seeded.result.ok(),"completed_stream_seed_over_64");
+        if (!seeded.result.ok()) return;
+        check(ledger.serialize_source(context,seeded.receipt,source,value,
+            native_header).ok(),"completed_stream_serialized");
+        const auto claimed=ledger.load_native(context,seeded.receipt,loaded,
+            native_header,value,true);
+        check(claimed.result.ok(),"completed_stream_claimed");
+        if (!claimed.result.ok()) return;
+        check(ledger.clone_native(context,claimed.ticket,
+            proof_for(loaded,target,value,native_header)).ok(),
+            "completed_stream_cloned");
+        check(ledger.consume(context,claimed.ticket,target,value,
+            native_header).ok(),"completed_stream_consumed");
+        if (index==0u) {
+            first_receipt=seeded.receipt;
+            first_claim=claimed.ticket;
+            first_header=native_header;
+        }
+    }
+
+    check(is_code(ledger.inspect(context,first_receipt).result,
+        ErrorCode::claim_mismatch),"reclaimed_slot_rejects_stale_receipt");
+    check(is_code(ledger.consume(context,first_claim,ref(0x100200u,3u),value,
+        first_header),ErrorCode::claim_mismatch),"reclaimed_slot_rejects_stale_claim");
+    check(is_code(ledger.seed(context,"rival_seq_0",value,ref(0x300000u,1u),500u).result,
+        ErrorCode::duplicate_request),"reclaimed_slot_keeps_request_replay_history");
+
+    const auto header_replay=ledger.seed(context,"rival_old_header",value,
+        ref(0x301000u,1u),500u);
+    check(header_replay.result.ok(),"header_replay_seeded");
+    check(is_code(ledger.serialize_source(context,header_replay.receipt,
+        ref(0x301000u,1u),value,first_header),ErrorCode::ambiguous_header),
+        "reclaimed_slot_keeps_native_header_history");
+
+    RivalCommandAuthorityLedger live(context.session_epoch);
+    bridge::rival_command_authority::SeedReceipt first_live_receipt{};
+    for (std::uint32_t index=0;index<64u;++index) {
+        char request_id[32]{};
+        std::snprintf(request_id,sizeof(request_id),"live_%u",index);
+        const auto seeded=live.seed(context,request_id,value,
+            ref(0x400000u+static_cast<std::uint64_t>(index)*0x100u,1u),500u);
+        check(seeded.result.ok(),"live_capacity_seed");
+        if (index==0u) first_live_receipt=seeded.receipt;
+    }
+    check(is_code(live.seed(context,"live_over_capacity",value,
+        ref(0x500000u,1u),500u).result,ErrorCode::capacity_full),
+        "live_references_are_not_reclaimed");
+    check(is_code(live.revoke_request(context,first_live_receipt),
+        ErrorCode::request_revoked),"reclaim_requires_terminal_invalidation");
+    check(live.seed(context,"live_after_revoke",value,ref(0x500100u,1u),500u)
+        .result.ok(),"invalidated_inactive_slot_is_reclaimed");
+    check(is_code(live.inspect(context,first_live_receipt).result,
+        ErrorCode::claim_mismatch),"reclaimed_invalidated_receipt_is_stale");
+    check(is_code(live.seed(context,"live_0",value,ref(0x500200u,1u),500u).result,
+        ErrorCode::duplicate_request),"invalidated_slot_keeps_request_replay_history");
+
+    RivalCommandAuthorityLedger observed(context.session_epoch);
+    check(observed.reserve_request_id("preflight_failed").ok(),
+        "preflight_request_id_is_reserved");
+    check(is_code(observed.reserve_request_id("preflight_failed"),
+        ErrorCode::duplicate_request),"preflight_request_replay_is_rejected");
+    check(observed.reserve_request_id("preflight_seeded").ok(),
+        "preflight_seed_reservation");
+    check(observed.seed(context,"preflight_seeded",value,ref(0x600000u,1u),500u)
+        .result.ok(),"seed_attaches_to_request_reservation");
+    check(is_code(observed.seed(context,"preflight_seeded",value,
+        ref(0x600100u,1u),500u).result,ErrorCode::duplicate_request),
+        "seeded_reservation_cannot_be_reused");
+}
+
 int main() {
     static_assert(sizeof(NativeHeader)>=24u,"header retains reserved4b and alignment");
     test_direct_success_chain();
@@ -416,6 +503,7 @@ int main() {
     test_destroy_and_detach_semantics();
     test_generation_reuse();
     test_context_deadline_and_claims();
+    test_terminal_slot_reclamation();
     std::printf("checks=%u failures=%u status=%s\n",g_checks,g_failures,
         g_failures==0?"passed":"failed");
     return g_failures==0?0:1;

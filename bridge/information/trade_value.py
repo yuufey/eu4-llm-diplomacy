@@ -1,4 +1,4 @@
-"""Read-only T03 trade-node cache adapter for the verified FRA observer.
+"""Read-only T03 trade-node cache adapter for the configured observer.
 
 This source exposes the four projected node-value caches.  Collection value
 remains unknown because the current native evidence does not establish it.
@@ -16,13 +16,12 @@ from typing import Any, Mapping
 
 from .model import InformationError, canonical
 from .sources import _result, _source_info
-from .trade_income import _context_reason as _base_context_reason
+from .trade_income import _observer_context_reason
 from .trade_income import _identity as _base_identity
 from .trade_income import _session_binding
 
 
 _TOPIC = "T03"
-_COUNTRY = "FRA"
 _VERSION = "1.37.4"
 _GAME_SHA256 = "b23fa0e1f698d31b01cdd1c3817a675805d8c6286cb66f9c231e6e2a42544d77"
 _SOURCE = "bridge.information.trade_value_capture_v2.capture"
@@ -136,7 +135,7 @@ def _public_projected_field(name: str, item: Any) -> dict[str, Any]:
 
 
 class NativeTradeValueSource:
-    """Expose bounded T03 trade-node caches for a logical FRA observer."""
+    """Expose bounded T03 caches for nodes discovered by the configured observer."""
 
     event_types: tuple[str, ...] = ()
 
@@ -161,7 +160,7 @@ class NativeTradeValueSource:
             "complete": False,
             "runtime_validation": "trade_value_capture_v2.validate_capture",
             "source": _SOURCE,
-            "supported_observers": [_COUNTRY],
+            "supported_observers": [],
             "supported_object_types": ["trade_node"],
             "supported_versions": [_VERSION],
             "unit": _UNIT,
@@ -212,7 +211,7 @@ class NativeTradeValueSource:
             "fields": fields,
             "object_types": ["trade_node"],
             "observer_roles": [],
-            "observer_scope": [_COUNTRY],
+            "observer_scope": [],
             "parameters": {"type": "object", "properties": {}, "required": [], "additionalProperties": False},
             "supported_versions": [_VERSION],
             "triggers": ["query", "periodic"],
@@ -253,9 +252,6 @@ class NativeTradeValueSource:
         if context is not None:
             if not isinstance(context, Mapping):
                 raise InformationError("invalid_context", "context must be an object")
-            observer = context.get("observer")
-            if observer is not None and observer != _COUNTRY:
-                raise InformationError("observer_scope_mismatch", "T03 is restricted to logical FRA observer")
         normalized = {
             "topic": _TOPIC,
             "object": deepcopy(obj),
@@ -294,7 +290,7 @@ class NativeTradeValueSource:
 
     @staticmethod
     def _context_reason(context: Any) -> str | None:
-        reason = _base_context_reason(context, _COUNTRY)
+        reason = _observer_context_reason(context)
         return reason.replace("TRADE_INCOME_", "TRADE_VALUE_", 1) if reason else None
 
     def read(self, query: dict, context: dict | None = None) -> dict[str, Any]:
@@ -306,7 +302,7 @@ class NativeTradeValueSource:
         node_id = normalized["object"]["node_id"]
         provenance: dict[str, Any] = {
             "adapter": _SOURCE,
-            "observer": _COUNTRY,
+            "observer": None,
             "node_id": node_id,
             "read_only": True,
             "native_function_invoked": False,
@@ -333,6 +329,7 @@ class NativeTradeValueSource:
         if context_failed:
             provenance["context_guard"]["status"] = "unavailable"
             return result(current, self._failure_fields(requested, "TRADE_VALUE_CONTEXT_UNAVAILABLE"))
+        provenance["observer"] = current.get("observer")
         reason = self._context_reason(current)
         if reason is not None:
             provenance["context_guard"]["status"] = "unavailable"
@@ -363,7 +360,7 @@ class NativeTradeValueSource:
         report: Any = None
         capture_error: str | None = None
         try:
-            report = capture_fn(installation, node_id, observer=_COUNTRY)
+            report = capture_fn(installation, node_id, observer=before["observer"])
         except Exception as exc:
             capture_error = "TRADE_VALUE_CAPTURE_FAILED:" + type(exc).__name__
         provenance["capture_performed"] = True
@@ -397,7 +394,7 @@ class NativeTradeValueSource:
                     "information.trade_value_capture.v1",
                     "information.trade_value_capture.v2",
                 }
-                or report.get("observer") != _COUNTRY
+                or report.get("observer") != before["observer"]
                 or not isinstance(report.get("object"), Mapping)
                 or set(report["object"]) != {"type", "node_id"}
                 or report["object"].get("type") != "trade_node"

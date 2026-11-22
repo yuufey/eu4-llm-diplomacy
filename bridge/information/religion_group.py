@@ -33,7 +33,6 @@ class NativeReligionGroupSource(NativeTradeIncomeSource):
             'unit': 'native_display_name', 'scale': 1, 'period': 'current',
             'basis': BASIS, 'value_origin': VALUE_ORIGIN,
             'paths': ["observation.backend.targets[0].fields['S02.religion_group'].value.religion_group_name"],
-            'supported_observers': ['FRA'],
             'runtime_validation': 'religion_group_capture.validate_capture',
             'raw_semantics': 'current primary religion group cached display-name bytes, strictly decoded; not a configuration key or ID',
             'gaps': ['RELIGION_GROUP_CONFIGURATION_IDENTITY_NOT_READ',
@@ -41,7 +40,7 @@ class NativeReligionGroupSource(NativeTradeIncomeSource):
                      'COUNTRY_VIEW_PROJECTION_NOT_ACTUAL_UI_OBSERVATION',
                      'MAIN_THREAD_ATOMICITY_NOT_PROVEN'],
         }}
-        topic['scope_note'] = ('FRA为逻辑非玩家观察方；复制已准入国家当前主宗教所属组的显示名，'
+        topic['scope_note'] = ('复制观察国可见国家的主宗教组显示名。'
                                '不把本地化显示名解释为配置key或数字ID。')
         return [topic]
 
@@ -88,7 +87,7 @@ class NativeReligionGroupSource(NativeTradeIncomeSource):
         normalized = self.validate_query(query, current)
         target = normalized['object']['country']
         provenance = {'read_only': True, 'native_function_invoked': False,
-                      'observer': 'FRA', 'target': target, 'actual_UI_observed': False}
+                      'observer': current.get('observer'), 'target': target, 'actual_UI_observed': False}
 
         def result(field, ctx):
             source = _source_info(type(self).__name__, ctx, complete=False,
@@ -122,7 +121,7 @@ class NativeReligionGroupSource(NativeTradeIncomeSource):
             return failure('RELIGION_GROUP_CAPTURE_UNAVAILABLE', before, True)
         report = None; error = None
         try:
-            report = capture(installation, country=target, observer='FRA')
+            report = capture(installation, country=target, observer=before['observer'])
         except Exception as exc:
             error = 'RELIGION_GROUP_CAPTURE_FAILED:' + type(exc).__name__
         try:

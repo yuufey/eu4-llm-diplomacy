@@ -13,6 +13,7 @@ import ctypes as C
 from ctypes import wintypes as W
 import os
 from pathlib import Path
+import re
 import time
 from typing import Any
 import uuid
@@ -26,6 +27,16 @@ _POLL_SECONDS = 0.2
 _MAX_TIMEOUT_SECONDS = 30.0
 _GAME_WINDOW_TITLE = "Europa Universalis IV"
 _SW_SHOWNOACTIVATE = 4
+
+
+def expected_physical_player(record: object) -> str:
+    """Use the loaded player verified by the installer, or the legacy POR default."""
+    if isinstance(record, dict):
+        for key in ("preflight_player_tag", "verified_loaded_player_tag"):
+            tag = record.get(key)
+            if isinstance(tag, str) and re.fullmatch(r"[A-Z0-9]{3}", tag):
+                return tag
+    return "POR"
 
 
 def _heartbeat_thread_token(event: dict) -> tuple[str, int | str] | tuple[str]:
@@ -51,7 +62,7 @@ def _heartbeat_thread_token(event: dict) -> tuple[str, int | str] | tuple[str]:
 
 
 def _stable_matching_heartbeat(events: list[object], expected_session: str,
-                               *, player: str = "POR", allow_date_progress: bool = False) -> dict | None:
+                               *, player: str | None = None, allow_date_progress: bool = False) -> dict | None:
     """Return the last heartbeat in a consecutive stable pair.
 
     The pair must carry the same session, thread identity, player and
@@ -59,7 +70,8 @@ def _stable_matching_heartbeat(events: list[object], expected_session: str,
     thread; and its integer frame counter must strictly increase.  A later
     same-session heartbeat that breaks those conditions clears the pair, so an
     earlier stable pair cannot make a changed or stale world appear ready.
-    Read-only information callers may accept monotonically advancing dates.
+    An optional expected player binds the pair to a verified physical seat.
+    Callers that sample running worlds may accept monotonically advancing dates.
     """
 
     if not isinstance(expected_session, str) or not expected_session:
@@ -76,15 +88,16 @@ def _stable_matching_heartbeat(events: list[object], expected_session: str,
         frames = candidate.get("frames")
         date_raw = candidate.get("date_raw")
         thread_token = _heartbeat_thread_token(candidate)
-        context = (
-            thread_token, candidate.get("player"), date_raw,
-        )
+        observed_player = candidate.get("player")
+        context = (thread_token, observed_player, date_raw)
         valid = (
             candidate.get("state_readable") is True
             and candidate.get("thread_changed") is False
-            and candidate.get("player") == player
-            and isinstance(date_raw, int) and not isinstance(date_raw, bool)
-            and isinstance(frames, int) and not isinstance(frames, bool)
+            and isinstance(observed_player, str)
+            and re.fullmatch(r"[A-Z0-9]{3}", observed_player) is not None
+            and (player is None or observed_player == player)
+            and type(date_raw) is int and date_raw > 0
+            and type(frames) is int and frames > 0
             and thread_token != ()
         )
         matching_context = previous_context == context
@@ -257,7 +270,8 @@ def _fresh_matching_heartbeat(session: Any, log_path: Path) -> bool:
         except (UnicodeDecodeError, ValueError):
             continue
         events.append(event)
-    return _stable_matching_heartbeat(events, expected_session) is not None
+    player = expected_physical_player(getattr(session, "record", None))
+    return _stable_matching_heartbeat(events, expected_session, player=player) is not None
 
 
 def wait_runtime_ready(session: Any, timeout: float = _MAX_TIMEOUT_SECONDS,
@@ -270,7 +284,8 @@ def wait_runtime_ready(session: Any, timeout: float = _MAX_TIMEOUT_SECONDS,
     deliberately not called on each poll.
     """
 
-    initial_health = session.health()
+    health = getattr(session, "physical_player_health", session.health)
+    initial_health = health()
     if isinstance(initial_health, dict) and initial_health.get("status") == "ready":
         return initial_health
 
@@ -292,7 +307,7 @@ def wait_runtime_ready(session: Any, timeout: float = _MAX_TIMEOUT_SECONDS,
         if _fresh_matching_heartbeat(session, log_path):
             # This is the only second health call.  It rechecks identity,
             # loaded module and current heartbeat through the real session.
-            return session.health()
+            return health()
         remaining = deadline - time.monotonic()
         if remaining <= 0.0:
             break

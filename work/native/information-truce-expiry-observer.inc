@@ -5,6 +5,11 @@
 namespace truce_expiry_observer {
 namespace owned = information::truce_expiry;
 namespace plan = owned::entry;
+#ifdef BRIDGE_NATIVE_COUNTRY_CONTROL
+constexpr unsigned kWire = 2;
+#else
+constexpr unsigned kWire = 1;
+#endif
 constexpr unsigned kCapacity = 64;
 struct Event final {
     owned::Value value{};
@@ -57,15 +62,29 @@ extern "C" uintptr_t truce_maintenance_observe(uintptr_t instance) {
         int32_t date = 0;
         if (!thread_changed && frame_thread == GetCurrentThreadId()
             && read(base + 0x233fe58, game) && read(game + 0x1dd0, date)) {
-            decision = owned::begin(reader, {base, date, true}, instance, pending);
+            owned::Context context{base, date, true};
+#ifdef BRIDGE_NATIVE_COUNTRY_CONTROL
+            context.observable = observation_information_country_handle;
+#endif
+            decision = owned::begin(reader, context, instance, pending);
         } else decision = owned::Decision::unreadable;
     }
     // Each invocation owns its pending state, including nested native calls.
     const uintptr_t result = original(instance);
     owned::Value value{};
     if (decision == owned::Decision::ready) {
-        if (owned::finish(reader, pending, value)) queue(value);
-        else note_drop();
+        if (owned::finish(reader, pending, value)) {
+#ifndef BRIDGE_NATIVE_COUNTRY_CONTROL
+            queue(value);
+#else
+            for (const auto endpoint : {value.actor, value.recipient}) {
+                if (observation_information_country_handle(endpoint)) {
+                    value.observer = endpoint;
+                    queue(value);
+                }
+            }
+#endif
+        } else note_drop();
     } else if (decision == owned::Decision::unreadable) note_drop();
     return result;
 }
@@ -150,13 +169,13 @@ static void flush() noexcept {
             "\"recipient_ref\":\"0x%llx\",\"observer_ref\":\"0x%llx\","
             "\"date_input_raw\":%d,\"end_date_raw\":%d,\"adjustment_raw\":%d,"
             "\"configuration_a_raw\":%d,\"configuration_b_raw\":%d,"
-            "\"source\":\"direct_truce_maintenance_return\",\"wire\":1}\n",
+            "\"source\":\"direct_truce_maintenance_return\",\"wire\":%u}\n",
             static_cast<unsigned long>(GetCurrentProcessId()),
             static_cast<unsigned long long>(observation_creation),
             static_cast<unsigned long long>(event.sequence), value.date,
             static_cast<unsigned long long>(value.actor), static_cast<unsigned long long>(value.recipient),
             static_cast<unsigned long long>(value.observer), value.input, value.end, static_cast<int>(value.adjustment),
-            value.configuration_a, value.configuration_b);
+            value.configuration_a, value.configuration_b, kWire);
         if (bytes < 0 || static_cast<size_t>(bytes) >= sizeof(message)) { transport_fault = true; return; }
         if (!append(message, static_cast<size_t>(bytes))) return;
         AcquireSRWLockExclusive(&queue_lock);

@@ -202,7 +202,7 @@ def test_catalog_and_strict_selectors(fake_trade_memory, tmp_path: Path):
     assert source.validate_query(_query({"type": "country", "country": "FRA"}), base.context())["parameters"] == {}
     assert source.validate_query(_query({"type": "trade_node", "node_id": "champagne"}))
     with pytest.raises(InformationError):
-        source.validate_query(_query({"type": "country", "country": "ENG"}))
+        source.validate_query(_query({"type": "country", "country": "ENG"}), base.context())
     with pytest.raises(InformationError):
         source.validate_query(_query({"type": "trade_node", "node_id": "非ASCII"}))
     with pytest.raises(InformationError):

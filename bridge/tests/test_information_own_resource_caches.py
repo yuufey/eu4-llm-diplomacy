@@ -113,7 +113,7 @@ def test_information_tools_reads_n01_treasury_and_monthly_without_reference(
     captured = []
     monkeypatch.setattr(
         caches, 'capture',
-        lambda _installation, fields: captured.append(tuple(fields)) or deepcopy(cache_report),
+        lambda _installation, fields, _observer: captured.append(tuple(fields)) or deepcopy(cache_report),
     )
     monkeypatch.setattr(
         caches._owner, '_validate_capture_common',
@@ -176,8 +176,10 @@ def test_n01_unavailable_cache_without_reference_is_explicit(monkeypatch):
     assert preview_calls == []
 
 
-def test_manpower_and_max_manpower_share_one_cache_capture(monkeypatch):
-    query = {'topic': 'N02', 'object': {'type': 'country', 'country': 'FRA'},
+@pytest.mark.parametrize('observer', ['FRA', 'TUR', 'D01'])
+def test_manpower_and_max_manpower_share_one_cache_capture(monkeypatch, observer):
+    context = dict(_context(), observer=observer)
+    query = {'topic': 'N02', 'object': {'type': 'country', 'country': observer},
              'fields': ['manpower', 'max_manpower'],
              'parameters': {}}
     captured = []
@@ -185,12 +187,12 @@ def test_manpower_and_max_manpower_share_one_cache_capture(monkeypatch):
         'N02.manpower': {'status': 'known', 'value': 23456},
         'N02.max_manpower': {'status': 'known', 'value': 67890},
     }}]}}}
-    monkeypatch.setattr(caches, 'capture', lambda _installation, fields:
-                        captured.append(tuple(fields)) or deepcopy(report))
+    monkeypatch.setattr(caches, 'capture', lambda _installation, fields, tag:
+                        captured.append((tuple(fields), tag)) or deepcopy(report))
     monkeypatch.setattr(caches._owner, '_validate_capture_common', lambda *args, **kwargs: True)
-    with sampled_read(query, _context()):
-        result = caches.read(_source(_context()), query, _context())
-    assert captured == [('N02.manpower', 'N02.max_manpower')]
+    with sampled_read(query, context):
+        result = caches.read(_source(context), query, context)
+    assert captured == [(('N02.manpower', 'N02.max_manpower'), observer)]
     assert result['fields'] == {
         'manpower': {'status': 'known', 'value': 23456},
         'max_manpower': {'status': 'known', 'value': 67890},

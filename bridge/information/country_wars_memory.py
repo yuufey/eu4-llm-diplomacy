@@ -214,7 +214,7 @@ def _validate_binding(limiter: _shared._BoundedReader, base: int,
 
 def _select_complete_scan(scan: Any, observer: Mapping[str, Any],
                           member: Mapping[str, Any]) -> tuple[dict[str, Any], dict[str, Any]]:
-    """Select FRA and one revalidated member from a real complete scan."""
+    """Select the observer and one revalidated member from a complete scan."""
     if not isinstance(scan, Mapping) or scan.get("status") != "observed":
         raise _LeafFailure("ADMISSION_COUNTRY_SCAN_UNAVAILABLE")
     if scan.get("basis") != "country_manager_table_tag_slot_binding":
@@ -567,7 +567,7 @@ def _member_gate(reader: _shared._BoundedReader, base: int, observer: dict[str, 
                           "selector": selector_evidence}
         return descriptor, raw_gate
     try:
-        gate = gate_func(reader, base, pair_bindings, "FRA", target_tag)
+        gate = gate_func(reader, base, pair_bindings, observer['tag'], target_tag)
     except Exception as exc:
         raw_gate = {"status": "unknown", "reason": "MEMBER_ADMISSION_FAILED",
                     "error_type": type(exc).__name__}
@@ -888,20 +888,17 @@ def _read_wars(limiter: _shared._BoundedReader, base: int,
 def read_fields(reader: Any, base: int, binding: Mapping[str, Any],
                 fields: tuple[str, ...] | list[str], *,
                 observer_binding: Mapping[str, Any] | None = None,
+                expected_observer: str = "FRA",
                 registry_reader: Any = None,
                 member_admission_reader: Any = None,
                 admission_bindings: Mapping[str, Any] | None = None) -> dict[str, dict[str, Any]]:
     """Read only ``F01.wars`` using the supplied bounded memory provider.
 
     ``binding`` and ``observer_binding`` are canonical per-country entries
-    from the caller's already observed country scan.  The observer must be
-    FRA.  The leaf independently resolves and rechecks their full references.
-    An admission callback, when supplied, has the same signature as
-    ``foreign_technology_capture._bound_admission``.  This helper constructs
-    ``admission_bindings`` is the complete observed country scan from the
-    parent. The leaf shallow-copies its top-level selector, preserves the
-    original full rows, and replaces only ``requested`` with FRA and one
-    independently revalidated member.
+    from the caller's observed country scan. The leaf checks their full
+    references and requires the supplied observer to match ``expected_observer``.
+    The member admission callback receives a view of the complete scan scoped
+    to that observer and one independently revalidated member.
     """
     if not isinstance(fields, (tuple, list)) or len(fields) > 16:
         return {}
@@ -932,8 +929,8 @@ def read_fields(reader: Any, base: int, binding: Mapping[str, Any],
         observer_pointer, observer = _faith._binding(observer_binding)
     except Exception as exc:
         return {FIELD_WARS: _unknown(f"OBSERVER_BINDING_INVALID:{type(exc).__name__}")}
-    if observer.get("tag") != "FRA":
-        return {FIELD_WARS: _unknown("OBSERVER_MUST_BE_FRA")}
+    if observer.get("tag") != expected_observer:
+        return {FIELD_WARS: _unknown("OBSERVER_BINDING_SCOPE_MISMATCH")}
 
     limiter = _shared._BoundedReader(_ReaderAdapter(reader))
     try:

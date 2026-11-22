@@ -66,7 +66,7 @@ def _qualified_processor(trace, module, country, manager, component):
         return component
 
 
-def read_fields(reader, base, target_binding, fields=FIELDS, **_unused):
+def read_fields(reader, base, target_binding, fields=FIELDS, *, observer='FRA', **_unused):
     result = {}
     if not isinstance(fields, (tuple, list)) or len(fields) > 16:
         return {FIELD: {'status': 'unknown', 'reason': 'FIELD_REQUEST_INVALID'}}
@@ -82,7 +82,7 @@ def read_fields(reader, base, target_binding, fields=FIELDS, **_unused):
     status, reason, value = 'unknown', 'DIPLOMATS_TOTAL_INPUT_UNKNOWN', None
     try:
         module, country, retained = _binding._parse_target(base, target_binding)
-        if retained.get('tag') != 'FRA':
+        if retained.get('tag') != observer:
             raise ValueError('TARGET_COUNTRY_SCOPE')
         limiter = _binding._shared._BoundedReader(trace)
         raw['target_binding_revalidation'] = _binding._validate_target_binding(limiter, module, country, retained)

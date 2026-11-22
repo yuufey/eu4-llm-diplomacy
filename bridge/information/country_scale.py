@@ -2,7 +2,7 @@
 
 Capture/session ownership and raw reads live in ``country_scale_capture`` and
 the bounded memory leaves. This adapter exposes five narrow values and keeps
-the logical FRA observer separate from the physical client country.
+the configured observer separate from the physical client country.
 """
 from __future__ import annotations
 
@@ -17,7 +17,7 @@ from .observation_time import dates_match
 from .sources import _result, _source_info
 from .trade_income import (
     NativeTradeIncomeSource,
-    _context_reason as _base_context_reason,
+    _observer_context_reason,
     _identity,
     _session_binding,
 )
@@ -28,7 +28,6 @@ _REASON = re.compile(r"[A-Z0-9_:-]{1,128}\Z")
 _WAR_ID = re.compile(r"war_([0-9a-f]{16})_([0-9a-f]{8})\Z")
 _POINTER_LIKE = re.compile(r"0x[0-9a-fA-F]{6,}")
 _TOPIC = "F01"
-_OBSERVER = "FRA"
 _VERSION = "1.37.4"
 _SCHEMA = "information.country_scale_capture.v1"
 
@@ -137,7 +136,6 @@ class NativeCountryScaleSource(NativeTradeIncomeSource):
                 "basis": spec["basis"],
                 "value_origin": spec["value_origin"],
                 "paths": [f"observation.backend.targets[0].fields['{field_id}']"],
-                "supported_observers": [_OBSERVER],
                 "runtime_validation": "country_scale_capture.validate_capture",
                 "gaps": list(spec["gaps"]),
             }
@@ -194,7 +192,7 @@ class NativeCountryScaleSource(NativeTradeIncomeSource):
             "fields": fields,
             "object_types": ["country"],
             "observer_roles": [],
-            "observer_scope": [_OBSERVER],
+            "observer_scope": [],
             "parameters": {
                 "type": "object",
                 "properties": {},
@@ -209,11 +207,10 @@ class NativeCountryScaleSource(NativeTradeIncomeSource):
             "scope_note": (
                 "仅支持 development、territory、subject_scale、major_power、wars 五个部分字段；"
                 "territory限于country-scope num_of_cities缓存值，不是完整owned-province数量或列表；"
-                "FRA是逻辑观察方，"
-                "country对象可为FRA或其他国家，物理客户端身份不会替换。major_power只反映已证"
+                "country 对象可为观察国或可见的外国。major_power 只反映已证"
                 "明的glow功能条件，不等于完整列强排名；未闭合TLS分支返回unknown，实际UI未观察。"
                 "pass2 country admission只作为保守export boundary，不证明每个native widget可见；"
-                "wars仅投影当前country opponent index和side vectors；每个成员按FRA country-view gate保守redact，"
+                "wars 根据当前战争索引和参战名单读取，每个成员都按观察国的原生可见性条件核对。"
                 "未验证成员不公开TAG。side_a/side_b不是进攻/防守角色，observer_session war_id不证明对象生命周期，"
                 "不代表全球战争清单或实际UI可见性。"
             ),
@@ -256,9 +253,10 @@ class NativeCountryScaleSource(NativeTradeIncomeSource):
         if not isinstance(parameters, dict) or parameters:
             raise InformationError("invalid_parameters", "F01 has no extra parameters")
         if context is not None and (
-            not isinstance(context, dict) or context.get("observer") != _OBSERVER
+            not isinstance(context, dict) or not isinstance(context.get('observer'), str)
+            or not _TAG.fullmatch(context['observer'])
         ):
-            raise InformationError("observer_scope_mismatch", "The verified logical observer is FRA")
+            raise InformationError("observer_scope_mismatch", "F01 requires a configured observer country")
         return {
             "topic": _TOPIC,
             "object": deepcopy(obj),
@@ -268,7 +266,7 @@ class NativeCountryScaleSource(NativeTradeIncomeSource):
 
     @staticmethod
     def _context_reason(context: dict) -> str | None:
-        reason = _base_context_reason(context, _OBSERVER)
+        reason = _observer_context_reason(context)
         return reason.replace("TRADE_INCOME_", "COUNTRY_SCALE_", 1) if reason else None
 
     @staticmethod
@@ -511,10 +509,11 @@ class NativeCountryScaleSource(NativeTradeIncomeSource):
         current = deepcopy(context) if isinstance(context, dict) else self.context()
         normalized = self.validate_query(query, current)
         target = normalized["object"]["country"]
+        observer_tag = current['observer']
         provenance = {
             "read_only": True,
             "native_function_invoked": False,
-            "observer": _OBSERVER,
+            "observer": observer_tag,
             "target": target,
             "basis": "validated_partial_foreign_country_scale_projection",
             "actual_UI_observed": False,
@@ -570,7 +569,7 @@ class NativeCountryScaleSource(NativeTradeIncomeSource):
         report = None
         capture_error: str | None = None
         try:
-            report = capture(installation, country=target, observer=_OBSERVER)
+            report = capture(installation, country=target, observer=observer_tag)
         except Exception as exc:
             capture_error = "COUNTRY_SCALE_CAPTURE_FAILED:" + type(exc).__name__
 
@@ -614,7 +613,7 @@ class NativeCountryScaleSource(NativeTradeIncomeSource):
             if not isinstance(backend, Mapping):
                 raise ValueError("backend")
             observer = backend["observer"]
-            if not isinstance(observer, Mapping) or observer.get("tag") != _OBSERVER:
+            if not isinstance(observer, Mapping) or observer.get("tag") != observer_tag:
                 raise ValueError("observer")
             targets = backend["targets"]
             if not isinstance(targets, list) or len(targets) != 1:

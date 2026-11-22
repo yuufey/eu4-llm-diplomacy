@@ -18,10 +18,9 @@ from .trade_income import (
     _COLLECTION_BASIS,
     _COLLECTION_ORIGIN,
     _CONTEXT_KEYS,
-    _COUNTRY,
     _GAME_SHA256,
     _VERSION,
-    _context_reason,
+    _observer_context_reason,
     _identity,
 )
 
@@ -59,7 +58,6 @@ _CATALOG_ITEM = {
                 "is true; no home-node, route, or income inference"
             ),
             "paths": ["trade_income.nodes[].eligible", "trade_income.nodes[].node_id"],
-            "supported_countries": [_COUNTRY],
             "period": _PERIOD,
             "basis": _COLLECTION_BASIS,
             "value_origin": _COLLECTION_ORIGIN,
@@ -72,7 +70,7 @@ _CATALOG_ITEM = {
     },
     "object_types": ["country"],
     "observer_roles": ["country"],
-    "observer_scope": [_COUNTRY],
+    "observer_scope": [],
     "parameters": {
         "type": "object", "properties": {}, "required": [],
         "additionalProperties": False,
@@ -84,8 +82,7 @@ _CATALOG_ITEM = {
     "visibility": "country_scope",
     "context_scope": "country_scope",
     "scope_note": (
-        "仅复用同一NativeTradeIncomeSource实例的FRA country collection；"
-        "不选择home_node，不推断路线、收益或商人生命周期。"
+        "列出当前观察国满足原生贸易收集条件的节点。"
     ),
 }
 
@@ -148,10 +145,9 @@ class NativeTradeCollectionSource:
             raise InformationError(
                 "invalid_object", "T02.collect_node does not support trade_node objects"
             )
-        if obj.get("country") != _COUNTRY:
-            raise InformationError(
-                "observer_scope_mismatch", "T02.collect_node supports verified FRA only"
-            )
+        country = obj.get('country')
+        if not isinstance(country, str) or not re.fullmatch(r"[A-Z0-9]{3}", country):
+            raise InformationError("invalid_object", "T02.collect_node requires a country tag")
         fields = query.get("fields")
         if (
             not isinstance(fields, list)
@@ -175,10 +171,8 @@ class NativeTradeCollectionSource:
             if not isinstance(context, dict):
                 raise InformationError("invalid_context", "context must be an object")
             observer = context.get("observer")
-            if observer is not None and observer != _COUNTRY:
-                raise InformationError(
-                    "observer_scope_mismatch", "T02.collect_node is outside FRA observer scope"
-                )
+            if observer is not None and observer != country:
+                raise InformationError("observer_scope_mismatch", "T02.collect_node is limited to the configured observer country")
         normalized = {
             "topic": _TOPIC,
             "object": deepcopy(obj),
@@ -209,10 +203,10 @@ class NativeTradeCollectionSource:
         return _result(normalized, context, fields, False, source)
 
     @staticmethod
-    def _upstream_query() -> dict[str, Any]:
+    def _upstream_query(country: str) -> dict[str, Any]:
         return {
             "topic": _UPSTREAM_TOPIC,
-            "object": {"type": "country", "country": _COUNTRY},
+            "object": {"type": "country", "country": country},
             "fields": [_UPSTREAM_FIELD],
             "parameters": {},
         }
@@ -255,14 +249,15 @@ class NativeTradeCollectionSource:
                 return "TRADE_COLLECTION_UPSTREAM_SOURCE_STATUS_INVALID"
         if source.get("mode") != context.get("mode", "live"):
             return "TRADE_COLLECTION_UPSTREAM_SOURCE_MODE_MISMATCH"
-        if source.get("observer") != _COUNTRY:
+        observer = context.get('observer')
+        if source.get("observer") != observer:
             return "TRADE_COLLECTION_UPSTREAM_SOURCE_OBSERVER_MISMATCH"
         if source.get("session_id") != context.get("session_id"):
             return "TRADE_COLLECTION_UPSTREAM_SOURCE_SESSION_MISMATCH"
         if upstream.get("game_date") != context.get("game_date"):
             return "TRADE_COLLECTION_UPSTREAM_GAME_DATE_MISMATCH"
         objects = upstream.get("objects")
-        if objects != [{"type": "country", "country": _COUNTRY}]:
+        if objects != [{"type": "country", "country": observer}]:
             return "TRADE_COLLECTION_UPSTREAM_OBJECT_MISMATCH"
         return None
 
@@ -311,6 +306,7 @@ class NativeTradeCollectionSource:
 
     def read(self, query: dict, context: dict | None = None) -> dict:
         normalized = self.validate_query(query, context)
+        country = normalized['object']['country']
         supplied = _copy(context) if context is not None else None
         initial_context_error: str | None = None
         if supplied is not None:
@@ -326,7 +322,7 @@ class NativeTradeCollectionSource:
         provenance: dict[str, Any] = {
             "adapter": "NativeTradeCollectionSource",
             "upstream_adapter": "NativeTradeIncomeSource",
-            "country": _COUNTRY,
+            "country": country,
             "read_only": True,
             "native_function_invoked": False,
             "unit": _UNIT,
@@ -349,10 +345,13 @@ class NativeTradeCollectionSource:
             provenance["context_guard"]["status"] = "unavailable"
             return result(current, _unavailable(initial_context_error))
 
-        reason = _context_reason(current)
+        reason = _observer_context_reason(current)
         if reason is not None:
             provenance["context_guard"]["status"] = "unavailable"
             return result(current, _unavailable(reason))
+
+        if current.get('observer') != country:
+            raise InformationError('observer_scope_mismatch', 'T02.collect_node is limited to the configured observer country')
 
         before = current
         if supplied is not None:
@@ -363,7 +362,7 @@ class NativeTradeCollectionSource:
                 return result(current, _unavailable(
                     "TRADE_COLLECTION_CONTEXT_READ_FAILED:" + type(exc).__name__
                 ))
-            before_reason = _context_reason(before)
+            before_reason = _observer_context_reason(before)
             if before_reason is not None:
                 provenance["context_guard"]["status"] = "unavailable"
                 return result(before, _unavailable(before_reason))
@@ -375,7 +374,7 @@ class NativeTradeCollectionSource:
         upstream_error: str | None = None
         try:
             upstream = self.trade_income_source.read(
-                self._upstream_query(), _copy(before)
+                self._upstream_query(country), _copy(before)
             )
         except Exception as exc:
             upstream_error = "TRADE_COLLECTION_UPSTREAM_READ_FAILED:" + type(exc).__name__
@@ -391,7 +390,7 @@ class NativeTradeCollectionSource:
             provenance["context_guard"]["status"] = "unavailable"
             self._attach_upstream(provenance, upstream)
             return result(before, _unavailable(after_error))
-        after_reason = _context_reason(after)
+        after_reason = _observer_context_reason(after)
         if after_reason is not None or _identity(before) != _identity(after):
             provenance["context_guard"]["status"] = "changed"
             self._attach_upstream(provenance, upstream)

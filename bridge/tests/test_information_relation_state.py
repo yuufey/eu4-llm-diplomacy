@@ -289,6 +289,29 @@ def test_bad_context_does_not_call_inspector_and_endpoint_or_action_mismatch_ret
         service.close()
 
 
+def test_pair_query_uses_the_configured_non_french_observer(tmp_path) -> None:
+    public = deepcopy(DATA["captures"]["rival_BUR"]["inspection"])
+    public.update(actor="TUR", recipient="VEN")
+    inspector = RecordedInspector(overrides={("set_rival", "VEN"): public})
+    source, primary, _ = _source(context=_context(observer="TUR"), inspector=inspector)
+    query = _query("VEN", ["rival"])
+    query["object"]["actor"] = "TUR"
+    service = InformationService(source, tmp_path / "relation-tur.sqlite")
+    try:
+        item = _item(service.query("tur-rival", queries=[query]))
+        assert _family_value(item, "status", "rival")["value"] == "active"
+        assert inspector.calls == [("set_rival", "TUR", "VEN", "initiate", {})]
+        assert item["source"]["provenance"]["observer_scope"] == "TUR"
+    finally:
+        service.close()
+
+    primary._context = _context(observer="ENG")
+    inspector.calls.clear()
+    denied = NativeRelationSource(primary).read(query)
+    assert denied["fields"]["status"] == {"status": "unavailable", "reason": "OBSERVER_SCOPE_MISMATCH"}
+    assert inspector.calls == []
+
+
 def test_sibling_family_failure_keeps_other_known(tmp_path) -> None:
     inspector = RecordedInspector(failures={"support_independence"})
     source, _primary, _ = _source(inspector=inspector)

@@ -187,8 +187,11 @@ def test_capture_adapter_passes_global_hre_scope_to_shared_owner(monkeypatch):
     assert calls["schema"] == capture.INNER_SCHEMA
     assert calls["profile_sha256"] == capture.PROFILE_SHA256
     assert report["object"] == {"type": "country", "country": "HRE"}
+    report = capture.capture("installation.json", observer="TUR")
+    assert calls["observer"] == report["observer"] == "TUR"
+    assert calls["observer_scoped"] is True
     with pytest.raises(ValueError, match="OBSERVER_SCOPE"):
-        capture.capture("installation.json", observer="POR")
+        capture.capture("installation.json", observer="tur")
 
 
 def test_validate_rejects_typed_identity_tampering(monkeypatch):

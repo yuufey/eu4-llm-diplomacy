@@ -1,7 +1,7 @@
-"""Read-only adapter for FRA's bounded native country-discovery candidates.
+"""Read-only adapter for the configured observer's native country-discovery candidates.
 
 The source exports only tags which both pass the captured native existence
-predicate and are known by FRA. The native candidate domain remains partial.
+predicate and are known to the observer. The native candidate domain remains partial.
 """
 from __future__ import annotations
 
@@ -15,7 +15,7 @@ from .catalog import get_topic
 from .empire_live import _context_identity
 from .model import InformationError, canonical
 from .sources import _result, _source_info
-from .trade_income import _context_reason as _base_reason, _session_binding
+from .trade_income import _observer_context_reason as _base_reason, _session_binding
 
 
 FIELD = "discovered_countries"
@@ -30,7 +30,7 @@ _MAX_CANDIDATES = 4096
 
 
 class NativeCountryDiscoverySource:
-    """Expose FRA-known tags among the bounded native ordinary-country scan."""
+    """Expose known tags among the bounded native ordinary-country scan."""
 
     event_types: tuple[str, ...] = ()
     field_names = FIELDS
@@ -56,7 +56,7 @@ class NativeCountryDiscoverySource:
             supported_versions=["1.37.4"],
             triggers=["query", "periodic"],
             observer_roles=[],
-            object_semantics="session_or_FRA_country_discovery_view",
+            object_semantics="session_or_observer_country_discovery_view",
             parameters={"type": "object", "properties": {},
                         "required": [], "additionalProperties": False},
         )
@@ -72,7 +72,7 @@ class NativeCountryDiscoverySource:
                 "value_origin": "native_country_exists_and_observer_knows_country",
                 "basis": _BASIS,
                 "supported_object_types": ["session", "country"],
-                "description": "FRA知晓且通过原生存在判断的国家标签；候选国家域仍不完整。",
+                "description": "在已检查的普通国家中，观察国已发现且当前存在的国家。",
                 "gaps": [
                     "ORDINARY_COUNTRY_CANDIDATE_DOMAIN_IS_BOUNDED",
                     "NON_ATOMIC_TWO_PASS_OBSERVATION",
@@ -115,7 +115,7 @@ class NativeCountryDiscoverySource:
 
     @staticmethod
     def _context_reason(context: Any) -> str | None:
-        reason = _base_reason(context, "FRA")
+        reason = _base_reason(context)
         return reason.replace("TRADE_INCOME_", "C02_", 1) if reason else None
 
     def _binding(self, context: dict) -> tuple[Any, int | None, str | None]:
@@ -189,8 +189,9 @@ class NativeCountryDiscoverySource:
         selected = [name for name in query["fields"] if name in self.field_names]
         fields = {name: {"status": "unsupported", "reason": "C02_COUNTRY_DISCOVERY_FIELD_NOT_IMPLEMENTED"}
                   for name in query["fields"]}
+        observer = current.get('observer')
         provenance = {
-            "observer": "FRA",
+            "observer": observer,
             "read_only": True,
             "native_function_invoked": False,
             "actual_UI_observed": False,
@@ -220,7 +221,7 @@ class NativeCountryDiscoverySource:
             return result(current)
 
         obj = query["object"]
-        if obj.get("type") == "country" and obj.get("country") != "FRA":
+        if obj.get("type") == "country" and obj.get("country") != observer:
             fields[FIELD] = {"status": "not_applicable",
                              "reason": "C02_OBSERVER_DISCOVERY_VIEW_ONLY",
                              "period": "current", "complete": False}
@@ -245,7 +246,7 @@ class NativeCountryDiscoverySource:
 
         try:
             module, capture = self._backend()
-            report = capture(installation, observer="FRA")
+            report = capture(installation, observer=observer)
         except Exception:
             return failure("C02_CAPTURE_FAILED", before)
 

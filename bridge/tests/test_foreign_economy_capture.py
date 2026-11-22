@@ -265,7 +265,8 @@ def _make_capture(profile: dict[str, Any], *, country_view_admitted: bool = True
                   reparations_present: bool = True,
                   subsidies_present: bool = True,
                   image: Any | None = None, bindings: dict[str, Any] | None = None,
-                  refs: dict[str, Any] | None = None, data: dict[str, Any] | None = None):
+                  refs: dict[str, Any] | None = None, data: dict[str, Any] | None = None,
+                  observer: str = "FRA", engine=capture):
     if image is None:
         image, bindings, refs, data = _make_image(
             profile, country_view_admitted=country_view_admitted,
@@ -277,7 +278,10 @@ def _make_capture(profile: dict[str, Any], *, country_view_admitted: bool = True
     wrapped = owner._FailureReplayReader(source)
     observation_error = None
     try:
-        observation = capture._observe(wrapped, MODULE_BASE, "ENG", profile)
+        if engine is capture:
+            observation = capture._observe(wrapped, MODULE_BASE, "ENG", profile)
+        else:
+            observation = engine._observe(wrapped, MODULE_BASE, "ENG", profile, observer=observer)
     except Exception as exc:
         observation = None
         observation_error = f"{type(exc).__name__}:{exc}"
@@ -286,15 +290,15 @@ def _make_capture(profile: dict[str, Any], *, country_view_admitted: bool = True
         "binding_verified": True,
         "process_creation_filetime": CREATION,
         "process_path": "synthetic-eu4.exe",
-        "process_path_sha256": capture.EXE_SHA256,
+        "process_path_sha256": engine.EXE_SHA256,
     }
     report = {
-        "schema": capture.SCHEMA,
+        "schema": engine.SCHEMA,
         "status": "observed" if completed else "unknown",
         "completed": completed,
-        "request": {"country": "ENG", "observer": "FRA",
+        "request": {"country": "ENG", "observer": observer,
                     "creation_filetime": CREATION, "session_id": SESSION_ID},
-        "profile_sha256": capture.PROFILE_SHA256,
+        "profile_sha256": engine.PROFILE_SHA256,
         "identity": deepcopy(identity),
         "identity_after": deepcopy(identity),
         "module_base": hex(MODULE_BASE),
@@ -310,8 +314,8 @@ def _make_capture(profile: dict[str, Any], *, country_view_admitted: bool = True
         },
     }
     context = {
-        "observer": "FRA", "session_id": SESSION_ID,
-        "game_version": "1.37.4", "game_sha256": capture.EXE_SHA256,
+        "observer": observer, "session_id": SESSION_ID,
+        "game_version": "1.37.4", "game_sha256": engine.EXE_SHA256,
         "game_date": GAME_DATE,
     }
     return report, context, CREATION, {
@@ -339,6 +343,35 @@ def _labels(report: dict[str, Any]) -> list[str]:
 def _assert_valid(report: dict[str, Any], context: dict[str, Any], creation: int) -> None:
     assert report["observation"]["stable"] is True
     assert capture.validate_capture(report, context, creation, "ENG")
+
+
+def test_turkish_observer_reads_income_own_loan_and_bilateral_contracts(fixture_profile, monkeypatch):
+    from bridge.information import foreign_economy_capture_v7 as latest
+    from bridge.information import foreign_economy_projection_v7 as public
+
+    monkeypatch.setattr(latest, "_load_profile", lambda: fixture_profile)
+
+    image, bindings, refs, data = _make_image(fixture_profile)
+    observer_ref = (refs["observer_fullref"] & ~0xffffff) | int.from_bytes(b"TUR", "little")
+    image.put_u64(bindings["FRA"]["country_pointer"] + 0x20, observer_ref)
+    image.put_u64(data["records"][0] + 0x20, observer_ref)
+    refs["observer_fullref"] = observer_ref
+    _put_observer_reparations(image, bindings, refs, present=True)
+    _put_observer_subsidies(image, bindings, refs, present=True)
+    report, context, creation, _ = _make_capture(fixture_profile, image=image, bindings=bindings,
+        refs=refs, data=data, observer="TUR", engine=latest)
+    assert latest.validate_capture(report, context, creation, "ENG")
+    assert not latest.validate_capture(report, context | {"observer": "FRA"}, creation, "ENG")
+    projected = public.project(_target(report), "ENG",
+        ["income", "debt", "reparations", "subsidies"], observer="TUR")
+    assert projected["income"]["status"] == "known"
+    value = projected["debt"]["value"]
+    assert value["loans_to_observer"]["records"][0]["lender"] == "TUR"
+    assert value["total_debt"]["reason"] == "DEBT_PRIVATE_TOTAL_OBSERVER_EVIDENCE_UNAVAILABLE"
+    for field in ("reparations", "subsidies"):
+        contracts = projected[field]["value"]["observer_involved_contracts"]
+        assert contracts["status"] == "known", contracts
+        assert "TUR" in repr(contracts["contracts"]) and "FRA" not in repr(contracts["contracts"])
 
 
 def test_two_pass_capture_projects_real_income_and_observer_lent_loan_with_role_and_replay(

@@ -36,15 +36,16 @@ GAME_DATE = 56562768
 class _Session:
     observer = "FRA"
 
-    def __init__(self, directory: Path, *, change_at: int | None = None):
+    def __init__(self, directory: Path, *, change_at: int | None = None, observer="FRA"):
         self.directory = directory
+        self.observer = observer
         self.session_id = SESSION_ID
         self.creation_filetime = CREATION_FILETIME
         self.change_at = change_at
         self.health_calls = 0
         self.record = {
-            "observer": "FRA",
-            "controlled_countries": ["FRA"],
+            "observer": observer,
+            "controlled_countries": [observer],
             "game_sha256": GAME_SHA256,
             "game_version": "1.37.4",
             "session_id": SESSION_ID,
@@ -61,7 +62,7 @@ class _Session:
             "game_date": date,
             "game_version": "1.37.4",
             "game_sha256": GAME_SHA256,
-            "observer": "FRA",
+            "observer": self.observer,
             "game_day": date // 24,
             "world_id": "country-forces-world",
             "reasons": [],
@@ -78,10 +79,10 @@ class _Tools:
         raise AssertionError("N02 forces-only reads must not inspect diplomacy")
 
 
-def _base(tmp_path: Path, *, change_at: int | None = None):
-    session = _Session(tmp_path, change_at=change_at)
+def _base(tmp_path: Path, *, change_at: int | None = None, observer="FRA"):
+    session = _Session(tmp_path, change_at=change_at, observer=observer)
     tools = _Tools(session)
-    return DiplomacySource(tools, observer="FRA"), session, tools
+    return DiplomacySource(tools, observer=observer), session, tools
 
 
 def _rows() -> list[dict]:
@@ -614,7 +615,7 @@ def test_context_change_after_capture_retracts_even_with_valid_rows(
     assert calls == []
 
 
-def test_forces_only_is_local_but_mixed_manpower_keeps_state_recipient_rule(
+def test_forces_and_manpower_validate_without_reference_recipient(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
 ):
     forces, base, _, tools, _ = _source(tmp_path, monkeypatch)
@@ -627,9 +628,9 @@ def test_forces_only_is_local_but_mixed_manpower_keeps_state_recipient_rule(
     assert sample["fields"]["army_size"]["status"] == "known"
     assert tools.inspect_calls == []
 
-    with pytest.raises(InformationError) as missing:
-        composite.validate_query(_query(["army_size", "manpower"]))
-    assert missing.value.code == "invalid_parameters"
+    without_reference = composite.validate_query(_query(["army_size", "manpower"]))
+    assert without_reference["fields"] == ["army_size", "manpower"]
+    assert without_reference["parameters"] == {}
 
     mixed = composite.validate_query(
         _query(["army_size", "manpower"], {"reference_recipient": "PAP"})

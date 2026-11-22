@@ -10,6 +10,7 @@ from datetime import datetime, timezone
 import hashlib
 import json
 from pathlib import Path
+import re
 from typing import Any, Mapping
 
 from . import country_resources_memory as _crm
@@ -412,7 +413,7 @@ def _parse_address(value: Any) -> int | None:
 def _find_country(reader: Any, module_base: int, country: str, profile: Mapping[str, Any],
                   budget: _ReadBudget) -> tuple[int, dict[str, Any]]:
     layout = _profile_layout(profile)
-    if country != EXPECTED_COUNTRY:
+    if not isinstance(country, str) or re.fullmatch(r"[A-Z0-9]{3}", country) is None:
         raise ReadError("unsupported_country")
     database, database_raw = _read_u64(reader, _add_address(module_base, layout["database_global_rva"], layout),
                                        "country_rivals.database_global", budget, layout)
@@ -621,7 +622,7 @@ def read_fields(reader: Any, module_base: int, country_pointer: int,
     try:
         loaded = _load_profile() if profile is None else _prepare_profile(profile)
         layout = _profile_layout(loaded)
-        if country != EXPECTED_COUNTRY:
+        if not isinstance(country, str) or re.fullmatch(r"[A-Z0-9]{3}", country) is None:
             raise ReadError("unsupported_country")
         if not _valid_address(module_base, layout) or not _valid_address(country_pointer, layout):
             raise ReadError("module_or_country_pointer_invalid")
@@ -708,9 +709,9 @@ def capture(installation: Path, country: str = EXPECTED_COUNTRY) -> dict[str, An
     budget = _ReadBudget()
     try:
         report["probe_script_sha256"] = hashlib.sha256(Path(__file__).read_bytes()).hexdigest()
-        if country != EXPECTED_COUNTRY:
+        if not isinstance(country, str) or re.fullmatch(r"[A-Z0-9]{3}", country) is None:
             report["status"] = "unsupported_country"
-            report["errors"].append({"stage": "request", "status": "unknown", "error": "Only FRA is permitted"})
+            report["errors"].append({"stage": "request", "status": "unknown", "error": "Invalid country tag"})
             return report
         profile = _load_profile()
         report["static_contract_guard"] = _static_contract_guard(profile)
@@ -1015,9 +1016,10 @@ def _validate_private_graph(record: Mapping[str, Any], profile: Mapping[str, Any
     country_pointer = _parse_address(private.get("country_pointer"))
     game = _parse_address(private.get("game_pointer"))
     country_handle = _parse_address(private.get("country_handle"))
+    country = record.get("country")
     if (country_pointer is None or game is None or country_handle is None or
             not _valid_address(country_pointer, layout) or not _valid_address(game, layout) or
-            _tag_from_fullref(country_handle) != EXPECTED_COUNTRY):
+            _tag_from_fullref(country_handle) != country):
         return False
     if not _static_guard_valid(private.get("static_contract_guard"), profile):
         return False
@@ -1032,7 +1034,7 @@ def _validate_private_graph(record: Mapping[str, Any], profile: Mapping[str, Any
             date.get("value") != _raw_i32(date_raw.hex()) or handle_raw is None or
             _raw_u64(handle_raw.hex()) != country_handle or private.get("country_handle_raw_hex") != handle_raw.hex()):
         return False
-    scan = _validate_country_scan(private.get("country_scan"), module_base, profile, trace, EXPECTED_COUNTRY)
+    scan = _validate_country_scan(private.get("country_scan"), module_base, profile, trace, country)
     if scan is None:
         return False
     country_slot, database_rows, labels = scan
@@ -1084,7 +1086,7 @@ def _validate_private_graph(record: Mapping[str, Any], profile: Mapping[str, Any
             return False
         tag, slot = _tag_from_fullref(fullref), _slot_from_fullref(fullref)
         dbrow = database_rows.get(slot)
-        if (tag is None or slot is None or tag == EXPECTED_COUNTRY or dbrow is None or
+        if (tag is None or slot is None or tag == country or dbrow is None or
                 dbrow.get("tag") != tag or dbrow.get("fullref") != _hex(fullref) or
                 dbrow.get("fullref_raw_hex") != fullref_raw.hex() or
                 dbrow.get("fullref_slot") != slot or row.get("tag") != tag or row.get("slot") != slot or
@@ -1121,10 +1123,10 @@ def validate_record(record: Any) -> bool:
     try:
         profile = _load_profile()
         layout = _profile_layout(profile)
-        if (not isinstance(record, Mapping) or record.get("status") != "observed" or
-                record.get("profile_id") != EXPECTED_PROFILE_ID or
-                record.get("profile_sha256") != EXPECTED_PROFILE_SHA256 or
-                record.get("country") != EXPECTED_COUNTRY):
+        country = record.get("country") if isinstance(record, Mapping) else None
+        if (not isinstance(country, str) or re.fullmatch(r"[A-Z0-9]{3}", country) is None
+                or record.get("status") != "observed" or record.get("profile_id") != EXPECTED_PROFILE_ID
+                or record.get("profile_sha256") != EXPECTED_PROFILE_SHA256):
             return False
         private = record.get("private")
         module_base = _parse_address(private.get("module_base")) if isinstance(private, Mapping) else None
@@ -1158,7 +1160,7 @@ def validate_capture(report: Any, context: Mapping[str, Any] | None,
     try:
         if (not isinstance(report, Mapping) or report.get("status") != "observed" or
                 report.get("completed") is not True or report.get("complete") is not True or
-                report.get("country") != country or country != EXPECTED_COUNTRY or
+                report.get("country") != country or
                 report.get("read_only") is not True):
             return False
         identity, request = report.get("identity"), report.get("request")
@@ -1220,6 +1222,8 @@ def validate_capture(report: Any, context: Mapping[str, Any] | None,
                 not validate_record(before["record"]) or not validate_record(after["record"])):
             return False
         pass_records = (before["record"], after["record"])
+        if any(record.get("country") != country for record in pass_records):
+            return False
         expected_bytes = sum(item["observation"]["read_budget"]["bytes_reserved"] for item in pass_records)
         expected_calls = sum(len(item["observation"]["read_log"]) for item in pass_records)
         if access.get("rpm_bytes_requested") != expected_bytes or access.get("rpm_calls") != expected_calls:

@@ -18,14 +18,13 @@ from .sources import _copy, _result, _source_info
 from .trade_income import (
     NativeTradeIncomeSource,
     _CONTEXT_KEYS,
-    _COUNTRY,
     _GAME_SHA256,
     _PERIOD,
     _SCALE,
     _UNIT,
     _VERSION,
     _capture_record_reason,
-    _context_reason,
+    _observer_context_reason,
     _identity,
     _parent_report_reason,
     _record_canonical_sha256,
@@ -59,7 +58,6 @@ _CATALOG_ITEM = {
             "raw": False,
             "raw_semantics": "唯一 entry+0xAD 非零节点的 node_id；flag raw 单独保留",
             "paths": ["home_trade_node.home_node"],
-            "supported_countries": [_COUNTRY],
             "period": _HOME_PERIOD,
             "basis": _BASIS,
             "value_origin": _VALUE_ORIGIN,
@@ -72,7 +70,7 @@ _CATALOG_ITEM = {
     },
     "object_types": ["country"],
     "observer_roles": ["country"],
-    "observer_scope": [_COUNTRY],
+    "observer_scope": [],
     "parameters": {
         "type": "object", "properties": {}, "required": [],
         "additionalProperties": False,
@@ -84,7 +82,7 @@ _CATALOG_ITEM = {
     "visibility": "country_scope",
     "context_scope": "country_scope",
     "scope_note": (
-        "仅读取固定1.37.4、FRA观察者的原生贸易 entry+0xAD；"
+        "读取当前观察国在 1.37.4 原生贸易条目中的主贸易节点标志。"
         "零或多候选均保持unknown，缓存新鲜度及完整路线仍未闭合。"
     ),
 }
@@ -99,12 +97,12 @@ def _unavailable(reason: str) -> dict[str, Any]:
 
 
 def _home_context_reason(context: Any) -> str | None:
-    reason = _context_reason(context)
+    reason = _observer_context_reason(context)
     return reason.replace("TRADE_INCOME_", "TRADE_HOME_", 1) if reason else None
 
 
 def _home_parent_reason(report: Any, context: Mapping[str, Any], creation: int) -> str | None:
-    reason = _parent_report_reason(report, context, _COUNTRY, creation)
+    reason = _parent_report_reason(report, context, context.get("observer"), creation)
     if reason is not None:
         return reason.replace("TRADE_INCOME_", "TRADE_HOME_", 1)
     request = report.get("request") if isinstance(report, Mapping) else None
@@ -220,7 +218,7 @@ def _compact_home_provenance(home: Mapping[str, Any], trade_income: Mapping[str,
     return result
 
 
-def _home_record_reason(report: Any) -> str | None:
+def _home_record_reason(report: Any, country: str) -> str | None:
     """Validate top/before/after home children and their canonical identity."""
 
     if not isinstance(report, Mapping):
@@ -239,7 +237,7 @@ def _home_record_reason(report: Any) -> str | None:
         if not isinstance(child, Mapping) or not isinstance(trade, Mapping):
             return "TRADE_HOME_RECORD_MISSING"
         if (
-            child.get("country") != _COUNTRY
+            child.get("country") != country
             or child.get("basis") != _BASIS
             or child.get("unit") != _HOME_UNIT
             or child.get("scale") != _HOME_SCALE
@@ -293,7 +291,7 @@ def _field_from_home(home: Mapping[str, Any]) -> dict[str, Any]:
 
 
 class NativeTradeHomeSource(NativeTradeIncomeSource):
-    """Expose T02.home_node for the verified FRA observer."""
+    """Expose T02.home_node for the configured observer country."""
 
     event_types: tuple[str, ...] = ()
 
@@ -321,8 +319,9 @@ class NativeTradeHomeSource(NativeTradeIncomeSource):
             raise InformationError("invalid_object", "T02.home_node requires a country object")
         if obj.get("type") != "country":
             raise InformationError("invalid_object", "T02.home_node does not support trade_node objects")
-        if obj.get("country") != _COUNTRY:
-            raise InformationError("observer_scope_mismatch", "T02.home_node supports verified FRA only")
+        country = obj.get("country")
+        if not isinstance(country, str) or re.fullmatch(r"[A-Z0-9]{3}", country) is None:
+            raise InformationError("invalid_object", "T02.home_node requires a country tag")
         fields = query.get("fields")
         if (
             not isinstance(fields, list)
@@ -341,8 +340,8 @@ class NativeTradeHomeSource(NativeTradeIncomeSource):
             if not isinstance(context, dict):
                 raise InformationError("invalid_context", "context must be an object")
             observer = context.get("observer")
-            if observer is not None and observer != _COUNTRY:
-                raise InformationError("observer_scope_mismatch", "T02.home_node is outside FRA observer scope")
+            if observer is not None and observer != country:
+                raise InformationError("observer_scope_mismatch", "T02.home_node is limited to the configured observer country")
         normalized = {
             "topic": _TOPIC,
             "object": deepcopy(obj),
@@ -390,9 +389,10 @@ class NativeTradeHomeSource(NativeTradeIncomeSource):
         current = supplied if supplied is not None else self.context()
         normalized = self.validate_query(query, current)
         requested = normalized["fields"]
+        country = normalized["object"]["country"]
         provenance: dict[str, Any] = {
             "adapter": "bridge.information.country_resources_memory.capture",
-            "country": _COUNTRY,
+            "country": country,
             "read_only": True,
             "native_function_invoked": False,
             "unit": _HOME_UNIT,
@@ -449,7 +449,7 @@ class NativeTradeHomeSource(NativeTradeIncomeSource):
         try:
             report = capture(
                 installation,
-                _COUNTRY,
+                country,
                 include_trade_income=True,
                 include_home_trade_node=True,
             )
@@ -490,12 +490,12 @@ class NativeTradeHomeSource(NativeTradeIncomeSource):
         if reason is not None:
             provenance["capture_reason"] = reason
             return result(before, self._failure_fields(requested, reason, unavailable=False))
-        reason = _capture_record_reason(report)
+        reason = _capture_record_reason(report, country)
         if reason is not None:
             reason = reason.replace("TRADE_INCOME_", "TRADE_HOME_TRADE_INCOME_", 1)
             provenance["capture_reason"] = reason
             return result(before, self._failure_fields(requested, reason, unavailable=False))
-        reason = _home_record_reason(report)
+        reason = _home_record_reason(report, country)
         if reason is not None:
             provenance["capture_reason"] = reason
             return result(before, self._failure_fields(requested, reason, unavailable=False))

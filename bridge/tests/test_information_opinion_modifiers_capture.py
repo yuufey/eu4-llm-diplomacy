@@ -21,7 +21,9 @@ def test_capture_delegates_to_shared_readonly_owner(monkeypatch):
     assert calls["kwargs"]["schema"] == capture.SCHEMA
     assert calls["kwargs"]["profile_sha256"] == capture.PROFILE_SHA256
     assert calls["kwargs"]["load_profile"] is capture._memory._load_profile
-    assert calls["kwargs"]["observe"] is capture._memory._observe
+    assert calls['kwargs']['observe'].func is capture._memory._observe
+    assert calls['kwargs']['observe'].keywords == {'observer': 'FRA'}
+    assert calls['kwargs']['observer_scoped'] is True
 
 
 def test_capture_scope_rejects_non_tag_and_observer_target():
@@ -49,7 +51,9 @@ def test_validate_capture_uses_strict_replay_and_required_access(monkeypatch):
     assert calls["kwargs"]["schema"] == capture.SCHEMA
     assert calls["kwargs"]["profile_sha256"] == capture.PROFILE_SHA256
     assert calls["kwargs"]["load_profile"] is capture._memory._load_profile
-    assert calls["kwargs"]["observe"] is capture._memory._observe
+    assert calls['kwargs']['observe'].func is capture._memory._observe
+    assert calls['kwargs']['observe'].keywords == {'observer': 'FRA'}
+    assert calls['kwargs']['observer_scoped'] is True
     assert calls["kwargs"]["require_access"] is True
 
 

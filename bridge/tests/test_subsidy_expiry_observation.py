@@ -78,7 +78,7 @@ def test_decoder_keeps_both_payment_directions_and_actual_occurrence_date(payer,
 
 @pytest.mark.parametrize('changes', [
     {'event': 'native_subsidy_cancelled'}, {'source': 'subsidy_record_remove_return'},
-    {'wire': True}, {'wire': 2}, {'complete': True}, {'schema_version': 1},
+    {'wire': True}, {'wire': 3}, {'complete': True}, {'schema_version': 1},
     {'sequence': True}, {'sequence': 0}, {'sequence': 2**63}, {'session_id': 'other-session'},
     {'date_raw': GAME_DATE - 24}, {'date_raw': -1}, {'date_raw': True},
     {'start_date_raw': 2**31}, {'end_date_raw': -2**31 - 1}, {'monthly_amount_raw': True},

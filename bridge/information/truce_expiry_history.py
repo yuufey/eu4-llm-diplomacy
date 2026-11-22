@@ -28,13 +28,13 @@ class NativeTruceExpiryHistorySource:
     def catalog(self):
         topic = get_topic('H02')
         topic.update(source=type(self).__name__, context_scope='recorded',
-                     observer_roles=['actor', 'recipient'], observer_scope=['FRA'])
+                     observer_roles=['actor', 'recipient'], observer_scope=[])
         topic['fields'] = {FIELD: {
             'coverage': 'available', 'complete': True, 'source': type(self).__name__,
             'unit': 'truce_expiry_events', 'period': 'observed_history',
             'direction': 'actor_to_recipient',
             'native_source_available': observation.EVENT_TYPE in self.base_source.event_types,
-            'description': '已采集的FRA参与国家对中，指定方向直接停战记录的自然到期。',
+            'description': '观察国参与的直接停战记录自然到期，保留原有方向。',
             'event_filter': {'types': [observation.EVENT_TYPE]},
         }}
         return [topic]
@@ -77,7 +77,8 @@ class NativeTruceExpiryHistorySource:
                 'event_date': _date(fields['event_date']['value'])}
 
     def _native(self, query, context, event=None):
-        if context.get('observer') != 'FRA':
+        if (event is None and context.get('observer') != 'FRA'
+                and observation.EVENT_TYPE not in self.base_source.event_types):
             return {'status': 'unavailable', 'reason': 'TRUCE_EXPIRY_OBSERVER_SCOPE_MISMATCH'}
         if query['parameters'].get('event_type', observation.EVENT_TYPE) != observation.EVENT_TYPE:
             return {'status': 'known', 'value': [], 'complete': True}

@@ -637,7 +637,7 @@ def _read_group_chain(reader: _BudgetReader, base: int, target_pointer: int,
 
 def read_fields(reader: Any, base: int, target_binding: Mapping[str, Any],
                 fields: tuple[str, ...] | list[str], *, permission: Any = None,
-                predicate_profile: Any = None) -> dict[str, dict[str, Any]]:
+                predicate_profile: Any = None, observer_tag: str = "FRA") -> dict[str, dict[str, Any]]:
     """Read the requested soldier/ship statistics after permission and binding checks.
 
     This pure leaf uses the real foreign military visibility receipt supplied by
@@ -670,7 +670,7 @@ def read_fields(reader: Any, base: int, target_binding: Mapping[str, Any],
         return {field: _unknown_for(field, "TARGET_BINDING_INVALID") for field in requested} | output
 
     permission_state, permission_reason = _manpower._permission_result(
-        permission, base, retained)
+        permission, base, retained, observer_tag)
     initial_raw = {
         "target_binding": deepcopy(retained),
         "permission": deepcopy(permission),

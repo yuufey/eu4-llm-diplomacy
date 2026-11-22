@@ -85,7 +85,7 @@ def test_capture_is_bound_to_one_global_hre_record(monkeypatch):
 def test_validate_capture_replays_exhausted_ordered_trace(monkeypatch):
     monkeypatch.setattr(capture, "_load_profile", lambda: {})
 
-    def observe(reader, base, country, profile):
+    def observe(reader, base, country, profile, *, observer="FRA"):
         raw = reader.read(base + 0x100, 4, "capture.test.value")
         return {"stable": True, "context_before": {"game_date": DATE},
                 "context_after": {"game_date": DATE},
@@ -115,7 +115,7 @@ def test_validate_capture_replays_exhausted_ordered_trace(monkeypatch):
 def test_validate_capture_rejects_stale_session_creation_and_object(monkeypatch):
     monkeypatch.setattr(capture, "_load_profile", lambda: {})
 
-    def observe(reader, base, country, profile):
+    def observe(reader, base, country, profile, *, observer="FRA"):
         raw = reader.read(base + 0x100, 4, "capture.test.value")
         return {"stable": True, "context_before": {"game_date": DATE},
                 "context_after": {"game_date": DATE},
@@ -136,7 +136,7 @@ def test_validate_capture_rejects_stale_session_creation_and_object(monkeypatch)
 def test_validate_capture_rejects_bool_and_string_creation_values(monkeypatch):
     monkeypatch.setattr(capture, "_load_profile", lambda: {})
 
-    def observe(reader, base, country, profile):
+    def observe(reader, base, country, profile, *, observer="FRA"):
         raw = reader.read(base + 0x100, 4, "capture.test.value")
         return {"stable": True, "context_before": {"game_date": DATE},
                 "context_after": {"game_date": DATE},
@@ -165,7 +165,7 @@ def test_projection_is_whitelist_only_and_preserves_ui_boundary():
         "schema": "information.empire_memory.v1",
         "status": "known",
         "observer": "FRA",
-        "observer_nonplayer": {"verified": True},
+        "observer_nonplayer": {"tag": "FRA", "verified": True},
         "physical_client": {"tag": "POR", "fullref_raw_hex": _raw_ref(2, "POR")},
         "emperor": {"tag": "HAB", "fullref_raw_hex": _raw_ref(3, "HAB"), "country_pointer": "private"},
         "electors": [

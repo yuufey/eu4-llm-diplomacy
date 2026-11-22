@@ -62,7 +62,8 @@ def _income_percent(reader, module_base):
 
 def read_fields(reader, module_base, observer, target, requested, *, observed_date):
     """Reuse the validated pair graph and evaluate its current native terms."""
-    state = _relations.read_state(reader, module_base, observer, target, observed_date)
+    options = {'logical_observer': observer['tag']} if observer['tag'] != 'FRA' else {}
+    state = _relations.read_state(reader, module_base, observer, target, observed_date, **options)
     reason = state.get("reason") if state["status"] != "known" else None
     if reason is None:
         directions = state["raw_inputs"]["pair_directions"]

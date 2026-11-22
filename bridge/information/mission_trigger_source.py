@@ -4,6 +4,7 @@ from __future__ import annotations
 from collections.abc import Mapping
 from copy import deepcopy
 import json
+import re
 from typing import Any
 from .mission_trigger_selection import select_tasks
 
@@ -152,12 +153,16 @@ def _combine(kind: str, child_values: list[bool | None]) -> bool | None:
 
 
 def _validate_tree(node: Any, *, depth: int, counter: list[int], is_root: bool = False,
-                   allow_geographic_body: bool = False, country_scope: str = "FRA",
-                   province_scope: bool = False, allow_count_filter: bool = False,
+                   allow_geographic_body: bool = False, root_country: str = "FRA",
+                   country_scope: str | None = None, province_scope: bool = False,
+                   allow_count_filter: bool = False,
                    ) -> bool:
     """Validate memory output and recompute every logical node from children."""
-    if depth > MAX_TREE_DEPTH or not isinstance(node, Mapping):
+    if (depth > MAX_TREE_DEPTH or not isinstance(node, Mapping)
+            or (is_root and (not isinstance(root_country, str) or not re.fullmatch(r"[A-Z0-9]{3}", root_country)))):
         return False
+    if country_scope is None:
+        country_scope = root_country
     counter[0] += 1
     if counter[0] > MAX_TOTAL_NODES:
         return False
@@ -189,7 +194,8 @@ def _validate_tree(node: Any, *, depth: int, counter: list[int], is_root: bool =
                 or not isinstance(body, Mapping) or body.get('kind') != 'and'
                 or body.get('method_rva') != AND_EVALUATE_RVA
                 or not _validate_tree(body, depth=depth + 1, counter=counter,
-                                      country_scope=country_scope, province_scope=province_scope)):
+                                      root_country=root_country, country_scope=country_scope,
+                                      province_scope=province_scope)):
             return False
         value = body['evaluation']['satisfied']
         result = value == expected if value is not None else None
@@ -219,8 +225,8 @@ def _validate_tree(node: Any, *, depth: int, counter: list[int], is_root: bool =
                 return False
             seen.add(province)
             if not _validate_tree(tree, depth=depth + 1, counter=counter,
-                                  allow_geographic_body=True, country_scope=country_scope,
-                                  province_scope=True):
+                                  allow_geographic_body=True, root_country=root_country,
+                                  country_scope=country_scope, province_scope=True):
                 return False
             values.append(tree['evaluation']['satisfied'])
         result = _combine('and' if scope['quantifier'] == 'all' else 'or', values)
@@ -229,7 +235,7 @@ def _validate_tree(node: Any, *, depth: int, counter: list[int], is_root: bool =
 
     if kind == "count":
         if (is_root or method_rva != COUNT_EVALUATE_RVA
-                or country_scope != "FRA" or province_scope):
+                or country_scope != root_country or province_scope):
             return False
         expected_mode = {0x2BF9: "owned", 0x37FC: "non_sovereign_subjects"}.get(token)
         scope, metric = node.get("scope"), node.get("metric")
@@ -237,7 +243,7 @@ def _validate_tree(node: Any, *, depth: int, counter: list[int], is_root: bool =
         if (expected_mode is None or not isinstance(scope, Mapping)
                 or set(scope) != {"kind", "country", "mode"}
                 or scope.get("kind") != "owned_provinces"
-                or scope.get("country") != "FRA" or scope.get("mode") != expected_mode
+                or scope.get("country") != root_country or scope.get("mode") != expected_mode
                 or not isinstance(metric, Mapping)
                 or set(metric) != {"threshold", "domain_count", "lower_bound", "upper_bound",
                                    "sampled_count", "fully_evaluated"}
@@ -261,7 +267,7 @@ def _validate_tree(node: Any, *, depth: int, counter: list[int], is_root: bool =
         if (not isinstance(filter_node, Mapping) or filter_node.get("kind") != "and"
                 or filter_node.get("method_rva") != COUNT_EVALUATE_RVA
                 or not _validate_tree(
-                    filter_node, depth=depth + 1, counter=counter,
+                    filter_node, depth=depth + 1, counter=counter, root_country=root_country,
                     country_scope="__unbound__", province_scope=True,
                     allow_count_filter=True,
                 )):
@@ -326,7 +332,8 @@ def _validate_tree(node: Any, *, depth: int, counter: list[int], is_root: bool =
             return False
         for branch in branches:
             if not _validate_tree(branch, depth=depth + 1, counter=counter,
-                                  country_scope=country_scope, province_scope=province_scope):
+                                  root_country=root_country, country_scope=country_scope,
+                                  province_scope=province_scope):
                 return False
         limit, positive, negative = [branch["evaluation"]["satisfied"] for branch in branches]
         selection = "then" if limit is True else "else" if limit is False else "unknown"
@@ -381,7 +388,8 @@ def _validate_tree(node: Any, *, depth: int, counter: list[int], is_root: bool =
         child_values: list[bool | None] = []
         for child in node["children"]:
             if not _validate_tree(child, depth=depth + 1, counter=counter,
-                                  country_scope=child_country, province_scope=child_province):
+                                  root_country=root_country, country_scope=child_country,
+                                  province_scope=child_province):
                 return False
             child_evaluation = _evaluation(child)
             if child_evaluation is None:
@@ -415,7 +423,7 @@ def _validate_tree(node: Any, *, depth: int, counter: list[int], is_root: bool =
                 None if dynamic else actual == required)
             if evaluation != (('known', result) if result is not None else ('unknown', None)):
                 return False
-        if method_rva in _COUNTRY_METHODS and (country_scope != 'FRA' or province_scope):
+        if method_rva in _COUNTRY_METHODS and (country_scope != root_country or province_scope):
             if evaluation[0] != 'unknown' or metric is not _MISSING:
                 return False
     elif evaluation[0] != "unknown":
@@ -423,7 +431,8 @@ def _validate_tree(node: Any, *, depth: int, counter: list[int], is_root: bool =
     return True
 
 
-def _normalized_rows(captured: Any, prerequisites: Any, selector=None) -> list[tuple[tuple[str, str], Mapping[str, Any]]]:
+def _normalized_rows(captured: Any, prerequisites: Any, selector=None, *,
+                     root_country="FRA") -> list[tuple[tuple[str, str], Mapping[str, Any]]]:
     if not isinstance(captured, Mapping) or not isinstance(prerequisites, Mapping):
         raise ValueError("MISSION_TRIGGER_TASKS_INVALID")
     rows, expected = captured.get("tasks"), prerequisites.get("tasks")
@@ -441,7 +450,7 @@ def _normalized_rows(captured: Any, prerequisites: Any, selector=None) -> list[t
         if pair is None or pair != expected_pair:
             raise ValueError("MISSION_TRIGGER_TASK_MISMATCH")
         tree = row.get("tree")
-        if not _validate_tree(tree, depth=0, counter=node_counter, is_root=True):
+        if not _validate_tree(tree, depth=0, counter=node_counter, is_root=True, root_country=root_country):
             raise ValueError("MISSION_TRIGGER_TREE_INVALID")
         result.append((pair, row))
     return result
@@ -469,7 +478,7 @@ def normalize_triggers(report: Any, prerequisites: Any) -> dict[str, Any]:
                 or prerequisites.get("status") != "known"):
             return gap("MISSION_TRIGGERS_NOT_VERIFIED")
         selector = request.get('trigger_selector')
-        rows = _normalized_rows(captured, prerequisites, selector)
+        rows = _normalized_rows(captured, prerequisites, selector, root_country=request.get('country', 'FRA'))
         tasks = [
             {"root_id": pair[0], "task_id": pair[1], "tree": deepcopy(row["tree"])}
             for pair, row in rows
@@ -647,7 +656,8 @@ def project_progress(state: Any, entries: Any, game_version: Any) -> dict[str, A
         trigger_by_pair = _pair_index(captured.get("tasks"), require_conditions=False)
         node_counter = [0]
         for row in trigger_by_pair.values():
-            if not _validate_tree(row.get("tree"), depth=0, counter=node_counter, is_root=True):
+            if not _validate_tree(row.get("tree"), depth=0, counter=node_counter, is_root=True,
+                                  root_country=state.get("country", "FRA")):
                 raise ValueError("MISSION_TRIGGER_TREE_INVALID")
 
         conditions = state.get("mission_conditions")
@@ -739,7 +749,8 @@ def trigger_results(state: Any) -> dict[tuple[str, str], dict[str, Any]]:
         result: dict[tuple[str, str], dict[str, Any]] = {}
         for pair, row in indexed.items():
             tree = row.get("tree")
-            if not _validate_tree(tree, depth=0, counter=counter, is_root=True):
+            if not _validate_tree(tree, depth=0, counter=counter, is_root=True,
+                                  root_country=state.get("country", "FRA")):
                 return {}
             evaluation = tree["evaluation"]
             result[pair] = {

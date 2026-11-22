@@ -284,8 +284,8 @@ def test_observer_mismatch_and_stale_pre_capture_context_do_not_capture(tmp_path
     source, base, _, captures, _ = make_source(tmp_path, monkeypatch)
     wrong_observer = base.context()
     wrong_observer["observer"] = "POR"
-    with pytest.raises(InformationError):
-        source.read(make_query("ENG"), wrong_observer)
+    wrong = source.read(make_query("ENG"), wrong_observer)["fields"]["faith"]
+    assert wrong["reason"] == "COUNTRY_FAITH_CONTEXT_STALE"
     stale = base.context()
     stale["game_date"] += 1
     result = source.read(make_query("ENG"), stale)

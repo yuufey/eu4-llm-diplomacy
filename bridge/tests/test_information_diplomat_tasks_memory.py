@@ -16,6 +16,8 @@ VECTOR = 0x6100002000
 DATABASE = 0x6200000000
 TABLE = 0x6300000000
 FRA_COUNTRY = 0x6400000000
+ENG_COUNTRY = 0x6400003000
+O00_COUNTRY = 0x6400004000
 BUR_COUNTRY = 0x6400001000
 ORL_COUNTRY = 0x6400002000
 
@@ -65,15 +67,21 @@ def _reader(*, entries: list[dict] | None = None, bad_fullref: bool = False, ove
     reader.qword(DATABASE + layout["database_table_offset"], TABLE)
     reader.i32(DATABASE + layout["database_table_count_offset"], 256)
     fra = _fullref("FRA", 122)
+    eng = _fullref("ENG", 25)
+    o00 = _fullref("O00", 80)
     bur = _fullref("BUR", 46)
     orl = _fullref("ORL", 47)
     reader.qword(TABLE + 122 * 8, FRA_COUNTRY)
+    reader.qword(TABLE + 25 * 8, ENG_COUNTRY)
+    reader.qword(TABLE + 80 * 8, O00_COUNTRY)
     reader.qword(TABLE + 46 * 8, BUR_COUNTRY)
     reader.qword(TABLE + 47 * 8, ORL_COUNTRY)
     for slot in range(256):
-        if slot not in {46, 47, 122}:
+        if slot not in {25, 46, 47, 80, 122}:
             reader.qword(TABLE + slot * 8, 0)
     reader.qword(FRA_COUNTRY + layout["country_fullref_offset"], fra)
+    reader.qword(ENG_COUNTRY + layout["country_fullref_offset"], eng)
+    reader.qword(O00_COUNTRY + layout["country_fullref_offset"], o00)
     reader.qword(BUR_COUNTRY + layout["country_fullref_offset"], 0 if bad_fullref else bur)
     reader.qword(ORL_COUNTRY + layout["country_fullref_offset"], orl)
 
@@ -81,6 +89,8 @@ def _reader(*, entries: list[dict] | None = None, bad_fullref: bool = False, ove
     reader.i32(0x6500000000 + layout["game_date_offset"], 56559408)
     reader.qword(COUNTRY_POINTER + layout["country_tasks_offset"], HOLDER)
     reader.qword(FRA_COUNTRY + layout["country_tasks_offset"], HOLDER)
+    reader.qword(ENG_COUNTRY + layout["country_tasks_offset"], HOLDER)
+    reader.qword(O00_COUNTRY + layout["country_tasks_offset"], HOLDER)
     reader.qword(HOLDER + layout["holder_manager_offset"], MANAGER)
     if oversized:
         reader.qword(MANAGER + layout["vector_begin_offset"], VECTOR)
@@ -315,6 +325,16 @@ def test_vector_limit_and_tamper_are_fail_closed() -> None:
     assert not memory.validate_record(record)
 
 
+def test_negative_diplomat_id_is_rejected_by_the_record_validator() -> None:
+    record = memory.read_fields(
+        _reader(entries=[{"state": 0, "id": -1, "record": 0}]),
+        MODULE_BASE, COUNTRY_POINTER,
+    )
+    assert record["status"] == "observed"
+    assert record["values"]["diplomat_tasks"][0]["raw_id_44"] == -1
+    assert not memory.validate_record(record)
+
+
 def test_null_entry_pointer_is_unknown_instead_of_synthetic_idle() -> None:
     reader = _reader(entries=[])
     layout = memory._profile_layout(memory._load_profile())
@@ -371,7 +391,8 @@ def test_capture_validate_lifecycle_checks_cleanup_date_and_top_projection(monke
     monkeypatch.setattr(memory, "AddressBoundedRPM", lambda _kernel, _handle, _module_base: fake_reader)
 
     report = memory.capture(Path("fake-installation.json"))
-    context = {"session_id": session_id, "game_sha256": memory.EXPECTED_EXE_SHA256, "game_date": 56559408}
+    context = {"session_id": session_id, "game_sha256": memory.EXPECTED_EXE_SHA256,
+               "game_date": 56559408, "observer": "FRA"}
     assert report["status"] == "observed", report["errors"]
     assert report["completed"] is True
     assert report["profile"] == {"path": str(memory.PROFILE_FILE), "sha256": memory.EXPECTED_PROFILE_SHA256, "profile_id": memory.EXPECTED_PROFILE_ID, "max_bytes": memory.PROFILE_MAX_BYTES}
@@ -382,4 +403,21 @@ def test_capture_validate_lifecycle_checks_cleanup_date_and_top_projection(monke
     stale["values"]["diplomat_tasks"][0]["raw_2c"] += 1
     assert not memory.validate_capture(stale, context, creation_filetime)
     assert not memory.validate_capture(report, {**context, "game_date": 56559409}, creation_filetime)
+
+    eng_context = {**context, "observer": "ENG"}
+    eng_report = memory.capture(Path("fake-installation.json"), country="ENG")
+    assert eng_report["status"] == "observed", eng_report["errors"]
+    assert eng_report["country"] == "ENG"
+    assert eng_report["before"]["country_pointer"] == hex(ENG_COUNTRY)
+    assert memory.validate_capture(eng_report, eng_context, creation_filetime, "ENG")
+    assert not memory.validate_capture(eng_report, context, creation_filetime, "ENG")
+    wrong_country_scan = deepcopy(eng_report)
+    for snapshot in (wrong_country_scan["before"], wrong_country_scan["after"]):
+        snapshot["country_scan"]["matches"][0]["tag"] = "FRA"
+    assert not memory.validate_capture(wrong_country_scan, eng_context, creation_filetime, "ENG")
+    o00_context = {**context, "observer": "O00"}
+    o00_report = memory.capture(Path("fake-installation.json"), country="O00")
+    assert o00_report["status"] == "observed", o00_report["errors"]
+    assert memory.validate_capture(o00_report, o00_context, creation_filetime, "O00")
+    assert memory.capture(Path("fake-installation.json"), country="eng")["status"] == "unsupported_country"
 

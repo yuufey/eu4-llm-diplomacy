@@ -1,8 +1,7 @@
 """Read one cached province modifier component with native layout guards.
 
-The observer is logical FRA and must remain a non-player country. Province
-admission and discovery precede the leaf. The output describes a cached
-component and arithmetic residual, not complete attribution of the aggregate.
+Admission and discovery for the configured observer precede the leaf. The
+output describes a cached component and arithmetic residual.
 """
 from copy import deepcopy
 import hashlib
@@ -11,11 +10,11 @@ from pathlib import Path
 
 from . import foreign_technology_capture as _owner
 from . import province_state_memory as _province
+from .province_state_capture import _validate_reviewed_layout_dependencies
 from . import province_goods_sources_memory as _leaf
 from . import foreign_quality_memory as _quality
 from . import province_trade_power_inputs_memory as _descriptor
 
-ROOT = Path(__file__).resolve().parents[2]
 PROFILE_FILE = Path(__file__).with_name('profiles')/'province-goods-sources-memory-1374-v1-sampling-r1.json'
 PROFILE_SHA256 = '1b83ed3bc207fcdaea1fd94bf1ba20b52f120a04a742715cd0d0ed1066c36a05'
 SCHEMA = 'information.province_goods_sources_capture.v1'
@@ -23,6 +22,10 @@ INNER_SCHEMA = 'information.province_goods_sources_observer_snapshot.v1'
 
 def _valid_id(value):
     return type(value) is int and 1 <= value <= 0xffff
+
+def _valid_observer(value):
+    return isinstance(value, str) and _owner._TAG.fullmatch(value) is not None
+
 
 def _load_profile():
     if not 0 < PROFILE_FILE.stat().st_size <= 256*1024:
@@ -44,11 +47,7 @@ def _load_profile():
             or layout['modifier_index'] != 21 or layout['modifier_key'] != 'trade_goods_size_modifier'
             or layout['full_source_coverage'] is not False):
         raise ValueError('PROVINCE_GOODS_SOURCES_LAYOUT')
-    for item in profile['source_evidence'] + profile['layout_dependencies']:
-        path = (ROOT/item['path']).resolve()
-        path.relative_to(ROOT)
-        if path.stat().st_size != item['bytes'] or _owner._sha(path) != item['sha256']:
-            raise ValueError('PROVINCE_GOODS_SOURCES_DEPENDENCY_PIN')
+    _validate_reviewed_layout_dependencies(profile, 'PROVINCE_GOODS_SOURCES_DEPENDENCY_PIN')
     return profile
 
 def _qualified_fields(reader, base, binding, fields):
@@ -83,21 +82,23 @@ def _qualified_fields(reader, base, binding, fields):
                 'descriptor_reads': trace.reads, 'error_type': type(exc).__name__}}
     return result
 
-def _observe_for(province_id):
+def _observe_for(province_id, observer='FRA'):
     def observe(reader, base, country, profile):
-        if country != 'FRA' or not _valid_id(province_id):
+        if country != observer or not _valid_id(province_id):
             raise ValueError('PROVINCE_GOODS_SOURCES_SCOPE')
         table = profile['layout']['province_goods_sources']['callback_table']
         start = base+int(table['rva'],0)
         expected = b''.join((base+int(rva,0)).to_bytes(8,'little') for rva in table['target_rvas'])
         if len(expected) != 288:
             raise ValueError('PROVINCE_GOODS_SOURCE_CALLBACK_COUNT')
-        def backend(read, module_base, observer):
+        def backend(read, module_base, observer_country):
+            if observer_country != observer:
+                raise ValueError('PROVINCE_GOODS_SOURCES_SCOPE')
             before = _owner._read(read, start, len(expected), 'province_goods_sources.callbacks.before')
             if before != expected:
                 raise ValueError('PROVINCE_GOODS_SOURCE_CALLBACK_MISMATCH')
             result = _province.read_two_pass(read, module_base, province_id, observer=observer,
-                fields=(_leaf.FIELD_GOODS_SOURCE,), read_fields=_qualified_fields)
+                observer_scoped=True, fields=(_leaf.FIELD_GOODS_SOURCE,), read_fields=_qualified_fields)
             after = _owner._read(read, start, len(expected), 'province_goods_sources.callbacks.after')
             if after != before:
                 raise ValueError('PROVINCE_GOODS_SOURCE_CALLBACK_CHANGED')
@@ -108,22 +109,24 @@ def _observe_for(province_id):
     return observe
 
 def capture(installation: Path, province_id: int, *, observer: str = 'FRA'):
-    if not _valid_id(province_id) or observer != 'FRA':
+    if not _valid_id(province_id) or not _valid_observer(observer):
         raise ValueError('PROVINCE_GOODS_SOURCES_REQUEST_SCOPE')
-    inner = _owner._capture_common(installation,'FRA',observer='FRA',schema=INNER_SCHEMA,
-        profile_sha256=PROFILE_SHA256,load_profile=_load_profile,
-        observe=_observe_for(province_id),allow_observer_target=True)
-    return {'schema':SCHEMA,'observer':'FRA',
+    inner = _owner._capture_common(installation, observer, observer=observer, schema=INNER_SCHEMA,
+        profile_sha256=PROFILE_SHA256, load_profile=_load_profile,
+        observe=_observe_for(province_id, observer), allow_observer_target=True, observer_scoped=True)
+    return {'schema':SCHEMA,'observer':observer,
         'object':{'type':'province','province_id':province_id},'capture':inner}
 
 def validate_capture(report, context, creation, province_id):
-    if (not _valid_id(province_id) or not isinstance(report,dict)
+    observer = context.get('observer') if isinstance(context, dict) else None
+    if (not _valid_id(province_id) or not _valid_observer(observer) or not isinstance(report,dict)
             or set(report) != {'schema','observer','object','capture'}
-            or report['schema'] != SCHEMA or report['observer'] != 'FRA'
+            or report['schema'] != SCHEMA or report['observer'] != observer
             or not _owner._same(report['object'],{'type':'province','province_id':province_id})):
         return False
-    return _owner._validate_capture_common(report['capture'],context,creation,'FRA',
-        schema=INNER_SCHEMA,profile_sha256=PROFILE_SHA256,load_profile=_load_profile,
-        observe=_observe_for(province_id),allow_observer_target=True,require_access=True)
+    return _owner._validate_capture_common(report['capture'], context, creation, observer,
+        schema=INNER_SCHEMA, profile_sha256=PROFILE_SHA256, load_profile=_load_profile,
+        observe=_observe_for(province_id, observer), allow_observer_target=True,
+        observer_scoped=True, require_access=True)
 
 __all__ = ['capture','validate_capture']

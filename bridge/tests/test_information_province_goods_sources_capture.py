@@ -210,23 +210,24 @@ class CaptureEnvelopeTests(unittest.TestCase):
             for report, province_id in cases:
                 with self.subTest(schema=report["schema"], province_id=province_id,
                                   object=report["object"]):
-                    self.assertFalse(capture.validate_capture(report, {}, 123, province_id))
+                    self.assertFalse(capture.validate_capture(report, {"observer": "FRA"}, 123, province_id))
         common.assert_not_called()
 
     def test_valid_capture_envelope_delegates_to_common_raw_replay(self):
         report = self.valid_report()
-        context = {"session_id": "fake-session"}
+        context = {"session_id": "fake-session", "observer": "FRA"}
         observe = lambda *args, **kwargs: {"stable": True}
         with patch.object(capture, "_observe_for", return_value=observe) as observe_for, \
              patch.object(capture._owner, "_validate_capture_common", return_value=True) as common:
             self.assertTrue(capture.validate_capture(report, context, 123, 183))
-        observe_for.assert_called_once_with(183)
+        observe_for.assert_called_once_with(183, "FRA")
         common.assert_called_once()
         args, kwargs = common.call_args
         self.assertEqual(args[:4], (report["capture"], context, 123, "FRA"))
         self.assertEqual(kwargs["schema"], capture.INNER_SCHEMA)
         self.assertIs(kwargs["observe"], observe)
         self.assertIs(kwargs["allow_observer_target"], True)
+        self.assertIs(kwargs["observer_scoped"], True)
         self.assertIs(kwargs["require_access"], True)
 
 

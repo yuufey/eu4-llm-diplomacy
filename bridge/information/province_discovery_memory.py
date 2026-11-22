@@ -235,7 +235,9 @@ def _one_pass(reader: _BudgetReader, base: int, pass_number: int,
             or role.get("verified") is not True or type(role.get("verified")) is not bool
             or role.get("observer") != observer or role.get("slot") != observer_slot):
         return {
-            "pass": pass_number, "status": "unknown", "reason": "FRA_SELF_ADMISSION_OR_ROLE_NOT_VERIFIED",
+            "pass": pass_number, "status": "unknown",
+            "reason": ("FRA_SELF_ADMISSION_OR_ROLE_NOT_VERIFIED" if observer == OBSERVER
+                       else "OBSERVER_SELF_ADMISSION_OR_ROLE_NOT_VERIFIED"),
             "context": context,
             "bindings": {"observer": observer_binding, "physical_client": physical_binding},
             "admission": admission, "header": None, "candidates": [],
@@ -324,17 +326,18 @@ def _one_pass(reader: _BudgetReader, base: int, pass_number: int,
 
 def _read_two_pass(reader: Any, module_base: int, observer: str = "FRA", *,
                    discovery_reader=None, candidate_bytes: int = 16,
-                   use_observed_country_count: bool = False) -> dict[str, Any]:
-    """Read and compare FRA's positive discovery bits over indexed IDs.
+                   use_observed_country_count: bool = False, observer_scoped=False) -> dict[str, Any]:
+    """Read and compare the observer's positive discovery bits over indexed IDs.
 
-    Countries are resolved once in each pass (FRA and the physical client),
-    then FRA's established self-admission and non-player role are checked
+    Each pass independently binds the observer and physical current reference.
+    The observer's self-admission and non-player role are checked
     before any province header or record is read. A known result is limited
     to stable candidate IDs ``1..count-1`` and never claims a complete native
     domain. No province ownership, controller, resource or owner fields are
     read. The two passes are sequential samples, not an atomic snapshot.
     """
-    if type(observer) is not str or observer != OBSERVER:
+    if (type(observer) is not str or not _owner._TAG.fullmatch(observer)
+            or (not observer_scoped and observer != OBSERVER)):
         return _unknown("OBSERVER_SCOPE_INVALID")
     if not callable(reader) and not callable(getattr(reader, "read", None)):
         return _unknown("READER_NOT_CALLABLE")
@@ -369,7 +372,7 @@ def _read_two_pass(reader: Any, module_base: int, observer: str = "FRA", *,
         "schema": SCHEMA,
         "status": "known",
         "basis": "stable_fra_discovery_bits_for_indexed_positive_id_candidates",
-        "observer": OBSERVER,
+        "observer": observer,
         "value": positive_ids,
         "scope": {"province_ids": "1..count-1",
                   "candidate_count": passes[1]["header"]["before"]["candidate_count"],

@@ -59,6 +59,29 @@ def query():
     return result
 
 
+def test_configured_observer_can_receive_war_receipt_as_nonleader(tmp_path, monkeypatch):
+    event = declaration(third_party=True, schema_version=2, country="TUR",
+                        observer_fullref=reference("TUR", 2))
+    event["participants"]["side_a"] = ["CAS", "TUR"]
+    assert observation.public_observation(event | {"country": "FRA"}, SESSION_ID) is None
+    session, journal, _ = make_source(tmp_path, events=[event])
+    session.observed_countries = ("TUR",)
+    monkeypatch.setattr(session, "installation_capabilities", lambda: frozenset({
+        observation.CAPABILITY, observation.SCOPED_CAPABILITY,
+    }))
+    try:
+        source = DiplomacySource(DiplomacyTools(journal, session), observer="TUR")
+        context = source.context()
+        result = source.poll_events(context, None)
+        snapshot = next(row for row in result["events"] if row["event_type"] == observation.EVENT_TYPE)
+        assert observation.valid_event_snapshot(snapshot, context)
+        roles = observation.project_role_labels(snapshot["payload"])
+        assert roles["observer_role"] == "defender"
+        assert roles["defenders"] == ["CAS", "TUR"]
+    finally:
+        journal.close()
+
+
 def test_three_change_sources_share_bytes_with_independent_native_cursors(tmp_path):
     rows = [native_event(1), rival(1), declaration(1), expired(2), declaration(2, third_party=True)]
     session, journal, source = make_source(tmp_path, ack=declaration_ack(), events=rows)

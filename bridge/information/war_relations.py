@@ -41,7 +41,8 @@ class NativeWarRelationsSource:
         topic.update(status='available', fields={'wars': field}, source=type(self).__name__,
                      supported_versions=deepcopy(upstream['supported_versions']),
                      object_types=['country', 'country_pair'], observer_roles=[],
-                     observer_scope=['FRA'], context_scope='visible_scope', visibility='visible_scope',
+                     observer_scope=deepcopy(upstream.get('observer_scope', [])),
+                     context_scope='visible_scope', visibility='visible_scope',
                      triggers=['query', 'periodic'],
                      scope_note='country视图复用F01同一读器；country_pair尚未实现。完整性不足，不支持变化订阅。')
         return [topic]

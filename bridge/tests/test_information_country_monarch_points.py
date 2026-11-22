@@ -144,7 +144,6 @@ def test_catalog_puts_points_first_and_documents_native_metadata(tmp_path: Path)
     assert topic["fields"]["monarch_points"] == {
         "coverage": "available",
         "source": "bridge.information.country_resources_memory.capture",
-        "supported_countries": ["FRA"],
         "description": (
             "本国当前行政、外交、军事君主点数；只取固定版本的有界"
             "纯 RPM capture values"

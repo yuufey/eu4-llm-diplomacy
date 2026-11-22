@@ -6,6 +6,7 @@ import json
 from pathlib import Path
 
 from . import foreign_technology_capture as _owner
+from . import province_state_capture as _base
 from . import province_trade_value_capture as _previous
 from . import node_cash_aggregate_memory as _leaf
 from . import node_cash_aggregate_parent_memory as _parent
@@ -37,16 +38,14 @@ def _load_profile():
             or profile.get('semantics', {}).get('supported_fields') != list(FIELDS)):
         raise ValueError('NODE_CASH_PROFILE_IDENTITY')
     for entry in profile['source_evidence'] + profile['layout_dependencies']:
-        path = (ROOT / entry['path']).resolve()
-        path.relative_to(ROOT)
-        if path.stat().st_size != entry['bytes'] or _owner._sha(path) != entry['sha256']:
+        if not _base._matches_reviewed_layout(entry):
             raise ValueError('NODE_CASH_DEPENDENCY_PIN')
     return profile
 
 
-def _observe_for(province_id):
+def _observe_for(province_id, observer='FRA'):
     def observe(reader, module_base, country, profile):
-        if country != 'FRA' or not _previous._valid_id(province_id):
+        if country != observer or not _previous._valid_id(province_id):
             raise ValueError('NODE_CASH_SCOPE')
 
         def power_parent(read, base, pid, *, observer):
@@ -58,31 +57,34 @@ def _observe_for(province_id):
             return _previous._parent.extend(read, base, pid, observer=observer,
                 parent_reader=power_parent, read_fields=_previous._leaf.read_fields)
 
-        def backend(read, base, observer):
-            if observer != 'FRA':
+        def backend(read, base, observer_country):
+            if observer_country != observer:
                 raise ValueError('NODE_CASH_SCOPE')
-            return _parent.extend(read, base, province_id, observer='FRA', parent_reader=value_parent)
+            return _parent.extend(read, base, province_id, observer=observer, parent_reader=value_parent)
 
         return _owner._observe(reader, module_base, country, profile, backend_reader=backend)
     return observe
 
 
 def capture(installation, province_id, *, observer='FRA'):
-    if not _previous._valid_id(province_id) or observer != 'FRA':
+    if not _previous._valid_id(province_id) or not isinstance(observer, str) or not _owner._TAG.fullmatch(observer):
         raise ValueError('NODE_CASH_SCOPE')
-    inner = _owner._capture_common(installation, 'FRA', observer='FRA', schema=INNER_SCHEMA,
+    inner = _owner._capture_common(installation, observer, observer=observer, schema=INNER_SCHEMA,
         profile_sha256=PROFILE_SHA256, load_profile=_load_profile,
-        observe=_observe_for(province_id), allow_observer_target=True)
-    return {'schema': SCHEMA, 'observer': 'FRA',
+        observe=_observe_for(province_id, observer), allow_observer_target=True, observer_scoped=True)
+    return {'schema': SCHEMA, 'observer': observer,
             'object': {'type': 'province', 'province_id': province_id}, 'capture': inner}
 
 
 def validate_capture(report, context, creation, province_id):
+    observer = context.get('observer') if isinstance(context, dict) else None
     if (not _previous._valid_id(province_id) or not isinstance(report, dict)
+            or not isinstance(observer, str) or not _owner._TAG.fullmatch(observer)
             or set(report) != {'schema', 'observer', 'object', 'capture'}
-            or report.get('schema') != SCHEMA or report.get('observer') != 'FRA'
+            or report.get('schema') != SCHEMA or report.get('observer') != observer
             or not _owner._same(report.get('object'), {'type': 'province', 'province_id': province_id})):
         return False
-    return _owner._validate_capture_common(report['capture'], context, creation, 'FRA',
+    return _owner._validate_capture_common(report['capture'], context, creation, observer,
         schema=INNER_SCHEMA, profile_sha256=PROFILE_SHA256, load_profile=_load_profile,
-        observe=_observe_for(province_id), allow_observer_target=True, require_access=True)
+        observe=_observe_for(province_id, observer), allow_observer_target=True,
+        observer_scoped=True, require_access=True)

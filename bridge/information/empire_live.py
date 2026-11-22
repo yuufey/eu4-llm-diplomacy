@@ -14,7 +14,7 @@ import re
 from .catalog import get_topic
 from .model import InformationError, canonical
 from .sources import _result, _source_info
-from .trade_income import _context_reason as _base_reason, _identity, _session_binding
+from .trade_income import _identity, _observer_context_reason, _session_binding
 
 
 FIELDS = ('emperor', 'electors')
@@ -92,7 +92,7 @@ class NativeEmpireSource:
 
     @staticmethod
     def _context_reason(context):
-        reason = _base_reason(context, 'FRA')
+        reason = _observer_context_reason(context)
         return reason.replace('TRADE_INCOME_', 'EMPIRE_', 1) if reason else None
 
     def _binding(self, context):
@@ -142,7 +142,7 @@ class NativeEmpireSource:
         selected = [name for name in query['fields'] if name in self.field_names]
         fields = {name: {'status': 'unsupported', 'reason': 'S01_LIVE_FIELD_NOT_IMPLEMENTED'}
                   for name in query['fields']}
-        provenance = {'observer': 'FRA', 'read_only': True, 'native_function_invoked': False,
+        provenance = {'observer': current.get('observer'), 'read_only': True, 'native_function_invoked': False,
                       'actual_UI_observed': False, 'atomic_snapshot': False,
                       'country_selector_semantics': 'global_empire_record_not_membership',
                       'visibility_basis': 'static_native_hre_window_data_binding'}
@@ -179,7 +179,7 @@ class NativeEmpireSource:
         try:
             module = import_module(self.capture_module, __package__)
             capture = self.capture if self.capture is not None else module.capture
-            report = capture(installation, observer='FRA')
+            report = capture(installation, observer=before['observer'])
         except Exception:
             return failure('EMPIRE_CAPTURE_FAILED', before)
         try:

@@ -1,4 +1,4 @@
-"""Read FRA's bounded native diplomatic relation count and limit."""
+"""Read the observer country's bounded native diplomatic relation count and limit."""
 from __future__ import annotations
 
 from collections.abc import Mapping
@@ -15,7 +15,7 @@ from .sources import _result, _source_info
 from .trade_income import (
     _GAME_SHA256,
     _VERSION,
-    _context_reason as _base_context_reason,
+    _observer_context_reason,
     _identity,
     _session_binding,
 )
@@ -23,7 +23,6 @@ from .trade_income import (
 
 _TOPIC = "N05"
 _FIELDS = ("relations_count", "relations_limit")
-_COUNTRY = "FRA"
 _UNIT = "diplomatic_relation"
 _SCALE = 1
 _PERIOD = "current"
@@ -39,7 +38,7 @@ _CONTEXT_IDENTITY_KEYS = [
 
 
 class NativeRelationsCapacitySource:
-    """Own only N05.relations_count and N05.relations_limit for FRA."""
+    """Expose the observer country's N05.relations_count and N05.relations_limit."""
 
     event_types: tuple[str, ...] = ()
 
@@ -56,7 +55,7 @@ class NativeRelationsCapacitySource:
             status="available",
             source=type(self).__name__,
             observer_roles=["country"],
-            observer_scope=[_COUNTRY],
+            observer_scope=[],
             visibility="country_scope",
             context_scope="country_scope",
             supported_versions=[_VERSION],
@@ -74,7 +73,6 @@ class NativeRelationsCapacitySource:
                 "period": _PERIOD,
                 "basis": _BASIS,
                 "value_origin": _VALUE_ORIGIN,
-                "supported_countries": [_COUNTRY],
                 "supported_object_types": ["country"],
                 "description": (
                     "读取固定范围内本国外交关系计数与容量。关系数量来自原生条件算术，"
@@ -112,10 +110,9 @@ class NativeRelationsCapacitySource:
         if (not isinstance(obj, dict) or set(obj) != {"type", "country"}
                 or obj.get("type") != "country"):
             raise InformationError("invalid_object", "N05 requires a country object")
-        if obj.get("country") != _COUNTRY:
-            raise InformationError(
-                "observer_scope_mismatch", "N05 supports the verified FRA observer only",
-            )
+        country = obj.get("country")
+        if not _is_country(country):
+            raise InformationError("invalid_object", "N05 requires a country tag")
         fields = query.get("fields")
         if (not isinstance(fields, list) or not fields or len(fields) > len(_FIELDS)
                 or any(type(field) is not str or field not in _FIELDS for field in fields)
@@ -129,15 +126,13 @@ class NativeRelationsCapacitySource:
             raise InformationError("invalid_parameters", "N05 accepts reference_recipient only")
         if "reference_recipient" in parameters:
             recipient = parameters["reference_recipient"]
-            if not _is_country(recipient) or recipient == _COUNTRY:
+            if not _is_country(recipient) or recipient == country:
                 raise InformationError("invalid_parameters", "reference_recipient must name another country")
         if context is not None:
             if not isinstance(context, dict):
                 raise InformationError("invalid_context", "context must be an object")
-            if context.get("observer") is not None and context.get("observer") != _COUNTRY:
-                raise InformationError(
-                    "observer_scope_mismatch", "N05 is outside the verified FRA observer scope",
-                )
+            if context.get("observer") is not None and context.get("observer") != country:
+                raise InformationError("observer_scope_mismatch", "N05 is limited to the configured observer country")
         normalized = {
             "topic": _TOPIC,
             "object": deepcopy(obj),
@@ -150,7 +145,7 @@ class NativeRelationsCapacitySource:
     @staticmethod
     def _context_reason(context: Any) -> str | None:
         try:
-            reason = _base_context_reason(context, _COUNTRY)
+            reason = _observer_context_reason(context)
         except Exception:
             return "RELATIONS_CAPACITY_CONTEXT_INVALID"
         return reason.replace("TRADE_INCOME_", "RELATIONS_CAPACITY_", 1) if reason else None
@@ -232,13 +227,14 @@ class NativeRelationsCapacitySource:
             current = {}
         normalized = self.validate_query(query, current)
         requested = normalized["fields"]
+        country = normalized["object"]["country"]
         fields = {
             name: self._public_field("unknown", reason="RELATIONS_CAPACITY_NOT_READ")
             for name in requested
         }
         provenance: dict[str, Any] = {
-            "observer": _COUNTRY,
-            "country": _COUNTRY,
+            "observer": country,
+            "country": country,
             "read_only": True,
             "native_function_invoked": False,
             "context_guard": {
@@ -302,7 +298,7 @@ class NativeRelationsCapacitySource:
         try:
             module = import_module(".relations_capacity_capture", __package__)
             capture_reader = self.capture if self.capture is not None else module.capture
-            report = capture_reader(installation, observer=_COUNTRY)
+            report = capture_reader(installation, observer=country)
         except Exception:
             capture_failed = True
 

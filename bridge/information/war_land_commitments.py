@@ -6,7 +6,7 @@ from .catalog import get_topic, validate_query
 from .model import InformationError, digest
 from .observation_time import dates_match
 from .sources import _result, _source_info
-from .trade_income import _context_reason, _identity
+from .trade_income import _identity, _observer_context_reason
 
 
 FIELD = 'land_commitment'
@@ -28,19 +28,19 @@ class NativeWarLandCommitmentsSource:
         topic = get_topic('W04')
         topic.update(source=type(self).__name__, status='available',
                      object_types=['war', 'country'], observer_roles=['actor'],
-                     observer_scope=['FRA'], supported_versions=['1.37.4'],
+                     observer_scope=[], supported_versions=['1.37.4'],
                      context_scope='country_scope', visibility='visible_scope',
                      triggers=['query', 'periodic', 'change'],
                      change_detection='sampled_selected_beneficiary_or_complete_war_land_flags',
                      change_scope={'fields': [FIELD]},
-                     scope_note='FRA当前战争，war按W01选择，country按受益国筛选。')
+                     scope_note='战争按 W01 选择，国家对象按观察国当前战争的受益国筛选。')
         topic['fields'] = {FIELD: {
             'coverage': 'partial', 'source': type(self).__name__, 'complete': False,
             'unit': 'land_commitments', 'scale': 1, 'period': 'current',
             'supported_object_types': ['war', 'country'],
             'basis': 'existing_R07_current_war_participant_land_flags',
             'paths': ['R07.land_commitments'], 'gaps': list(_GAPS),
-            'description': '当前土地标记、本方战争领袖及同战争中已观察的许诺发送方，范围为FRA当前战争。',
+            'description': '观察国当前战争中的土地标记、己方领袖及已有事件证据的许诺发送方。',
         }}
         return [topic]
 
@@ -65,8 +65,6 @@ class NativeWarLandCommitmentsSource:
                 raise InformationError('invalid_object', 'A beneficiary country is required')
         else:
             raise InformationError('invalid_object', 'Land commitments require a war or country')
-        if context is not None and context.get('observer') != 'FRA':
-            raise InformationError('observer_scope_mismatch', 'The supported observer is FRA')
         return normalized
 
     def _read_war(self, query, context):
@@ -86,16 +84,16 @@ class NativeWarLandCommitmentsSource:
         return upstream.get('fields', {}).get(_UPSTREAM_FIELD), proof, objects
 
     def read(self, query, context=None):
-        query = self.validate_query(query, context)
         before = self.context()
+        query = self.validate_query(query, before if context is None else context)
         objects = [deepcopy(query['object'])]
         fields = {name: {'status': 'unsupported', 'reason': 'W04_FIELD_NOT_IMPLEMENTED'}
                   for name in query['fields']}
         provenance = {'delegated_topic': 'R07', 'delegated_field': _UPSTREAM_FIELD,
                       'shared_reader': 'NativeCommitmentsSource', 'read_only': True,
-                      'scope': 'FRA_current_wars', 'gaps': list(_GAPS)}
+                      'scope': 'observer_current_wars', 'gaps': list(_GAPS)}
         if FIELD in fields:
-            reason = _context_reason(before, 'FRA')
+            reason = _observer_context_reason(before)
             if context is not None and (_identity(context) != _identity(before)
                     or not dates_match(context.get('game_date'), before.get('game_date'))):
                 reason = 'WAR_LAND_COMMITMENTS_CONTEXT_MISMATCH'
@@ -153,7 +151,7 @@ class NativeWarLandCommitmentsSource:
                 or source.get('name') != type(self).__name__
                 or source.get('session_id') != context.get('session_id')
                 or not isinstance(capture_hash, str) or _SHA.fullmatch(capture_hash) is None
-                or _context_reason(context, 'FRA')):
+                or _observer_context_reason(context)):
             return None
         return {'schema': 'information.change_comparison.v1',
                 'scope': 'W04.current_land_commitments.' + digest({

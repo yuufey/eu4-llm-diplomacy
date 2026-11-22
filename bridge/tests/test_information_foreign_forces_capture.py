@@ -116,14 +116,15 @@ def _put_force_graph(image: Any, target_pointer: int) -> None:
 
 
 def _make_image(profile: dict[str, Any], *, stats_allowed: bool = True,
-                human_fra: bool = False):
+                human_fra: bool = False, observer: str = "FRA"):
     image, bindings, _values = memory_fixture.make_reader({
-        "FRA": (122, 0x1200, 5),
+        observer: (122, 0x1200, 5),
         "POR": (189, 0x5500, 3),
         "ENG": (300, 0x4500, 9),
     }, count=310)
     refs = tech_fixture._write_capture_context(
-        image, country="ENG", admitted=True, physical_tag="POR", human_fra=human_fra)
+        image, country="ENG", admitted=True, physical_tag="POR", human_fra=human_fra,
+        observer=observer)
 
     image.put_u64(WORLD + visibility.WORLD_SETTINGS_OFFSET, SETTINGS)
     image.put_i32(SETTINGS + visibility.PUBLIC_OPTIONS_OFFSET,
@@ -152,19 +153,19 @@ def _make_image(profile: dict[str, Any], *, stats_allowed: bool = True,
 
 
 def _make_report(profile: dict[str, Any], *, stats_allowed: bool = True,
-                 human_fra: bool = False):
+                 human_fra: bool = False, observer: str = "FRA"):
     image, bindings, refs = _make_image(
-        profile, stats_allowed=stats_allowed, human_fra=human_fra)
-    return _make_report_from_image(profile, image, {"bindings": bindings, **refs})
+        profile, stats_allowed=stats_allowed, human_fra=human_fra, observer=observer)
+    return _make_report_from_image(profile, image, {"bindings": bindings, **refs}, observer=observer)
 
 
 def _make_report_from_image(profile: dict[str, Any], image: Any,
-                            fixture: dict[str, Any]):
+                            fixture: dict[str, Any], *, observer: str = "FRA"):
     source = TraceReader(image)
     wrapped = owner._FailureReplayReader(source)
     observation_error = None
     try:
-        observation = capture._observe(wrapped, MODULE_BASE, "ENG", profile)
+        observation = capture._observe(wrapped, MODULE_BASE, "ENG", profile, observer=observer)
     except Exception as exc:
         observation = None
         observation_error = f"{type(exc).__name__}:{exc}"
@@ -179,7 +180,7 @@ def _make_report_from_image(profile: dict[str, Any], image: Any,
         "schema": capture.SCHEMA,
         "status": "observed" if passed else "unknown",
         "completed": passed,
-        "request": {"country": "ENG", "observer": "FRA",
+        "request": {"country": "ENG", "observer": observer,
                     "creation_filetime": CREATION, "session_id": SESSION_ID},
         "profile_sha256": capture.PROFILE_SHA256,
         "identity": deepcopy(identity),
@@ -197,7 +198,7 @@ def _make_report_from_image(profile: dict[str, Any], image: Any,
         },
     }
     context = {
-        "observer": "FRA", "session_id": SESSION_ID,
+        "observer": observer, "session_id": SESSION_ID,
         "game_version": "1.37.4", "game_sha256": capture.EXE_SHA256,
         "game_date": GAME_DATE,
     }
@@ -266,6 +267,41 @@ def test_permission_denial_marks_force_fields_invisible_without_reading_groups(
         assert target["field_consistency"][field]["status"] == "invisible"
     assert not any(row["label"].startswith("force_statistics.")
                    for row in fixture["source"].read_log)
+
+
+@pytest.mark.parametrize('stats_allowed', [True, False])
+def test_f02_serves_forces_from_the_configured_observer(tmp_path, pinned_profile, stats_allowed):
+    from bridge.information import InformationService
+    from bridge.information.composite import CompositeSource
+    from bridge.information.foreign_technology import NativeForeignTechnologySource
+    from bridge.tests.test_information_foreign_technology import Base
+
+    report, context, creation, _ = _make_report(pinned_profile, observer='TUR',
+                                                stats_allowed=stats_allowed)
+    assert not capture.validate_capture(report, dict(context, observer='FRA'), creation, 'ENG')
+    base = Base(tmp_path, context, creation)
+    base.operator_observer = 'TUR'
+
+    def capture_forces(installation, *, country, observer):
+        assert (country, observer) == ('ENG', 'TUR')
+        return deepcopy(report)
+
+    adapter = NativeForeignTechnologySource(base, forces_capture=capture_forces)
+    service = InformationService(CompositeSource(base, [adapter]), tmp_path / 'information.sqlite3')
+    try:
+        result = service.query('foreign-forces-tur', [{
+            'topic': 'F02', 'object': {'type': 'country', 'country': 'ENG'},
+            'fields': ['visible_army', 'visible_navy', 'visibility'],
+        }])
+        fields = result['items'][0]['fields']
+        assert fields['visibility']['value']['army']['country_view']['observer'] == 'TUR'
+        if stats_allowed:
+            assert fields['visible_army']['value'] == 30
+            assert fields['visible_navy']['value'] == 3
+        else:
+            assert fields['visible_army']['status'] == fields['visible_navy']['status'] == 'invisible'
+    finally:
+        service.close()
 
 
 def test_unknown_stats_permission_skips_force_resource_reads(monkeypatch, pinned_profile):

@@ -1,6 +1,6 @@
 """Bounded membership/role evidence for the native country node-power sum.
 
-This leaf consumes an already validated FRA trade-income record and the
+This leaf consumes an already validated trade-income record and the
 country-resources 256-entry identity scan.  It does not scan the country table,
 call native functions, or read any country's power value.
 """
@@ -139,14 +139,13 @@ class _Trace:
 def _source_identity(trade_record: Any, country_scan: Any) -> dict[str, Any]:
     if not isinstance(trade_record, Mapping) or not _trade.validate_record(trade_record):
         raise _Unknown("trade_income_record_invalid")
-    if trade_record.get("country") != "FRA":
-        raise _Unknown("trade_income_country_mismatch")
+    country = trade_record.get("country")
     trade_pointer = _parse_pointer(trade_record.get("country_pointer"))
     trade_ref = _parse_u64_hex(trade_record.get("country_fullref_raw_hex"))
     trade_slot = trade_record.get("country_slot")
     if trade_pointer is None or trade_ref is None or not _is_int(trade_slot):
         raise _Unknown("trade_income_identity_invalid")
-    if (_country_refs._tag_from_fullref(trade_ref[0]) != "FRA"
+    if (_country_refs._tag_from_fullref(trade_ref[0]) != country
             or int.from_bytes(trade_ref[1][4:6], "little", signed=True) != trade_slot):
         raise _Unknown("trade_income_identity_invalid")
     if trade_record.get("country_fullref_address") != hex(
@@ -156,7 +155,7 @@ def _source_identity(trade_record: Any, country_scan: Any) -> dict[str, Any]:
 
     if not isinstance(country_scan, Mapping) or country_scan.get("status") != "observed":
         raise _Unknown("country_scan_not_observed")
-    if country_scan.get("requested_country") != "FRA":
+    if country_scan.get("requested_country") != country:
         raise _Unknown("country_scan_country_mismatch")
     if country_scan.get("scanned_entries") != MAX_SOURCE_SCAN_ENTRIES:
         raise _Unknown("country_scan_window_invalid")
@@ -191,12 +190,12 @@ def _source_identity(trade_record: Any, country_scan: Any) -> dict[str, Any]:
     table_index = match.get("table_index")
     if (handle_raw_pair is None or handle_value_parsed is None
             or handle_value_parsed != handle_raw_pair[0]
-            or handle_tag != "FRA" or not _is_int(handle_slot)
+            or handle_tag != country or not _is_int(handle_slot)
             or not _is_int(table_index)):
         raise _Unknown("country_scan_handle_invalid")
     raw_tag = _country_refs._tag_from_fullref(handle_raw_pair[0])
     raw_slot = int.from_bytes(handle_raw_pair[1][4:6], "little", signed=True)
-    if raw_tag != "FRA" or raw_slot != handle_slot:
+    if raw_tag != country or raw_slot != handle_slot:
         raise _Unknown("country_scan_handle_invalid")
 
     if (scan_pointer is None or match_pointer is None or scan_pointer != match_pointer
@@ -246,7 +245,7 @@ def _unknown(reason: str, trace: _Trace, *, private: Mapping[str, Any] | None = 
 
 def read_fields(reader: Any, module_base: int, trade_income_record: Any,
                 country_scan: Any) -> dict[str, Any]:
-    """Verify FRA's unique membership and NPC observer role with bounded reads."""
+    """Verify the selected country’s unique membership and NPC role."""
     trace = _Trace(reader)
     private: dict[str, Any] = {}
     membership: dict[str, Any] = {}

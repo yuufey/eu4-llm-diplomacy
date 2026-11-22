@@ -3,6 +3,7 @@ from pathlib import Path
 from copy import deepcopy
 import hashlib
 import json
+import re
 
 from . import foreign_country_memory as _countries
 from . import foreign_technology_capture as _owner
@@ -80,10 +81,10 @@ def _observe_for(fields):
     return observe
 
 
-def capture(installation, fields):
-    return _owner._capture_common(installation, 'FRA', observer='FRA', schema=SCHEMA,
+def capture(installation, fields, observer='FRA'):
+    return _owner._capture_common(installation, observer, observer=observer, schema=SCHEMA,
         profile_sha256=PROFILE_SHA256, load_profile=_load_profile, observe=_observe_for(fields),
-        allow_observer_target=True)
+        allow_observer_target=True, observer_scoped=True)
 
 
 def read(source, query, context):
@@ -109,7 +110,9 @@ def read(source, query, context):
                         'observer_nonplayer_role_verified': False}))
 
     session = getattr(source, 'session', None)
-    if session is None or query['object'].get('country') != 'FRA':
+    observer = context.get('observer')
+    if (session is None or not isinstance(observer, str) or not re.fullmatch(r'[A-Z0-9]{3}', observer)
+            or query['object'].get('country') != observer):
         return unavailable('MAX_MANPOWER_CACHE_SCOPE_UNAVAILABLE')
     directory = getattr(session, 'directory', None)
     if directory is None:
@@ -117,10 +120,11 @@ def read(source, query, context):
     if not fields or set(fields) - _CACHE_FIELDS:
         return unavailable('MAX_MANPOWER_CACHE_FIELDS_UNAVAILABLE')
     try:
-        report = capture(Path(directory) / 'installation.json', fields)
-        valid = _owner._validate_capture_common(report, context, session.record['creation_filetime'], 'FRA',
+        report = capture(Path(directory) / 'installation.json', fields, observer)
+        valid = _owner._validate_capture_common(report, context, session.record['creation_filetime'], observer,
             schema=SCHEMA, profile_sha256=PROFILE_SHA256, load_profile=_load_profile,
-            observe=_observe_for(fields), allow_observer_target=True, require_access=True)
+            observe=_observe_for(fields), allow_observer_target=True, require_access=True,
+            observer_scoped=True)
         if not valid:
             return unavailable('MAX_MANPOWER_CACHE_CAPTURE_INVALID')
         after = source.context()

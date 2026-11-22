@@ -16,7 +16,7 @@ from .model import InformationError, canonical
 from .sources import _result, _source_info
 from .trade_income import (
     NativeTradeIncomeSource,
-    _context_reason as _base_reason,
+    _observer_context_reason as _base_reason,
     _identity,
     _session_binding,
 )
@@ -126,7 +126,7 @@ def _valid_i32(value: Any) -> bool:
     return type(value) is int and _INT32_MIN <= value <= _INT32_MAX
 
 
-def _positive_admission(value: Any) -> bool:
+def _positive_admission(value: Any, observer: str) -> bool:
     if not isinstance(value, Mapping):
         return False
     role = value.get("observer_nonplayer_role")
@@ -135,7 +135,7 @@ def _positive_admission(value: Any) -> bool:
         and type(value.get("admitted")) is bool
         and value["admitted"] is True
         and isinstance(role, Mapping)
-        and role.get("observer") == "FRA"
+        and role.get("observer") == observer
         and role.get("verified") is True
     )
 
@@ -149,7 +149,7 @@ def _positive_discovery(value: Any) -> bool:
     )
 
 
-def _backend_target(report: Any, province_id: int,
+def _backend_target(report: Any, province_id: int, observer: str,
                     projection_version: int = 1) -> tuple[dict[str, Any] | None, str | None]:
     outer_schema = SCHEMA_V2 if projection_version == 2 else SCHEMA
     inner_schema = INNER_SCHEMA_V2 if projection_version == 2 else INNER_SCHEMA
@@ -157,7 +157,7 @@ def _backend_target(report: Any, province_id: int,
         return None, "PROVINCE_GOODS_SOURCES_CAPTURE_INVALID"
     if report.get("schema") != outer_schema:
         return None, "PROVINCE_GOODS_SOURCES_CAPTURE_INVALID"
-    if report.get("observer") != "FRA":
+    if report.get("observer") != observer:
         return None, "PROVINCE_GOODS_SOURCES_CAPTURE_OBSERVER_MISMATCH"
     outer = report.get("object")
     if (not isinstance(outer, Mapping) or set(outer) != {"type", "province_id"}
@@ -176,8 +176,8 @@ def _backend_target(report: Any, province_id: int,
     if (not isinstance(backend, Mapping) or backend.get("status") != "observed"
             or not isinstance(consistency, Mapping) or consistency.get("status") != "stable"):
         return None, "PROVINCE_GOODS_SOURCES_BACKEND_UNSTABLE"
-    observer = backend.get("observer")
-    if not isinstance(observer, Mapping) or observer.get("tag") != "FRA":
+    backend_observer = backend.get("observer")
+    if not isinstance(backend_observer, Mapping) or backend_observer.get("tag") != observer:
         return None, "PROVINCE_GOODS_SOURCES_BACKEND_OBSERVER_MISMATCH"
     targets = backend.get("targets")
     if not isinstance(targets, list) or len(targets) != 1 or not isinstance(targets[0], Mapping):
@@ -188,7 +188,7 @@ def _backend_target(report: Any, province_id: int,
     admissions = target.get("admission_by_pass")
     discoveries = target.get("discovery_by_pass")
     if (not isinstance(admissions, Mapping) or not isinstance(discoveries, Mapping)
-            or any(not _positive_admission(admissions.get(phase)) for phase in _PASSPHASES)
+            or any(not _positive_admission(admissions.get(phase), observer) for phase in _PASSPHASES)
             or any(not _positive_discovery(discoveries.get(phase)) for phase in _PASSPHASES)):
         return None, "PROVINCE_GOODS_SOURCES_ADMISSION_OR_DISCOVERY_UNVERIFIED"
     field_consistency = target.get("field_consistency")
@@ -506,9 +506,8 @@ class NativeProvinceGoodsSourceBreakdownSource(NativeTradeIncomeSource):
         parameters = query.get("parameters", {})
         if not isinstance(parameters, dict) or parameters:
             raise InformationError("invalid_parameters", "N09 province breakdown has no extra parameters")
-        if context is not None and (not isinstance(context, dict)
-                                    or context.get("observer") not in (None, "FRA")):
-            raise InformationError("observer_scope_mismatch", "N09 province breakdown is verified for logical FRA")
+        if context is not None and not isinstance(context, dict):
+            raise InformationError("invalid_context", "N09 province breakdown context must be an object")
         normalized = {
             "topic": "N09", "object": deepcopy(obj), "fields": [FIELD], "parameters": {},
         }
@@ -517,7 +516,7 @@ class NativeProvinceGoodsSourceBreakdownSource(NativeTradeIncomeSource):
 
     @staticmethod
     def _context_reason(context: Any) -> str | None:
-        reason = _base_reason(context, "FRA")
+        reason = _base_reason(context)
         return reason.replace("TRADE_INCOME_", "PROVINCE_GOODS_SOURCES_", 1) if reason else None
 
     def _result_for(self, query: dict[str, Any], context: dict[str, Any], field: dict[str, Any],
@@ -543,8 +542,9 @@ class NativeProvinceGoodsSourceBreakdownSource(NativeTradeIncomeSource):
         current = deepcopy(context) if isinstance(context, dict) else self.context()
         normalized = self.validate_query(query, current)
         province_id = normalized["object"]["province_id"]
+        observer = current.get("observer")
         provenance: dict[str, Any] = {
-            "observer": "FRA", "province_id": province_id,
+            "observer": observer, "province_id": province_id,
             "read_only": True, "native_function_invoked": False,
             "basis": BASIS_V2 if self.projection_version == 2 else BASIS,
             "full_source_coverage": False,
@@ -588,7 +588,7 @@ class NativeProvinceGoodsSourceBreakdownSource(NativeTradeIncomeSource):
         report = None
         capture_error = None
         try:
-            report = capture(installation, province_id=province_id, observer="FRA")
+            report = capture(installation, province_id=province_id, observer=observer)
         except Exception as exc:
             capture_error = f"PROVINCE_GOODS_SOURCES_CAPTURE_FAILED:{type(exc).__name__}"
         try:
@@ -614,7 +614,7 @@ class NativeProvinceGoodsSourceBreakdownSource(NativeTradeIncomeSource):
         if valid is not True:
             return self._failure(normalized, before, "PROVINCE_GOODS_SOURCES_CAPTURE_INVALID", provenance)
 
-        target, envelope_error = _backend_target(report, province_id, self.projection_version)
+        target, envelope_error = _backend_target(report, province_id, observer, self.projection_version)
         if target is None:
             return self._failure(normalized, before,
                                  envelope_error or "PROVINCE_GOODS_SOURCES_CAPTURE_INVALID", provenance)

@@ -13,6 +13,7 @@ RECORD_CAPABILITY = 'native_alliance_record_observation'
 ROYAL_RECORD_CAPABILITY = 'native_royal_record_observation'
 DIRECTED_RECORD_CAPABILITY = 'native_directed_record_observation'
 SUPPORT_SUBJECT_RECORD_CAPABILITY = 'native_support_subject_record_observation'
+SCOPED_CAPABILITY = 'native_relation_change_configured_observers'
 EVENT_TYPE = 'relation_changed'
 NATIVE_EVENT = 'native_relation_changed'
 NATIVE_GAP = 'native_relation_capture_gap'
@@ -27,6 +28,7 @@ DIRECTED_RECORD_SOURCE = 'relation_command_or_alliance_or_royal_or_directed_reco
 DIRECTED_RECORD_SCOPE = 'FRA_pair_at_six_relation_command_or_alliance_or_royal_or_directed_record_returns'
 SUPPORT_SUBJECT_RECORD_SOURCE = 'relation_command_or_six_family_record_return_actual_pair_state'
 SUPPORT_SUBJECT_RECORD_SCOPE = 'FRA_pair_at_six_relation_command_or_six_family_record_returns'
+CONFIGURED_RECORD_SCOPE = 'configured_observer_pair_at_six_relation_command_or_six_family_record_returns'
 RECORD_DATE_SEMANTICS = 'native_relation_command_or_record_return_game_date'
 DATE_SEMANTICS_BY_SCOPE = {
     SCOPE: DATE_SEMANTICS,
@@ -34,6 +36,7 @@ DATE_SEMANTICS_BY_SCOPE = {
     ROYAL_RECORD_SCOPE: RECORD_DATE_SEMANTICS,
     DIRECTED_RECORD_SCOPE: RECORD_DATE_SEMANTICS,
     SUPPORT_SUBJECT_RECORD_SCOPE: RECORD_DATE_SEMANTICS,
+    CONFIGURED_RECORD_SCOPE: RECORD_DATE_SEMANTICS,
 }
 MAX_EVENTS = 1024
 KINDS = ('alliance', 'royal_marriage', 'military_access', 'guarantee', 'support_independence', 'subject')
@@ -104,12 +107,13 @@ def _valid_payload(payload, date, scope):
         return False
     expected_fields = (_PAYLOAD_FIELDS if scope == SCOPE else _RECORD_PAYLOAD_FIELDS
                        if scope in DATE_SEMANTICS_BY_SCOPE else None)
+    country = payload.get('country')
     if (expected_fields is None or set(payload) != expected_fields
-            or payload.get('country') != 'FRA' or payload.get('scope') != scope
+            or (scope != CONFIGURED_RECORD_SCOPE and country != 'FRA') or payload.get('scope') != scope
             or not _integer(date, 1, 2**31 - 1)
             or any(not isinstance(payload[key], str) or _TAG.fullmatch(payload[key]) is None
                    for key in ('actor', 'recipient'))
-            or payload['actor'] == payload['recipient'] or 'FRA' not in (payload['actor'], payload['recipient'])
+            or payload['actor'] == payload['recipient'] or country not in (payload['actor'], payload['recipient'])
             or not isinstance(payload['relation_kind'], str) or payload['relation_kind'] not in KINDS):
         return False
     if scope == SCOPE:
@@ -127,7 +131,7 @@ def _valid_payload(payload, date, scope):
             return False
     else:
         path = payload.get('observation_path')
-        paths = (_SUPPORT_SUBJECT_RECORD_PATHS if scope == SUPPORT_SUBJECT_RECORD_SCOPE else
+        paths = (_SUPPORT_SUBJECT_RECORD_PATHS if scope in (SUPPORT_SUBJECT_RECORD_SCOPE, CONFIGURED_RECORD_SCOPE) else
                  _DIRECTED_RECORD_PATHS if scope == DIRECTED_RECORD_SCOPE else _ROYAL_RECORD_PATHS)
         if not isinstance(path, str) or path not in paths:
             return False
@@ -227,7 +231,7 @@ def scope_for_capabilities(capabilities):
     if SUPPORT_SUBJECT_RECORD_CAPABILITY in caps:
         if not {RECORD_CAPABILITY, ROYAL_RECORD_CAPABILITY, DIRECTED_RECORD_CAPABILITY} <= caps:
             return None
-        return SUPPORT_SUBJECT_RECORD_SCOPE
+        return CONFIGURED_RECORD_SCOPE if SCOPED_CAPABILITY in caps else SUPPORT_SUBJECT_RECORD_SCOPE
     if DIRECTED_RECORD_CAPABILITY in caps:
         if RECORD_CAPABILITY not in caps or ROYAL_RECORD_CAPABILITY not in caps:
             return None
@@ -257,6 +261,9 @@ def public_observation(event, session_id):
     elif event['schema_version'] == 5:
         fields, payload_fields, scope, expected_source = (
             _RECORD_NATIVE_FIELDS, _RECORD_PAYLOAD_FIELDS, SUPPORT_SUBJECT_RECORD_SCOPE, SUPPORT_SUBJECT_RECORD_SOURCE)
+    elif event['schema_version'] == 6:
+        fields, payload_fields, scope, expected_source = (
+            _RECORD_NATIVE_FIELDS, _RECORD_PAYLOAD_FIELDS, CONFIGURED_RECORD_SCOPE, SUPPORT_SUBJECT_RECORD_SOURCE)
     else:
         return None
     if (set(event) != fields or event.get('event') != NATIVE_EVENT
@@ -292,8 +299,8 @@ def valid_event_snapshot(event, context):
     if date_semantics is None:
         return False
     if (not isinstance(session_id, str) or not session_id or len(session_id) > 256
-            or event.get('session_id') != session_id or event.get('observer') != 'FRA'
-            or context.get('observer') != 'FRA' or context.get('game_sha256') != GAME_SHA256
+            or event.get('session_id') != session_id or event.get('observer') != payload.get('country')
+            or context.get('observer') != payload.get('country') or context.get('game_sha256') != GAME_SHA256
             or event.get('event_type') != EVENT_TYPE or event.get('complete') is not True
             or not _valid_payload(payload, event.get('game_date'), scope) or event.get('objects') != objects(payload)
             or not isinstance(source, dict) or source.get('session_id') != session_id
@@ -310,7 +317,7 @@ class Collector(NativeChangeCollector):
             health_key='relation_source', prefix='RELATION', decoder=public_observation, max_events=MAX_EVENTS)
 
     def observe(self, event, *, allow_record=False, allow_royal_record=False, allow_directed_record=False,
-                allow_support_subject_record=False):
+                allow_support_subject_record=False, allow_scoped=False):
         if (isinstance(event, dict) and event.get('session_id') == self.session_id
                 and event.get('event') == self.native_event):
             expected_version = (5 if allow_support_subject_record is True and allow_directed_record is True
@@ -319,6 +326,8 @@ class Collector(NativeChangeCollector):
                                 and allow_royal_record is True else
                                 3 if allow_record is True and allow_royal_record is True else
                                 2 if allow_record is True else 1)
+            if expected_version == 5 and allow_scoped:
+                expected_version = 6
             if type(event.get('schema_version')) is not int or event['schema_version'] != expected_version:
                 self.gaps.add(self.prefix+'_OBSERVATION_INVALID')
                 return

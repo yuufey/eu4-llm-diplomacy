@@ -91,8 +91,9 @@ def _validate_requested(requested_methods: Any) -> list[str]:
 
 def _validate_context(context: Any) -> tuple[Mapping[str, Any], str, Any, str]:
     context = _mapping(context, "context", "context_invalid")
-    if context.get("observer") != "FRA":
-        _fail("observer_scope_mismatch", "Custom text derivation is bound to the FRA observer")
+    observer = context.get("observer")
+    if not isinstance(observer, str) or re.fullmatch(r"[A-Z0-9]{3}", observer) is None:
+        _fail("observer_scope_mismatch", "Custom text derivation requires a country observer")
     if context.get("status") != "ready" or context.get("mode") != "live":
         _fail("context_invalid", "custom text derivation requires a ready live context")
     session_id = context.get("session_id")
@@ -133,7 +134,7 @@ def _validate_shell(report: Any, context: Any, requested: list[str]) -> Mapping[
         _fail("request_invalid", "capture request does not match the observer or method list")
 
     query_scope = report["query_scope"]
-    if (query_scope.get("country") != "FRA"
+    if (query_scope.get("country") != context.get("observer")
             or query_scope.get("root_kind") != "country"
             or query_scope.get("binding") != "explicit_query_observer"
             or query_scope.get("ui_root_scope_verified") is not False):
@@ -257,7 +258,7 @@ def normalize_methods(report: Any, context: Any, requested_methods: Any) -> dict
         "session_id": session_id,
         "game_sha256": game_sha256,
         "game_date": game_date,
-        "country": "FRA",
+        "country": context_map["observer"],
         "root_binding": "explicit_query_observer_country",
         "ui_root_scope_verified": False,
         "selection_rule": "single_unconditional_positive_weight",

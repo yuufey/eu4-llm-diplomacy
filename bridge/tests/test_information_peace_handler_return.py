@@ -36,8 +36,14 @@ def handler_fixture(tmp_path_factory):
     start = execution.index('        const ExecutionGameDate result_date_begin=execution_game_date();',
                             execution.index('extern "C" int bridge_execution_execute('))
     boundary = execution[start:execution.index('        if (binding.sender) {', start)]
-    start = peace.index('static void execution_peace_response(')
-    formatter = peace[start:peace.index('static void execution_peace_pending_results(', start)]
+    start = peace.index('static void execution_peace_inbound_unknown(')
+    formatter = peace[start:peace.index('static ExecutionBinding execution_peace_deferred_binding(', start)]
+    start = peace.index('struct ExecutionPeaceDeferredResult')
+    spool = peace[start:peace.index('static bool execution_peace_seen_request_id(', start)]
+    start = peace.index('static bool execution_peace_defer_result(')
+    spool += peace[start:peace.index('static bool execution_peace_set_paths(', start)]
+    start = peace.index('static ExecutionBinding execution_peace_deferred_binding(')
+    spool += peace[start:peace.index('static void execution_peace_tick(', start)]
     preamble = r'''
 #include <cassert>
 #include <cstdint>
@@ -47,7 +53,7 @@ def handler_fixture(tmp_path_factory):
 #include <string>
 #include <vector>
 enum class ActionFamily { peace, alliance };
-struct Payload { ActionFamily family=ActionFamily::peace; };
+struct Payload { ActionFamily family=ActionFamily::peace; int32_t state34=2; };
 struct PeaceRequest {
     char request_id[65]="synthetic-peace-return";
     char action_id[25]="white_peace";
@@ -59,18 +65,36 @@ struct ResponseRequest {
     char session_id[28]="synthetic-peace-session";
     char request_id[65]="synthetic-peace-return";
     char original_actor[4]="ENG",decision[7]="accept";
+    char decision_country[4]="FRA";
     int32_t date_raw=56566512;
 };
 struct ExecutionBinding {
+    bool used=true,response_queued=false;
     bool sender=true,consumed=true,transport_verified=true,invalidated=false;
     bool inbound_response_request=true,alliance_before_verified=true,alliance_before=true;
     bool peace_handler_returned=false,peace_effects_supported=false;
+    uint64_t pending_proposal_id=10,pending_generation=12;
     Payload payload{};
     PeaceRequest peace_request{};
     ResponseRequest response_request{};
     char peace_war_id[30]="war_0123456789abcdef_00000001";
     int peace_effects_before=0;
 };
+namespace bridge_alliance_inbound_detail { constexpr unsigned kQueueCapacity=64; }
+using AlliancePayload=Payload;
+using PeaceExecutionRequest=PeaceRequest;
+using PeaceEffectState=int;
+static bool pending_readable=false,pending_active=true,pending_retained=true,war_readable=false;
+static bool inbound_pending_is_active(uint64_t id,uint64_t generation,bool& active,bool* retained) {
+    assert(id==10 && generation==12);
+    active=pending_active;
+    *retained=pending_retained;
+    return pending_readable;
+}
+static bool execution_peace_war_state(const Payload&,bool& active) {
+    active=false;
+    return war_readable;
+}
 struct ResponseScope { bool active=false;unsigned parent_slot=13; };
 static ResponseScope execution_response_scope{};
 static void* execution_entry_original=nullptr;
@@ -152,7 +176,24 @@ int main(int argc,char** argv) {
     const int returned=run_target(binding);
     assert(!execution_response_scope.active && execution_response_scope.parent_slot==13);
     if (mode=="unbound") binding.transport_verified=false;
-    if (mode=="flush_later" || mode=="tight_buffer" || mode=="line_budget") {
+    if (mode=="spool_reused" || mode=="spool_gone" || mode=="spool_removal_proven") {
+        assert(execution_peace_defer_result(binding));
+        std::strcpy(binding.response_request.request_id,"reused-by-another-request");
+        execution_peace_pending_results(); // Locked or unreadable pending list.
+        pending_readable=true;
+        execution_peace_pending_results(); // Still present in the native list.
+        if (mode=="spool_removal_proven") {
+            pending_active=false;
+            execution_peace_pending_results(); // Removal proven; war read unavailable.
+        }
+        const bool still_found=mode=="spool_reused";
+        pending_readable=still_found;
+        pending_retained=still_found;
+        pending_active=false;
+        war_readable=true;
+        execution_peace_pending_results();
+        execution_peace_pending_results(); // Results are emitted once.
+    } else if (mode=="flush_later" || mode=="tight_buffer" || mode=="line_budget") {
         const int32_t captured=execution_result_game_date(&saved_begin);
         current_date+=240;
         char small[32]="{\"outcome\":\"accepted\"}\n";
@@ -160,7 +201,8 @@ int main(int argc,char** argv) {
         if (mode=="line_budget") {
             const std::string text="{\"outcome\":\"accepted\",\"padding\":\""
                 +std::string(256u*1024u-82u,'x')+"\"}\n";
-            std::vector<char> buffer(text.size()+512u,0);
+            std::vector<char> buffer(256u*1024u+512u,0);
+            assert(text.size()<buffer.size());
             std::memcpy(buffer.data(),text.data(),text.size());
             execution_result_line(buffer.data(),buffer.size(),captured);
         } else if (mode=="tight_buffer") execution_result_line(small,sizeof(small),captured);
@@ -177,12 +219,27 @@ int main(int argc,char** argv) {
     directory = tmp_path_factory.mktemp('peace-handler-return')
     source = directory / 'fixture.cpp'
     executable = directory / 'fixture.exe'
-    source.write_text(preamble + date_struct + date_helpers + original + formatter + runner, encoding='utf-8')
+    source.write_text(preamble + date_struct + date_helpers + original + formatter + spool + runner,
+                      encoding='utf-8')
     built = subprocess.run([compiler, '-std=c++17', '-O2', '-Wall', '-Wextra', '-Werror',
                             str(source), '-o', str(executable)], capture_output=True, text=True,
                            cwd=ROOT, timeout=45)
     assert built.returncode == 0, built.stderr
     return executable
+
+
+@pytest.mark.parametrize('mode,outcome', [
+    ('spool_reused', 'accepted'),
+    ('spool_gone', 'unknown'),
+    ('spool_removal_proven', 'accepted'),
+])
+def test_pending_peace_result_keeps_evidence_after_slot_reuse(handler_fixture, mode, outcome):
+    result = subprocess.run([str(handler_fixture), mode], capture_output=True, text=True, timeout=10)
+    assert result.returncode == 0, result.stderr
+    response, stats = [json.loads(line) for line in result.stdout.splitlines()]
+    assert response['request_id'] == 'synthetic-peace-return'
+    assert response['outcome'] == outcome
+    assert stats['entry_forwards'] == 1
 
 
 @pytest.mark.parametrize('mode,outcome,forwards,returned,invalidations', [

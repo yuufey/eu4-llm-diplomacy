@@ -10,6 +10,7 @@ from collections.abc import Mapping
 from typing import Any
 
 from . import province_state_memory
+from .foreign_country_memory import _tag_ok
 
 
 SOURCE = "province_state_memory.read_two_pass"
@@ -22,7 +23,7 @@ MAX_CACHED_BYTES = MAX_CACHED_ENTRIES * 8
 IDENTITY_SAMPLING = "shared_two_pass_country_scan_per_trigger_snapshot"
 COMMON_INPUT_SAMPLING = "shared_two_pass_observer_and_domain_inputs_per_trigger_snapshot"
 
-# These reads depend on the same FRA observer/country table/province domain,
+# These reads depend on the same observer, country table and province domain,
 # not on the selected province. Keep this an exact whitelist: province ID,
 # discovery and source owner/controller fullrefs must still be read afresh.
 _SHARED_INPUT_LABELS = frozenset({
@@ -212,12 +213,13 @@ def _read_province_state(read: Any, module_base: int, province_id: int,
     """
     if type(province_id) is not int or not 1 <= province_id <= MAX_PROVINCE_ID:
         return _unknown("province_id_invalid")
-    if type(observer) is not str or observer != "FRA":
+    if not _tag_ok(observer):
         return _unknown("observer_scope_invalid")
 
     try:
+        options = {'observer_scoped': True} if observer != 'FRA' else {}
         report = province_state_memory.read_two_pass(
-            read, module_base, province_id, observer=observer, fields=FIELDS)
+            read, module_base, province_id, observer=observer, fields=FIELDS, **options)
     except Exception:
         return _unknown("province_state_read_failed")
     if not isinstance(report, Mapping):
@@ -285,7 +287,6 @@ def _read_province_state(read: Any, module_base: int, province_id: int,
     # This exact binding is returned by country_reference_memory and is
     # cross-pass checked by province_state_memory. It lets the caller compare
     # this observer with its separately tracked task-root country pointer.
-    observer = "FRA"
     observer_bindings = report.get("observer", {}).get("bindings_by_pass") if isinstance(
         report.get("observer"), Mapping) else None
     observer_identity = _observer_identity(observer_bindings, observer)
@@ -308,7 +309,7 @@ def read_province_state(read: Any, module_base: int, province_id: int,
         return _unknown("province_state_projection_failed")
 
 
-def make_province_reader():
+def make_province_reader(*, observer: str = 'FRA'):
     """Create bounded shared-input caches for one outer trigger snapshot.
 
     Every target still passes through the existing two-pass reader. Country
@@ -370,7 +371,7 @@ def make_province_reader():
                 byte_count += size
             return raw
 
-        result = read_province_state(tracked_read, module_base, province_id)
+        result = read_province_state(tracked_read, module_base, province_id, observer=observer)
         if phase_error is not None:
             return _unknown(phase_error)
         if result.get("status") != "known":

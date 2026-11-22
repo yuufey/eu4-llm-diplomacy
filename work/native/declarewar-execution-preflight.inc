@@ -45,12 +45,10 @@ static bool execution_declarewar_preflight(const ExecutionRequest& request,
     DeclareWarCandidateSelection selection{};
     selection.casus_belli=request.casus_belli;
     selection.province_id=request.war_goal_province;
-    if (!strcmp(request.war_goal_beneficiary,request.actor))
-        selection.beneficiary_handle=actor;
-    else if (strcmp(request.war_goal_beneficiary,"---")
-        && !alliance_query_country(request.war_goal_beneficiary,selection.beneficiary_handle))
-        return false;
     const bool no_cb=!strcmp(request.casus_belli,"no_casus_belli");
+    if (!declarewar_candidates_resolve_beneficiary(
+            selection,request.war_goal_beneficiary,request.actor,actor,no_cb)) return false;
+    uint64_t selected_beneficiary=0;
     if (no_cb) {
         if (selection.province_id!=-1 || selection.beneficiary_handle) return false;
     } else {
@@ -63,6 +61,7 @@ static bool execution_declarewar_preflight(const ExecutionRequest& request,
             declarewar_candidates_release_selected_owned(candidates.selected_owned);
             return false;
         }
+        selected_beneficiary=candidates.selected_beneficiary_handle;
         memcpy(action+0x48,&candidates.selected_owned,sizeof(candidates.selected_owned));
         candidates.selected_owned=0; // ownership transferred to native action
     }
@@ -111,7 +110,7 @@ static bool execution_declarewar_preflight(const ExecutionRequest& request,
     uint64_t beneficiary=0;
     if (!no_cb && (payload.war.owned.owned_field18!=static_cast<uint32_t>(request.war_goal_province)
         || !declarewar_candidates_normalize_beneficiary(payload.war.owned.owned_field38,beneficiary)
-        || beneficiary!=selection.beneficiary_handle)) return false;
+        || beneficiary!=selected_beneficiary)) return false;
     uintptr_t transport=0;
     return execution_world_dispatcher(dispatcher,transport);
 }

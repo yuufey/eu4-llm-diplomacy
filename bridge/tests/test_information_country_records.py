@@ -121,6 +121,22 @@ def test_modifier_ids_targets_and_definition_effects_use_one_validated_capture(t
     assert calls == [("FRA", {"include_country_modifiers": True})]
 
 
+def test_modifier_targets_bind_to_the_configured_non_fra_observer(tmp_path, monkeypatch):
+    adapter, base, report, calls = source(tmp_path, "country_modifiers", modifier_child())
+    context = dict(base.context(), observer="TUR")
+    monkeypatch.setattr(base, "context", lambda: deepcopy(context))
+    report["country"] = "TUR"
+    request = query("N07", ["target"])
+    with pytest.raises(ValueError, match="configured observer country"):
+        adapter.read(request, context)
+    assert calls == []
+
+    request["object"]["country"] = "TUR"
+    result = adapter.read(request, context)
+    assert calls == [("TUR", {"include_country_modifiers": True})]
+    assert result["fields"]["target"]["value"][0]["country"] == "TUR"
+
+
 def test_modifier_dates_come_from_instances_and_keep_default_start_unknown(tmp_path):
     adapter, base, _report_value, calls = source(tmp_path, "country_modifiers", modifier_child())
     result = adapter.read(query("N08", ["modifier_start_date", "modifier_end_date", "remaining_days", "duration_type"]), base.context())
@@ -135,9 +151,9 @@ def test_modifier_dates_come_from_instances_and_keep_default_start_unknown(tmp_p
 def test_ruler_modifier_type_preserves_its_separate_fixed_expiry():
     records = [{"key": "power_to_provinces", "start_date_raw": 43808760,
                 "date_raw": 56773248, "flags": {"ruler_modifier": 1}}]
-    assert _modifier_projection("duration_type", records, GAME_DATE) == [
+    assert _modifier_projection("duration_type", records, GAME_DATE, "FRA") == [
         {"modifier_id": "power_to_provinces", "status": "known", "value": "ruler_modifier"}]
-    assert _modifier_projection("modifier_end_date", records, GAME_DATE)[0]["value"] == 56773248
+    assert _modifier_projection("modifier_end_date", records, GAME_DATE, "FRA")[0]["value"] == 56773248
 
 
 @pytest.mark.parametrize("where", ["top", "before", "after"])
@@ -172,9 +188,9 @@ def test_parent_context_change_retracts_records(tmp_path):
 def test_unbounded_and_overdue_dates_preserve_the_native_duration_distinction():
     records = [dict(key="unbounded", start_date_raw=0x29C77F8, date_raw=43800000, flags={}, effects=[]),
                dict(key="overdue", start_date_raw=0x29C77F8, date_raw=GAME_DATE-48, flags={}, effects=[])]
-    assert _modifier_projection("remaining_days", records, GAME_DATE)[0]["status"] == "not_applicable"
-    assert _modifier_projection("duration_type", records, GAME_DATE)[0]["value"] == "no_fixed_end_date"
-    assert _modifier_projection("remaining_days", records, GAME_DATE)[1]["raw"] == -48
+    assert _modifier_projection("remaining_days", records, GAME_DATE, "FRA")[0]["status"] == "not_applicable"
+    assert _modifier_projection("duration_type", records, GAME_DATE, "FRA")[0]["value"] == "no_fixed_end_date"
+    assert _modifier_projection("remaining_days", records, GAME_DATE, "FRA")[1]["raw"] == -48
 
 
 @pytest.mark.parametrize("option", ["include_country_loans", "include_country_modifiers"])
