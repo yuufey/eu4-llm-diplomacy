@@ -62,7 +62,7 @@ class GameTimeControl:
             with self.lock.acquire(blocking=False) as acquired:
                 if not acquired:
                     raise InformationError("game_time_busy", "A clock request is already in progress")
-                if self.session.information_health().get("status") != "ready":
+                if self.session.physical_player_health(allow_date_progress=True).get("status") != "ready":
                     raise InformationError("source_unavailable", "The live O00 observer session is unready")
                 offset = self.log.stat().st_size
                 revision = time.time_ns()

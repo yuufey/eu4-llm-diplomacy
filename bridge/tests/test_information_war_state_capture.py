@@ -10,27 +10,28 @@ from bridge.tests.test_information_country_occupation_memory import put_province
 
 
 @pytest.mark.parametrize('stats_allowed', [True, False])
-def test_two_countries_share_country_scan_and_replay_all_requested_fields(monkeypatch, stats_allowed):
+@pytest.mark.parametrize('observer', ['FRA', 'TUR'])
+def test_two_countries_share_country_scan_and_replay_all_requested_fields(monkeypatch, stats_allowed, observer):
     fields = list(capture.FIELDS)
     profile = capture._load_profile(fields)
-    image, bindings, refs = _make_image(profile, stats_allowed=stats_allowed)
-    fra = bindings['FRA']['country_pointer']
-    image.put_u64(fra + 0xd18, 0)
-    image.put_u64(fra + 0x1338, 0)
-    image.put_i32(fra + 0x1344, 0)
+    image, bindings, refs = _make_image(profile, stats_allowed=stats_allowed, observer=observer)
+    own_country = bindings[observer]['country_pointer']
+    image.put_u64(own_country + 0xd18, 0)
+    image.put_u64(own_country + 0x1338, 0)
+    image.put_i32(own_country + 0x1344, 0)
     put_provinces(image, refs['target_fullref'],
         [refs['target_fullref'], refs['observer_fullref']], country=refs['target_pointer'],
         world=WORLD, blockaded=[1])
     monkeypatch.setattr(capture._owner, '_bound_admission', lambda *args: {
         'status': 'known', 'admitted': True, 'observer_nonplayer_role': {'verified': True}})
-    countries = ['ENG', 'FRA']
+    countries = ['ENG', observer]
     reader = TraceReader(image)
-    observation = capture._observe_for(countries, fields)(reader, MODULE_BASE, 'ENG', profile)
+    observation = capture._observe_for(countries, fields, observer)(reader, MODULE_BASE, 'ENG', profile)
     assert observation['stable'] is True
     targets = {row['tag']: row['fields'] for row in observation['backend']['targets']}
     assert targets['ENG']['W03.blockades']['value']['blockaded_provinces'] == 1
     assert targets['ENG']['W03.occupations']['value']['occupied_provinces'] == 1
-    assert targets['FRA']['W03.current_forces']['value'] == {
+    assert targets[observer]['W03.current_forces']['value'] == {
         'army_soldiers': {'status': 'known', 'value': 0},
         'navy_ships': {'status': 'known', 'value': 0}}
     assert targets['ENG']['W03.current_forces']['complete'] is stats_allowed
@@ -38,7 +39,8 @@ def test_two_countries_share_country_scan_and_replay_all_requested_fields(monkey
     report, context, creation, _ = make_valid_capture()
     report.update(schema=capture.SCHEMA, profile_sha256=capture.PROFILE_SHA256,
                   observation=observation, raw_reads=deepcopy(reader.read_log))
-    report['request'].update(countries=countries, fields=fields)
+    report['request'].update(countries=countries, fields=fields, observer=observer)
+    context['observer'] = observer
     report['access'] = {'read_only': True, 'native_function_invoked': False, 'writes': False,
         'UI_control': False, 'date_advance': False, 'save_or_reload': False,
         'limit_bytes': capture._owner.MAX_READ_BYTES,

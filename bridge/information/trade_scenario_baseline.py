@@ -91,7 +91,8 @@ def _sum_membership(report):
             return failure
         observed = records[1]["observation"]
         membership = observed["membership"]
-        value = {"observer": "FRA", "country_slot": observed["country_slot"],
+        country = report["after"]["trade_income"]["country"]
+        value = {"observer": country, "country_slot": observed["country_slot"],
             "member_count": membership["member_count"],
             "observer_occurrences": membership["observer_occurrences"],
             "fullref_occurrences": membership["fullref_occurrences"],

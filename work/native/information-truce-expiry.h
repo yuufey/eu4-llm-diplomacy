@@ -13,6 +13,11 @@ struct Context final {
     Address module = 0;
     std::int32_t date = 0;
     bool bound_frame_thread = false;
+    bool (*observable)(std::uint64_t) noexcept = nullptr;
+
+    bool observes(std::uint64_t reference) const noexcept {
+        return observable ? observable(reference) : (reference & 0xffffff) == 0x415246;
+    }
 };
 
 struct Value final {
@@ -69,7 +74,8 @@ inline Value value(const std::array<unsigned char, 0x48>& bytes, const Context& 
     Value result{};
     result.actor = shared::field<std::uint64_t>(bytes, 8);
     result.recipient = shared::field<std::uint64_t>(bytes, 0x10);
-    result.observer = (result.actor & 0xffffff) == 0x415246 ? result.actor : result.recipient;
+    result.observer = context.observes(result.actor) ? result.actor
+        : context.observes(result.recipient) ? result.recipient : 0;
     result.date = context.date;
     result.input = shared::field<std::int32_t>(bytes, 0x34);
     result.adjustment = shared::field<std::int8_t>(bytes, 0x24);
@@ -144,7 +150,7 @@ Decision begin(Reader& reader, const Context& context, Address instance, Pending
     Pending candidate{};
     candidate.value = detail::value(bytes, context);
     candidate.flags = bytes[0x45];
-    if (!(candidate.flags & 1) || (candidate.value.observer & 0xffffff) != 0x415246
+    if (!(candidate.flags & 1) || !candidate.value.observer
         || candidate.value.actor == candidate.value.recipient) return Decision::ignored;
     candidate.context = context;
     candidate.instance = instance;

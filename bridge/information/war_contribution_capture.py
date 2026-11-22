@@ -32,18 +32,18 @@ def _details(reader, base, field, profile):
     return {'contribution': _memory.read_contribution(reader, base, field, profile['war_contribution'])}
 
 
-def capture(installation):
+def capture(installation, *, observer='FRA'):
     installation = Path(installation)
     document = _owner._identity._load_installation(installation)
     descriptor = _registry_layout.descriptor_for_installation(installation)
 
     def observe(reader, base, country, profile):
         return _scale._capture_observe(reader, base, country, profile, document['creation_filetime'],
-                                      descriptor, war_details_reader=_details)
+                                      descriptor, war_details_reader=_details, observer=observer)
 
-    return _owner._capture_common(installation, 'FRA', observer='FRA', schema=SCHEMA,
+    return _owner._capture_common(installation, observer, observer=observer, schema=SCHEMA,
         profile_sha256=PROFILE_SHA256, load_profile=_load_profile, observe=observe,
-        allow_observer_target=True)
+        allow_observer_target=True, observer_scoped=True)
 
 
 def field_from_capture(report):
@@ -55,6 +55,7 @@ def field_from_capture(report):
 
 def validate_capture(report, context, creation):
     try:
+        observer = context['observer']
         metadata = report['observation']['observer_module_binding']
         profile = _load_profile()
         descriptor = None
@@ -70,8 +71,8 @@ def validate_capture(report, context, creation):
     def observe(reader, base, country, loaded_profile):
         return _scale._observe_with_metadata(reader, base, country, loaded_profile,
             module_before=before, module_after=after, expected_creation=creation,
-            registry_descriptor=descriptor, war_details_reader=_details)
+            registry_descriptor=descriptor, war_details_reader=_details, observer=observer)
 
-    return _owner._validate_capture_common(report, context, creation, 'FRA', schema=SCHEMA,
+    return _owner._validate_capture_common(report, context, creation, observer, schema=SCHEMA,
         profile_sha256=PROFILE_SHA256, load_profile=_load_profile, observe=observe,
-        allow_observer_target=True, require_access=True)
+        allow_observer_target=True, require_access=True, observer_scoped=True)

@@ -636,8 +636,8 @@ static bool inbound_pending_reserve(uint64_t proposal_id,const char* actor,
     return found;
 }
 
-static void inbound_pending_release(uint64_t proposal_id,uint64_t generation) noexcept {
-    if (!TryAcquireSRWLockExclusive(&inbound_pending_lock)) return;
+static bool inbound_pending_release(uint64_t proposal_id,uint64_t generation) noexcept {
+    if (!TryAcquireSRWLockExclusive(&inbound_pending_lock)) return false;
     for (auto& record:inbound_pending_records) {
         if (record.active && record.proposal_id==proposal_id
             && record.generation==generation && record.response_reserved
@@ -647,6 +647,7 @@ static void inbound_pending_release(uint64_t proposal_id,uint64_t generation) no
         }
     }
     ReleaseSRWLockExclusive(&inbound_pending_lock);
+    return true;
 }
 
 static bool inbound_pending_commit(uint64_t proposal_id,uint64_t generation) noexcept {
@@ -666,8 +667,9 @@ static bool inbound_pending_commit(uint64_t proposal_id,uint64_t generation) noe
 }
 
 static bool inbound_pending_is_active(uint64_t proposal_id,uint64_t generation,
-    bool& active) noexcept {
+    bool& active,bool* retained=nullptr) noexcept {
     active=false;
+    if (retained) *retained=true;
     if (!TryAcquireSRWLockExclusive(&inbound_pending_lock)) return false;
     for (auto& record:inbound_pending_records) {
         if (record.proposal_id!=proposal_id || record.generation!=generation) continue;
@@ -697,6 +699,7 @@ static bool inbound_pending_is_active(uint64_t proposal_id,uint64_t generation,
         ReleaseSRWLockExclusive(&inbound_pending_lock);
         return true;
     }
+    if (retained) *retained=false;
     ReleaseSRWLockExclusive(&inbound_pending_lock);
     return false;
 }

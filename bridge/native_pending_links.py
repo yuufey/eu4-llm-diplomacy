@@ -11,9 +11,11 @@ from .information import native_pending_memory as native
 def match_current_proposals(report, proposals, session_id):
     """Return only opaque public identifiers, keeping the native inventory intact."""
     first = report.get('before') if isinstance(report, dict) else None
+    observer = report.get('country') if isinstance(report, dict) else None
     if (not isinstance(first, dict) or first != report.get('after')
             or report.get('schema') != native.SCHEMA or report.get('status') != 'observed'
-            or report.get('country') != 'FRA' or report.get('game_sha256') != native.GAME_SHA256
+            or not isinstance(observer, str) or re.fullmatch(r'[A-Z0-9]{3}', observer) is None
+            or report.get('game_sha256') != native.GAME_SHA256
             or report.get('profile_sha256') != native.PROFILE_SHA256
             or report.get('read_only') is not True or report.get('consistent') is not True
             or report.get('native_function_invoked') is not False
@@ -27,14 +29,17 @@ def match_current_proposals(report, proposals, session_id):
             or first.get('player_country') != report.get('player_country')
             or not isinstance(report.get('player_country'), str)
             or re.fullmatch(r'[A-Z0-9]{3}', report['player_country']) is None
-            or report.get('player_country') == 'FRA'):
+            or report.get('player_country') == observer):
         raise ValueError('NATIVE_PENDING_PROPOSAL_PROOF_UNAVAILABLE')
-    value = native.validate_value(report['value'])
+    value = native.validate_value(report['value'], observer=observer)
     base = int(report['module_base']['va'], 0)
     if not 0x10000 <= base < 2**47 or base % 0x10000:
         raise ValueError('NATIVE_PENDING_PROPOSAL_BASE_INVALID')
     nodes = first['private']['nodes']
     recipient_ref = int(first['roots']['country_scan']['country_handle'], 0)
+    recipient_binding = proposal_expiry._reference(hex(recipient_ref))
+    if recipient_binding is None or recipient_binding[1] != observer:
+        raise ValueError('NATIVE_PENDING_PROPOSAL_RECIPIENT_INVALID')
     if not isinstance(nodes, list) or len(nodes) != len(value['entries']):
         raise ValueError('NATIVE_PENDING_PROPOSAL_NODES_INVALID')
     links = {}

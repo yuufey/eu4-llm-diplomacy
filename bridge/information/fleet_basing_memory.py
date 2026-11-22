@@ -568,8 +568,8 @@ def _valid_tag(tag: Any) -> bool:
 
 
 def _normalize_request(actor: Any, recipient: Any) -> None:
-    if actor != EXPECTED_COUNTRY or (recipient is not None and (not _valid_tag(recipient) or recipient == actor)):
-        raise ProbeError("actor_must_be_FRA_and_recipient_distinct_tag")
+    if not _valid_tag(actor) or (recipient is not None and (not _valid_tag(recipient) or recipient == actor)):
+        raise ProbeError("actor_or_recipient_tag_invalid")
 
 
 def _retract(report: dict[str, Any], reason: str) -> dict[str, Any]:
@@ -960,13 +960,12 @@ def validate_capture(report: Mapping[str, Any], context: Mapping[str, Any] | Non
         if creation_filetime is not None and identity.get("process_creation_filetime") != creation_filetime:
             return False
         request = report.get("request")
-        if not isinstance(request, Mapping) or request.get("actor") != (EXPECTED_COUNTRY if actor is None else actor):
+        if not isinstance(request, Mapping):
             return False
+        _normalize_request(request.get("actor"), request.get("recipient"))
         if actor is not None and request.get("actor") != actor:
             return False
         if recipient is not None and request.get("recipient") != recipient:
-            return False
-        if request.get("recipient") is not None and not _valid_tag(request.get("recipient")):
             return False
         if report.get("doublepass", {}).get("performed") is not True or report.get("doublepass", {}).get("consistent") is not True:
             return False

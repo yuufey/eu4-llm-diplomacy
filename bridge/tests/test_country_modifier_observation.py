@@ -179,6 +179,16 @@ def test_malformed_or_out_of_scope_native_rows_are_rejected(changes):
     assert observation.public_observation(event, SESSION_ID) is None
 
 
+def test_configured_modifier_scope_validates_turkish_fullref_and_rejects_mismatched_tags():
+    reference = (42 << 32) | int.from_bytes(b"TUR", "little")
+    event = native_event(country="TUR", country_fullref=hex(reference), schema_version=2)
+    assert observation.public_observation(event, SESSION_ID) is None
+    public = observation.public_observation(event, SESSION_ID, allow_scoped=True)
+    assert public["payload"]["country"] == "TUR"
+    assert public["payload"]["scope"] == observation.CONFIGURED_SCOPE
+    assert observation.public_observation(event | {"country": "ENG"}, SESSION_ID, allow_scoped=True) is None
+
+
 def test_missing_fields_and_wrong_session_are_rejected_or_ignored():
     missing = native_event()
     del missing["flags"]

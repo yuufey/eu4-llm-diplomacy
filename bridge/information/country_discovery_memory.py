@@ -11,6 +11,7 @@ import hashlib
 
 from . import country_reference_memory as _country
 from . import foreign_technology_capture as _owner
+from .foreign_country_memory import _tag_ok
 from . import province_discovery_memory as _shared
 from .model import canonical
 
@@ -21,8 +22,8 @@ MAX_READ_CALLS = _shared.MAX_READ_CALLS
 MAX_TOTAL_READ_BYTES = _shared.MAX_TOTAL_READ_BYTES
 
 
-def _unknown(reason, passes, budget):
-    return {'schema': SCHEMA, 'status': 'unknown', 'observer': OBSERVER,
+def _unknown(reason, passes, budget, observer):
+    return {'schema': SCHEMA, 'status': 'unknown', 'observer': observer if _tag_ok(observer) else None,
         'reason': str(reason)[:160], 'complete': False, 'domain_complete': False,
         'passes': passes, 'budget': budget.summary(), 'consistency': {'status': 'unknown'}}
 
@@ -52,7 +53,7 @@ def _candidates(scan):
     return candidates, excluded
 
 
-def _one_pass(reader, base, number, *, existence_reader=None):
+def _one_pass(reader, base, number, *, existence_reader=None, observer=OBSERVER):
     from .country_knowledge_memory import read_knowledge
 
     context = _owner._context(reader, base)
@@ -63,23 +64,24 @@ def _one_pass(reader, base, number, *, existence_reader=None):
     physical_tag = _country._tag_from_fullref(physical_ref)
     if physical_tag is None:
         raise ValueError('PHYSICAL_CLIENT_TAG_INVALID')
-    tags = [OBSERVER] if physical_tag == OBSERVER else [OBSERVER, physical_tag]
+    tags = [observer] if physical_tag == observer else [observer, physical_tag]
     scan = _country.resolve_countries(reader.read, base, tags,
         expected_refs={physical_tag: physical_ref})
     if scan.get('status') != 'observed':
         raise ValueError('COUNTRY_BINDINGS_UNAVAILABLE')
-    binding = _shared._country_binding(scan, OBSERVER)
+    binding = _shared._country_binding(scan, observer)
     physical = _shared._country_binding(scan, physical_tag)
-    gate = _shared._admission_summary(_owner._bound_admission(reader.read, base, scan, OBSERVER, OBSERVER))
+    gate = _shared._admission_summary(_owner._bound_admission(reader.read, base, scan, observer, observer))
     role = gate['observer_nonplayer_role']
     result = {'pass': number, 'status': 'unknown', 'reason': None,
         'bindings': {'observer': binding, 'physical_client': physical}, 'admission': gate,
         'context': {'before': context, 'after': None}, 'header': None, 'candidates': []}
     if (binding is None or physical is None or gate.get('status') != 'known'
             or gate.get('admitted') is not True or role.get('verified') is not True
-            or role.get('observer') != OBSERVER or type(role.get('slot')) is not int
+            or role.get('observer') != observer or type(role.get('slot')) is not int
             or role['slot'] != binding.get('slot')):
-        result['reason'] = 'FRA_SELF_ADMISSION_OR_ROLE_NOT_VERIFIED'
+        result['reason'] = ('FRA_SELF_ADMISSION_OR_ROLE_NOT_VERIFIED' if observer == OBSERVER
+                            else 'OBSERVER_SELF_ADMISSION_OR_ROLE_NOT_VERIFIED')
         return result
     if existence_reader is not None:
         existence = existence_reader(reader, base, binding)
@@ -122,7 +124,8 @@ def _one_pass(reader, base, number, *, existence_reader=None):
                     'status': 'known', 'value': False, 'exists': False, 'knowledge_evaluated': False,
                     'sample_sha256': hashlib.sha256(canonical(existence).encode()).hexdigest()})
                 continue
-        known = read_knowledge(reader, base, binding, candidate, header)
+        options = {'observer_tag': observer} if observer != OBSERVER else {}
+        known = read_knowledge(reader, base, binding, candidate, header, **options)
         row = {'tag': candidate['tag'], 'slot': candidate['slot'], 'status': known.get('status')}
         if known.get('status') != 'known' or type(known.get('value')) is not bool:
             row['reason'] = str(known.get('reason', 'COUNTRY_KNOWLEDGE_UNKNOWN'))[:160]
@@ -148,34 +151,35 @@ def _one_pass(reader, base, number, *, existence_reader=None):
     return result
 
 
-def _read_two_pass(reader, module_base, observer=OBSERVER, *, existence_reader=None):
+def _read_two_pass(reader, module_base, observer=OBSERVER, *, existence_reader=None, observer_scoped=False):
     budget = _shared._BudgetReader(reader)
     passes = []
-    if type(observer) is not str or observer != OBSERVER:
-        return _unknown('OBSERVER_SCOPE_INVALID', passes, budget)
+    if not _tag_ok(observer) or (not observer_scoped and observer != OBSERVER):
+        return _unknown('OBSERVER_SCOPE_INVALID', passes, budget, observer)
     if (type(module_base) is not int or not _country._is_user_address(module_base)
             or module_base & 7):
-        return _unknown('MODULE_BASE_INVALID', passes, budget)
+        return _unknown('MODULE_BASE_INVALID', passes, budget, observer)
     try:
         for number in (1, 2):
-            current = _one_pass(budget, module_base, number, existence_reader=existence_reader)
+            current = _one_pass(budget, module_base, number,
+                                existence_reader=existence_reader, observer=observer)
             passes.append(current)
             if current['status'] != 'known':
-                return _unknown(current['reason'], passes, budget)
+                return _unknown(current['reason'], passes, budget, observer)
         keys = ('bindings', 'admission', 'context', 'header', 'candidates',
                 'excluded_rows', 'country_table_count', 'country_index_sha256')
         if existence_reader is not None:
             keys += ('observer_existence',)
         changed = [key for key in keys if not _owner._same(passes[0].get(key), passes[1].get(key))]
         if changed:
-            result = _unknown('TWO_PASS_EVIDENCE_CHANGED', passes, budget)
+            result = _unknown('TWO_PASS_EVIDENCE_CHANGED', passes, budget, observer)
             result['consistency'] = {'status': 'changed', 'changed_components': changed}
             return result
     except Exception as error:
         reason = str(error) if isinstance(error, (ValueError, _shared._ReadStop)) else type(error).__name__
-        return _unknown(reason, passes, budget)
+        return _unknown(reason, passes, budget, observer)
     values = sorted(row['tag'] for row in passes[1]['candidates'] if row['value'])
-    result = {'schema': SCHEMA, 'status': 'known', 'observer': OBSERVER, 'value': values,
+    result = {'schema': SCHEMA, 'status': 'known', 'observer': observer, 'value': values,
         'basis': 'native_knows_country_for_ordinary_canonical_table_candidates',
         'complete': False, 'domain_complete': False,
         'scope': {'candidate_count': len(passes[1]['candidates']),

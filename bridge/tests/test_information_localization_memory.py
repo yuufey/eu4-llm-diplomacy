@@ -342,7 +342,7 @@ class LocalizationMemoryTests(unittest.TestCase):
         self.assertIsInstance(lm._fnv1_ascii(key), int)
 
     def test_request_scope_and_ascii_limits_close_without_opening(self):
-        report = lm.capture(Path("missing.json"), "ENG", ["name"])
+        report = lm.capture(Path("missing.json"), "invalid-tag", ["name"])
         self.assertEqual(report["status"], "unsupported_country")
         self.assertEqual(report["cleanup"]["handle_close"]["status"], "not_opened")
         invalid = lm.capture(Path("missing.json"), "FRA", ["bad\u2603"])

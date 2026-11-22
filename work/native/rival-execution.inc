@@ -23,6 +23,7 @@ struct Binding {
     char reason[80]{};
 };
 static Binding bindings[capacity]{};
+static uint64_t binding_session_epoch=0;
 static authority::RivalCommandAuthorityLedger ledger(0);
 static wchar_t request_path[MAX_PATH]{};
 static bool enabled=false;
@@ -127,7 +128,8 @@ static void rival_command_observer_on_load(const RivalCommandEvent& e) {
         || e.peer!=transport || !e.peer_readable) return;
     for (auto& b:bindings) {
         if (!b.used || b.invalidated || !b.serialized || b.claimed
-            || b.source.address!=e.outgoing || !payload_matches(b,e.target)) continue;
+            || b.source!=object_ref(e.source_ref) || b.source.address!=e.outgoing
+            || !payload_matches(b,e.target)) continue;
         const auto loaded=object_ref(e.target_ref);
         auto result=ledger.load_native(context(),b.seed,loaded,header(e.target),b.payload,true);
         if (result.result.ok()) { b.loaded=loaded; b.claim=result.ticket; b.claimed=true; }
@@ -232,6 +234,10 @@ static bool rival_execution_install() noexcept {
     if (!observation_creation || !request_path[0]
         || rival_command_observer_install_state!=2
         || !rival_authority_detail::rival_authority_installed) return false;
+    if (binding_session_epoch!=observation_creation) {
+        for (auto& b:bindings) b=Binding{};
+        binding_session_epoch=observation_creation;
+    }
     ledger.reset_session_epoch(observation_creation);
     enabled=true;
     return true;
@@ -255,12 +261,16 @@ static void rival_execution_tick() {
     if (!parsed.ok()) {
         line("{\"event\":\"native_rival_wire_rejected\",\"submitted\":false}\n"); return;
     }
-    for (const auto& b:bindings)
-        if (b.used && !strcmp(b.request.request_id,request.request_id)) return;
     rival_execution_detail::Binding* selected=nullptr;
     for (auto& b:bindings) if (!b.used) { selected=&b; break; }
     if (!selected) {
         line("{\"event\":\"native_rival_capacity_exhausted\",\"submitted\":false}\n"); return;
+    }
+    const auto reservation=ledger.reserve_request_id(request.request_id);
+    if (reservation.code==authority::ErrorCode::duplicate_request) return;
+    if (!reservation.ok()) {
+        line("{\"event\":\"native_rival_capacity_exhausted\",\"submitted\":false}\n");
+        return;
     }
     auto& b=*selected;
     b.used=true; b.request=request;
@@ -318,7 +328,12 @@ static void rival_execution_flush() {
                 b.header.origin48,b.header.flags4a,b.header.sequence4c,b.reason);
             line(message); b.submission_emitted=true;
         }
-        if (!b.done || b.result_emitted || !b.submitted) continue;
+        if (!b.done || b.result_emitted || !b.submitted) {
+            if (b.done && b.submission_emitted
+                && (!b.submitted || b.result_emitted))
+                b=Binding{};
+            continue;
+        }
         const bool executed=b.consumed && b.relationship_verified;
         snprintf(message,sizeof(message),
             "{\"event\":\"native_rival_execution_result\",\"family\":\"rival\",\"session_id\":\"%lu-%llx\",\"request_id\":\"%s\",\"action_id\":\"%s\",\"actor\":\"%s\",\"recipient\":\"%s\",\"phase\":\"initiate\",\"date_raw\":%d,\"status\":\"%s\",\"executed\":%s,\"request_binding_verified\":true,\"native_rule_verified\":%s,\"relationship_verified\":%s,\"before_active\":%s,\"after_active\":%s,\"dip_before\":%d,\"dip_after\":%d,\"cost_raw\":%d,\"rival_count_before\":%d,\"rival_count_after\":%d,\"reason_code\":\"%s\"}\n",
@@ -331,5 +346,12 @@ static void rival_execution_flush() {
             b.before.diplomatic_power_raw,b.after.diplomatic_power_raw,b.cost,
             b.before.count,b.after.count,b.reason);
         line(message); b.result_emitted=true;
+        if (b.done && b.submission_emitted
+            && (!b.submitted || b.result_emitted)) {
+            // Reuse only after every terminal result has been reported.  The
+            // authority ledger keeps request/header history and generation
+            // receipts reject callbacks that outlive this binding slot.
+            b=Binding{};
+        }
     }
 }

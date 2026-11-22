@@ -156,7 +156,7 @@ def _observe_with_metadata(reader: Any, base: int, country: str,
                            module_after: Mapping[str, Any],
                            expected_creation: int,
                            registry_descriptor: Mapping[str, Any] | None = None,
-                           war_details_reader=None) -> dict[str, Any]:
+                           war_details_reader=None, observer: str = "FRA") -> dict[str, Any]:
     descriptor = profile["observer_registry"] if registry_descriptor is None else registry_descriptor
     consistency, before, after = _module_consistency(
         module_before, module_after, descriptor)
@@ -185,7 +185,7 @@ def _observe_with_metadata(reader: Any, base: int, country: str,
                 current = admission_state.get("current")
                 scan = current.get("scan") if isinstance(current, Mapping) else None
                 requested_scan = scan.get("requested") if isinstance(scan, Mapping) else None
-                observer_binding = (requested_scan.get("FRA")
+                observer_binding = (requested_scan.get(observer)
                                     if isinstance(requested_scan, Mapping) else None)
                 if not isinstance(scan, Mapping) or not isinstance(observer_binding, Mapping):
                     result[_wars.FIELD_WARS] = _unknown("parent_country_scan_unavailable")
@@ -199,6 +199,7 @@ def _observe_with_metadata(reader: Any, base: int, country: str,
                         values = _wars.read_fields(
                             limited_reader, current_base, target_binding,
                             (_wars.FIELD_WARS,), observer_binding=observer_binding,
+                            expected_observer=observer,
                             registry_reader=registry_reader,
                             member_admission_reader=_owner._bound_admission,
                             admission_bindings=scan)
@@ -217,7 +218,7 @@ def _observe_with_metadata(reader: Any, base: int, country: str,
                     for field in requested}
 
         return _backend.read_two_pass(
-            read, module_base, "FRA", [target], FIELDS,
+            read, module_base, observer, [target], FIELDS,
             read_fields=read_fields, admission_reader=admission_reader,
         )
 
@@ -248,7 +249,7 @@ def _observe(reader: Any, base: int, country: str,
 def _capture_observe(reader: Any, base: int, country: str,
                      profile: Mapping[str, Any], creation: int,
                      registry_descriptor: Mapping[str, Any] | None = None,
-                     war_details_reader=None) -> dict[str, Any]:
+                     war_details_reader=None, observer: str = "FRA") -> dict[str, Any]:
     """Read DLL metadata only inside the parent's admitted held-reader scope."""
     if (registry_descriptor is not None
             and registry_descriptor["module_file"] == profile["observer_registry"]["module_file"]):
@@ -260,7 +261,7 @@ def _capture_observe(reader: Any, base: int, country: str,
     observation = _observe_with_metadata(
         reader, base, country, profile, module_before=before, module_after=before,
         expected_creation=creation, registry_descriptor=registry_descriptor,
-        war_details_reader=war_details_reader)
+        war_details_reader=war_details_reader, observer=observer)
     after = _module_binding.from_held_reader(reader, descriptor)
     consistency, before, after = _module_consistency(before, after, descriptor)
     observation["observer_module_binding"] = {
@@ -289,18 +290,20 @@ def capture(installation: Path, country: str, *, observer: str = "FRA") -> dict[
                 profile: Mapping[str, Any]) -> dict[str, Any]:
         if creation == 0:
             raise ValueError("COUNTRY_SCALE_INSTALLATION_CREATION")
-        return _capture_observe(reader, base, requested_country, profile, creation, descriptor)
+        return _capture_observe(reader, base, requested_country, profile, creation, descriptor,
+                                observer=observer)
 
     return _owner._capture_common(
         installation, country, observer=observer, schema=SCHEMA,
         profile_sha256=PROFILE_SHA256, load_profile=_load_profile,
-        observe=observe, allow_observer_target=True,
+        observe=observe, allow_observer_target=True, observer_scoped=True,
     )
 
 
 def validate_capture(report: Any, context: Mapping[str, Any],
                      creation: int, country: str) -> bool:
     try:
+        observer = context['observer']
         observation = report["observation"]
         metadata = observation["observer_module_binding"]
         if not isinstance(metadata, Mapping) or set(metadata) != {"before", "after", "consistency"}:
@@ -322,12 +325,13 @@ def validate_capture(report: Any, context: Mapping[str, Any],
         return _observe_with_metadata(
             reader, base, requested_country, replay_profile,
             module_before=before, module_after=after, expected_creation=creation,
-            registry_descriptor=descriptor)
+            registry_descriptor=descriptor, observer=observer)
 
     return _owner._validate_capture_common(
         report, context, creation, country, schema=SCHEMA,
         profile_sha256=PROFILE_SHA256, load_profile=_load_profile,
         observe=replay_observe, allow_observer_target=True, require_access=True,
+        observer_scoped=True,
     )
 
 

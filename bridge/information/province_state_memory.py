@@ -511,11 +511,11 @@ def _read_pass(number: int, limiter: _shared._BoundedReader, module_base: int,
 
 
 def _base_result(province_id: Any, observer: Any,
-                 fields: tuple[str, ...] = FIELDS) -> dict[str, Any]:
+                 fields: tuple[str, ...] = FIELDS, *, observer_scoped=False) -> dict[str, Any]:
     return {
         "schema": SCHEMA,
         "status": "unknown",
-        "observer": {"tag": observer if observer == "FRA" else None,
+        "observer": {"tag": observer if _shared._tag_ok(observer) and (observer_scoped or observer == "FRA") else None,
                      "fullref": None,
                      "bindings_by_pass": {"pass1": None, "pass2": None}},
         "targets": [{
@@ -543,26 +543,25 @@ def _base_result(province_id: Any, observer: Any,
 
 def read_two_pass(reader: Any, base: int, province_id: int, *,
                   observer: str = "FRA", fields: list[str] | tuple[str, ...] = FIELDS,
-                  read_fields: Any = None) -> dict[str, Any]:
+                  read_fields: Any = None, observer_scoped=False) -> dict[str, Any]:
     """Read selected G02 fields independently for a positively discovered ID.
 
-    Each pass scans the country manager for FRA once, resolves the requested
-    province ID once, applies the existing self-admission plus Human1/FRA0
-    role check, and reads the observer's province+0x5e0 discovery bit. Owner
+    Each pass resolves the observer and province, validates the observer's role,
+    and reads the province+0x5e0 discovery bit for the observer slot. Owner
     and controller fullrefs are then validated independently against the
     bounded country database; no per-reference full database scan is done.
     """
     selected_fields = _valid_field_ids(fields)
     if selected_fields is None:
-        result = _base_result(province_id, observer)
+        result = _base_result(province_id, observer, observer_scoped=observer_scoped)
         result["errors"].append({"code": "field_scope_invalid"})
         return result
-    result = _base_result(province_id, observer, selected_fields)
+    result = _base_result(province_id, observer, selected_fields, observer_scoped=observer_scoped)
     if read_fields is not None and not callable(read_fields):
         result["errors"].append({"code": "field_reader_invalid"})
         return result
-    if observer != "FRA":
-        result["errors"].append({"code": "observer_scope_invalid", "reason": "FRA_ONLY"})
+    if not _shared._tag_ok(observer) or (not observer_scoped and observer != "FRA"):
+        result["errors"].append({"code": "observer_scope_invalid", "reason": "OBSERVER_TAG_INVALID" if observer_scoped else "FRA_ONLY"})
         return result
     if type(province_id) is not int or province_id < 1:
         result["errors"].append({"code": "province_id_invalid"})

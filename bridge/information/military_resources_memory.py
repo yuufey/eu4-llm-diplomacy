@@ -12,6 +12,7 @@ from datetime import datetime, timezone
 import hashlib
 import json
 from pathlib import Path
+import re
 import struct
 from typing import Any, Mapping
 
@@ -409,13 +410,13 @@ def _runtime_code_guard(reader: Any, module_base: int, profile: Mapping[str, Any
 
 def _tag_from_fullref(value: int) -> str | None:
     raw = (value & 0xFFFFFF).to_bytes(3, "little")
-    if not all(0x41 <= byte <= 0x5A for byte in raw):
+    if not all(0x41 <= byte <= 0x5A or 0x30 <= byte <= 0x39 for byte in raw):
         return None
     return raw.decode("ascii")
 
 
 def _find_country(reader: Any, module_base: int, country: str, profile: Mapping[str, Any], budget: _ReadBudget) -> tuple[int, dict[str, Any]]:
-    if country != EXPECTED_COUNTRY:
+    if not isinstance(country, str) or re.fullmatch(r"[A-Z0-9]{3}", country) is None:
         raise ReadError("unsupported_country")
     layout = _profile_layout(profile)
     database, database_raw = _read_u64(reader, _add_address(module_base, layout["database_global_rva"], layout), "military_resources.database", budget, layout)
@@ -641,7 +642,8 @@ def read_fields(reader: Any, module_base: int, country_pointer: int, country: st
     try:
         loaded = _load_profile() if profile is None else _prepare_profile(profile)
         layout = _profile_layout(loaded)
-        if country != EXPECTED_COUNTRY or not _valid_address(module_base, layout) or not _valid_address(country_pointer, layout):
+        if (not isinstance(country, str) or re.fullmatch(r"[A-Z0-9]{3}", country) is None
+                or not _valid_address(module_base, layout) or not _valid_address(country_pointer, layout)):
             raise ReadError("unsupported_country_or_pointer")
         static_guard = _static_contract_guard(loaded)
         if static_guard.get("status") != "observed":
@@ -680,7 +682,7 @@ def _diff_paths(left: Any, right: Any, path: str = "$") -> list[str]:
 
 
 def capture(installation: Path, country: str = EXPECTED_COUNTRY) -> dict[str, Any]:
-    """Capture FRA sailors and force limits with two independent country scans."""
+    """Capture sailors and force limits with two independent country scans."""
     installation = Path(installation)
     report: dict[str, Any] = {
         "probe": "information-military-resources-runtime", "probe_version": 1,
@@ -700,8 +702,10 @@ def capture(installation: Path, country: str = EXPECTED_COUNTRY) -> dict[str, An
     kernel = None; handle = None; budget = _ReadBudget()
     try:
         report["probe_script_sha256"] = hashlib.sha256(Path(__file__).read_bytes()).hexdigest()
-        if country != EXPECTED_COUNTRY:
-            report["status"] = "unsupported_country"; report["errors"].append({"stage": "request", "status": "unknown", "error": "Only FRA is permitted"}); return report
+        if not isinstance(country, str) or re.fullmatch(r"[A-Z0-9]{3}", country) is None:
+            report["status"] = "unsupported_country"
+            report["errors"].append({"stage": "request", "status": "unknown", "error": "Invalid country tag"})
+            return report
         profile = _load_profile()
         report["static_contract_guard"] = _static_contract_guard(profile)
         if report["static_contract_guard"].get("status") != "observed":
@@ -905,7 +909,7 @@ def _validate_country_scan(scan: Any, country_pointer: int, handle: int,
                            module_base: int, layout: Mapping[str, int],
                            profile: Mapping[str, Any],
                            trace: Mapping[str, Mapping[str, Any]]) -> set[str] | None:
-    """Rebuild the selected FRA table match from its per-slot RPM bytes."""
+    """Rebuild the selected country's table match from its per-slot RPM bytes."""
     if not isinstance(scan, Mapping) or scan.get("country_pointer") != _hex(country_pointer) or scan.get("country_handle") != _hex(handle):
         return None
     if scan.get("status") == "synthetic":
@@ -953,7 +957,7 @@ def _validate_country_scan(scan: Any, country_pointer: int, handle: int,
         fullref_labels.add(fullref_label)
         fullref = int.from_bytes(fullref_raw, "little", signed=False)
         tag = _tag_from_fullref(fullref)
-        if tag == EXPECTED_COUNTRY and ((fullref >> 32) & 0xFFFF) == slot:
+        if tag == _tag_from_fullref(handle) and ((fullref >> 32) & 0xFFFF) == slot:
             matches.append({"slot": slot, "pointer": _hex(pointer), "table_entry_raw_hex": pointer_raw.hex(),
                             "fullref_raw_hex": fullref_raw.hex(), "tag": tag,
                             "country_handle": _hex(fullref), "country_handle_raw_hex": fullref_raw.hex()})
@@ -1100,7 +1104,7 @@ def _validate_private_graph(record: Mapping[str, Any], profile: Mapping[str, Any
     handle = _parse_address(private.get("country_handle"))
     game = _parse_address(private.get("game_pointer"))
     if (country_pointer is None or handle is None or game is None or not _valid_address(country_pointer, layout) or
-            not _valid_address(game, layout) or _tag_from_fullref(handle) != EXPECTED_COUNTRY):
+            not _valid_address(game, layout) or _tag_from_fullref(handle) != record.get("country")):
         return False
     expected_labels = {f"military_resources.code.{name}" for name, _rva, _end, _raw in _profile_code_guards(profile)}
     game_cell = module_base + layout["game_global_rva"]
@@ -1164,7 +1168,10 @@ def validate_record(record: Any) -> bool:
     try:
         profile = _load_profile()
         layout = _profile_layout(profile)
-        if not isinstance(record, Mapping) or record.get("status") != "observed" or record.get("profile_id") != EXPECTED_PROFILE_ID or record.get("profile_sha256") != EXPECTED_PROFILE_SHA256 or record.get("country") != EXPECTED_COUNTRY:
+        country = record.get("country") if isinstance(record, Mapping) else None
+        if (not isinstance(country, str) or re.fullmatch(r"[A-Z0-9]{3}", country) is None
+                or record.get("status") != "observed" or record.get("profile_id") != EXPECTED_PROFILE_ID
+                or record.get("profile_sha256") != EXPECTED_PROFILE_SHA256):
             return False
         private = record.get("private")
         module_base = int(str(private.get("module_base")), 0) if isinstance(private, Mapping) else 0
@@ -1195,7 +1202,9 @@ def validate_record(record: Any) -> bool:
 def validate_capture(report: Any, context: Mapping[str, Any] | None, creation_filetime: int, country: str = EXPECTED_COUNTRY) -> bool:
     """Validate installation identity, date, two-pass equality, and cleanup."""
     try:
-        if not isinstance(report, Mapping) or report.get("status") != "observed" or report.get("completed") is not True or report.get("country") != country or country != EXPECTED_COUNTRY or report.get("read_only") is not True:
+        if (not isinstance(report, Mapping) or report.get("status") != "observed"
+                or report.get("completed") is not True or report.get("country") != country
+                or report.get("read_only") is not True):
             return False
         identity, request = report.get("identity"), report.get("request")
         cleanup = report.get("cleanup", {}).get("handle_close") if isinstance(report.get("cleanup"), Mapping) else None
@@ -1206,7 +1215,8 @@ def validate_capture(report: Any, context: Mapping[str, Any] | None, creation_fi
             return False
         if type(creation_filetime) is not int or identity.get("installation_creation_filetime") != creation_filetime or identity.get("process_creation_filetime") != creation_filetime:
             return False
-        if not isinstance(context, Mapping) or type(context.get("game_date")) is not int:
+        if (not isinstance(context, Mapping) or type(context.get("game_date")) is not int
+                or context.get("observer", country) != country):
             return False
         expected_session = context.get("session_id", context.get("installation_session_id"))
         if expected_session is not None and identity.get("installation_session_id") != expected_session:
@@ -1218,6 +1228,8 @@ def validate_capture(report: Any, context: Mapping[str, Any] | None, creation_fi
         if not isinstance(before, Mapping) or not isinstance(after, Mapping) or not isinstance(before.get("record"), Mapping) or not isinstance(after.get("record"), Mapping) or not validate_record(before["record"]) or not validate_record(after["record"]):
             return False
         pass_records = (before["record"], after["record"])
+        if any(record.get("country") != country for record in pass_records):
+            return False
         expected_bytes = sum(item["observation"]["read_budget"]["bytes_reserved"] for item in pass_records)
         expected_calls = sum(len(item["observation"]["read_log"]) for item in pass_records)
         if access.get("rpm_bytes_requested") != expected_bytes or access.get("rpm_calls") != expected_calls:

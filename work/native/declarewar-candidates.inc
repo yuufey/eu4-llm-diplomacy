@@ -62,7 +62,22 @@ struct DeclareWarCandidateSelection {
     const char* casus_belli=nullptr;
     int32_t province_id=-1;
     uint64_t beneficiary_handle=0;
+    bool allow_self_sentinel=false;
 };
+
+static bool declarewar_candidates_resolve_beneficiary(
+    DeclareWarCandidateSelection& selection,const char* beneficiary,
+    const char* actor_tag,uint64_t actor,bool no_cb) noexcept {
+    if (!beneficiary || !strcmp(beneficiary,"---")) return true;
+    if (!strcmp(beneficiary,actor_tag)) {
+        if (!no_cb) {
+            selection.beneficiary_handle=actor;
+            selection.allow_self_sentinel=true;
+        }
+        return true;
+    }
+    return alliance_query_country(beneficiary,selection.beneficiary_handle);
+}
 
 struct DeclareWarCandidateNativeVector {
     void* vtable=nullptr;
@@ -155,6 +170,7 @@ struct DeclareWarCandidateQueryResult {
     unsigned captured_count=0;
     unsigned selection_match_count=0;
     uintptr_t selected_owned=0;
+    uint64_t selected_beneficiary_handle=0;
     int32_t selected_candidate_index=-1;
     DeclareWarCandidateCapture items[declarewar_candidates_max_items]{};
 };
@@ -329,16 +345,47 @@ static bool declarewar_candidates_read_empty_sentinel(
         && sentinel!=0;
 }
 
-static bool declarewar_candidates_selection_match(
+enum class DeclareWarCandidateMatch { none,self_sentinel,exact };
+
+static DeclareWarCandidateMatch declarewar_candidates_selection_match(
     const DeclareWarCandidateSelection& selection,
     const DeclareWarCandidateCapture& item) noexcept {
     if (!selection.casus_belli || !*selection.casus_belli
         || !item.casus_belli_key_verified
         || !item.target_province_id_verified
-        || !item.beneficiary_identifier_verified) return false;
-    return !strcmp(selection.casus_belli,item.casus_belli_key)
-        && selection.province_id==item.target_province_id
-        && selection.beneficiary_handle==item.beneficiary_handle;
+        || !item.beneficiary_identifier_verified
+        || strcmp(selection.casus_belli,item.casus_belli_key)
+        || selection.province_id!=item.target_province_id)
+        return DeclareWarCandidateMatch::none;
+    if (selection.beneficiary_handle==item.beneficiary_handle)
+        return DeclareWarCandidateMatch::exact;
+    return selection.allow_self_sentinel && !item.beneficiary_handle
+        ?DeclareWarCandidateMatch::self_sentinel:DeclareWarCandidateMatch::none;
+}
+
+static uintptr_t declarewar_candidates_select(const DeclareWarCandidateSelection& selection,
+    DeclareWarCandidateQueryResult& output) noexcept {
+    uintptr_t selected=0;
+    auto best=DeclareWarCandidateMatch::none;
+    for (unsigned index=0;index<output.captured_count;++index) {
+        const auto& item=output.items[index];
+        const auto match=declarewar_candidates_selection_match(selection,item);
+        if (match==DeclareWarCandidateMatch::none || match<best) continue;
+        if (match>best) {
+            best=match;
+            output.selection_match_count=0;
+        }
+        if (++output.selection_match_count==1) {
+            selected=item.address;
+            output.selected_candidate_index=static_cast<int32_t>(item.candidate_index);
+            output.selected_beneficiary_handle=item.beneficiary_handle;
+        } else {
+            selected=0;
+            output.selected_candidate_index=-1;
+            output.selected_beneficiary_handle=0;
+        }
+    }
+    return selected;
 }
 
 static bool declarewar_candidates_cleanup_vector(
@@ -428,22 +475,9 @@ static bool declarewar_candidates_query(uint64_t actor,uint64_t target,
         if (item.metadata_text_truncated) output.truncated=true;
     }
 
-    uintptr_t selected_candidate=0;
     if (selection) {
-        for (unsigned index=0;index<output.captured_count;++index) {
-            const DeclareWarCandidateCapture& item=output.items[index];
-            if (!declarewar_candidates_selection_match(*selection,item)) continue;
-            ++output.selection_match_count;
-            if (output.selection_match_count==1) {
-                selected_candidate=item.address;
-                output.selected_candidate_index=
-                    static_cast<int32_t>(item.candidate_index);
-            } else {
-                selected_candidate=0;
-                output.selected_candidate_index=-1;
-            }
-        }
-        if (output.selection_match_count==1 && selected_candidate) {
+        const uintptr_t selected_candidate=declarewar_candidates_select(*selection,output);
+        if (selected_candidate) {
             uintptr_t empty_sentinel=0;
             if (declarewar_candidates_read_empty_sentinel(empty_sentinel)) {
                 output.selection_clone_attempted=true;

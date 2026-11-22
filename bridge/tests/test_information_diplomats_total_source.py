@@ -80,13 +80,13 @@ def make_source(tmp_path, monkeypatch, *, projected=None, validation=True,
     return source, base, report, calls
 
 
-def test_catalog_and_query_are_fra_only_and_select_only_diplomats_total(
+def test_catalog_and_query_are_observer_bound_and_select_only_diplomats_total(
         tmp_path, monkeypatch):
     source, base, _, calls = make_source(tmp_path, monkeypatch)
     topic = source.catalog()[0]
     assert topic["topic_id"] == TOPIC
     assert list(topic["fields"]) == [FIELD]
-    assert topic["observer_scope"] == ["FRA"]
+    assert topic["observer_scope"] == []
     assert topic["triggers"] == ["query", "periodic"]
 
     normalized = source.validate_query(make_query(), base.context())

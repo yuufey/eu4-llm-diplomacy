@@ -21,7 +21,7 @@ def _is_tag(value: Any) -> bool:
 
 
 class NativeSpecialDiplomacySource:
-    """Expose the validated FRA trade-league record already read for R01."""
+    """Expose the observer’s validated trade-league record already read for R01."""
 
     event_types: tuple[str, ...] = ()
 
@@ -37,7 +37,7 @@ class NativeSpecialDiplomacySource:
             source=type(self).__name__, status="available",
             object_types=["country"],
             supported_versions=["1.37.4"], context_scope="country_scope",
-            visibility="country_scope", observer_roles=["country"], observer_scope=["FRA"],
+            visibility="country_scope", observer_roles=["country"], observer_scope=[],
             triggers=["query", "periodic", "change"],
             change_detection="sampled_state_comparison_not_lossless_events",
             object_semantics="current_country_trade_league_membership",
@@ -45,11 +45,11 @@ class NativeSpecialDiplomacySource:
         topic["fields"] = {FIELD: {
             "coverage": "partial", "source": type(self).__name__, "complete": False,
             "unit": "trade_league_state", "scale": 1, "period": "current",
-            "supported_object_types": ["country"], "supported_countries": ["FRA"],
+            "supported_object_types": ["country"],
             "basis": "native_country_trade_league_membership",
             "value_origin": "copied_native_country_trade_league_object_vector",
-            "description": "读取FRA贸易联盟谓词、leader及原生成员顺序；不推导外交效果。",
-            "paths": ["NativeRelationSource._extension_report('trade_league', 'FRA', None).before.actor_record"],
+            "description": "读取当前观察国的贸易联盟状态、领导国和原生成员顺序。",
+            "paths": ["NativeRelationSource._extension_report('trade_league', observer, None).before.actor_record"],
             "gaps": ["S05_SESSION_OBJECT_NOT_IMPLEMENTED", "OTHER_S05_FIELDS_NOT_IMPLEMENTED",
                      "SAMPLED_STATE_COMPARISON_NOT_LOSSLESS_EVENTS"],
         }}
@@ -64,10 +64,9 @@ class NativeSpecialDiplomacySource:
         if normalized["parameters"] != {}:
             raise InformationError("invalid_parameters", "S05 special diplomacy takes no parameters")
         obj = normalized["object"]
-        if obj["type"] == "country" and obj["country"] != "FRA":
-            raise InformationError("observer_scope_mismatch", "S05 country view is limited to observer FRA")
-        if context is not None and context.get("observer", "FRA") != "FRA":
-            raise InformationError("observer_scope_mismatch", "S05 is outside the FRA observer context")
+        observer = context.get("observer") if context else None
+        if observer is not None and obj["type"] == "country" and obj["country"] != observer:
+            raise InformationError("observer_scope_mismatch", "S05 country view requires the configured observer")
         return normalized
 
     @staticmethod
@@ -75,13 +74,13 @@ class NativeSpecialDiplomacySource:
         return {"status": "unknown", "reason": reason}
 
     @classmethod
-    def _project_actor_record(cls, report):
+    def _project_actor_record(cls, report, observer):
         if not isinstance(report, Mapping):
             return cls._unknown("TRADE_LEAGUE_REPORT_INVALID")
         before = report.get("before")
         actor_record = before.get("actor_record") if isinstance(before, Mapping) else None
         if (not isinstance(actor_record, Mapping) or actor_record.get("status") != "observed"
-                or actor_record.get("country") != "FRA"):
+                or actor_record.get("country") != observer):
             return cls._unknown("TRADE_LEAGUE_ACTOR_RECORD_INVALID")
 
         predicate = actor_record.get("predicate")
@@ -100,7 +99,7 @@ class NativeSpecialDiplomacySource:
         # it from whether the copied member list happens to be empty.
         return {
             "status": "known",
-            "value": {"country": "FRA", "active": predicate,
+            "value": {"country": observer, "active": predicate,
                       "leader": leader, "members": tags},
             "unit": "trade_league_state", "scale": 1, "period": "current",
             "complete": False, "partial": True,
@@ -137,10 +136,12 @@ class NativeSpecialDiplomacySource:
             elif context is not None and _identity_snapshot(context) != _identity_snapshot(before):
                 fields[FIELD] = {"status": "unavailable", "reason": "BASE_CONTEXT_CHANGED_BEFORE_QUERY"}
             else:
+                self.validate_query(query, before)
+                observer = before["observer"]
                 used_extension = True
                 try:
                     report, reason = self.relation_source._extension_report(
-                        "trade_league", "FRA", None, before
+                        "trade_league", observer, None, before
                     )
                 except Exception:
                     report, reason = None, "TRADE_LEAGUE_READ_FAILED"
@@ -149,7 +150,7 @@ class NativeSpecialDiplomacySource:
                         reason if isinstance(reason, str) and reason else "TRADE_LEAGUE_CAPTURE_UNKNOWN"
                     )
                 else:
-                    fields[FIELD] = self._project_actor_record(report)
+                    fields[FIELD] = self._project_actor_record(report, observer)
                     if fields[FIELD].get('status') == 'known':
                         try:
                             provenance['capture_report_sha256'] = digest(report)

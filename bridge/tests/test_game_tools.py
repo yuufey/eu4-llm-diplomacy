@@ -8,6 +8,8 @@ import threading
 import time
 import unittest
 
+import pytest
+
 from bridge.game_tools import GameTools
 from bridge.information.collection_lock import CollectionLock
 from bridge.information.mcp import InformationMCPServer
@@ -337,6 +339,64 @@ def test_live_runtime_game_tools_share_the_original_diplomacy_and_journal(tmp_pa
             # _build_runtime returns the durable journal separately; the
             # process entry point owns closing it after the service transport.
             journal.close()
+
+
+def test_native_country_and_clock_failure_keep_read_tools_available(tmp_path, wiring, monkeypatch):
+    from bridge.diplomacy import ObserverSession
+    from bridge.game_time_control import TOOL_NAME as CLOCK_TOOL
+    from bridge.diplomat_recall import TOOL_NAME as RECALL_TOOL
+
+    configured = []
+
+    def fail_configuration(session, countries):
+        configured.append(countries)
+        raise RuntimeError("NATIVE_COUNTRY_CONTROL_CONFIGURATION_REJECTED: country_unavailable")
+
+    def fail_clock(session):
+        raise InformationError("permission_denied", "Clock requires a verified observer seat")
+
+    monkeypatch.setattr(ObserverSession, "configure_controlled_countries", fail_configuration,
+                        raising=False)
+    monkeypatch.setattr("bridge.game_time_control.bind_game_time_control", fail_clock)
+    args = _live_args(tmp_path)
+    args.observer = "TUR"
+    args.controlled_country = "ENG"
+    args.allow_time_control = True
+    service, journal = _build_runtime(args)
+    service.collection_lock = CollectionLock(":memory:")
+    service._closed = False
+    diplomacy = FakeDiplomacyTools()
+    diplomacy.can_recall_diplomat = True
+    diplomacy.results["list_diplomatic_actions"] = {
+        "actions": [{"phases": {"initiate": {"query": "native", "execute": "native_submission"}}}],
+        "incoming_proposals": [{"id": "inbound", "execute": {"accept": "native_response"}}],
+    }
+    tools = GameTools(service, diplomacy)
+    try:
+        assert configured == [["ENG"]]
+        listed = {item["name"] for item in tools.definitions()}
+        assert {"information_query", "list_diplomatic_actions", "inspect_diplomatic_action",
+                "get_diplomatic_result"} <= listed
+        assert {"execute_diplomatic_action", RECALL_TOOL, CLOCK_TOOL}.isdisjoint(listed)
+        for name in ("execute_diplomatic_action", RECALL_TOOL):
+            with pytest.raises(InformationError, match="country_unavailable") as error:
+                tools.call(name)
+            assert error.value.code == "native_country_control_unavailable"
+        with pytest.raises(InformationError, match="verified observer seat"):
+            tools.call(CLOCK_TOOL)
+        listing = tools.call("list_diplomatic_actions")
+        assert listing["actions"][0]["phases"]["initiate"]["query"] == "native"
+        assert listing["actions"][0]["phases"]["initiate"]["execute"] == "unavailable"
+        assert listing["incoming_proposals"] == [{"id": "inbound"}]
+        preview = tools.call("inspect_diplomatic_action", {
+            "action_id": "offer_alliance", "actor": "ENG", "recipient": "TUR"})
+        assert preview["inspection"] == "native-readable-result"
+        assert preview["authorization"]["status"] == "unavailable"
+        assert [name for name, _ in diplomacy.calls] == [
+            "list_diplomatic_actions", "inspect_diplomatic_action"]
+    finally:
+        service.close()
+        journal.close()
 
 
 if __name__ == "__main__":

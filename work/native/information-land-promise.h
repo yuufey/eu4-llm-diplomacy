@@ -41,7 +41,8 @@ struct Value final {
 
 inline bool same(const Value& left, const Value& right) noexcept {
     return left.promisor == right.promisor && left.beneficiary == right.beneficiary
-        && left.date == right.date && !std::strcmp(left.war_id, right.war_id);
+        && left.observer == right.observer && left.date == right.date
+        && !std::strcmp(left.war_id, right.war_id);
 }
 
 } // namespace information::land_promise

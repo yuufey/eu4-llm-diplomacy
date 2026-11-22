@@ -30,7 +30,7 @@ class NativeReligionDefenderSource(NativeTradeIncomeSource):
             'coverage': 'partial', 'complete': False, 'unit': 'country_and_membership',
             'scale': 1, 'period': 'current', 'basis': BASIS, 'value_origin': ORIGIN,
             'source': 'bridge.information.religion_defender_tier_capture.capture',
-            'supported_observers': ['FRA'], 'triggers': ['query', 'periodic'],
+            'triggers': ['query', 'periodic'],
             'runtime_validation': 'religion_defender_tier_capture.validate_capture',
             'paths': ["observation.backend.targets[0].fields['S02.defender'].value"],
             'raw_semantics': ('current primary religion state holder reference, resolved against '
@@ -42,7 +42,7 @@ class NativeReligionDefenderSource(NativeTradeIncomeSource):
             'gaps': list(GAPS),
         }})
         topic['scope_note'] = ('读取准入国家当前主宗教的守护者国家，并判断该国家是否就是守护者；'
-                               'FRA为逻辑非玩家观察方。等级来自运行时表；无效引用保持未知，资格尚未读取。')
+                               '等级来自运行时表，无效引用保持未知。')
         return [topic]
 
     def validate_query(self, query, context=None):
@@ -107,7 +107,7 @@ class NativeReligionDefenderSource(NativeTradeIncomeSource):
         normalized = self.validate_query(query, current)
         target = normalized['object']['country']
         provenance = {'read_only': True, 'native_function_invoked': False,
-                      'observer': 'FRA', 'target': target, 'actual_UI_observed': False}
+                      'observer': current.get('observer'), 'target': target, 'actual_UI_observed': False}
 
         def result(field, ctx):
             source = _source_info(type(self).__name__, ctx, complete=False,
@@ -135,7 +135,7 @@ class NativeReligionDefenderSource(NativeTradeIncomeSource):
         try:
             module = import_module('.religion_defender_tier_capture', __package__)
             capture = self.capture if self.capture is not None else module.capture
-            report = capture(installation, country=target, observer='FRA')
+            report = capture(installation, country=target, observer=before['observer'])
         except Exception as exc:
             error = 'RELIGION_DEFENDER_CAPTURE_FAILED:' + type(exc).__name__
         try:

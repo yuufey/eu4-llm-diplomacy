@@ -7,13 +7,17 @@ from __future__ import annotations
 
 from copy import deepcopy
 from importlib import import_module
+import re
 from typing import Any, Mapping
 
 from .country_state import NativeCountryStateSource, _parameter_schema
-from .military_quality import _context_reason, _pointer_hex, _snapshot_country_pointer
+from .military_quality import _pointer_hex, _snapshot_country_pointer
 from .model import InformationError, canonical
 from .sources import _copy, _result, _source_info
-from .trade_income import NativeTradeIncomeSource, _COUNTRY, _VERSION, _GAME_SHA256, _identity, _session_binding
+from .trade_income import (
+    NativeTradeIncomeSource, _VERSION, _GAME_SHA256, _identity,
+    _observer_context_reason, _session_binding,
+)
 
 
 _TOPICS = {
@@ -42,7 +46,7 @@ def _field_metadata(topic, field):
         value_origin = "derived_from_validated_native_loan_principals"
     return {"coverage": "partial", "complete": False, "source": "NativeCountryRecordsSource",
             "runtime_validation": "validated_native_records", "unit": unit, "scale": scale,
-            "period": "current", "raw": field != "loan_summary", "supported_countries": [_COUNTRY],
+            "period": "current", "raw": field != "loan_summary",
             "basis": "native_country_loan_records" if topic == "N01" else "native_direct_country_modifier_records",
             "value_origin": value_origin,
             "gaps": (["FOREIGN_LENDER_RUNTIME_SAMPLE_UNAVAILABLE", "NATIVE_LOAN_DISPLAY_TEXT_UNREAD",
@@ -59,7 +63,7 @@ def _catalog_item(topic):
             "parameters": _parameter_schema("N01") if topic == "N01" else
                           {"type": "object", "properties": {}, "required": [], "additionalProperties": False},
             "supported_versions": [_VERSION], "triggers": ["query", "periodic"],
-            "observer_roles": ["country"], "observer_scope": [_COUNTRY],
+            "observer_roles": ["country"], "observer_scope": [],
             "visibility": "country_scope", "context_scope": "country_scope",
             "source": "NativeCountryRecordsSource", "scope_note":
             ("当前原生贷款列表；本金、利率、贷款方类型及到期日期的已证语义可读，缺项逐条保留。" if topic == "N01" else
@@ -97,12 +101,12 @@ def _child_reason(report, key, field):
     return None
 
 
-def _modifier_projection(field, records, current_date):
+def _modifier_projection(field, records, current_date, country):
     """Preserve native order; a default/unknown date stays explicit per row."""
     if field == "modifier_id":
         return [r["key"] for r in records]
     if field == "target":
-        return [{"modifier_id": r["key"], "type": "country", "country": _COUNTRY} for r in records]
+        return [{"modifier_id": r["key"], "type": "country", "country": country} for r in records]
     if field == "effects":
         return [{"modifier_id": r["key"], "effects": [dict(deepcopy(e), scale=1000,
                                                           unit="native_fixed_point", business_unit="unknown")
@@ -196,8 +200,9 @@ class NativeCountryRecordsSource(NativeTradeIncomeSource):
         obj = query.get("object")
         if not isinstance(obj, dict) or set(obj) != {"type", "country"} or obj.get("type") != "country":
             raise InformationError("invalid_object", "A country object is required")
-        if obj.get("country") != _COUNTRY:
-            raise InformationError("observer_scope_mismatch", "Only the verified FRA observer is supported")
+        country = obj.get("country")
+        if not isinstance(country, str) or not re.fullmatch(r"[A-Z0-9]{3}", country):
+            raise InformationError("invalid_object", "Expected a country tag")
         fields = query.get("fields")
         if (not isinstance(fields, list) or not fields or any(not isinstance(f, str) for f in fields)
                 or len(set(fields)) != len(fields) or set(fields)-set(_TOPICS[topic][3])):
@@ -206,11 +211,10 @@ class NativeCountryRecordsSource(NativeTradeIncomeSource):
         if not isinstance(parameters, dict) or set(parameters)-({"reference_recipient"} if topic == "N01" else set()):
             raise InformationError("invalid_parameters", "Unknown country-record parameters")
         if "reference_recipient" in parameters:
-            from re import fullmatch
-            if not isinstance(parameters["reference_recipient"], str) or not fullmatch(r"[A-Z0-9]{3}", parameters["reference_recipient"]):
+            if not isinstance(parameters["reference_recipient"], str) or not re.fullmatch(r"[A-Z0-9]{3}", parameters["reference_recipient"]):
                 raise InformationError("invalid_parameters", "reference_recipient must be a country tag")
-        if context is not None and (not isinstance(context, dict) or context.get("observer", _COUNTRY) != _COUNTRY):
-            raise InformationError("observer_scope_mismatch", "Invalid observer context")
+        if context is not None and (not isinstance(context, dict) or context.get("observer", country) != country):
+            raise InformationError("observer_scope_mismatch", "Country records are limited to the configured observer country")
         return {"topic": topic, "object": deepcopy(obj), "fields": list(fields), "parameters": deepcopy(parameters)}
 
     def read(self, query, context=None):
@@ -218,6 +222,7 @@ class NativeCountryRecordsSource(NativeTradeIncomeSource):
         current = supplied if supplied is not None else self.context()
         normalized = self.validate_query(query, current)
         topic = normalized["topic"]
+        country = normalized["object"]["country"]
         _title, key, field, _fields = _TOPICS[topic]
         provenance = {"read_only": True, "native_function_invoked": False,
                       "adapter": "bridge.information.country_resources_memory.capture", "record_key": key}
@@ -228,14 +233,14 @@ class NativeCountryRecordsSource(NativeTradeIncomeSource):
         def failed(reason, unavailable=False, ctx=current):
             return result({f: {"status": "unavailable" if unavailable else "unknown", "reason": reason}
                            for f in normalized["fields"]}, ctx)
-        reason = _context_reason(current)
+        reason = _observer_context_reason(current)
         if reason:
-            return failed(reason.replace("MILITARY_QUALITY", "COUNTRY_RECORDS"), True)
+            return failed(reason.replace("TRADE_INCOME", "COUNTRY_RECORDS"), True)
         try:
             before = self.context() if supplied is not None else current
         except Exception:
             before = {}
-        if _context_reason(before) or _identity(before) != _identity(current):
+        if _observer_context_reason(before) or _identity(before) != _identity(current):
             return failed("COUNTRY_RECORDS_CONTEXT_STALE", True)
         installation, creation, reason = _session_binding(self.base_source)
         if reason or installation is None or creation is None:
@@ -245,16 +250,16 @@ class NativeCountryRecordsSource(NativeTradeIncomeSource):
             from .country_resources_memory import capture
         report = None
         try:
-            report = capture(installation, _COUNTRY, **{f"include_{key}": True})
+            report = capture(installation, country, **{f"include_{key}": True})
         except Exception as exc:
             provenance["capture_error"] = type(exc).__name__
         try:
             after = self.context()
         except Exception:
             after = {}
-        if _context_reason(after) or _identity(before) != _identity(after):
+        if _observer_context_reason(after) or _identity(before) != _identity(after):
             return failed("COUNTRY_RECORDS_CONTEXT_CHANGED_DURING_CAPTURE")
-        reason = NativeCountryStateSource._capture_report_reason(report, before, _COUNTRY, creation)
+        reason = NativeCountryStateSource._capture_report_reason(report, before, country, creation)
         if reason:
             return failed(reason.replace("MONARCH_POINTS", "COUNTRY_RECORDS_PARENT"))
         if (report.get("target_build", {}).get("version") != _VERSION
@@ -273,7 +278,7 @@ class NativeCountryRecordsSource(NativeTradeIncomeSource):
             from .country_record_localization import NativeCountryModifierLocalizationSource
             localizer = NativeCountryModifierLocalizationSource(
                 self.base_source, localization_reader=self.localization_reader)
-            localized = localizer.localize_records(child, before)
+            localized = localizer.localize_records(child, before, country=country)
             provenance["localization"] = deepcopy(localized.get("source", {}))
             provenance["native_records_and_text_atomic"] = False
             # A language-cache read is independent of the country capture.
@@ -282,7 +287,7 @@ class NativeCountryRecordsSource(NativeTradeIncomeSource):
                 final_context = self.context()
             except Exception:
                 final_context = {}
-            if _context_reason(final_context) or _identity(before) != _identity(final_context):
+            if _observer_context_reason(final_context) or _identity(before) != _identity(final_context):
                 return failed("COUNTRY_RECORDS_CONTEXT_CHANGED_DURING_LOCALIZATION")
         fields = {}
         for name in normalized["fields"]:
@@ -296,7 +301,7 @@ class NativeCountryRecordsSource(NativeTradeIncomeSource):
             elif name in {"name", "description"}:
                 item = deepcopy(localized["fields"][name])
             else:
-                value = _modifier_projection(name, records, before["game_date"])
+                value = _modifier_projection(name, records, before["game_date"], country)
                 if name == "effects":
                     for modifier in value:
                         modifier["named_effects"] = self._named_effects(modifier["modifier_id"])

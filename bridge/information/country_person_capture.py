@@ -1,6 +1,7 @@
 """Own one readonly S04 observation using the shared identity/trace lifecycle."""
 from __future__ import annotations
 
+from functools import partial
 import hashlib
 import json
 from pathlib import Path
@@ -10,8 +11,8 @@ from . import foreign_country_memory as _backend
 from . import foreign_technology_capture as _owner
 from . import person_name_runtime_memory as _name_runtime
 from .country_faith_capture import _admission as _country_admission
+from .province_state_capture import _matches_reviewed_layout
 
-ROOT=Path(__file__).resolve().parents[2]
 PROFILE_FILE=Path(__file__).with_name('profiles')/'country-person-memory-1374-v3-sampling-r1.json'
 PROFILE_SHA256='1cb0094f97526499425836ea409ed17ca06126a4d564c5f20fbeb55e5865bb2f'
 SCHEMA='information.country_person_capture.v1'
@@ -27,8 +28,7 @@ def _load_profile():
             or profile.get('executable',{}).get('sha256')!=_owner.EXE_SHA256):
         raise ValueError('PERSON_PROFILE_BUILD')
     for item in profile['source_evidence']+profile['layout_dependencies']:
-        path=(ROOT/item['path']).resolve();path.relative_to(ROOT)
-        if path.stat().st_size!=item['bytes'] or _owner._sha(path)!=item['sha256']:
+        if not _matches_reviewed_layout(item):
             raise ValueError('PERSON_PROFILE_DEPENDENCY')
     plugin=profile.get('name_runtime',{}).get('plugin')
     if plugin is not None:
@@ -39,7 +39,7 @@ def _load_profile():
     return profile
 
 
-def _observe(reader,base,country,profile):
+def _observe(reader,base,country,profile,*,observer='FRA'):
     layouts={}
     def admission(read,module_base,scan,observer,target):
         result=_country_admission(read,module_base,scan,observer,target)
@@ -56,21 +56,22 @@ def _observe(reader,base,country,profile):
         def collect(limiter,module,target_binding,fields):
             return _fields.read_fields(limiter,module,target_binding,fields,
                 name_layout=layouts.get(target))
-        return _backend.read_two_pass(read,module_base,'FRA',[target],_fields.FIELDS,
+        return _backend.read_two_pass(read,module_base,observer,[target],_fields.FIELDS,
             read_fields=collect,admission_reader=admission)
     return _owner._observe(reader,base,country,profile,backend_reader=backend)
 
 
 def capture(installation:Path,country:str,*,observer:str='FRA')->dict:
     return _owner._capture_common(installation,country,observer=observer,schema=SCHEMA,
-        profile_sha256=PROFILE_SHA256,load_profile=_load_profile,observe=_observe,
-        allow_observer_target=True)
+        profile_sha256=PROFILE_SHA256,load_profile=_load_profile,observe=partial(_observe, observer=observer),
+        allow_observer_target=True,observer_scoped=True)
 
 
 def validate_capture(report,context,creation,country)->bool:
     return _owner._validate_capture_common(report,context,creation,country,schema=SCHEMA,
-        profile_sha256=PROFILE_SHA256,load_profile=_load_profile,observe=_observe,
-        allow_observer_target=True,require_access=True)
+        profile_sha256=PROFILE_SHA256,load_profile=_load_profile,
+        observe=partial(_observe, observer=context.get('observer')),
+        allow_observer_target=True,require_access=True,observer_scoped=True)
 
 
 __all__=['capture','validate_capture']

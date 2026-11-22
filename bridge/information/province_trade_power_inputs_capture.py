@@ -6,6 +6,7 @@ import json
 from pathlib import Path
 
 from . import foreign_technology_capture as _owner
+from . import province_state_capture as _base
 from . import province_state_memory as _province
 from . import province_trade_power_inputs_memory as _leaf
 
@@ -41,9 +42,7 @@ def _load_profile():
             or profile.get('semantics', {}).get('supported_fields') != list(FIELDS)):
         raise ValueError('PROVINCE_TRADE_INPUTS_PROFILE_BUILD')
     for item in profile['source_evidence'] + profile['layout_dependencies']:
-        path = (ROOT / item['path']).resolve()
-        path.relative_to(ROOT)
-        if path.stat().st_size != item['bytes'] or _owner._sha(path) != item['sha256']:
+        if not _base._matches_reviewed_layout(item):
             raise ValueError('PROVINCE_TRADE_INPUTS_PROFILE_DEPENDENCY')
     return profile
 
@@ -52,37 +51,40 @@ def _valid_id(value):
     return type(value) is int and 1 <= value <= 65535
 
 
-def _observe_for(province_id):
+def _observe_for(province_id, observer='FRA'):
     def observe(reader, module_base, country, profile):
-        if country != 'FRA' or not _valid_id(province_id):
+        if country != observer or not _valid_id(province_id):
             raise ValueError('PROVINCE_TRADE_INPUTS_SCOPE')
 
-        def backend(read, base, observer):
-            if observer != 'FRA':
+        def backend(read, base, observer_country):
+            if observer_country != observer:
                 raise ValueError('PROVINCE_TRADE_INPUTS_SCOPE')
-            return _province.read_two_pass(read, base, province_id, observer='FRA',
-                fields=FIELDS, read_fields=_leaf.read_fields)
+            return _province.read_two_pass(read, base, province_id, observer=observer,
+                fields=FIELDS, read_fields=_leaf.read_fields, observer_scoped=True)
 
         return _owner._observe(reader, module_base, country, profile, backend_reader=backend)
     return observe
 
 
 def capture(installation, province_id, *, observer='FRA'):
-    if not _valid_id(province_id) or observer != 'FRA':
+    if not _valid_id(province_id) or not isinstance(observer, str) or not _owner._TAG.fullmatch(observer):
         raise ValueError('PROVINCE_TRADE_INPUTS_SCOPE')
-    inner = _owner._capture_common(installation, 'FRA', observer='FRA', schema=INNER_SCHEMA,
+    inner = _owner._capture_common(installation, observer, observer=observer, schema=INNER_SCHEMA,
         profile_sha256=PROFILE_SHA256, load_profile=_load_profile,
-        observe=_observe_for(province_id), allow_observer_target=True)
-    return {'schema': SCHEMA, 'observer': 'FRA',
+        observe=_observe_for(province_id, observer), allow_observer_target=True, observer_scoped=True)
+    return {'schema': SCHEMA, 'observer': observer,
             'object': {'type': 'province', 'province_id': province_id}, 'capture': inner}
 
 
 def validate_capture(report, context, creation, province_id):
+    observer = context.get('observer') if isinstance(context, dict) else None
     if (not _valid_id(province_id) or not isinstance(report, dict)
+            or not isinstance(observer, str) or not _owner._TAG.fullmatch(observer)
             or set(report) != {'schema', 'observer', 'object', 'capture'}
-            or report.get('schema') != SCHEMA or report.get('observer') != 'FRA'
+            or report.get('schema') != SCHEMA or report.get('observer') != observer
             or not _owner._same(report.get('object'), {'type': 'province', 'province_id': province_id})):
         return False
-    return _owner._validate_capture_common(report['capture'], context, creation, 'FRA',
+    return _owner._validate_capture_common(report['capture'], context, creation, observer,
         schema=INNER_SCHEMA, profile_sha256=PROFILE_SHA256, load_profile=_load_profile,
-        observe=_observe_for(province_id), allow_observer_target=True, require_access=True)
+        observe=_observe_for(province_id, observer), allow_observer_target=True,
+        observer_scoped=True, require_access=True)

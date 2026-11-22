@@ -6,28 +6,31 @@ import pytest
 from bridge.information import truce_capture as capture
 
 
-def memory():
-    bindings = {'FRA': {'country_pointer': '0x100000', 'slot': 122, 'fullref': '0x0100007a00415246'},
+def memory(observer='FRA'):
+    observer_ref = 0x0100007a00000000 | int.from_bytes(observer.encode('ascii'), 'little')
+    bindings = {observer: {'country_pointer': '0x100000', 'slot': 122, 'fullref': hex(observer_ref)},
                 'NAV': {'country_pointer': '0x200000', 'slot': 90, 'fullref': '0x0100005a0056414e'}}
     data = {0x300000 + 0x233dc88: (10).to_bytes(4, 'little'),
             0x300000 + 0x233dd8c: (5).to_bytes(4, 'little')}
-    for actor, target, table in [('FRA', 'NAV', 0x400000), ('NAV', 'FRA', 0x500000)]:
+    for actor, target, table in [(observer, 'NAV', 0x400000), ('NAV', observer, 0x500000)]:
         data[int(bindings[actor]['country_pointer'], 0) + 0x1510] = table.to_bytes(8, 'little')
         row = bytearray(0x48)
         row[:8] = (0x600000).to_bytes(8, 'little')
         row[0x10:0x18] = int(bindings[target]['fullref'], 0).to_bytes(8, 'little')
         row[0x24] = 255
         row[0x34:0x38] = (56551344).to_bytes(4, 'little')
-        row[0x45] = 1 if actor == 'FRA' else 0
+        row[0x45] = 1 if actor == observer else 0
         data[table + bindings[target]['slot'] * 0x48] = bytes(row)
     return bindings, data
 
 
-def test_generic_country_both_directions_and_signed_widths():
-    bindings, data = memory()
-    result = capture.read_inputs(lambda address, size, label: data[address], 0x300000, bindings, 'NAV')
+@pytest.mark.parametrize('observer', ['FRA', 'TUR'])
+def test_generic_country_both_directions_and_signed_widths(observer):
+    bindings, data = memory(observer)
+    result = capture.read_inputs(lambda address, size, label: data[address], 0x300000, bindings, 'NAV',
+                                 observer=observer)
     rows = result['value']['directed_records']
-    assert [(row['actor'], row['target']) for row in rows] == [('FRA', 'NAV'), ('NAV', 'FRA')]
+    assert [(row['actor'], row['target']) for row in rows] == [(observer, 'NAV'), ('NAV', observer)]
     assert [row['direct_flag'] for row in rows] == [True, False]
     assert [row['adjustment_signed_i8'] for row in rows] == [-1, -1]
     assert all(row['date_input_signed_i32'] == 56551344 and row['computed_expiry'] is None for row in rows)

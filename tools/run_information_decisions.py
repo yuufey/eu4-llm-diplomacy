@@ -17,7 +17,7 @@ sys.path.insert(0, str(ROOT))
 from tools.serve_information import _build_runtime, build_parser
 from bridge.information.collection_lock import CollectionLock
 from bridge.information.decision_codex import CodexDecisionClient, CodexRPCError
-from bridge.information.decision_desktop import desktop_thread_id, enqueue_desktop_brief
+from bridge.information.decision_desktop import desktop_thread_id, send_desktop_brief, verify_desktop_owner
 from bridge.information.decision_mcp import decision_mcp
 from bridge.information.decision_queue import DecisionQueue, strategic_subscription
 from bridge.game_tools import GameTools
@@ -60,14 +60,14 @@ def receipt(event: str, **fields):
     print(json.dumps({"event": event, **fields}, ensure_ascii=False), flush=True)
 
 
-def due_brief(service, queue, subscription_id):
+def due_brief(service, queue, subscription_id, *, turn_id=None):
     tick = service.tick()
     context = tick.get("context", {})
     if context.get("status") == "ready" and any(
             context.get(key) != value for key, value in queue.binding.items()):
         raise RuntimeError("The source changed away from the bound decision session")
     if subscription_id and tick.get("state") == "processed":
-        return queue.claim_latest(subscription_id, context)
+        return queue.claim_latest(subscription_id, context, active_turn_id=turn_id)
     return None
 
 
@@ -85,13 +85,12 @@ def run_desktop(service, queue, options, subscription_id):
         if brief:
             result_id = brief["result_id"]
             try:
-                outcome = enqueue_desktop_brief(options.codex_exe, options.desktop_thread, brief,
-                                                check_only=options.check)
-                queue.mark(result_id, "queued")
+                outcome = send_desktop_brief(options.desktop_thread, brief)
+                queue.mark(result_id, "delivered")
             except BaseException:
                 queue.mark(result_id, "uncertain")
                 raise
-            event = {"event": "decision_desktop_queued", "result_id": result_id, **outcome}
+            event = {"event": "decision_desktop_delivered", "result_id": result_id, **outcome}
             print(json.dumps(event, ensure_ascii=False), flush=True)
             if options.receipts:
                 with options.receipts.open("a", encoding="utf-8") as stream:
@@ -99,7 +98,7 @@ def run_desktop(service, queue, options, subscription_id):
             if options.check:
                 return 0
         time.sleep(options.poll_seconds)
-    raise RuntimeError("No due brief was queued in five minutes")
+    raise RuntimeError("No due brief was delivered in five minutes")
 
 
 def run_turns(service, queue, codex, thread_id, subscription_id, poll_seconds, check_only):
@@ -132,17 +131,35 @@ def run_turns(service, queue, codex, thread_id, subscription_id, poll_seconds, c
             if check_only or state != "completed":
                 return 0 if state == "completed" else 1
 
-        brief = due_brief(service, queue, None if active else subscription_id)
+        brief = due_brief(service, queue, None if active and check_only else subscription_id,
+                          turn_id=active[1] if active else None)
         if brief:
             result_id = brief["result_id"]
             try:
-                turn_id = codex.start_turn(thread_id, brief)
-                queue.mark(result_id, "running", turn_id)
+                if active:
+                    try:
+                        turn_id = codex.steer_turn(thread_id, active[1], brief)
+                    except CodexRPCError as error:
+                        if ("no active turn to steer" not in str(error).lower()
+                                or codex.read_turn_status(thread_id, active[1]) != "completed"):
+                            raise
+                        queue.mark(active[0], "completed")
+                        receipt("decision_turn_finished", result_id=active[0], thread_id=thread_id,
+                                turn_id=active[1], status="completed")
+                        active = None
+                if active:
+                    queue.mark(result_id, "steered", turn_id)
+                else:
+                    turn_id = codex.start_turn(thread_id, brief)
+                    queue.mark(result_id, "running", turn_id)
             except BaseException:
                 queue.mark(result_id, "uncertain")
                 raise
-            active = result_id, turn_id, "running"
-            receipt("decision_turn_started", result_id=result_id, thread_id=thread_id, turn_id=turn_id)
+            if active:
+                receipt("decision_turn_steered", result_id=result_id, thread_id=thread_id, turn_id=turn_id)
+            else:
+                active = result_id, turn_id, "running"
+                receipt("decision_turn_started", result_id=result_id, thread_id=thread_id, turn_id=turn_id)
         time.sleep(poll_seconds)
     raise RuntimeError("The read-only decision check did not finish in five minutes")
 
@@ -155,11 +172,12 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--codex-exe", default=os.environ.get("CODEX_APP_RUNTIME_CLI_PATH")
                         or shutil.which("codex.exe") or shutil.which("codex"))
     parser.add_argument("--desktop-thread", type=desktop_thread_id, help="Deliver briefs to a local Codex chat UUID")
-    parser.add_argument("--check", action="store_true", help="Process one due brief with read-only game tools")
+    parser.add_argument("--check", action="store_true",
+                        help="Process one due brief (desktop delivery or read-only Codex turn)")
     parser.add_argument("--receipts", type=Path, help="Record this Codex App Server's protocol in JSONL")
     parser.add_argument("service_arguments", nargs=argparse.REMAINDER)
     options = parser.parse_args(argv)
-    if not options.workspace.is_dir() or not options.codex_exe:
+    if not options.workspace.is_dir() or (not options.desktop_thread and not options.codex_exe):
         parser.error("A decision workspace and Codex executable are required")
     if (not 1 <= options.every_game_days <= 3650 or not math.isfinite(options.poll_seconds)
             or options.poll_seconds <= 0):
@@ -176,6 +194,8 @@ def main(argv: list[str] | None = None) -> int:
         with launch_guard.acquire(blocking=False) as acquired, ExitStack() as stack:
             if not acquired:
                 raise RuntimeError("A decision scheduler already owns this database")
+            if options.desktop_thread:
+                verify_desktop_owner(options.desktop_thread)
             service, journal = _build_runtime(args)
             if journal:
                 stack.callback(journal.close)

@@ -22,8 +22,10 @@ def war_query(fields=None):
             'fields': fields or ['occupations', 'blockades', 'current_forces']}
 
 
-def source_fixture(tmp_path, monkeypatch, *, allies=('FRA', 'SAV'), opponents=('ENG',), hidden=()):
+def source_fixture(tmp_path, monkeypatch, *, allies=('FRA', 'SAV'), opponents=('ENG',), hidden=(),
+                   observer='FRA'):
     _, context, creation, _ = make_valid_capture()
+    context['observer'] = observer
 
     class WarBase(Base):
         def read(self, query, current):
@@ -36,11 +38,13 @@ def source_fixture(tmp_path, monkeypatch, *, allies=('FRA', 'SAV'), opponents=('
                     'actor_side': 'side_a', 'recipient_side': 'side_b', 'reason': None}}}}
 
     base = WarBase(tmp_path, context, creation)
+    base.operator_observer = observer
     territory = NativeWarTerritorySource(base)
     forces = NativeWarForcesSource(base, None, None)
     calls = []
 
-    def capture(installation, countries, *, fields):
+    def capture(installation, countries, *, fields, observer):
+        assert observer == context['observer']
         calls.append((list(countries), list(fields)))
         targets = []
         for country in countries:
@@ -73,6 +77,26 @@ def test_normal_query_groups_war_members_and_returns_selected_identity(tmp_path,
         full = api.call('information_get_result', {'result_id': public['result_id'], 'view': 'full'})
         assert full['complete'] is True
         assert calls == [(['FRA', 'SAV', 'ENG'], list(module._capture.FIELDS))]
+    finally:
+        service.close()
+
+
+def test_tur_war_query_keeps_enemy_sizes_and_rejects_reversed_actor(tmp_path, monkeypatch):
+    adapter, base, calls = source_fixture(tmp_path, monkeypatch, observer='TUR',
+                                          allies=('TUR', 'DUL'), opponents=('ALB',))
+    service = InformationService(CompositeSource(base, [adapter]), tmp_path / 'information.sqlite3')
+    query = war_query(['current_forces']) | {'object': {'type': 'war', 'actor': 'TUR',
+                                                        'recipient': 'ALB', 'war_id': WAR}}
+    try:
+        api = InformationTools(service)
+        item = api.call('information_query', {'request_id': 'tur-war', 'queries': [query]})['items'][0]
+        assert item['war_id'] == WAR
+        assert item['current_forces']['opposing_side']['ALB'] == {
+            'army_soldiers': 10000, 'navy_ships': 10}
+        assert calls == [(['TUR', 'DUL', 'ALB'], ['current_forces'])]
+        reversed_query = dict(query, object=dict(query['object'], actor='ALB', recipient='TUR'))
+        with pytest.raises(InformationError):
+            adapter.validate_query(reversed_query, base.context())
     finally:
         service.close()
 
@@ -138,10 +162,10 @@ def test_one_failed_batch_preserves_other_countries(tmp_path, monkeypatch):
     source, _, calls = source_fixture(tmp_path, monkeypatch, allies=allies)
     original = source.capture
 
-    def capture(installation, countries, *, fields):
+    def capture(installation, countries, *, fields, observer):
         if 'SCO' in countries:
             raise OSError('fixture capture failure')
-        return original(installation, countries, fields=fields)
+        return original(installation, countries, fields=fields, observer=observer)
 
     source.capture = capture
     result = source.read(war_query(['blockades']))
@@ -173,8 +197,8 @@ def test_force_change_reuses_persisted_current_sizes_and_only_captures_once(tmp_
             'queries': [war_query(['current_forces'])]})
         original = adapter.capture
 
-        def changed(installation, countries, *, fields):
-            result = original(installation, countries, fields=fields)
+        def changed(installation, countries, *, fields, observer):
+            result = original(installation, countries, fields=fields, observer=observer)
             for target in result['observation']['backend']['targets']:
                 sizes = target['fields']['W03.current_forces']['value']
                 sizes['army_soldiers']['value'] = 12000 if target['tag'] == 'FRA' else 8000

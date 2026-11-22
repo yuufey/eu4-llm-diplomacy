@@ -9,6 +9,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 from copy import deepcopy
+import re
 from typing import Any
 
 from . import trade_power_memory as _trade_power
@@ -144,7 +145,10 @@ def _parse_power_sum_membership(baseline: Any) -> bool:
     }
     if not isinstance(value, Mapping) or set(value) != value_keys:
         return False
-    if type(value.get("observer")) is not str or value.get("observer") != "FRA":
+    observer = value.get("observer")
+    source = baseline.get("source")
+    if (not isinstance(observer, str) or re.fullmatch(r"[A-Z0-9]{3}", observer) is None
+            or not isinstance(source, Mapping) or source.get("observer") != observer):
         return False
     country_slot = value.get("country_slot")
     member_count = value.get("member_count")

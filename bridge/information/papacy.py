@@ -31,7 +31,7 @@ class NativePapacySource(NativeTradeIncomeSource):
             'coverage': 'partial', 'complete': False, 'unit': 'papacy_summary',
             'scale': 1, 'period': 'current', 'basis': BASIS, 'value_origin': ORIGIN,
             'source': 'bridge.information.papacy_capture.capture',
-            'supported_observers': ['FRA'], 'triggers': ['query', 'periodic'],
+            'triggers': ['query', 'periodic'],
             'runtime_validation': 'papacy_capture.validate_capture',
             'paths': ["observation.backend.targets[0].fields['S02.papacy'].value"],
             'raw_semantics': ('native papacy-definition presence, country papal influence, current controller '
@@ -40,7 +40,7 @@ class NativePapacySource(NativeTradeIncomeSource):
             'gaps': list(GAPS),
         }})
         topic['scope_note'] = ('读取准入国家的教廷适用性、影响力、控制者与金库；'
-                               'FRA为逻辑非玩家观察方，不适用与未知分别标记。')
+                               '按当前观察国的国家视角准入。不适用与未知分别标记。')
         return [topic]
 
     def validate_query(self, query, context=None):
@@ -77,7 +77,7 @@ class NativePapacySource(NativeTradeIncomeSource):
         normalized = self.validate_query(query, current)
         target = normalized['object']['country']
         provenance = {'read_only': True, 'native_function_invoked': False,
-                      'observer': 'FRA', 'target': target, 'actual_UI_observed': False}
+                      'observer': current.get('observer'), 'target': target, 'actual_UI_observed': False}
 
         def result(field, ctx):
             source = _source_info(type(self).__name__, ctx, complete=False,
@@ -105,7 +105,7 @@ class NativePapacySource(NativeTradeIncomeSource):
         try:
             module = import_module('.papacy_capture', __package__)
             capture = self.capture if self.capture is not None else module.capture
-            report = capture(installation, country=target, observer='FRA')
+            report = capture(installation, country=target, observer=before['observer'])
         except Exception as exc:
             error = 'PAPACY_CAPTURE_FAILED:' + type(exc).__name__
         try:

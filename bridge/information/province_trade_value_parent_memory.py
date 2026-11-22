@@ -86,7 +86,8 @@ def _shared_snapshot(limiter, base, province_id, anchor, countries):
                       and isinstance(parent_gates, Mapping), "COUNTRY_ANCHOR_MISSING")
     observer = country_bindings.get("observer")
     controller = country_bindings.get("controller")
-    _country._require(isinstance(observer, Mapping) and observer.get("tag") == "FRA",
+    _country._require(isinstance(observer, Mapping)
+                      and _shared._same_raw(observer, anchor.get("observer_binding")),
                       "OBSERVER_BINDING_UNVERIFIED")
     _country._require(isinstance(controller, Mapping), "CONTROLLER_BINDING_UNVERIFIED")
     _country._require(_country._allowed(parent_gates.get("observer", {})),
@@ -212,7 +213,8 @@ def _retract(result, target, reason):
 
 def extend(reader, base, province_id, *, observer="FRA", parent_reader, read_fields):
     """Append the owner-scoped value leaf to one active two-pass G02 parent."""
-    if (observer != "FRA" or type(province_id) is not int or not 1 <= province_id <= 0xFFFF
+    if (not isinstance(observer, str) or not _country._owner._TAG.fullmatch(observer)
+            or type(province_id) is not int or not 1 <= province_id <= 0xFFFF
             or not callable(parent_reader) or not callable(read_fields)):
         raise ValueError("PROVINCE_TRADE_VALUE_PARENT_SCOPE_INVALID")
     limiter = _shared._BoundedReader(_country._province._ReaderAdapter(reader))

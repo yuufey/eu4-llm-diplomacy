@@ -8,6 +8,7 @@ import pytest
 from bridge.information import province_discovery_capture as capture
 from bridge.tests.test_information_province_discovery_memory_v2 import make_image, BASES
 from bridge.tests.test_information_foreign_technology_capture import RecordingReader
+from bridge.tests import test_information_province_state_memory as province_fixture
 
 BASE = BASES[0]
 CREATION = 134381481521109200
@@ -18,16 +19,24 @@ def profile():
     return capture._load_profile()
 
 
-def bundle(profile, values=(True, False, True)):
+def bundle(profile, values=(True, False, True), *, observer="FRA"):
     image = make_image(values)
+    if observer != "FRA":
+        slot = province_fixture.FRA_SLOT
+        pointer = province_fixture.COUNTRY_BASE + slot * 0x1000
+        ref = province_fixture._fullref(observer, slot)
+        image.put_u64(pointer + province_fixture.country_memory.COUNTRY_FULLREF_OFFSET, ref)
+        admission = province_fixture.admission
+        image.put_u64(province_fixture.RELATION_TABLE + slot * admission.RELATION_ROW_STRIDE
+                      + admission.RELATION_ROW_RECIPIENT_FULLREF_OFFSET, ref)
     for guard in profile['code_guards']:
         image.put(BASE + int(guard['rva'], 16), bytes.fromhex(guard['bytes']))
     reader = RecordingReader(image)
-    observation = capture._observe(reader, BASE, 'FRA', profile)
+    observation = capture._observe(reader, BASE, observer, profile, observer=observer)
     identity = {'binding_verified': True, 'process_creation_filetime': CREATION,
         'process_path': 'synthetic-eu4.exe', 'process_path_sha256': capture._owner.EXE_SHA256}
     report = {'schema': capture.SCHEMA, 'status': 'observed', 'completed': True,
-        'request': {'country': 'FRA', 'observer': 'FRA', 'creation_filetime': CREATION,
+        'request': {'country': observer, 'observer': observer, 'creation_filetime': CREATION,
             'session_id': 'discovery-capture-test'}, 'profile_sha256': capture.PROFILE_SHA256,
         'identity': identity, 'identity_after': deepcopy(identity), 'module_base': hex(BASE),
         'observation': observation, 'raw_reads': reader.read_log,
@@ -35,7 +44,7 @@ def bundle(profile, values=(True, False, True)):
         'access': {'read_only': True, 'native_function_invoked': False, 'writes': False,
             'UI_control': False, 'date_advance': False, 'save_or_reload': False,
             'limit_bytes': 524288, 'calls': reader.calls, 'bytes_requested': reader.bytes_requested}}
-    context = {'observer': 'FRA', 'session_id': 'discovery-capture-test',
+    context = {'observer': observer, 'session_id': 'discovery-capture-test',
         'game_version': '1.37.4', 'game_sha256': capture._owner.EXE_SHA256,
         'game_date': observation['context_before']['game_date']}
     return report, context
@@ -110,10 +119,17 @@ def test_profile_rejects_changed_extra_guard_range_even_with_recomputed_profile_
         capture._load_profile()
 
 
-def test_capture_rejects_player_or_other_observer_before_opening_process(tmp_path):
-    report = capture.capture(tmp_path / 'missing-installation.json', observer='POR')
+def test_capture_rejects_invalid_observer_before_opening_process(tmp_path):
+    report = capture.capture(tmp_path / 'missing-installation.json', observer='invalid')
     assert report['status'] == 'unknown' and report['cleanup']['status'] == 'not_opened'
     assert report['errors'][0]['reason'] == 'FOREIGN_TECH_REQUEST_SCOPE'
+
+
+def test_discovery_replays_only_for_the_bound_turkish_observer(profile):
+    report, context = bundle(profile, observer="TUR")
+    assert capture.validate_capture(report, context, CREATION)
+    assert not capture.validate_capture(report, context | {"observer": "FRA"}, CREATION)
+    assert capture.project_fields(report)["discovered_provinces"]["value"] == [1, 3]
 
 
 def test_failed_native_nonplayer_role_withdraws_observation_before_province_words(profile):

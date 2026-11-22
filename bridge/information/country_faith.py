@@ -1,7 +1,7 @@
 """Expose the current primary-faith display name and icon request for S02.
 
 This adapter projects a validated capture into a deliberately small public
-DTO.  It keeps the logical FRA observer separate from the physical player,
+DTO. It keeps the configured observer separate from the physical player,
 and it does not treat an icon frame request as proof of a rendered widget.
 """
 from __future__ import annotations
@@ -17,7 +17,7 @@ from .religion_binding import binding_digests
 from .sources import _result, _source_info
 from .trade_income import (
     NativeTradeIncomeSource,
-    _context_reason as _base_context_reason,
+    _observer_context_reason as _base_context_reason,
     _identity,
     _session_binding,
 )
@@ -30,7 +30,6 @@ _POINTER_LIKE = re.compile(r"0x[0-9a-fA-F]{6,}")
 _TOPIC = "S02"
 _FIELD = "faith"
 _BACKEND_FIELD = "S02.faith"
-_OBSERVER = "FRA"
 _VERSION = "1.37.4"
 _BASIS = "native_primary_faith_and_country_view_projection"
 _VALUE_ORIGIN = "copied_native_primary_faith_name_and_icon_request"
@@ -63,7 +62,6 @@ class NativeCountryFaithSource(NativeTradeIncomeSource):
                 "observation.backend.targets[0].fields['S02.faith'].value.primary_religion_name.encoding",
                 "observation.backend.targets[0].fields['S02.faith'].value.icon_frame_request",
             ],
-            "supported_observers": [_OBSERVER],
             "runtime_validation": "country_faith_capture.validate_capture",
             "gaps": [
                 "COUNTRY_VIEW_PROJECTION_NOT_ACTUAL_UI_OBSERVATION",
@@ -80,7 +78,7 @@ class NativeCountryFaithSource(NativeTradeIncomeSource):
             "fields": {_FIELD: field},
             "object_types": ["country"],
             "observer_roles": [],
-            "observer_scope": [_OBSERVER],
+            "observer_scope": [],
             "parameters": {
                 "type": "object",
                 "properties": {},
@@ -93,7 +91,7 @@ class NativeCountryFaithSource(NativeTradeIncomeSource):
             "context_scope": "visible_scope",
             "visibility": "visible_scope",
             "scope_note": (
-                "FRA是逻辑观察方，country对象可为FRA或其他国家；"
+                "国家对象须通过当前观察国的国家视角准入。"
                 "只公开当前primary faith显示名称缓存、原始EU4 escape字节和图标帧请求，"
                 "不把显示名称当作原生宗教键或ID。物理玩家身份不作替换，"
                 "国家视角准入是投影而非实际UI观察；图标帧请求不代表实际显示，"
@@ -134,10 +132,8 @@ class NativeCountryFaithSource(NativeTradeIncomeSource):
         parameters = query.get("parameters", {})
         if not isinstance(parameters, dict) or parameters:
             raise InformationError("invalid_parameters", "S02.faith has no extra parameters")
-        if context is not None and (
-            not isinstance(context, dict) or context.get("observer") != _OBSERVER
-        ):
-            raise InformationError("observer_scope_mismatch", "The verified logical observer is FRA")
+        if context is not None and not isinstance(context, dict):
+            raise InformationError("invalid_context", "S02 requires a context object")
         return {
             "topic": _TOPIC,
             "object": deepcopy(obj),
@@ -147,7 +143,7 @@ class NativeCountryFaithSource(NativeTradeIncomeSource):
 
     @staticmethod
     def _context_reason(context: dict) -> str | None:
-        reason = _base_context_reason(context, _OBSERVER)
+        reason = _base_context_reason(context)
         return reason.replace("TRADE_INCOME_", "COUNTRY_FAITH_", 1) if reason else None
 
     @staticmethod
@@ -181,7 +177,7 @@ class NativeCountryFaithSource(NativeTradeIncomeSource):
         provenance = {
             "read_only": True,
             "native_function_invoked": False,
-            "observer": _OBSERVER,
+            "observer": current.get("observer"),
             "target": target,
             "basis": _BASIS,
             "actual_UI_observed": False,
@@ -236,7 +232,7 @@ class NativeCountryFaithSource(NativeTradeIncomeSource):
         report = None
         capture_error: str | None = None
         try:
-            report = capture(installation, country=target, observer=_OBSERVER)
+            report = capture(installation, country=target, observer=before["observer"])
         except Exception as exc:
             capture_error = "COUNTRY_FAITH_CAPTURE_FAILED:" + type(exc).__name__
 

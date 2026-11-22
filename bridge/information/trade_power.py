@@ -17,11 +17,10 @@ from .sources import _copy, _result, _source_info
 from .trade_income import (
     NativeTradeIncomeSource,
     _CONTEXT_KEYS,
-    _COUNTRY,
     _GAME_SHA256,
     _VERSION,
     _capture_record_reason,
-    _context_reason,
+    _observer_context_reason,
     _identity,
     _parent_report_reason,
     _record_canonical_sha256,
@@ -61,7 +60,6 @@ _CATALOG_ITEM = {
             "raw": True,
             "raw_semantics": "selected trade-node entry country-power cache / 1000",
             "paths": ["trade_power.nodes[].country_power_raw"],
-            "supported_countries": [_COUNTRY],
             "period": _PERIOD,
             "basis": _BASIS,
             "value_origin": _COUNTRY_ORIGIN,
@@ -80,7 +78,6 @@ _CATALOG_ITEM = {
             "raw": True,
             "raw_semantics": "selected trade-node total-power cache / 1000",
             "paths": ["trade_power.nodes[].total_power_raw"],
-            "supported_countries": [_COUNTRY],
             "period": _PERIOD,
             "basis": _BASIS,
             "value_origin": _TOTAL_ORIGIN,
@@ -93,7 +90,7 @@ _CATALOG_ITEM = {
     },
     "object_types": ["trade_node"],
     "observer_roles": ["country"],
-    "observer_scope": [_COUNTRY],
+    "observer_scope": [],
     "parameters": {
         "type": "object", "properties": {}, "required": [],
         "additionalProperties": False,
@@ -105,8 +102,7 @@ _CATALOG_ITEM = {
     "visibility": "country_scope",
     "context_scope": "country_scope",
     "scope_note": (
-        "仅读取固定1.37.4、FRA观察者指定节点的原生竞争力与总贸易力缓存；"
-        "缓存新鲜度和实时界面选择器对应关系仍未闭合。"
+        "读取观察国在指定节点的贸易竞争力及节点总贸易力缓存。"
     ),
 }
 
@@ -135,7 +131,7 @@ def _valid_raw(value: Any, raw_hex: Any) -> bool:
 
 
 def _power_context_reason(context: Any) -> str | None:
-    reason = _context_reason(context)
+    reason = _observer_context_reason(context)
     return reason.replace("TRADE_INCOME_", "TRADE_POWER_", 1) if reason else None
 
 
@@ -167,14 +163,14 @@ def _power_validate_reason(power: Any, trade_income: Any) -> str | None:
         and power.get("profile_sha256") != expected
     ):
         return "TRADE_POWER_PROFILE_PIN_INVALID"
-    return _power_shape_reason(power)
+    return _power_shape_reason(power, trade_income.get('country'))
 
 
-def _power_shape_reason(power: Any) -> str | None:
+def _power_shape_reason(power: Any, country: str) -> str | None:
     if not isinstance(power, Mapping) or power.get("status") != "observed":
         return "TRADE_POWER_RECORD_INVALID"
     if (
-        power.get("country") != _COUNTRY
+        power.get("country") != country
         or power.get("basis") != _BASIS
         or power.get("unit") != _UNIT
         or power.get("scale") != _SCALE
@@ -308,7 +304,7 @@ def _power_record_reason(report: Any) -> str | None:
 
 
 def _power_parent_reason(report: Any, context: Mapping[str, Any], creation: int) -> str | None:
-    reason = _parent_report_reason(report, context, _COUNTRY, creation)
+    reason = _parent_report_reason(report, context, context.get('observer'), creation)
     if reason is not None:
         return reason.replace("TRADE_INCOME_", "TRADE_POWER_", 1)
     request = report.get("request") if isinstance(report, Mapping) else None
@@ -318,7 +314,7 @@ def _power_parent_reason(report: Any, context: Mapping[str, Any], creation: int)
 
 
 class NativeTradePowerSource(NativeTradeIncomeSource):
-    """Expose T04 country and total trade-power caches for a FRA node."""
+    """Expose T04 country and total trade-power caches for an observer's node."""
 
     event_types: tuple[str, ...] = ()
 
@@ -365,12 +361,8 @@ class NativeTradePowerSource(NativeTradeIncomeSource):
         parameters = query.get("parameters", {})
         if not isinstance(parameters, dict) or parameters:
             raise InformationError("invalid_parameters", "T04 parameters must be an empty object")
-        if context is not None:
-            if not isinstance(context, dict):
-                raise InformationError("invalid_context", "context must be an object")
-            observer = context.get("observer")
-            if observer is not None and observer != _COUNTRY:
-                raise InformationError("observer_scope_mismatch", "T04 is outside the verified FRA observer scope")
+        if context is not None and not isinstance(context, dict):
+            raise InformationError("invalid_context", "context must be an object")
         normalized = {
             "topic": _TOPIC,
             "object": deepcopy(obj),
@@ -437,9 +429,10 @@ class NativeTradePowerSource(NativeTradeIncomeSource):
         normalized = self.validate_query(query, current)
         requested = normalized["fields"]
         node_id = normalized["object"]["node_id"]
+        observer = current.get('observer')
         provenance: dict[str, Any] = {
             "adapter": "bridge.information.country_resources_memory.capture",
-            "country": _COUNTRY,
+            "country": observer,
             "read_only": True,
             "native_function_invoked": False,
             "unit": _UNIT,
@@ -494,7 +487,7 @@ class NativeTradePowerSource(NativeTradeIncomeSource):
         try:
             report = capture(
                 installation,
-                _COUNTRY,
+                observer,
                 include_trade_income=True,
                 include_trade_power=True,
             )
@@ -531,7 +524,7 @@ class NativeTradePowerSource(NativeTradeIncomeSource):
         if reason is not None:
             provenance["capture_reason"] = reason
             return result(before, self._failure_fields(requested, reason, unavailable=False))
-        reason = _capture_record_reason(report)
+        reason = _capture_record_reason(report, observer)
         if reason is not None:
             reason = reason.replace("TRADE_INCOME_", "TRADE_POWER_TRADE_INCOME_", 1)
             provenance["capture_reason"] = reason

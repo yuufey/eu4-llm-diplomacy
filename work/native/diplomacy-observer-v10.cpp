@@ -124,6 +124,11 @@ static SRWLOCK native_control_country_lock=SRWLOCK_INIT;
 static wchar_t native_control_country_request_path[MAX_PATH]{};
 static ULONGLONG native_control_country_next_poll=0;
 static uint64_t native_control_country_last_hash=0;
+static bridge::control_country_policy::PolicyState native_information_country_policy{};
+static SRWLOCK native_information_country_lock=SRWLOCK_INIT;
+static wchar_t native_information_country_request_path[MAX_PATH]{};
+static ULONGLONG native_information_country_next_poll=0;
+static uint64_t native_information_country_last_hash=0;
 #endif
 #ifdef INFORMATION_BATTLE_WAR_IDENTITY
 static bool observation_register_battle_war(uintptr_t reference,char* out,size_t capacity) noexcept;
@@ -177,6 +182,22 @@ static bool observation_control_country_handle_tag_only(uint64_t handle) noexcep
 #endif
 }
 
+#ifdef BRIDGE_COUNTRY_MODIFIER_OBSERVATION
+static bool observation_information_country_handle(uint64_t handle) noexcept {
+#ifdef BRIDGE_NATIVE_COUNTRY_CONTROL
+    char tag[4]{};
+    if (!bridge::control_country_policy::tag_from_handle(handle,tag)) return false;
+    AcquireSRWLockShared(&native_information_country_lock);
+    const bool observed=native_information_country_policy.revision!=0
+        && native_information_country_policy.countries.contains(tag);
+    ReleaseSRWLockShared(&native_information_country_lock);
+    return observed && observation_country_handle(handle);
+#else
+    return (handle&0xffffffu)==0x415246u;
+#endif
+}
+#endif
+
 static bool observation_country_tag_matches_handle(const char* tag,
     std::uint64_t handle) noexcept {
     if (!tag || tag[3]!=0) return false;
@@ -189,6 +210,24 @@ static bool observation_country_tag_matches_handle(const char* tag,
         && static_cast<unsigned char>(tag[1])==static_cast<unsigned char>((handle>>8)&0xffu)
         && static_cast<unsigned char>(tag[2])==static_cast<unsigned char>((handle>>16)&0xffu);
 }
+
+#ifdef BRIDGE_NATIVE_COUNTRY_CONTROL
+static bool observation_ai_recipient(uint64_t recipient,int32_t expected_date) noexcept {
+    uintptr_t game=0,controllers=0;
+    uint64_t physical_player=0;
+    int32_t date=0,human_count=0,kind=0;
+    const auto slot=static_cast<unsigned>((recipient>>32)&0xffffu);
+    return !observation_control_country_handle_tag_only(recipient)
+        && observation_country_handle(recipient)
+        && read(base+0x233fe58,game) && game
+        && read(game+0x1dd0,date) && date==expected_date
+        && read(game+0x1e60,physical_player) && physical_player!=recipient
+        && observation_country_handle(physical_player)
+        && read(game+0xa60,human_count) && human_count==1
+        && read(game+0x1d48,controllers) && controllers
+        && read(controllers+slot*sizeof(kind),kind) && kind==0;
+}
+#endif
 
 static std::size_t observation_control_country_count() noexcept {
 #ifdef BRIDGE_NATIVE_COUNTRY_CONTROL
@@ -375,7 +414,9 @@ static void rival_execution_finish(unsigned binding) noexcept;
 static bool native_control_country_set_paths(const wchar_t* directory) noexcept {
     if (!directory || !directory[0]) return false;
     return swprintf(native_control_country_request_path,MAX_PATH,
-        L"%ls\\controlled-countries.req",directory)>=0;
+        L"%ls\\controlled-countries.req",directory)>=0
+        && swprintf(native_information_country_request_path,MAX_PATH,
+            L"%ls\\information-observers.req",directory)>=0;
 }
 
 static std::uint64_t native_control_country_hash(const char* bytes,
@@ -482,6 +523,61 @@ static void native_control_country_tick() noexcept {
     bridge_alliance_inbound_detail::inbound_saved_queue_reset();
     native_control_country_emit_ack(session_id,request.revision,
         accepted_countries,true,"ok");
+}
+
+static void native_information_country_tick() noexcept {
+    if (!native_information_country_request_path[0] || !control_ready()) return;
+    const ULONGLONG now=GetTickCount64();
+    if (now<native_information_country_next_poll) return;
+    native_information_country_next_poll=now+500;
+    HANDLE file=CreateFileW(native_information_country_request_path,GENERIC_READ,
+        FILE_SHARE_READ|FILE_SHARE_WRITE|FILE_SHARE_DELETE,nullptr,OPEN_EXISTING,
+        FILE_ATTRIBUTE_NORMAL,nullptr);
+    if (file==INVALID_HANDLE_VALUE) return;
+    char wire[bridge::control_country_policy::kMaxWireBytes+1]{};
+    DWORD bytes=0;
+    const bool readable=ReadFile(file,wire,sizeof(wire),&bytes,nullptr)!=FALSE;
+    CloseHandle(file);
+    if (!readable || !bytes) return;
+    const auto hash=native_control_country_hash(wire,bytes);
+    if (hash==native_information_country_last_hash) return;
+    native_information_country_last_hash=hash;
+
+    namespace policy=bridge::control_country_policy;
+    policy::Request request{};
+    if (!policy::parse_request(wire,bytes,request,"EU4INFO1").ok()) return;
+    char session_id[policy::kMaxSessionIdLength+1]{};
+    snprintf(session_id,sizeof(session_id),"%lu-%llx",
+        static_cast<unsigned long>(GetCurrentProcessId()),
+        static_cast<unsigned long long>(observation_creation));
+    const char* reason=std::strcmp(session_id,request.session_id)==0 ? nullptr : "session_mismatch";
+    for (std::size_t index=0;!reason && index<request.countries.count;++index) {
+        uint64_t handle=0;
+        const char* tag=request.countries.at(index);
+        if (!alliance_query_country(tag,handle) || !observation_country_handle(handle)
+            || !policy::tag_matches_handle(tag,handle)) reason="country_unavailable";
+    }
+    if (!reason) {
+        AcquireSRWLockExclusive(&native_information_country_lock);
+        const auto applied=native_information_country_policy.apply(request,session_id);
+        ReleaseSRWLockExclusive(&native_information_country_lock);
+        if (applied!=policy::ApplyError::ok) reason="stale_revision";
+    }
+    char countries[200]{};
+    std::size_t used=0;
+    for (std::size_t index=0;index<request.countries.count;++index) {
+        const int count=snprintf(countries+used,sizeof(countries)-used,"%s\"%.3s\"",
+            index?",":"",request.countries.at(index));
+        if (count<0 || static_cast<std::size_t>(count)>=sizeof(countries)-used) return;
+        used+=static_cast<std::size_t>(count);
+    }
+    char message[512]{};
+    snprintf(message,sizeof(message),
+        "{\"event\":\"native_information_observers_set\",\"session_id\":\"%s\","
+        "\"revision\":%llu,\"countries\":[%s],\"accepted\":%s,\"reason\":\"%s\"}\n",
+        session_id,static_cast<unsigned long long>(request.revision),countries,
+        reason?"false":"true",reason?reason:"ok");
+    line(message);
 }
 #endif
 
@@ -761,6 +857,9 @@ extern "C" void bridge_frame_tick(void* context) {
     if (!thread_changed && frame_thread==GetCurrentThreadId()) {
 #ifdef BRIDGE_NATIVE_COUNTRY_CONTROL
         if (frame_count>=100) native_control_country_tick();
+#endif
+#ifdef BRIDGE_NATIVE_COUNTRY_CONTROL
+        if (frame_count>=100) native_information_country_tick();
 #endif
 #ifdef BRIDGE_NATIVE_COUNTRY_CONTROL
         if (frame_count>=100) native_game_speed_tick();
@@ -1473,7 +1572,15 @@ extern "C" __declspec(dllexport) DWORD WINAPI BridgeStart(void* argument) {
     {
         char* end=strrchr(message,'}');
         if (end) snprintf(end,sizeof(message)-static_cast<size_t>(end-message),
-            ",\"native_territorial_interest_query\":true}\n");
+            ",\"native_territorial_interest_query\":true,\"native_territorial_interest_query_wire\":24"
+#ifdef BRIDGE_NATIVE_COUNTRY_CONTROL
+            ",\"native_information_observer_configuration\":true,\"native_country_modifier_scoped_schema\":2"
+            ",\"native_relation_change_scoped_schema\":6,\"native_war_declaration_scoped_schema\":2"
+            ",\"native_land_promise_scoped_schema\":2,\"native_mission_completion_scoped_schema\":3"
+            ",\"native_mission_availability_scoped_schema\":2,\"native_mission_condition_scoped_schema\":4"
+            ",\"native_expiry_scoped_wire\":2,\"native_rival_change_scoped_schema\":4"
+#endif
+            "}\n");
     }
 #ifdef BRIDGE_DEBT_QUOTE_QUERY
     char* end=strrchr(message,'}');
@@ -1481,7 +1588,11 @@ extern "C" __declspec(dllexport) DWORD WINAPI BridgeStart(void* argument) {
         const size_t used=static_cast<size_t>(end-message);
         snprintf(end,sizeof(message)-used,
             ",\"native_debt_quote_query\":true,\"native_debt_quote_query_wire\":1,"
-            "\"native_debt_quote_read_only\":true,\"native_debt_quote_fp_context\":true}\n");
+            "\"native_debt_quote_read_only\":true,\"native_debt_quote_fp_context\":true"
+#ifdef BRIDGE_NATIVE_COUNTRY_CONTROL
+            ",\"native_debt_quote_configured_country_scope\":true"
+#endif
+            "}\n");
     }
 #endif
 #ifdef BRIDGE_COUNTRY_MODIFIER_OBSERVATION

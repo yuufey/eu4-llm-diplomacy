@@ -56,8 +56,8 @@
     },
     {
       "path": "bridge/information/trade_value_capture.py",
-      "bytes": 10977,
-      "sha256": "0ca82c7cd1f5eb7433953c397d6ca7ec44b8a56e8484326dfe6226dc516951ad"
+      "bytes": 11567,
+      "sha256": "368b2258cb5107aed0335924efc141fe8bd4e42a0336b9c88a6d3334e9b92c67"
     }
   ],
   "layout": {

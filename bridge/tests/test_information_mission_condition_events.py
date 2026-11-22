@@ -15,6 +15,7 @@ from bridge.information.sources import DiplomacySource
 from bridge.information.tools import InformationTools
 from bridge.tests.test_information_country_modifier_events import GAME_DATE, SESSION_ID, LogSession, c04_query, make_source
 from bridge.tests.test_information_mission_availability_events import available
+from bridge.tests.test_information_mission_set_events import inserted
 from bridge.tests.test_information_alliance_record_events import record_ack
 from bridge.tests.test_information_war_declaration_events import reference
 
@@ -45,6 +46,57 @@ def query():
     value = c04_query()
     value['parameters']['event_type'] = observation.EVENT_TYPE
     return value
+
+
+def test_scoped_mission_records_share_live_cursor_and_require_matching_observer(tmp_path):
+    directory = Path(__file__).parent / 'fixtures'
+    fixture = json.loads((directory / 'information_mission_FRA_normandy_live_1374.json').read_bytes())
+    ack = json.loads((directory / fixture['installation_ack_fixture']).read_bytes())['installation_ack']
+    ack.update(version=65, session_id=SESSION_ID, observer='TUR',
+        native_country_control_configuration=True, native_country_control_protocol='EU4CONTROL1',
+        native_country_control_ack='native_controlled_countries_set',
+        native_country_control_request='controlled-countries.req',
+        native_information_observer_configuration=True, native_country_modifier_scoped_schema=2,
+        native_mission_completion_scoped_schema=3, native_mission_availability_scoped_schema=2,
+        native_mission_condition_scoped_schema=4, native_mission_condition_wire=2,
+        native_mission_condition_scope=observation.COMBINED_SCOPE)
+    ack[observation.PROVINCE_CAPABILITY] = True
+    own = {'country': 'TUR', 'country_fullref': reference('TUR', 43),
+           'mission_id_hex': 'tur_constance'.encode().hex()}
+    events = [
+        inserted(1, schema_version=3, **own),
+        available(1, schema_version=2, **own),
+        condition(1, schema_version=3, **own),
+        condition(2, schema_version=4, source=observation.PROVINCE_SOURCE,
+                  province_id=151, child_index=0, child_count=1, **own),
+        condition(3, schema_version=3),
+    ]
+    session, journal, _ = make_source(tmp_path, ack=ack, events=events, observer='TUR')
+    try:
+        assert {observation.SCOPED_CAPABILITY, mission_observation.SCOPED_CAPABILITY,
+                mission_availability_observation.SCOPED_CAPABILITY} <= session.installation_capabilities()
+        session.observed_countries = ('FRA', 'TUR')
+        source = DiplomacySource(DiplomacyTools(journal, session), observer='TUR')
+        context = source.context()
+        batch = source.poll_events(context, None)
+        assert batch['gaps'] == []
+        assert batch['cursor']['mission_condition_sequence'] == 3
+        assert [event['payload']['scope'] for event in batch['events']] == [
+            mission_observation.CONFIGURED_SET_SCOPE, mission_availability_observation.CONFIGURED_SCOPE,
+            observation.CONFIGURED_ROOT_SCOPE, observation.CONFIGURED_PROVINCE_SCOPE,
+        ]
+        for event in batch['events']:
+            selected = c04_query()
+            selected['parameters']['event_type'] = event['event_type']
+            replay = source.replay_event(selected, context, event)
+            assert replay['fields']['event_payload']['value'] == event['payload']
+            rejected = source.replay_event(selected, dict(context, observer='FRA'), event)
+            assert rejected['fields']['event_payload']['status'] == 'unavailable'
+        session.observed_countries = ('FRA',)
+        denied = DiplomacySource(DiplomacyTools(journal, session), observer='TUR')
+        assert observation.EVENT_TYPE not in denied.event_types
+    finally:
+        journal.close()
 
 
 def test_actual_normandy_events_merge_by_date_and_hide_native_details(tmp_path):

@@ -22,6 +22,7 @@ from ctypes import wintypes as W
 from datetime import datetime, timezone
 import hashlib
 import json
+import re
 from pathlib import Path
 from typing import Any, Mapping, Sequence
 
@@ -958,10 +959,10 @@ def capture(installation: Path, country: str, keys: Sequence[str]) -> dict[str, 
         report["errors"].append({"stage": "probe_identity", "status": "unknown", "error": str(exc)})
     # Validate request before opening a process.  This keeps invalid input
     # from consuming an RPM budget or creating a handle.
-    if country != EXPECTED_COUNTRY:
+    if not isinstance(country, str) or re.fullmatch(r"[A-Z0-9]{3}", country) is None:
         report["status"] = "unsupported_country"
         report["entries"] = _unknown_entries(requested, "unsupported_country")
-        report["errors"].append({"stage": "request", "status": "unknown", "error": "Only FRA is permitted"})
+        report["errors"].append({"stage": "request", "status": "unknown", "error": "Invalid country tag"})
         report["cleanup"]["handle_close"] = _close_process_handle(None, None)
         report["completed"] = True
         return report

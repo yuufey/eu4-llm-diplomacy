@@ -145,7 +145,7 @@ def test_known_country_projection_preserves_scalars_and_controller_membership(
     assert spec["unit"] == "papacy_summary" and spec["scale"] == 1
     assert spec["period"] == "current" and spec["basis"] == BASIS
     assert spec["triggers"] == ["query", "periodic"]
-    assert spec["supported_observers"] == ["FRA"]
+    assert "supported_observers" not in spec
 
     result = source.read(_query(target), base.context())
     field = result["fields"][FIELD]
@@ -330,8 +330,8 @@ def test_invalid_queries_and_observer_scope_are_rejected_before_capture(
         source.read(query, base.context())
     wrong_observer = base.context()
     wrong_observer["observer"] = "POR"
-    with pytest.raises(InformationError):
-        source.read(_query("ENG"), wrong_observer)
+    wrong = source.read(_query("ENG"), wrong_observer)["fields"][FIELD]
+    assert wrong["reason"] == "PAPACY_CONTEXT_STALE"
     assert captures == []
 
 

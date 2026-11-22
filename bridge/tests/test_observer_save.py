@@ -32,7 +32,7 @@ class _FakeSession:
     def __init__(self, installation: Path, executable: Path):
         self.health_calls = 0
 
-    def health(self) -> dict:
+    def physical_player_health(self) -> dict:
         self.health_calls += 1
         return {"status": "ready", "state_id": f"state-{self.health_calls}", "date_raw": 56459040}
 

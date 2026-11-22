@@ -1,6 +1,6 @@
 """Read-only T04 trade-share/source adapter.
 
-The country-resources parent owns the FRA identity and the guarded trade
+The country-resources parent owns the country identity and the guarded trade
 income graph.  This adapter requests the independent share/source child in the
 same capture, validates all three child snapshots, and projects only the
 selected node.  It never derives shares from trade power or aggregates source
@@ -18,12 +18,11 @@ from .sources import _copy, _result, _source_info
 from .trade_income import (
     NativeTradeIncomeSource,
     _CONTEXT_KEYS,
-    _COUNTRY,
     _GAME_SHA256,
     _VERSION,
     _capture_record_reason,
-    _context_reason,
     _identity,
+    _observer_context_reason,
     _parent_report_reason,
     _record_canonical_sha256,
     _session_binding,
@@ -74,9 +73,9 @@ _CATALOG_ITEM = {
             "unit": _SHARE_UNIT,
             "scale": _SHARE_SCALE,
             "raw": False,
-            "raw_semantics": "selected entry+0x2c signed share cache, retained inside the FRA collection value",
+            "raw_semantics": "selected entry+0x2c signed share cache for the configured observer",
             "paths": ["trade_details.nodes[].share_raw"],
-            "supported_countries": [_COUNTRY],
+            "supported_countries": [],
             "period": _PERIOD,
             "basis": _BASIS,
             "value_origin": _VALUE_ORIGIN,
@@ -106,7 +105,7 @@ _CATALOG_ITEM = {
                 "trade_details.nodes[].dynamic_sources",
                 "trade_details.nodes[].transfer_sources",
             ],
-            "supported_countries": [_COUNTRY],
+            "supported_countries": [],
             "period": _PERIOD,
             "basis": _BASIS,
             "value_origin": _VALUE_ORIGIN,
@@ -127,7 +126,7 @@ _CATALOG_ITEM = {
     },
     "object_types": ["trade_node"],
     "observer_roles": ["country"],
-    "observer_scope": [_COUNTRY],
+    "observer_scope": [],
     "parameters": {
         "type": "object", "properties": {}, "required": [],
         "additionalProperties": False,
@@ -182,7 +181,7 @@ def _valid_bytes_hex(value: Any) -> bool:
 
 
 def _details_context_reason(context: Any) -> str | None:
-    reason = _context_reason(context)
+    reason = _observer_context_reason(context)
     return reason.replace("TRADE_INCOME_", "TRADE_DETAILS_", 1) if reason else None
 
 
@@ -312,11 +311,11 @@ def _transfer_shape_reason(container: Any, direction: str) -> str | None:
     return None
 
 
-def _details_shape_reason(details: Any) -> str | None:
+def _details_shape_reason(details: Any, country: str) -> str | None:
     if not isinstance(details, Mapping) or details.get("status") != "observed":
         return "TRADE_DETAILS_RECORD_INVALID"
     if (
-        details.get("country") != _COUNTRY
+        details.get("country") != country
         or details.get("basis") not in _DETAILS_BASIS_ALIASES
         or details.get("period") != _PERIOD
         or details.get("value_origin") != _VALUE_ORIGIN
@@ -448,11 +447,11 @@ def _details_validate_reason(details: Any, trade_income: Any) -> str | None:
         and details.get("profile_sha256") != expected
     ):
         return "TRADE_DETAILS_PROFILE_PIN_INVALID"
-    return _details_shape_reason(details)
+    return _details_shape_reason(details, trade_income.get("country"))
 
 
 def _details_parent_reason(report: Any, context: Mapping[str, Any], creation: int) -> str | None:
-    reason = _parent_report_reason(report, context, _COUNTRY, creation)
+    reason = _parent_report_reason(report, context, context["observer"], creation)
     if reason is not None:
         return reason.replace("TRADE_INCOME_", "TRADE_DETAILS_", 1)
     request = report.get("request") if isinstance(report, Mapping) else None
@@ -564,7 +563,7 @@ def _compact_details_provenance(
 
 
 class NativeTradeDetailsSource(NativeTradeIncomeSource):
-    """Expose T04 shares and source rows for the verified FRA observer."""
+    """Expose T04 shares and source rows for the configured observer country."""
 
     event_types: tuple[str, ...] = ()
 
@@ -615,12 +614,8 @@ class NativeTradeDetailsSource(NativeTradeIncomeSource):
         parameters = query.get("parameters", {})
         if not isinstance(parameters, dict) or parameters:
             raise InformationError("invalid_parameters", "T04 parameters must be an empty object")
-        if context is not None:
-            if not isinstance(context, dict):
-                raise InformationError("invalid_context", "context must be an object")
-            observer = context.get("observer")
-            if observer is not None and observer != _COUNTRY:
-                raise InformationError("observer_scope_mismatch", "T04 details is outside the verified FRA observer scope")
+        if context is not None and not isinstance(context, dict):
+            raise InformationError("invalid_context", "context must be an object")
         normalized = {
             "topic": _TOPIC,
             "object": deepcopy(obj),
@@ -704,7 +699,7 @@ class NativeTradeDetailsSource(NativeTradeIncomeSource):
         try:
             report = capture(
                 installation,
-                _COUNTRY,
+                before["observer"],
                 include_trade_income=True,
                 include_trade_details=True,
             )
@@ -770,7 +765,7 @@ class NativeTradeDetailsSource(NativeTradeIncomeSource):
                 "report": report,
                 "after": after,
             }
-        reason = _capture_record_reason(report)
+        reason = _capture_record_reason(report, before["observer"])
         if reason is not None:
             reason = reason.replace("TRADE_INCOME_", "TRADE_DETAILS_TRADE_INCOME_", 1)
             provenance["capture_reason"] = reason
@@ -950,7 +945,7 @@ class NativeTradeDetailsSource(NativeTradeIncomeSource):
 
     @staticmethod
     def _field_from_node(
-        node: Mapping[str, Any], field: str, *,
+        node: Mapping[str, Any], field: str, *, country: str,
         localized_names: list[dict[str, Any] | None] | None = None,
     ) -> dict[str, Any]:
         share = node.get("share_raw")
@@ -965,7 +960,7 @@ class NativeTradeDetailsSource(NativeTradeIncomeSource):
             "complete": False,
         }
         if field == _SHARES:
-            return dict(common, value={_COUNTRY: {
+            return dict(common, value={country: {
                 "raw": share,
                 "raw_hex": share_hex,
                 "unit": _SHARE_UNIT,
@@ -983,7 +978,7 @@ class NativeTradeDetailsSource(NativeTradeIncomeSource):
                 "status": "unknown", "reason": "TRADE_MULTIPLIER_NOT_CLOSED",
             },
         }
-        return dict(common, value={_COUNTRY: value}, unit=_SOURCE_UNIT, scale=_SOURCE_SCALE)
+        return dict(common, value={country: value}, unit=_SOURCE_UNIT, scale=_SOURCE_SCALE)
 
     @staticmethod
     def _dynamic_key(raw_hex: Any) -> tuple[str | None, str | None]:
@@ -1195,7 +1190,7 @@ class NativeTradeDetailsSource(NativeTradeIncomeSource):
         localized: Any = None
         lookup_reason: str | None = None
         try:
-            localized = method(_COUNTRY, deepcopy(dict(context)), keys)
+            localized = method(context["observer"], deepcopy(dict(context)), keys)
         except InformationError as exc:
             lookup_reason = str(getattr(exc, "code", "LOCALIZATION_READ_FAILED"))
         except Exception as exc:
@@ -1259,7 +1254,7 @@ class NativeTradeDetailsSource(NativeTradeIncomeSource):
         node_id = normalized["object"]["node_id"]
         provenance: dict[str, Any] = {
             "adapter": "bridge.information.country_resources_memory.capture",
-            "country": _COUNTRY,
+            "country": current.get("observer"),
             "read_only": True,
             "native_function_invoked": False,
             "period": _PERIOD,
@@ -1359,7 +1354,7 @@ class NativeTradeDetailsSource(NativeTradeIncomeSource):
         for field in requested:
             try:
                 fields[field] = self._field_from_node(
-                    node, field, localized_names=localized_names,
+                    node, field, country=before["observer"], localized_names=localized_names,
                 )
             except Exception as exc:
                 reason = str(exc) or type(exc).__name__

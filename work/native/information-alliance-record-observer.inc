@@ -54,7 +54,8 @@ static Pending begin(uintptr_t record, plan::Kind kind) noexcept {
         return pending;
     }
     if (value.actor == value.recipient
-        || ((value.actor & 0xffffffu) != 0x415246u && (value.recipient & 0xffffffu) != 0x415246u)) return pending;
+        || (!observation_information_country_handle(value.actor)
+            && !observation_information_country_handle(value.recipient))) return pending;
     for (unsigned index = 0; index < active_count; ++index) {
         const auto& active = active_pairs[index];
         if ((active.actor == value.actor && active.recipient == value.recipient)

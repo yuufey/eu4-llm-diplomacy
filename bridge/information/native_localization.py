@@ -16,7 +16,6 @@ from .model import InformationError
 
 _KEY_PATTERN = re.compile(r"[!-~]{1,160}")
 _LANGUAGE_PATTERN = re.compile(r"l_[A-Za-z0-9_]{1,63}")
-_SUPPORTED_COUNTRIES = ("FRA",)
 _MAX_KEYS = 8192
 _BATCH_SIZE = 128
 
@@ -28,7 +27,7 @@ def _gap(reason: str, status: str = "unknown") -> dict[str, str]:
 class NativeLocalizationReader:
     """Normalize version-bound, double-pass native literal cache captures."""
 
-    supported_countries = _SUPPORTED_COUNTRIES
+    supported_countries = None
 
     def __init__(self, base_source, capture=None):
         self.base_source = base_source
@@ -51,11 +50,10 @@ class NativeLocalizationReader:
         final base-context check.  Public neutral consumers always use the
         guarded default through :meth:`localized_text`.
         """
-        if country not in self.supported_countries or context.get("observer") != country:
-            raise InformationError(
-                "observer_scope_mismatch",
-                "Localization reader supports the bound FRA observer",
-            )
+        if (not isinstance(country, str) or re.fullmatch(r"[A-Z0-9]{3}", country) is None
+                or context.get("observer") != country
+                or (self.supported_countries is not None and country not in self.supported_countries)):
+            raise InformationError("observer_scope_mismatch", "Localization requires the configured observer country")
         session = getattr(self.base_source, "session", None)
         if session is None or context.get("status") != "ready" or context.get("mode") != "live":
             raise InformationError("source_unavailable", "No ready native localization session")

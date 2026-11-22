@@ -166,7 +166,7 @@ def test_catalog_declares_only_partial_military_modifier_map(tmp_path):
     assert field["unit"] == "military_modifier_map"
     assert field["scale"] == 1
     assert field["period"] == "current"
-    assert field["supported_countries"] == ["FRA"]
+    assert topic["observer_scope"] == []
     assert field["supported_object_types"] == ["country"]
     assert topic["triggers"] == ["query", "periodic"]
     assert topic["parameters"]["additionalProperties"] is False

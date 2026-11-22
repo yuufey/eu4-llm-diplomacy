@@ -19,6 +19,7 @@ from datetime import datetime, timezone
 import hashlib
 import json
 from pathlib import Path
+import re
 from typing import Any, Mapping
 
 from . import mission_memory as _mission_memory
@@ -132,12 +133,6 @@ DOMINATION_UNKNOWN_REASON = "THREAD_LOCAL_DLC_OVERRIDE_UNRESOLVED"
 
 MAX_TOTAL_RPM = _profile_int(PROFILE["limits"]["max_total_rpm"], "limits.max_total_rpm")
 MAX_SINGLE_RPM = _profile_int(PROFILE["limits"]["max_single_rpm"], "limits.max_single_rpm")
-INITIAL_COUNTRY_TABLE_ENTRIES = _profile_int(
-    PROFILE["limits"]["initial_country_table_entries"], "limits.initial_country_table_entries"
-)
-MAX_COUNTRY_TABLE_ENTRIES = _profile_int(
-    PROFILE["limits"]["max_country_table_entries"], "limits.max_country_table_entries"
-)
 MAX_FLAG_IDS = _profile_int(PROFILE["limits"]["max_flag_ids"], "limits.max_flag_ids")
 MAX_TABLE_INDEX = _profile_int(PROFILE["limits"]["max_table_index"], "limits.max_table_index")
 PROCESS_ACCESS = 0x0400 | 0x0010  # PROCESS_QUERY_INFORMATION | PROCESS_VM_READ
@@ -175,13 +170,6 @@ def _address(value: int | None, module_base: int | None = None) -> dict[str, Any
     else:
         result["rva_identity"] = "runtime_va_or_heap"
     return result
-
-
-def _tag_and_slot(handle: int) -> tuple[str | None, int | None]:
-    raw = (handle & 0xFFFFFF).to_bytes(3, "little")
-    if not all(0x41 <= byte <= 0x5A or 0x30 <= byte <= 0x39 for byte in raw):
-        return None, (handle >> 32) & 0xFFFF
-    return raw.decode("ascii"), (handle >> 32) & 0xFFFF
 
 
 def _filetime_value(value: W.FILETIME) -> int:
@@ -490,64 +478,6 @@ def _runtime_code_guard(reader: Any, module_base: int) -> dict[str, Any]:
     return result
 
 
-def _country_identity(reader: Any, module_base: int, requested_country: str) -> dict[str, Any]:
-    """Find exactly one tag/slot match in the bounded first table window."""
-    database_field = module_base + DATABASE_RVA
-    database, database_raw = reader.qword(database_field, "global.database_pointer")
-    result: dict[str, Any] = {
-        "status": "unknown",
-        "requested_country": requested_country,
-        "database_pointer": _address(database, module_base),
-        "database_raw_hex": database_raw.hex(),
-        "table_pointer": None,
-        "scanned_entries": 0,
-        "initial_scan_limit": INITIAL_COUNTRY_TABLE_ENTRIES,
-        "tail_not_claimed": True,
-        "country_pointer": None,
-        "country_handle": None,
-    }
-    if not _valid_pointer(database):
-        result["unknown_reason"] = "database_pointer_invalid"
-        return result
-    table_field = database + COUNTRY_TABLE_OFFSET
-    table, table_raw = reader.qword(table_field, "database.country_table")
-    result["table_pointer"] = {"address": _address(table_field, module_base), "raw_hex": table_raw.hex(), "value": _address(table, module_base)}
-    if not _valid_pointer(table):
-        result["unknown_reason"] = "country_table_pointer_invalid"
-        return result
-    pointer_bytes = reader.read(table, INITIAL_COUNTRY_TABLE_ENTRIES * 8, "country_table.first_256_pointers")
-    matches: list[dict[str, Any]] = []
-    for index in range(INITIAL_COUNTRY_TABLE_ENTRIES):
-        pointer = int.from_bytes(pointer_bytes[index * 8:(index + 1) * 8], "little")
-        if pointer == 0 or not _valid_pointer(pointer):
-            continue
-        handle, handle_raw = reader.qword(pointer + COUNTRY_HANDLE_OFFSET, f"country[{index}].handle")
-        tag, slot = _tag_and_slot(handle)
-        if tag == requested_country and slot == index:
-            matches.append(
-                {
-                    "table_index": index,
-                    "country_pointer": _address(pointer, module_base),
-                    "country_handle": {
-                        "address": _address(pointer + COUNTRY_HANDLE_OFFSET, module_base),
-                        "field_offset": hex(COUNTRY_HANDLE_OFFSET),
-                        "raw_hex": handle_raw.hex(),
-                        "value": _hex(handle),
-                        "tag": tag,
-                        "slot": slot,
-                    },
-                }
-            )
-    result["scanned_entries"] = INITIAL_COUNTRY_TABLE_ENTRIES
-    if len(matches) == 1:
-        result.update({"status": "observed", **matches[0]})
-    elif len(matches) > 1:
-        result["unknown_reason"] = "duplicate_tag_and_slot_matches"
-    else:
-        result["unknown_reason"] = "country_not_found_within_fixed_256_entry_bound"
-    return result
-
-
 def _flag_result_unknown(reason: str, *, object_address: int | None = None, module_base: int | None = None) -> dict[str, Any]:
     return {
         "status": "unknown",
@@ -765,7 +695,7 @@ def _snapshot(reader: Any, module_base: int, country: str) -> dict[str, Any]:
         date_raw = reader.read(date_address, 4, "game.raw_date")
         date_value = int.from_bytes(date_raw, "little", signed=True)
         result["game_date"] = {"address": _address(date_address, module_base), "field_offset": hex(GAME_DATE_OFFSET), "raw_hex": date_raw.hex(), "raw": date_value}
-        country_scan = _country_identity(reader, module_base, country)
+        country_scan = _mission_memory._country_scan(reader, database, country)
         result["country_scan"] = country_scan
         if country_scan.get("status") != "observed":
             result["unknown_conditions"].append(country_scan.get("unknown_reason", "country_identity_unknown"))
@@ -942,9 +872,9 @@ def capture_inputs(installation: Path, country: str) -> dict[str, Any]:
         _apply_cleanup(report, None, None)
         report["completed"] = False
         return report
-    if country != EXPECTED_COUNTRY:
+    if not isinstance(country, str) or re.fullmatch(r"[A-Z0-9]{3}", country) is None:
         report["status"] = "unsupported_country"
-        report["errors"].append({"stage": "request", "status": "unknown", "error": "Only FRA is permitted"})
+        report["errors"].append({"stage": "request", "status": "unknown", "error": "Invalid country tag"})
         _apply_cleanup(report, None, None)
         report["completed"] = True
         return report
@@ -1019,7 +949,7 @@ def capture_inputs(installation: Path, country: str) -> dict[str, Any]:
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--installation", required=True, type=Path)
-    parser.add_argument("--country", choices=(EXPECTED_COUNTRY,), default=EXPECTED_COUNTRY)
+    parser.add_argument("--country", default=EXPECTED_COUNTRY)
     parser.add_argument("--output", required=True, type=Path)
     args = parser.parse_args(argv)
     report = capture_inputs(args.installation, args.country)

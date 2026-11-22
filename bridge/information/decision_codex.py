@@ -16,6 +16,8 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
+from .decision_desktop import desktop_prompt
+
 
 _CLIENT_INFO = {
     "name": "eu4_decision_orchestrator",
@@ -24,7 +26,7 @@ _CLIENT_INFO = {
 }
 _TOOL_OUTPUT_NAME = "information_brief"
 _TURN_NOTIFICATION_METHODS = {"turn/started", "turn/completed"}
-_RECEIPT_REQUEST_METHODS = {"thread/start", "thread/resume", "turn/start"}
+_RECEIPT_REQUEST_METHODS = {"thread/start", "thread/resume", "turn/start", "turn/steer"}
 _RECEIPT_NOTIFICATION_PREFIXES = ("thread/", "turn/", "item/", "rawResponseItem/")
 _MAX_TIMEOUT_SECONDS = 300.0
 
@@ -276,6 +278,18 @@ class CodexDecisionClient:
         turn_id = turn.get("id") if isinstance(turn, dict) else None
         if not isinstance(turn_id, str) or not turn_id:
             raise CodexAppServerError("app-server turn/start response did not include turn.id")
+        return turn_id
+
+    def steer_turn(self, thread_id: str, turn_id: str, brief: dict[str, Any]) -> str:
+        """Deliver a fresh brief to the exact model turn that is already running."""
+        with self._thread_operation_lock:
+            result = self._request("turn/steer", {
+                "threadId": thread_id,
+                "expectedTurnId": turn_id,
+                "input": [{"type": "text", "text": desktop_prompt(brief)}],
+            })
+        if not isinstance(result, dict) or result.get("turnId") != turn_id:
+            raise CodexAppServerError("app-server did not acknowledge the expected active turn")
         return turn_id
 
     def collect_turns(self) -> list[tuple[str, str, str]]:

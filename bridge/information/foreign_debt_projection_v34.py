@@ -340,7 +340,7 @@ def _total_component(base: Any, item: Any, target: str,
     }, public_scope_permission
 
 
-def _subset_component(base: Any, item: Any, target: str
+def _subset_component(base: Any, item: Any, target: str, observer: str
                       ) -> tuple[dict[str, Any], dict[str, Any]]:
     permission = base._page_permission(item, base.PAGE_DEBT)
     public_permission = base._page_permission_public(permission)
@@ -353,7 +353,7 @@ def _subset_component(base: Any, item: Any, target: str
     if failure is not None or record is None:
         return failure or base._unknown("ECONOMY_FIELD_UNKNOWN"), public_permission
     try:
-        projected = base._project_debt(record, target)
+        projected = base._project_debt(record, target, observer)
     except Exception:
         return base._unknown("OBSERVER_LOAN_SUBSET_PROJECTION_FAILED"), public_permission
     if projected.get("status") != "known" or not isinstance(projected.get("value"), Mapping):
@@ -366,12 +366,13 @@ def _subset_component(base: Any, item: Any, target: str
 
 
 def project(item: Any, target: str, country_view: Any,
-            *, scope_record: Any = None) -> dict[str, Any]:
+            *, scope_record: Any = None, observer: str = _OBSERVER) -> dict[str, Any]:
     """Project visible total principal and observer-lent subset independently."""
     base = _base_module()
     try:
         view = base._country_view_public(country_view)
-        if not isinstance(target, str) or not _TAG.fullmatch(target):
+        if (not isinstance(target, str) or not _TAG.fullmatch(target)
+                or not isinstance(observer, str) or not _TAG.fullmatch(observer) or target == observer):
             return failure_field("DEBT_PROJECTION_TARGET_INVALID", view)
         if view.get("status") != "known":
             reason = _safe_reason(base, view.get("reason"),
@@ -383,8 +384,13 @@ def project(item: Any, target: str, country_view: Any,
             hidden = base._invisible("COUNTRY_VIEW_PREDICATE_REJECTED_FOR_OBSERVER")
             permission = {"status": "unknown", "reason": "COUNTRY_VIEW_NOT_ADMITTED"}
             return _assemble(base, hidden, hidden, view, permission, permission)
-        total, scope_permission = _total_component(base, item, target, scope_record)
-        subset, page_permission = _subset_component(base, item, target)
+        if observer == _OBSERVER:
+            total, scope_permission = _total_component(base, item, target, scope_record)
+        else:
+            reason = "DEBT_PRIVATE_TOTAL_OBSERVER_EVIDENCE_UNAVAILABLE"
+            total = base._unknown(reason)
+            scope_permission = {"status": "unknown", "reason": reason}
+        subset, page_permission = _subset_component(base, item, target, observer)
         return _assemble(base, total, subset, view, scope_permission, page_permission)
     except Exception:
         return failure_field("FOREIGN_DEBT_PROJECTION_FAILED", country_view)

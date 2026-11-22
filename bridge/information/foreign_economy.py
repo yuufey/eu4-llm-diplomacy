@@ -16,11 +16,10 @@ from typing import Any, Mapping
 from . import foreign_economy_projection_v7 as _projection
 from .model import InformationError, canonical
 from .sources import _result, _source_info
-from .trade_income import NativeTradeIncomeSource, _context_reason, _identity, _session_binding
+from .trade_income import NativeTradeIncomeSource, _identity, _observer_context_reason, _session_binding
 
 _TAG = re.compile(r"[A-Z0-9]{3}\Z", re.ASCII)
 _SHA256 = re.compile(r"[0-9a-f]{64}\Z", re.ASCII)
-_OBSERVER = "FRA"
 _CAPTURE_SCHEMA = "information.foreign_economy_capture.v4"
 _CAPTURE_MODULE = ".foreign_economy_capture_v7"
 _RISK_REASON = "NATIVE_BANKRUPTCY_RISK_AND_FOREIGN_VISIBILITY_NOT_ESTABLISHED"
@@ -37,7 +36,7 @@ def _reason(value: Any, fallback: str) -> str:
 
 
 class NativeForeignEconomySource(NativeTradeIncomeSource):
-    """Expose the five public F03 fields for a non-FRA target via FRA view."""
+    """Expose the supported foreign economy pages within the configured observer view."""
 
     event_types: tuple[str, ...] = ()
 
@@ -47,7 +46,7 @@ class NativeForeignEconomySource(NativeTradeIncomeSource):
     def catalog(self) -> list[dict[str, Any]]:
         common = {
             "supported_versions": ["1.37.4"],
-            "supported_observers": [_OBSERVER],
+            "supported_observers": [],
             "supported_object_types": ["country"],
             "source": "bridge.information.foreign_economy_capture_v7.capture",
             "complete": False,
@@ -129,11 +128,11 @@ class NativeForeignEconomySource(NativeTradeIncomeSource):
             "fields": fields,
             "object_types": ["country"],
             "observer_roles": [],
-            "observer_scope": [_OBSERVER],
+            "observer_scope": [],
             "parameters": {"type": "object", "properties": {}, "required": [],
                             "additionalProperties": False},
             "supported_versions": ["1.37.4"],
-            "supported_observers": [_OBSERVER],
+            "supported_observers": [],
             "triggers": ["query", "periodic"],
             "source": type(self).__name__,
             "context_scope": "visible_scope",
@@ -157,8 +156,10 @@ class NativeForeignEconomySource(NativeTradeIncomeSource):
                 or obj.get("type") != "country" or not isinstance(obj.get("country"), str)
                 or not _TAG.fullmatch(obj["country"])):
             raise InformationError("invalid_object", "F03 requires a three-character country object")
-        if obj["country"] == _OBSERVER:
-            raise InformationError("invalid_object", "Use N01 for the FRA observer economy")
+        if context is not None and not isinstance(context, dict):
+            raise InformationError("invalid_context", "The F03 context must be an object")
+        if isinstance(context, dict) and obj["country"] == context.get("observer"):
+            raise InformationError("invalid_object", "Use N01 for the configured observer economy")
         fields = query.get("fields")
         if (not isinstance(fields, list) or not fields or len(fields) > len(_projection.PUBLIC_FIELDS)
                 or any(not isinstance(field, str) or field not in _projection.PUBLIC_FIELDS for field in fields)
@@ -167,9 +168,6 @@ class NativeForeignEconomySource(NativeTradeIncomeSource):
         parameters = query.get("parameters", {})
         if not isinstance(parameters, dict) or parameters:
             raise InformationError("invalid_parameters", "F03 has no extra parameters")
-        if context is not None and (not isinstance(context, dict)
-                                    or context.get("observer") != _OBSERVER):
-            raise InformationError("observer_scope_mismatch", "The verified logical observer is FRA")
         normalized = {"topic": _projection.TOPIC, "object": deepcopy(obj),
                       "fields": list(fields), "parameters": {}}
         canonical(normalized)
@@ -197,7 +195,7 @@ class NativeForeignEconomySource(NativeTradeIncomeSource):
             "read_only": True,
             "native_function_invoked": False,
             "native_debt_visibility_queries": 0,
-            "observer": _OBSERVER,
+            "observer": current.get("observer"),
             "target": target,
             "actual_UI_observed": False,
             "capture_report_sha256_by_source": {},
@@ -220,14 +218,14 @@ class NativeForeignEconomySource(NativeTradeIncomeSource):
             return result({"bankruptcy_risk": _projection.failure_field(
                 "bankruptcy_risk", _RISK_REASON)})
 
-        reason = _context_reason(current, _OBSERVER)
+        reason = _observer_context_reason(current)
         if reason is not None:
             return fail("FOREIGN_ECONOMY_CONTEXT_UNAVAILABLE")
         try:
             before = self.context()
         except Exception:
             before = {}
-        before_reason = _context_reason(before, _OBSERVER)
+        before_reason = _observer_context_reason(before)
         if before_reason is not None:
             return fail("FOREIGN_ECONOMY_CONTEXT_UNAVAILABLE")
         if _identity(current) != _identity(before):
@@ -257,21 +255,21 @@ class NativeForeignEconomySource(NativeTradeIncomeSource):
             call_before = self.context()
         except Exception:
             call_before = {}
-        if (_context_reason(call_before, _OBSERVER) is not None
+        if (_observer_context_reason(call_before) is not None
                 or _identity(call_before) != _identity(before)):
             return fail("FOREIGN_ECONOMY_CONTEXT_STALE")
 
         report = None
         capture_error = None
         try:
-            report = capture(installation, country=target, observer=_OBSERVER)
+            report = capture(installation, country=target, observer=before["observer"])
         except Exception:
             capture_error = "FOREIGN_ECONOMY_CAPTURE_FAILED"
         try:
             call_after = self.context()
         except Exception:
             call_after = {}
-        if (_context_reason(call_after, _OBSERVER) is not None
+        if (_observer_context_reason(call_after) is not None
                 or _identity(call_after) != _identity(call_before)
                 or _identity(call_after) != _identity(before)):
             provenance["capture_failures"] = {"economy": "FOREIGN_ECONOMY_CONTEXT_CHANGED_DURING_CAPTURE"}
@@ -290,7 +288,7 @@ class NativeForeignEconomySource(NativeTradeIncomeSource):
                 and report.get("status") == "observed" and report.get("completed") is True
                 and report.get("profile_sha256") == profile_sha
                 and isinstance(request, Mapping) and request.get("country") == target
-                and request.get("observer") == _OBSERVER
+                and request.get("observer") == before["observer"]
                 and request.get("session_id") == before.get("session_id")
                 and type(request.get("creation_filetime")) is int
                 and request.get("creation_filetime") == creation
@@ -359,12 +357,13 @@ class NativeForeignEconomySource(NativeTradeIncomeSource):
                 disclosure_after = self.context()
             except Exception:
                 disclosure_after = {}
-            if (_context_reason(disclosure_after, _OBSERVER) is not None
+            if (_observer_context_reason(disclosure_after) is not None
                     or _identity(disclosure_after) != _identity(call_after)):
                 provenance["capture_failures"] = {"economy": "FOREIGN_ECONOMY_CONTEXT_CHANGED_DURING_DISCLOSURE"}
                 return fail("FOREIGN_ECONOMY_CONTEXT_CHANGED_DURING_DISCLOSURE")
 
-        fields = _projection.project(item, target, requested_financial, debt_scope=debt_scope)
+        fields = _projection.project(item, target, requested_financial, debt_scope=debt_scope,
+                                     observer=before["observer"])
         if "bankruptcy_risk" in requested:
             fields["bankruptcy_risk"] = _projection.failure_field(
                 "bankruptcy_risk", _RISK_REASON)

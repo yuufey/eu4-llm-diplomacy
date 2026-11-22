@@ -20,7 +20,7 @@ def _identity(context):
     return tuple(context.get(key) for key in _IDENTITY) if isinstance(context, dict) else None
 
 
-def _current_favor_parameters(native, action, actor):
+def _current_favor_parameters(native, action, actor, recipient):
     """Keep the bound rule quote's requested resource and favor price."""
     quote = native.get('favor_trade')
     if (not isinstance(quote, dict) or action not in _FAVOR_AMOUNTS
@@ -33,10 +33,10 @@ def _current_favor_parameters(native, action, actor):
         return None
     amount_identity = {'unit': unit, 'scale': scale}
     if kind == 'trust':
-        amount_identity.update(trustor='FRA', trusted=actor, direction='recipient_to_actor')
+        amount_identity.update(trustor=recipient, trusted=actor, direction='recipient_to_actor')
     else:
-        amount_identity.update(payer='FRA', receiver=actor)
-    favor_identity = {'held_by': actor, 'owed_by': 'FRA', 'unit': 'favors', 'scale': 1000}
+        amount_identity.update(payer=recipient, receiver=actor)
+    favor_identity = {'held_by': actor, 'owed_by': recipient, 'unit': 'favors', 'scale': 1000}
     if (any(amount.get(key) != value for key, value in amount_identity.items())
             or any(favors.get(key) != value for key, value in favor_identity.items())
             or type(amount.get('scale')) is not int or type(favors.get('scale')) is not int):
@@ -72,6 +72,7 @@ def pending_change_comparison(query, sample, context):
     """Admit only the selected live proposal's validated pending boolean."""
     params = query.get('parameters', {})
     public_id = params.get('proposal_id')
+    observer = context.get('observer')
     fields = sample.get('fields', {})
     source = sample.get('source', {})
     provenance = source.get('provenance', {})
@@ -81,9 +82,10 @@ def pending_change_comparison(query, sample, context):
             or params.get('fresh_pending') is not True
             or not isinstance(public_id, str) or re.fullmatch(r'[0-9a-f]{32}', public_id) is None
             or context.get('status') != 'ready' or context.get('mode') != 'live'
-            or context.get('observer') != 'FRA' or context.get('game_sha256') != _SHA
+            or not isinstance(observer, str) or re.fullmatch(r'[A-Z0-9]{3}', observer) is None
+            or context.get('game_sha256') != _SHA
             or context.get('game_version') != '1.37.4'
-            or source.get('session_id') != context.get('session_id')
+            or source.get('session_id') != context.get('session_id') or source.get('observer') != observer
             or set(fields) != {'currently_pending'} or field.get('status') != 'known'
             or type(field.get('value')) is not bool or field.get('period') != 'current'
             or field.get('proposal_id') != public_id
@@ -113,14 +115,16 @@ def read_response_inspection(source, proposal, context, phase='accept'):
 
     if phase not in ('accept', 'reject'):
         return unknown('INBOUND_CURRENT_RESPONSE_PHASE_INVALID')
+    recipient = context.get('observer')
     if (context.get('status') != 'ready' or context.get('mode') != 'live'
-            or context.get('observer') != 'FRA' or context.get('game_sha256') != _SHA
+            or not isinstance(recipient, str) or re.fullmatch(r'[A-Z0-9]{3}', recipient) is None
+            or context.get('game_sha256') != _SHA
             or context.get('game_version') != '1.37.4' or type(context.get('game_date')) is not int):
         return unknown('INBOUND_CURRENT_CONTEXT_UNSUPPORTED', 'unavailable')
     public_id, actor, action = (proposal.get(key) for key in ('proposal_id', 'actor', 'action_id'))
     if (not isinstance(public_id, str) or re.fullmatch(r'[0-9a-f]{32}', public_id) is None
             or not isinstance(actor, str) or re.fullmatch(r'[A-Z0-9]{3}', actor) is None
-            or actor == 'FRA' or proposal.get('recipient') != 'FRA'
+            or actor == recipient or proposal.get('recipient') != recipient
             or proposal.get('observer_status') != 'observed_pending'
             or not isinstance(action, str) or _inbound_family(action) is None):
         return unknown('INBOUND_CURRENT_OBSERVATION_INVALID')
@@ -139,7 +143,7 @@ def read_response_inspection(source, proposal, context, phase='accept'):
     inspected, error = None, None
     try:
         provenance['inspection_attempted'] = True
-        inspected = inspector(action, actor, 'FRA', phase, {'proposal_id': public_id})
+        inspected = inspector(action, actor, recipient, phase, {'proposal_id': public_id})
     except Exception as exc:
         error = f'INBOUND_CURRENT_INSPECTION_FAILED:{type(exc).__name__}'
     try:
@@ -162,20 +166,20 @@ def read_response_inspection(source, proposal, context, phase='accept'):
     if not isinstance(actual, dict) or not isinstance(requested, dict):
         return unknown('INBOUND_CURRENT_PARAMETER_BINDING_INVALID')
     if (any(inspected.get(key) != value for key, value in (
-                ('action_id', action), ('actor', actor), ('recipient', 'FRA'), ('phase', phase)))
+                ('action_id', action), ('actor', actor), ('recipient', recipient), ('phase', phase)))
             or actual.get('proposal_id') != public_id or requested.get('proposal_id') != public_id
-            or actual.get('decision_country') != 'FRA'
+            or actual.get('decision_country') != recipient
             or any(observed.get(key) != value for key, value in (
-                ('proposal_id', public_id), ('actor', actor), ('recipient', 'FRA'), ('action_id', action)))
+                ('proposal_id', public_id), ('actor', actor), ('recipient', recipient), ('action_id', action)))
             or health.get('status') != 'ready' or type(health.get('date_raw')) is not int
             or health['date_raw'] <= 0
-            or inspected.get('decision_country') != 'FRA'
+            or inspected.get('decision_country') != recipient
             or health.get('session_id', context['session_id']) != context['session_id']):
         return unknown('INBOUND_CURRENT_PROPOSAL_BINDING_INVALID')
     if (native.get('event') != 'native_alliance_inbound_inspection'
             or any(native.get(key) != value for key, value in (
-                ('action_id', action), ('actor', actor), ('recipient', 'FRA'), ('phase', phase),
-                ('decision_country', 'FRA')))
+                ('action_id', action), ('actor', actor), ('recipient', recipient), ('phase', phase),
+                ('decision_country', recipient)))
             or type(native.get('date_raw')) is not int or native['date_raw'] <= 0
             or any(type(native.get(key)) is not bool for key in (
                 'pending_active', 'decision_country_verified', 'native_validity', 'response_rules_complete'))
@@ -213,7 +217,7 @@ def read_current_status(source, proposal, context, *, include_parameters=False, 
     result, provenance, inspected = read_response_inspection(source, proposal, context)
     if inspected is None:
         return result, provenance
-    public_id, actor, action = (proposal[key] for key in ('proposal_id', 'actor', 'action_id'))
+    public_id, actor, recipient, action = (proposal[key] for key in ('proposal_id', 'actor', 'recipient', 'action_id'))
     native = inspected['native_inbound_inspection']
     active = native['pending_active']
     if (include_parameters and action == 'peace_offer' and active
@@ -228,7 +232,7 @@ def read_current_status(source, proposal, context, *, include_parameters=False, 
                 'basis': 'selected_native_inbound_peace_inspection'}
     if ((include_parameters or include_consequences) and action in _FAVOR_AMOUNTS and active
             and native['native_validity'] is True and native['response_rules_complete'] is True):
-        terms = _current_favor_parameters(native, action, actor)
+        terms = _current_favor_parameters(native, action, actor, recipient)
         if terms is not None:
             if include_parameters:
                 result['proposal_parameters'] = {
@@ -238,7 +242,7 @@ def read_current_status(source, proposal, context, *, include_parameters=False, 
                     'scope': 'current_native_rule_quote'}
             if include_consequences:
                 from .inbound_consequences import project_favor_consequences
-                changes = project_favor_consequences(native['favor_trade'], terms, actor)
+                changes = project_favor_consequences(native['favor_trade'], terms, actor, recipient)
                 if changes is not None:
                     result['response_consequences'] = {
                         'status': 'known', 'value': changes, 'period': 'current',
@@ -254,7 +258,7 @@ def read_current_status(source, proposal, context, *, include_parameters=False, 
             'support_independence')
             and active and native['native_validity'] is True and native['response_rules_complete'] is True):
         from .inbound_consequences import project_relation_consequences
-        changes = project_relation_consequences(native, action, actor)
+        changes = project_relation_consequences(native, action, actor, recipient)
         if changes is not None:
             result['response_consequences'] = {
                 'status': 'known', 'value': changes, 'period': 'current',

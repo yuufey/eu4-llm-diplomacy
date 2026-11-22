@@ -116,19 +116,21 @@ def make_source(tmp_path, monkeypatch, *, projected=None, validation=True,
     return source, base, report, calls
 
 
-def test_catalog_and_query_are_fra_only_and_select_governance_capacity(
+def test_catalog_and_query_use_the_configured_observer_and_select_governance_capacity(
         tmp_path, monkeypatch):
     source, base, _, calls = make_source(tmp_path, monkeypatch)
     topic = source.catalog()[0]
     assert topic["topic_id"] == TOPIC
     assert list(topic["fields"]) == [FIELD]
-    assert topic["observer_scope"] == ["FRA"]
+    assert topic["observer_scope"] == []
     assert topic["triggers"] == ["query", "periodic"]
     assert topic["fields"][FIELD]["unit"] == "governing_capacity_summary"
 
     normalized = source.validate_query(make_query(), base.context())
     assert normalized["fields"] == [FIELD]
     assert normalized["parameters"] == {}
+    turkish = source.validate_query(make_query(country='TUR'), dict(base.context(), observer='TUR'))
+    assert turkish['object']['country'] == 'TUR'
     with pytest.raises(InformationError):
         source.validate_query(make_query(country="ENG"), base.context())
     with pytest.raises(InformationError):

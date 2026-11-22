@@ -251,7 +251,7 @@ def test_catalog_and_query_contract_keep_g02_partial_and_narrow(tmp_path, monkey
 
     assert topic["topic_id"] == "G02"
     assert topic["object_types"] == ["province"]
-    assert topic["observer_scope"] == ["FRA"]
+    assert topic["observer_scope"] == []
     assert topic["supported_versions"] == ["1.37.4"]
     assert topic["triggers"] == ["query", "periodic"]
     assert set(topic["fields"]) == set(FIELDS)
@@ -270,8 +270,8 @@ def test_catalog_and_query_contract_keep_g02_partial_and_narrow(tmp_path, monkey
         "owner": 1, "controller": 1, "culture": 1, "religion": 1, "autonomy": 1000,
         "development": 1000, "resource": 1, "center_of_trade": 1,
     }
-    assert "位为0返回unknown" in topic["scope_note"]
-    assert "不按物理玩家切换视角" in topic["scope_note"]
+    assert "发现位为 0 时返回 unknown" in topic["scope_note"]
+    assert "按已配置观察国" in topic["scope_note"]
     resource_gaps = topic["fields"]["resource"]["gaps"]
     assert "TRANSLATED_RESOURCE_NAME_NOT_CAPTURED" not in resource_gaps
     assert "NATIVE_FNV1_HASH_ONLY" in resource_gaps
@@ -317,8 +317,9 @@ def test_observer_mismatch_and_unsupported_context_version_fail_closed(tmp_path,
     source, base, _, captures, _ = make_source(tmp_path, monkeypatch)
 
     wrong_observer = make_context(observer="ENG")
-    with pytest.raises(InformationError):
-        source.read(make_query(), wrong_observer)
+    result = source.read(make_query(), wrong_observer)
+    assert all(field["status"] == "unavailable" and field["reason"] == "PROVINCE_STATE_CONTEXT_STALE"
+               for field in result["fields"].values())
     assert captures == []
 
     base.current["game_version"] = "1.37.5"
@@ -326,6 +327,15 @@ def test_observer_mismatch_and_unsupported_context_version_fail_closed(tmp_path,
     assert all(field["status"] == "unavailable" for field in result["fields"].values())
     assert_no_public_value(result)
     assert captures == []
+
+
+def test_province_query_uses_current_turkish_observer(tmp_path, monkeypatch):
+    context = make_context(observer="TUR")
+    report = make_report(observer="TUR", owner="TUR")
+    source, _, _, captures, _ = make_source(tmp_path, monkeypatch, context=context, report=report)
+    result = source.read(make_query(fields=["owner"]))
+    assert result["fields"]["owner"]["value"] == "TUR"
+    assert captures[0][2] == "TUR"
 
 
 def test_stale_caller_context_and_unavailable_source_context_have_no_values(

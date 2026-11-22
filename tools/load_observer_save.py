@@ -84,7 +84,7 @@ def _verify_loaded(installation: Path, pid: int, meta: dict,
         raise ValueError("timed out waiting for the startup pause")
 
     # Recheck the session identity, player and date after observing the pause.
-    final_health = session.health()
+    final_health = session.physical_player_health()
     if (final_health.get("status") != "ready" or final_health["date_raw"] != state.get("date_raw")
             or decode_date(final_health["date_raw"])[:3] != date):
         raise ValueError("loaded world did not verify as paused on the save's date")

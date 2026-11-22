@@ -107,7 +107,7 @@ def test_catalog_and_active_overlord_projection_are_pair_scoped() -> None:
     assert catalog[0]["topic_id"] == "R02"
     assert catalog[0]["status"] == "available"
     assert catalog[0]["supported_versions"] == ["1.37.4"]
-    assert catalog[0]["observer_scope"] == ["FRA"]
+    assert catalog[0]["observer_scope"] == []
     assert catalog[0]["triggers"] == ["query", "periodic", "change"]
     assert catalog[0]["change_detection"] == "sampled_state_comparison_not_lossless_events"
 
@@ -125,6 +125,27 @@ def test_catalog_and_active_overlord_projection_are_pair_scoped() -> None:
         ("offer_vassalization", "FRA", "SAV", "initiate", {})
     ]
     assert base.diplomacy_tools.submit_calls == []
+
+
+def test_non_french_observer_can_read_its_own_subject_pair() -> None:
+    public = _public_event("cancel_vassalization")
+    public.update(action_id="offer_vassalization", actor="TUR", recipient="CRI")
+    context = _context(observer="TUR")
+    source, base = _source(public, contexts=[context])
+    query = _query("CRI")
+    query["object"]["actor"] = "TUR"
+
+    result = source.read(query, context)
+    assert result["complete"] is True
+    assert result["fields"]["overlord"] == {"status": "known", "value": "TUR"}
+    assert result["fields"]["subject"] == {"status": "known", "value": "CRI"}
+    assert result["source"]["provenance"]["observer_scope"] == "TUR"
+    assert base.diplomacy_tools.calls == [("offer_vassalization", "TUR", "CRI", "initiate", {})]
+
+    source, base = _source(public, contexts=[_context(observer="ENG")])
+    denied = source.read(query)
+    assert denied["fields"]["overlord"] == {"status": "unavailable", "reason": "OBSERVER_SCOPE_MISMATCH"}
+    assert base.diplomacy_tools.calls == []
 
 
 def test_active_reverse_role_derives_recipient_as_overlord() -> None:
@@ -275,6 +296,7 @@ def test_public_date_is_not_required_when_base_identity_is_complete() -> None:
 @pytest.mark.parametrize("changed", [
     {"game_date": 56553385, "game_date_raw": 56553385},
     {"session_id": "new-session"},
+    {"world_id": "new-world"},
 ])
 def test_base_context_is_rechecked_after_inspection(changed) -> None:
     public = _public_event("cancel_vassalization")

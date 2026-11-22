@@ -11,7 +11,7 @@ FIELD = 'transfer_relations'
 _NODE = re.compile(r'[A-Za-z0-9][A-Za-z0-9_.:-]{0,127}\Z')
 _SHA = re.compile(r'[0-9a-f]{64}\Z')
 _STATIC_KEYS = ('game_version', 'configuration_sha256', 'definitions_sha256')
-_GAPS = ['NATIVE_CACHE_FRESHNESS_NOT_PROVEN', 'OTHER_COUNTRIES_NOT_SUPPORTED',
+_GAPS = ['NATIVE_CACHE_FRESHNESS_NOT_PROVEN',
          'TRANSFER_VALUES_ARE_NOT_INCOME_OR_ALL_DIPLOMATIC_RELATIONS']
 
 
@@ -51,7 +51,7 @@ class GeographicTradeTransferSource:
             fields={FIELD: {
                 'coverage': 'partial', 'complete': False, 'source': type(self).__name__,
                 'description': '指定节点，或省份按当前有效磁盘配置所属节点中，观察国的贸易权转出和转入来源记录',
-                'supported_countries': ['FRA'], 'supported_object_types': objtypes,
+                'supported_object_types': objtypes,
                 'unit': 'trade_power', 'scale': 1000, 'period': 'current',
                 'basis': 'existing_T05_transfer_for_selected_geographic_node',
                 'value_origin': 'NativeTradeTransferSource.T05.transfer',
@@ -109,6 +109,7 @@ class GeographicTradeTransferSource:
         if reason is not None:
             return finish(_field('unavailable', reason))
 
+        observer = current['observer']
         selected = {'basis': 'explicit_trade_node', 'loaded_membership_verified': None}
         fingerprint = None
         if obj['type'] == 'province':
@@ -153,9 +154,9 @@ class GeographicTradeTransferSource:
             return finish(_field(status, transferred.get('reason') or 'GEOGRAPHIC_TRADE_TRANSFER_UNKNOWN'))
         source = original.get('source')
         if (not isinstance(source, dict) or source.get('status') != 'observed' or source.get('mode') != 'live'
-                or source.get('observer') != 'FRA' or source.get('session_id') != current.get('session_id')
+                or source.get('observer') != observer or source.get('session_id') != current.get('session_id')
                 or current.get('mode') != 'live' or current.get('status') != 'ready'
-                or current.get('observer') != 'FRA' or original.get('game_date') != current.get('game_date')):
+                or original.get('game_date') != current.get('game_date')):
             return finish(_field('unavailable', 'GEOGRAPHIC_TRADE_TRANSFER_CONTEXT_MISMATCH'))
         value = transferred.get('value')
         if (not isinstance(value, dict) or value.get('node_id') != node_id
@@ -164,7 +165,7 @@ class GeographicTradeTransferSource:
                 or transferred['scale'] != 1000 or transferred.get('complete') is not False):
             return finish(_field('unknown', 'GEOGRAPHIC_TRADE_TRANSFER_RESULT_INVALID'))
         result_value = deepcopy(value)
-        result_value.update(observer='FRA', selection=deepcopy(selected),
+        result_value.update(observer=observer, selection=deepcopy(selected),
             relation_scope='observer_trade_node_transfer_cache')
         return finish(_field('known', value=result_value, unit=transferred['unit'], scale=1000,
             value_origin='NativeTradeTransferSource.T05.transfer', gaps=deepcopy(_GAPS)))

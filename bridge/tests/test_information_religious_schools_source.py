@@ -217,7 +217,7 @@ def test_catalog_and_native_school_projection_attach_only_matching_group_rule(tm
     assert spec['unit'] == UNIT and spec['scale'] == 1 and spec['period'] == 'current'
     assert spec['basis'] == BASIS and spec['value_origin'] == ORIGIN
     assert spec['triggers'] == ['query', 'periodic']
-    assert spec['supported_observers'] == ['FRA']
+    assert 'supported_observers' not in spec
     assert spec['source'] == 'bridge.information.school_relations_capture.capture'
     assert spec['runtime_validation'] == 'school_relations_capture.validate_capture'
     assert 'THREAD_GATED_ACTIVATION_PATH_UNRESOLVED' in spec['gaps']
@@ -615,7 +615,7 @@ def test_query_scope_and_field_validation_precede_capture(tmp_path, monkeypatch)
         source.read(_query(fields=['schools', 'faith']), base.context())
     with pytest.raises(InformationError):
         source.read(_query(parameters={'unexpected': True}), base.context())
-    with pytest.raises(InformationError):
-        source.read(_query('ENG'), {**base.context(), 'observer': 'ENG'})
+    wrong = source.read(_query('ENG'), {**base.context(), 'observer': 'ENG'})['fields']['schools']
+    assert wrong['reason'] == 'RELIGIOUS_SCHOOLS_CONTEXT_STALE'
     assert captures == []
 

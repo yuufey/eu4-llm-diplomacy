@@ -1,5 +1,6 @@
 """Read inputs for the native opinion tooltip's yearly contribution, without calls."""
 from copy import deepcopy
+from functools import partial
 import hashlib
 import json
 import re
@@ -34,10 +35,12 @@ def _load_profile():
         raise ValueError('OPINION_DECAY_BASE_PROFILE')
     for item in own['dependencies']:
         path=(ROOT/item['path']).resolve(strict=True);path.relative_to(ROOT)
-        if not 0<path.stat().st_size<=16*1024*1024 or path.stat().st_size!=item['bytes']:
+        size = path.stat().st_size
+        if not 0 < size <= 16 * 1024 * 1024:
             raise ValueError('OPINION_DECAY_DEPENDENCY_SIZE')
         with path.open('rb') as stream:digest=hashlib.file_digest(stream,'sha256').hexdigest()
-        if digest!=item['sha256']:raise ValueError('OPINION_DECAY_DEPENDENCY_PIN')
+        if not opinion._record_layout_matches(item, size, digest):
+            raise ValueError('OPINION_DECAY_DEPENDENCY_PIN')
     merged=deepcopy(records._load_profile())
     merged.update(profile_id=PROFILE_ID,profile_version=own['profile_version'])
     merged['code_guards'].extend(own['code_guards'])
@@ -176,7 +179,7 @@ def _record(reader,base,pointer,index,target,target_slot=None):
                                                before['suppress_yearly_raw'],before['factor'])
     return before
 
-def _backend_read(reader,base,country):
+def _backend_read(reader,base,country,*,observer='FRA'):
     pair={}
     def admit(read,module_base,scan,observer,target):
         pair.clear();pair.update(deepcopy(scan['requested']))
@@ -187,8 +190,8 @@ def _backend_read(reader,base,country):
         if selected!=FIELDS or not records._same(binding,pair.get(country)):
             raise ValueError('OPINION_DECAY_BINDING_CHANGED')
         output={}
-        for name,holder,target in [(FIELDS[0],pair['FRA'],pair[country]),
-                                   (FIELDS[1],pair[country],pair['FRA'])]:
+        for name,holder,target in [(FIELDS[0],pair[observer],pair[country]),
+                                   (FIELDS[1],pair[country],pair[observer])]:
             target_pointer=int(target['country_pointer'],0)
             def record_reader(r,b,p,i):return _record(r,b,p,i,target_pointer,target['slot'])
             direction=records._direction(read,module_base,holder,target,record_reader=record_reader)
@@ -196,7 +199,8 @@ def _backend_read(reader,base,country):
             if item['status']=='known':item['unit']=UNIT
             output[name]=item
         return output
-    return backend.read_two_pass(reader,base,'FRA',[country],FIELDS,read_fields=fields,admission_reader=admit)
+    return backend.read_two_pass(reader,base,observer,[country],FIELDS,read_fields=fields,admission_reader=admit)
 
-def _observe(reader,base,country,profile):
-    return opinion._owner._observe(reader,base,country,profile,backend_reader=_backend_read)
+def _observe(reader,base,country,profile,*,observer='FRA'):
+    return opinion._owner._observe(reader,base,country,profile,
+                                   backend_reader=partial(_backend_read, observer=observer))

@@ -70,6 +70,11 @@ def _build_runtime(args: argparse.Namespace):
     managed_countries = getattr(args, "managed_countries", None)
     if managed_countries is None:
         managed_countries = [controlled_country] if controlled_country is not None else []
+    information_observers = getattr(args, "information_observers", None)
+    if information_observers is None:
+        information_observers = [args.observer] if args.observer is not None else []
+    if args.observer is not None and args.observer not in information_observers:
+        raise InformationError("invalid_observer_scope", "The complete observation scope must include the configured observer")
     for country in managed_countries:
         DiplomacyControl(args.owner, country)
     if controlled_country is not None and controlled_country not in managed_countries:
@@ -202,6 +207,8 @@ def _build_runtime(args: argparse.Namespace):
     diplomacy_tools = None
     session = None
     game_time_control = None
+    game_time_control_error = None
+    diplomacy_execution_error = None
     allow_time_control = getattr(args, "allow_time_control", False)
     if allow_time_control and not args.operator_session:
         raise ValueError("--allow-time-control requires --operator-session with an O00 observer")
@@ -214,12 +221,28 @@ def _build_runtime(args: argparse.Namespace):
 
         session = ObserverSession(args.operator_session, game_exe())
         if allow_time_control:
-            game_time_control = bind_game_time_control(session)
+            try:
+                game_time_control = bind_game_time_control(session)
+            except InformationError as error:
+                game_time_control_error = (error.code, str(error))
+                logging.warning("Game clock unavailable: %s", error)
         session.controlled_country = controlled_country
-        configure_control = getattr(session, "configure_controlled_countries", None)
-        if controlled_country is not None and callable(configure_control):
-            configure_control(managed_countries)
         if not battle_only:
+            configure_observation = getattr(session, "configure_information_observers", None)
+            if information_observers and callable(configure_observation):
+                try:
+                    configure_observation(information_observers)
+                except (OSError, ValueError, RuntimeError) as error:
+                    logging.warning("Native information event observation unavailable: %s", error)
+            configure_control = getattr(session, "configure_controlled_countries", None)
+            if controlled_country is not None and callable(configure_control):
+                try:
+                    configure_control(managed_countries)
+                except (OSError, RuntimeError) as error:
+                    message = (str(error) if isinstance(error, RuntimeError)
+                               else "Native country-control request channel unavailable")
+                    diplomacy_execution_error = ("native_country_control_unavailable", message)
+                    logging.warning("Diplomacy execution unavailable: %s", message)
             journal_path = args.journal or DEFAULT_JOURNAL
             journal_path.parent.mkdir(parents=True, exist_ok=True)
             journal = DurableJournal(
@@ -594,6 +617,8 @@ def _build_runtime(args: argparse.Namespace):
     service.diplomacy_tools = diplomacy_tools
     service.diplomacy_control = control
     service.game_time_control = game_time_control
+    service.game_time_control_error = game_time_control_error
+    service.diplomacy_execution_error = diplomacy_execution_error
     return service, journal
 
 
@@ -646,6 +671,8 @@ def build_parser() -> argparse.ArgumentParser:
                         help="Country this LLM may control; defaults to --observer, omitting both leaves diplomacy read-only")
     parser.add_argument("--managed-countries", nargs="+", default=None,
                         help="Complete native managed-country set shared by LLM connections; defaults to the controlled country")
+    parser.add_argument("--information-observers", nargs="+", default=None,
+                        help="Complete native information event scope; defaults to the configured observer")
     parser.add_argument("--battle-only", action="store_true",
                         help="Serve session context and battles for a native-verified non-player observer")
     parser.add_argument("--static-game-data", action="store_true",

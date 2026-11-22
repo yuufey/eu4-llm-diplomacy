@@ -1,4 +1,4 @@
-"""Read the verified live G01 permanent-claim predicate for FRA provinces.
+"""Read the live G01 permanent-claim predicate for discovered provinces.
 
 This adapter owns only ``G01.permanent_claims``.  The capture module supplies
 the bounded two-pass native observation; this layer binds it to the active
@@ -19,13 +19,12 @@ from .model import InformationError, canonical
 from .province_interests_live import NativeProvinceInterestsSource
 from .province_interest_parameters import parameters_schema
 from .sources import _result, _source_info
-from .trade_income import _context_reason as _base_context_reason
+from .trade_income import _observer_context_reason as _base_context_reason
 from .trade_income import _identity, _session_binding
 
 
 _TOPIC = "G01"
 _FIELD = "permanent_claims"
-_COUNTRY = "FRA"
 _VERSION = "1.37.4"
 _GAME_SHA256 = "b23fa0e1f698d31b01cdd1c3817a675805d8c6286cb66f9c231e6e2a42544d77"
 _UNIT = "country_tag"
@@ -39,7 +38,7 @@ _PROFILE_SHA256 = re.compile(r"[0-9a-f]{64}\Z")
 
 
 class NativeProvincePermanentClaimsSource:
-    """Own the permanent-claim member list for positively discovered FRA provinces."""
+    """Read permanent-claim members for provinces discovered by the observer."""
 
     event_types: tuple[str, ...] = ()
 
@@ -73,10 +72,9 @@ class NativeProvincePermanentClaimsSource:
                 "period": _PERIOD,
                 "basis": _BASIS,
                 "value_origin": _VALUE_ORIGIN,
-                "supported_countries": [_COUNTRY],
                 "supported_object_types": ["province"],
                 "visibility": "positive_live_observer_discovery",
-                "description": "逻辑法国已发现省份中、由固定版本原生永久宣称谓词判定的国家标签列表。",
+                "description": "已发现省份中具有永久宣称的国家。",
                 "gaps": [
                     "COMPLETE_PROVINCE_UI_VISIBILITY_NOT_PROVEN",
                     "COUNTRY_REVERSE_ENUMERATION_NOT_IMPLEMENTED",
@@ -99,7 +97,7 @@ class NativeProvincePermanentClaimsSource:
     @staticmethod
     def _context_reason(context: Any) -> str | None:
         try:
-            reason = _base_context_reason(context, _COUNTRY)
+            reason = _base_context_reason(context)
         except Exception:
             return "PROVINCE_PERMANENT_CLAIMS_CONTEXT_INVALID"
         return reason.replace("TRADE_INCOME_", "PROVINCE_PERMANENT_CLAIMS_", 1) if reason else None
@@ -156,8 +154,9 @@ class NativeProvincePermanentClaimsSource:
             current = {}
 
         field = self._public_field("unknown", reason="PROVINCE_PERMANENT_CLAIMS_NOT_READ")
+        observer = current.get('observer')
         provenance: dict[str, Any] = {
-            "observer": _COUNTRY,
+            "observer": observer,
             "read_only": True,
             "native_function_invoked": False,
             "actual_UI_observed": False,
@@ -219,7 +218,7 @@ class NativeProvincePermanentClaimsSource:
         try:
             module = import_module(".province_permanent_claim_capture", __package__)
             capture = self.capture if self.capture is not None else module.capture
-            report = capture(installation, province_id=province_id, observer=_COUNTRY)
+            report = capture(installation, province_id=province_id, observer=observer)
         except Exception:
             capture_failed = True
 

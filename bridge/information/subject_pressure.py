@@ -13,7 +13,7 @@ from . import subject_type_memory as _subject_types
 from . import subject_integration_memory as _integration
 from .model import InformationError
 from .sources import _result, _source_info
-from .trade_income import NativeTradeIncomeSource, _context_reason, _identity, _session_binding
+from .trade_income import NativeTradeIncomeSource, _observer_context_reason, _identity, _session_binding
 
 
 SCHEMA = 'information.subject_pressure_capture.v1'
@@ -83,10 +83,13 @@ def _read_support_partners(read, pointer, rows, spec):
     return {'status': 'known', 'value': sorted(partners)}
 
 
-def _country_for(query):
+def _country_for(query, observer):
     obj = query['object']
-    return obj['country'] if obj['type'] == 'country' else (
-        obj['recipient'] if obj['actor'] == 'FRA' else obj['actor'])
+    if obj['type'] == 'country':
+        return obj['country']
+    if obj['type'] != 'country_pair' or observer not in (obj['actor'], obj['recipient']):
+        raise ValueError('SUBJECT_PRESSURE_OBSERVER_SCOPE')
+    return obj['recipient'] if obj['actor'] == observer else obj['actor']
 
 
 def _integration_result(captured, native, overlord):
@@ -116,7 +119,7 @@ def _integration_result(captured, native, overlord):
     return result
 
 
-def _observe_for(query, countries=None):
+def _observe_for(query, countries=None, *, observer='FRA'):
     def observe(reader, base, country, profile):
         bindings = {}
         rows = {}
@@ -136,7 +139,7 @@ def _observe_for(query, countries=None):
                 subject = target
                 parent = parent_ref(read, subject)
             else:
-                endpoints = [bindings['FRA'], bindings[country]]
+                endpoints = [bindings[observer], bindings[country]]
                 candidates = [(binding, parent_ref(read, binding)) for binding in endpoints]
                 related = [(binding, parent) for binding, parent in candidates
                            if any(parent == int(other['fullref'], 0) and other is not binding
@@ -191,22 +194,29 @@ def _observe_for(query, countries=None):
 
         def backend(read, module_base, target):
             targets = [target] if countries is None else countries
-            return _countries.read_two_pass(read, module_base, 'FRA', targets, fields=[_BINDING_FIELD],
+            return _countries.read_two_pass(read, module_base, observer, targets, fields=[_BINDING_FIELD],
                 admission_reader=admission, read_fields=read_fields)
 
         return _owner._observe(reader, base, country, profile, backend_reader=backend)
     return observe
 
 
-def capture(installation, query):
-    report = _owner._capture_common(installation, _country_for(query), observer='FRA', schema=SCHEMA,
+def capture(installation, query, *, observer='FRA'):
+    report = _owner._capture_common(installation, _country_for(query, observer), observer=observer, schema=SCHEMA,
         profile_sha256=PROFILE_SHA256, load_profile=_load_profile,
-        observe=_observe_for(query), allow_observer_target=True)
+        observe=_observe_for(query, observer=observer), allow_observer_target=True, observer_scoped=True)
     report['request']['query'] = deepcopy(query)
     return report
 
 
 def validate_capture(report, context, creation, query):
+    observer = context.get('observer') if isinstance(context, dict) else None
+    if not isinstance(observer, str) or not _TAG.fullmatch(observer):
+        return False
+    try:
+        country = _country_for(query, observer)
+    except (KeyError, TypeError, ValueError):
+        return False
     legacy = isinstance(report, dict) and report.get('profile_sha256') == _LEGACY_PROFILE_SHA256
     previous = _PREVIOUS_PROFILES.get(report.get('profile_sha256')) if isinstance(report, dict) else None
     profile_sha = _LEGACY_PROFILE_SHA256 if legacy else (
@@ -220,9 +230,10 @@ def validate_capture(report, context, creation, query):
         return _load_profile()
 
     return (isinstance(report, dict) and report.get('request', {}).get('query') == query
-        and _owner._validate_capture_common(report, context, creation, _country_for(query),
+        and _owner._validate_capture_common(report, context, creation, country,
             schema=SCHEMA, profile_sha256=profile_sha, load_profile=load_profile,
-            observe=_observe_for(query), allow_observer_target=True, require_access=True))
+            observe=_observe_for(query, observer=observer), allow_observer_target=True, require_access=True,
+            observer_scoped=True))
 
 
 def _binding_countries(countries):
@@ -234,18 +245,18 @@ def _binding_countries(countries):
     return list(countries)
 
 
-def _binding_observation(countries):
+def _binding_observation(countries, observer='FRA'):
     query = {'topic': 'S03', 'object': {'type': 'country', 'country': countries[0]},
              'fields': ['liberty_desire'], 'parameters': {}}
-    return _observe_for(query, countries)
+    return _observe_for(query, countries, observer=observer)
 
 
-def capture_bindings(installation, countries):
+def capture_bindings(installation, countries, *, observer='FRA'):
     """Share the existing country scan and guards for at most eight bindings."""
     countries = _binding_countries(countries)
-    report = _owner._capture_common(installation, countries[0], observer='FRA', schema=BINDING_SCHEMA,
+    report = _owner._capture_common(installation, countries[0], observer=observer, schema=BINDING_SCHEMA,
         profile_sha256=PROFILE_SHA256, load_profile=_load_profile,
-        observe=_binding_observation(countries), allow_observer_target=True)
+        observe=_binding_observation(countries, observer), allow_observer_target=True, observer_scoped=True)
     report['request']['countries'] = countries
     return report
 
@@ -255,10 +266,14 @@ def validate_binding_capture(report, context, creation, countries):
         countries = _binding_countries(countries)
     except ValueError:
         return False
+    observer = context.get('observer') if isinstance(context, dict) else None
+    if not isinstance(observer, str) or not _TAG.fullmatch(observer):
+        return False
     return (isinstance(report, dict) and report.get('request', {}).get('countries') == countries
         and _owner._validate_capture_common(report, context, creation, countries[0],
             schema=BINDING_SCHEMA, profile_sha256=PROFILE_SHA256, load_profile=_load_profile,
-            observe=_binding_observation(countries), allow_observer_target=True, require_access=True))
+            observe=_binding_observation(countries, observer), allow_observer_target=True, require_access=True,
+            observer_scoped=True))
 
 
 class NativeSubjectPressureSource(NativeTradeIncomeSource):
@@ -290,7 +305,7 @@ class NativeSubjectPressureSource(NativeTradeIncomeSource):
                 'title': '属国忠诚与义务' if topic == 'S03' else '外国压力与继承风险',
                 'status': 'available', 'fields': metadata,
                 'object_types': ['country', 'country_pair'] if topic == 'S03' else ['country'],
-                'observer_roles': [], 'observer_scope': ['FRA'],
+                'observer_roles': [], 'observer_scope': [],
                 'parameters': {'type': 'object', 'properties': {}, 'additionalProperties': False},
                 'supported_versions': ['1.37.4'], 'triggers': ['query', 'periodic'],
                 'source': type(self).__name__, 'context_scope': 'visible_scope', 'visibility': 'visible_scope'})
@@ -300,20 +315,24 @@ class NativeSubjectPressureSource(NativeTradeIncomeSource):
         if (not isinstance(query, dict) or query.get('topic') not in _FIELDS
                 or set(query) - {'topic', 'object', 'fields', 'parameters'}):
             raise InformationError('invalid_parameters', 'Expected an S03 or F04 query')
+        observer = context.get('observer') if isinstance(context, dict) else None
         obj = query.get('object')
         if not isinstance(obj, dict):
             raise InformationError('invalid_object', 'Expected a country or country pair')
         if obj.get('type') == 'country':
             if (set(obj) != {'type', 'country'} or not isinstance(obj.get('country'), str)
                     or not _TAG.fullmatch(obj['country'])
-                    or (query['topic'] == 'F04' and obj['country'] == 'FRA')):
+                    or (query['topic'] == 'F04' and obj['country'] == observer)):
                 raise InformationError('invalid_object', 'Invalid subject country')
         elif (query['topic'] != 'S03' or set(obj) != {'type', 'actor', 'recipient'}
                 or obj.get('type') != 'country_pair'
                 or any(not isinstance(obj.get(key), str) or not _TAG.fullmatch(obj[key])
                        for key in ('actor', 'recipient'))
-                or obj['actor'] == obj['recipient'] or 'FRA' not in (obj['actor'], obj['recipient'])):
-            raise InformationError('invalid_object', 'Subject country pair must include FRA')
+                or obj['actor'] == obj['recipient']):
+            raise InformationError('invalid_object', 'Subject query requires two distinct countries')
+        if (obj['type'] == 'country_pair' and observer is not None
+                and observer not in (obj['actor'], obj['recipient'])):
+            raise InformationError('observer_scope_mismatch', 'Subject country pair must include the observer')
         fields = query.get('fields')
         if (not isinstance(fields, list) or not fields
                 or any(name not in _FIELDS[query['topic']] for name in fields)
@@ -321,13 +340,14 @@ class NativeSubjectPressureSource(NativeTradeIncomeSource):
             raise InformationError('invalid_fields', 'Unsupported subject pressure fields')
         if query.get('parameters', {}) != {}:
             raise InformationError('invalid_parameters', 'Subject pressure has no extra parameters')
-        if context is not None and (not isinstance(context, dict) or context.get('observer') != 'FRA'):
-            raise InformationError('observer_scope_mismatch', 'The supported observer is FRA')
+        if context is not None and not isinstance(context, dict):
+            raise InformationError('invalid_context', 'Subject context must be an object')
         return {'topic': query['topic'], 'object': deepcopy(obj), 'fields': list(fields), 'parameters': {}}
 
     def read(self, query, context=None):
         current = deepcopy(context) if isinstance(context, dict) else self.context()
         query = self.validate_query(query, current)
+        observer = current.get('observer')
         invoked = False
 
         def result(fields, complete=False):
@@ -338,11 +358,18 @@ class NativeSubjectPressureSource(NativeTradeIncomeSource):
         def failure(reason):
             return result({name: {'status': 'unknown', 'reason': reason} for name in query['fields']})
 
+        def context_changed():
+            after = self.context()
+            return (_observer_context_reason(after) is not None or _identity(after) != _identity(current)
+                    or not _time.dates_match(current['game_date'], after['game_date']))
+
         installation, creation, reason = _session_binding(self.base_source)
-        if reason or _context_reason(current):
-            return failure(reason or _context_reason(current))
+        context_reason = _observer_context_reason(current)
+        if reason or context_reason:
+            return failure(reason or context_reason)
         try:
-            report = (self.capture or capture)(installation, query)
+            report = (self.capture(installation, query) if self.capture is not None
+                      else capture(installation, query, observer=observer))
             if not validate_capture(report, current, creation, query):
                 return failure('SUBJECT_PRESSURE_CAPTURE_INVALID')
             binding = report['observation']['backend']['targets'][0]['fields'][_BINDING_FIELD]
@@ -350,6 +377,8 @@ class NativeSubjectPressureSource(NativeTradeIncomeSource):
                 return result({name: deepcopy(binding) for name in query['fields']})
             state = binding['value']
             if state is None:
+                if context_changed():
+                    return failure('SUBJECT_PRESSURE_CONTEXT_CHANGED')
                 return result({name: {'status': 'not_applicable', 'reason': 'NO_SUBJECT_RELATION'}
                                for name in query['fields']}, True)
             liberty = {'status': 'unknown', 'reason': 'NATIVE_SUBJECT_STATE_UNAVAILABLE'}
@@ -360,20 +389,20 @@ class NativeSubjectPressureSource(NativeTradeIncomeSource):
                 rules.get('annexation_allowed') is True or rules.get('union_integration_allowed') is True)
             native_integration = None
             if query['topic'] == 'F04' or 'liberty_desire' in query['fields'] or integration_needed:
-                recipient = state['overlord'] if state['subject'] == 'FRA' else state['subject']
+                recipient = state['overlord'] if state['subject'] == observer else state['subject']
                 tools = getattr(self.base_source, 'diplomacy_tools', None)
                 inspector = getattr(tools, 'inspect_diplomatic_action', None)
                 if callable(inspector):
                     invoked = True
                     try:
-                        inspection = inspector('offer_vassalization', 'FRA', recipient, 'initiate', {})
+                        inspection = inspector('offer_vassalization', observer, recipient, 'initiate', {})
                     except Exception:
                         inspection = {}
                     if not isinstance(inspection, dict):
                         inspection = {}
-                    key = 'actor_subject_state' if state['subject'] == 'FRA' else 'recipient_subject_state'
+                    key = 'actor_subject_state' if state['subject'] == observer else 'recipient_subject_state'
                     native = inspection.get(key)
-                    if (inspection.get('actor') == 'FRA' and inspection.get('recipient') == recipient
+                    if (inspection.get('actor') == observer and inspection.get('recipient') == recipient
                             and isinstance(native, dict) and native.get('verified') is True
                             and native.get('is_subject') is True and native.get('overlord') == state['overlord']
                             and type(native.get('liberty_desire_raw')) is int and native.get('scale') == 1000):
@@ -381,9 +410,7 @@ class NativeSubjectPressureSource(NativeTradeIncomeSource):
                                    'raw': native['liberty_desire_raw'], 'scale': 1000, 'unit': 'percent'}
                         if native.get('subject_type') == state.get('subject_type'):
                             native_integration = native.get('integration')
-            after = self.context()
-            if (_context_reason(after) or _identity(after) != _identity(current)
-                    or not _time.dates_match(current['game_date'], after['game_date'])):
+            if context_changed():
                 return failure('SUBJECT_PRESSURE_CONTEXT_CHANGED')
             loyalty = state.get('loyalty', {'status': 'unknown', 'reason': 'SUBJECT_ATTITUDE_UNAVAILABLE'})
             if query['topic'] == 'S03':

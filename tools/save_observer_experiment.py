@@ -577,7 +577,7 @@ def _archive_autosave(installation: Path, saves: Path, name: str,
         # Verify the live player's heartbeat using this invocation's binding.
         # The declared player used by other consumers of the receipt stays intact.
         session.record = {**installation_record, "preflight_player_tag": player}
-        health = session.health()
+        health = session.physical_player_health()
         if health.get("status") != "ready":
             raise ExperimentError("OBSERVER_FRAME_HEALTH_NOT_READY")
         if date_raw != health.get("date_raw"):
@@ -636,7 +636,7 @@ def _archive_autosave(installation: Path, saves: Path, name: str,
         emit("paused_player_verified", phase="after", **after_signature)
         if before_signature != after_signature:
             raise ExperimentError("CONTROL_STATE_CHANGED_DURING_AUTOSAVE")
-        health_after = session.health()
+        health_after = session.physical_player_health()
         if health_after.get("status") != "ready" or health_after.get("date_raw") != date_raw:
             raise ExperimentError("OBSERVER_FRAME_HEALTH_LOST")
         state["session"]["health_after"] = health_after

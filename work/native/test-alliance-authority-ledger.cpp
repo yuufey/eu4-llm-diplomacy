@@ -1832,9 +1832,11 @@ static void test_capacity_and_session_binding() {
     AllianceAuthorityLedger ledger(0x6666u);
     const Context context{0x6666u,0u};
     SeedResult first{};
+    char first_id[32]{};
     for (unsigned i=0;i<64;++i) {
         char id[32]{};
         std::snprintf(id,sizeof(id),"authority-cap-%02u",i);
+        if (i==0) std::memcpy(first_id,id,sizeof(first_id));
         const SeedResult seeded=ledger.seed(context,id,
             payload_for(100u+i,Phase::initiate),
             Phase::initiate,wrapper_for(1000u+i),action_for(1000u+i),100u);
@@ -1856,12 +1858,119 @@ static void test_capacity_and_session_binding() {
         action_for(5001u),100u);
     check(is_code(still_full.result,ErrorCode::capacity_full),
         "terminal_tombstone_preserves_capacity");
+    check(ledger.release_terminal(context,first.receipt).ok(),
+        "explicit_terminal_release");
+    check(is_code(ledger.inspect(context,first.receipt).result,
+        ErrorCode::claim_mismatch),"released_receipt_is_stale");
+    check(is_code(ledger.seed(context,first_id,payload_for(5002u,
+        Phase::initiate),Phase::initiate,wrapper_for(5002u),
+        action_for(5002u),100u).result,ErrorCode::duplicate_request),
+        "released_request_remains_deduplicated");
+    check(ledger.seed(context,"authority-cap-after-release",
+        payload_for(5003u,Phase::initiate),Phase::initiate,
+        wrapper_for(5003u),action_for(5003u),100u).result.ok(),
+        "explicit_release_reclaims_one_live_slot");
+    check(is_code(ledger.seed(context,"authority-cap-after-release-overflow",
+        payload_for(5004u,Phase::initiate),Phase::initiate,
+        wrapper_for(5004u),action_for(5004u),100u).result,
+        ErrorCode::capacity_full),"live_capacity_stays_fixed");
 
     const Context wrong_epoch{0x7777u,0u};
     check(is_code(ledger.invalidate_expired(wrong_epoch),ErrorCode::wrong_epoch),
         "capacity_epoch_isolated");
     check(is_code(ledger.inspect(wrong_epoch,first.receipt).result,
         ErrorCode::wrong_epoch),"epoch_bound_at_construction");
+}
+
+static void test_terminal_reclamation_history_over_capacity() {
+    AllianceAuthorityLedger ledger(0x6767u);
+    const Context context{0x6767u,1u};
+    ClaimTicket stale_ticket{};
+    SeedResult stale_seed{};
+    std::uint16_t reclaimed_slot=bridge::alliance_authority::kInvalidSlot;
+    char first_request_id[64]{};
+    NativeHeader first_header{};
+
+    for (unsigned i=0;i<130u;++i) {
+        char request_id[64]{};
+        std::snprintf(request_id,sizeof(request_id),
+            "authority-reclaimed-%03u",i);
+        const AlliancePayload payload=payload_for(30000u+i,Phase::initiate);
+        const ObjectRef outgoing=wrapper_for(30000u+i);
+        const ObjectRef outgoing_action=action_for(30000u+i);
+        const ObjectRef incoming=wrapper_for(40000u+i);
+        const ObjectRef incoming_action=action_for(40000u+i);
+        const ObjectRef target=wrapper_for(50000u+i);
+        const ObjectRef target_action=action_for(50000u+i);
+        const NativeHeader header=header_for(1000u+i);
+        const SeedResult seeded=ledger.seed(context,request_id,payload,
+            Phase::initiate,outgoing,outgoing_action,50000u);
+        check(seeded.result.ok(),"reclaim_seed_over_64");
+        if (!seeded.result.ok()) break;
+
+        if (i==0) {
+            std::memcpy(first_request_id,request_id,sizeof(first_request_id));
+            first_header=header;
+            reclaimed_slot=seeded.result.slot;
+            check(is_code(ledger.release_terminal(context,seeded.receipt),
+                ErrorCode::invalid_stage),"live_record_cannot_be_released");
+            const auto still_live=ledger.inspect(context,seeded.receipt);
+            check(still_live.result.ok()
+                && still_live.view.state==State::seeded,
+                "failed_live_release_keeps_slot");
+        } else {
+            check(seeded.result.slot==reclaimed_slot,
+                "terminal_slot_reused_after_release");
+            check(is_code(ledger.serializer(context,stale_seed.receipt,
+                Phase::initiate,outgoing,outgoing_action,payload,header),
+                ErrorCode::claim_mismatch),"stale_seed_rejected_after_reuse");
+            check(is_code(ledger.consume_entry(context,stale_ticket,
+                Phase::initiate,target,target_action,payload,
+                bridge::alliance_authority::kTransferCloneHeader),
+                ErrorCode::claim_mismatch),"stale_ticket_rejected_after_reuse");
+        }
+
+        check(ledger.serializer(context,seeded.receipt,Phase::initiate,
+            outgoing,outgoing_action,payload,header).ok(),
+            "reclaim_serializer_over_64");
+        const ClaimResult claimed=ledger.incoming_preclone(context,
+            seeded.receipt,Phase::initiate,incoming,incoming_action,header,
+            payload,true);
+        check(claimed.result.ok(),"reclaim_claim_over_64");
+        const CloneProof proof=clone_for(incoming,incoming_action,target,
+            target_action,payload,header.seq);
+        check(ledger.postclone(context,claimed.ticket,Phase::initiate,proof)
+            .ok(),"reclaim_postclone_over_64");
+        check(ledger.consume_entry(context,claimed.ticket,Phase::initiate,
+            target,target_action,payload,proof.final_entry_header).ok(),
+            "reclaim_consume_over_64");
+        check(ledger.release_terminal(context,seeded.receipt).ok(),
+            "reclaim_terminal_over_64");
+
+        stale_ticket=claimed.ticket;
+        stale_seed=seeded;
+    }
+
+    const SeedResult duplicate_request=ledger.seed(context,first_request_id,
+        payload_for(60000u,Phase::initiate),Phase::initiate,
+        wrapper_for(60000u),action_for(60000u),50000u);
+    check(is_code(duplicate_request.result,ErrorCode::duplicate_request),
+        "request_history_survives_slot_reuse");
+
+    const SeedResult duplicate_header=ledger.seed(context,
+        "authority-reclaimed-header-replay",
+        payload_for(60001u,Phase::initiate),Phase::initiate,
+        wrapper_for(60001u),action_for(60001u),50000u);
+    check(duplicate_header.result.ok(),"header_replay_seed");
+    check(is_code(ledger.serializer(context,duplicate_header.receipt,
+        Phase::initiate,wrapper_for(60001u),action_for(60001u),
+        payload_for(60001u,Phase::initiate),first_header),
+        ErrorCode::ambiguous_header),"header_history_survives_slot_reuse");
+    check(is_code(ledger.revoke_request(context,duplicate_header.receipt,
+        Phase::initiate),ErrorCode::request_revoked),
+        "header_replay_record_terminalized");
+    check(ledger.release_terminal(context,duplicate_header.receipt).ok(),
+        "header_replay_record_released");
 }
 
 int main() {
@@ -1881,10 +1990,11 @@ int main() {
     test_fresh_intent_reuse();
     test_same_intent_detached_address_reuse();
     test_capacity_and_session_binding();
+    test_terminal_reclamation_history_over_capacity();
     const bool passed=g_failures==0;
     std::printf(
         "{\"passed\":%s,\"checks\":%u,\"failures\":%u,"
-        "\"capacity\":%u,\"heap_or_io_in_ledger\":false,"
+        "\"capacity\":%u,\"terminal_history\":\"growable_nothrow\","
         "\"native_calls\":false}\n",
         passed?"true":"false",g_checks,g_failures,
         static_cast<unsigned>(bridge::alliance_authority::kLedgerCapacity));

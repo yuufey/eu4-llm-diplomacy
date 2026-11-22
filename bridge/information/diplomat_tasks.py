@@ -109,9 +109,7 @@ def _public_reason(reason: str) -> str:
 def _context_failure(
         context: Any, *, country: str | None = None,
         prefix: str = "DIPLOMAT_TASKS") -> str | None:
-    # NativeCountryStateSource's points guard is FRA-only.  This adapter uses
-    # the same live-build/session/date checks while binding the country to the
-    # trusted observer assigned by the host.
+    # Bind the requested country to the host observer before reading task records.
     if not isinstance(context, dict):
         reason = "MONARCH_POINTS_CONTEXT_UNAVAILABLE"
     elif context.get("status") != "ready" or context.get("mode") != "live":

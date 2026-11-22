@@ -1,5 +1,6 @@
 """Shared country bindings for the selected war's national state summaries."""
 import hashlib
+from collections.abc import Mapping
 
 from . import country_occupation_memory as _occupation
 from . import foreign_country_memory as _countries
@@ -17,10 +18,12 @@ FIELDS = ('occupations', 'blockades', 'current_forces')
 
 def _read_forces(read, base, binding, observer, profile):
     leaf = _forces._forces
-    if binding['tag'] != 'FRA':
-        permission = _forces._visibility.read_permission(read, base, observer, binding)
+    if binding['tag'] != observer['tag']:
+        permission = _forces._visibility.read_permission(
+            read, base, observer, binding, observer_tag=observer['tag'])
         return leaf.read_fields(read, base, binding, _forces.FORCE_FIELDS,
-            permission=permission, predicate_profile=profile['force_predicates'])
+            permission=permission, predicate_profile=profile['force_predicates'],
+            observer_tag=observer['tag'])
     # The logical observer's own statistics use its canonical country binding.
     # Foreign-country visibility settings belong to the branch above.
     if (binding['fullref'] != observer['fullref']
@@ -46,22 +49,22 @@ def _load_profile(fields):
     return profile
 
 
-def _observe_for(countries, fields):
+def _observe_for(countries, fields, observer='FRA'):
     def observe(reader, base, anchor, profile):
         state = {}
 
-        def admission(read, module_base, scan, observer, target):
+        def admission(read, module_base, scan, observer_tag, target):
             state['scan'] = scan
             state['rows'] = {row['fullref']: row for row in scan['rows'] if row['fullref']}
-            return _owner._bound_admission(read, module_base, scan, observer, target)
+            return _owner._bound_admission(read, module_base, scan, observer_tag, target)
 
         def read_fields(read, module_base, binding, selected):
-            observer = state['scan']['requested']['FRA']
+            observer_binding = state['scan']['requested'][observer]
             values = {}
             terrain = [field for field in fields if field in _territory.FIELDS]
             if terrain:
                 try:
-                    summary = _occupation.read_occupation(read, module_base, binding, observer,
+                    summary = _occupation.read_occupation(read, module_base, binding, observer_binding,
                         state['rows'], profile['occupation'], include_occupation='occupations' in terrain,
                         blockade_spec=profile['blockade'] if 'blockades' in terrain else None)
                     blockades = summary.pop('blockades', None)
@@ -72,7 +75,7 @@ def _observe_for(countries, fields):
                                    for field in terrain})
             if 'current_forces' in fields:
                 try:
-                    stats = _read_forces(read, module_base, binding, observer, profile)
+                    stats = _read_forces(read, module_base, binding, observer_binding, profile)
                     values['W03.current_forces'] = project_sizes(stats,
                         _forces.ARMY_FIELD, _forces.NAVY_FIELD, 'army_soldiers')
                 except Exception as exc:
@@ -80,7 +83,7 @@ def _observe_for(countries, fields):
             return values
 
         def backend(read, module_base, target):
-            return _countries.read_two_pass(read, module_base, 'FRA', countries,
+            return _countries.read_two_pass(read, module_base, observer, countries,
                 fields=['W03.' + field for field in fields], admission_reader=admission,
                 read_fields=read_fields)
 
@@ -88,21 +91,24 @@ def _observe_for(countries, fields):
     return observe
 
 
-def capture(installation, countries, *, fields):
+def capture(installation, countries, *, fields, observer='FRA'):
     countries, fields = list(countries), list(fields)
     if not countries or len(countries) > _countries.MAX_TARGETS or not fields:
         raise ValueError('WAR_STATE_CAPTURE_SCOPE')
-    report = _owner._capture_common(installation, countries[0], observer='FRA', schema=SCHEMA,
+    report = _owner._capture_common(installation, countries[0], observer=observer, schema=SCHEMA,
         profile_sha256=PROFILE_SHA256, load_profile=lambda: _load_profile(fields),
-        observe=_observe_for(countries, fields), allow_observer_target=True)
+        observe=_observe_for(countries, fields, observer), allow_observer_target=True,
+        observer_scoped=True)
     report['request'].update(countries=countries, fields=fields)
     return report
 
 
 def validate_capture(report, context, creation, countries, fields):
-    if (not isinstance(report, dict) or report.get('request', {}).get('countries') != countries
+    if (not isinstance(context, Mapping) or not isinstance(report, dict)
+            or report.get('request', {}).get('countries') != countries
             or report.get('request', {}).get('fields') != fields or not countries):
         return False
     return _owner._validate_capture_common(report, context, creation, countries[0],
         schema=SCHEMA, profile_sha256=PROFILE_SHA256, load_profile=lambda: _load_profile(fields),
-        observe=_observe_for(countries, fields), allow_observer_target=True, require_access=True)
+        observe=_observe_for(countries, fields, context.get('observer')), allow_observer_target=True,
+        require_access=True, observer_scoped=True)

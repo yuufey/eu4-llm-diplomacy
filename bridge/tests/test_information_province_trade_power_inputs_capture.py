@@ -49,12 +49,14 @@ def test_validator_checks_outer_identity_before_replay_and_requires_access(monke
         lambda *args, **kwargs: calls.append((args, kwargs)) or True)
     report = {'schema': module.SCHEMA, 'observer': 'FRA',
         'object': {'type': 'province', 'province_id': 183}, 'capture': {}}
-    assert module.validate_capture(report, {}, 99, 183)
+    assert module.validate_capture(report, {'observer': 'FRA'}, 99, 183)
     assert calls[0][1]['require_access'] is True
+    assert calls[0][1]['observer_scoped'] is True
     assert calls[0][1]['load_profile'] is module._load_profile
     altered = deepcopy(report)
     altered['object']['province_id'] = True
-    assert not module.validate_capture(altered, {}, 99, 183)
+    assert not module.validate_capture(altered, {'observer': 'FRA'}, 99, 183)
+    assert not module.validate_capture(report, {'observer': 'TUR'}, 99, 183)
     assert len(calls) == 1
 
 

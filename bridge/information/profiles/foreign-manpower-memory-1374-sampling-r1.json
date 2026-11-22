@@ -82,8 +82,8 @@
     },
     {
       "path": "bridge/information/foreign_technology_capture.py",
-      "bytes": 17464,
-      "sha256": "dc3e07398a84b3ea2bb7b3e9c616fd0df02104ea907d0c4a4c80cfb0c002d29c"
+      "bytes": 18302,
+      "sha256": "add865cb523a3fafce591fb733d4d9ba52914b06ff6dd3bba4fe6f0bcda69165"
     },
     {
       "path": "bridge/information/foreign_country_memory.py",
@@ -92,13 +92,13 @@
     },
     {
       "path": "bridge/information/foreign_manpower_memory.py",
-      "bytes": 19827,
-      "sha256": "b04c474f5d940853cce4ceb941afaa0e57fd457e6b9ce45541dc3c3ac1e368c8"
+      "bytes": 20046,
+      "sha256": "1fb228b732d1cc26733d49079198d694616031ee70900942d242a9770befafc1"
     },
     {
       "path": "bridge/information/foreign_military_visibility_memory.py",
-      "bytes": 15024,
-      "sha256": "095a8cee07c5c9f7a12fc00dc1df8f1578a2e32fe62235f4c813cce9fb20a6e5"
+      "bytes": 15148,
+      "sha256": "336c6f4d35d644281ceef2d362a0278edb235544efa03f236b55f2f3ae49d344"
     },
     {
       "path": "bridge/information/country_reference_memory.py",

@@ -140,10 +140,9 @@ class JournalPendingMattersSource:
             'gaps': self._gaps(), 'description': '已绑定日志内本国未闭合请求及对账事项；不等同游戏当前待回应提议。'}}
         if self.native_pending:
             topic['fields']['pending_matters'].update(
-                description='已绑定日志的复核事项及FRA原生收件国待处理队列摘要，各部分单独标记范围与状态。',
+                description='已绑定日志的复核事项及当前观察国收到的原生待处理队列。',
                 basis='scoped_journal_page_and_recipient_owned_native_list',
                 native_queue_scope='recipient_owned_native_pending_action_list',
-                native_queue_observers=['FRA'],
                 native_queue_deadline={
                     'scope': 'recognized_native_pending_entries',
                     'unit': 'game_date_raw', 'scale': 1,
@@ -155,14 +154,16 @@ class JournalPendingMattersSource:
                     'response_authority': False})
             topic['change_detection'] = 'sampled_scoped_journal_and_native_queue_comparison'
             topic['change_scope'] = {'fields': ['pending_matters'],
-                'scope': 'configured_journal_page_and_FRA_native_pending_list'}
+                'scope': 'configured_journal_page_and_observer_native_pending_list'}
         return [topic]
 
     def _read_native(self, context):
         from . import native_pending_memory as native
         unknown = {'status': 'unknown', 'reason': 'NATIVE_PENDING_CONTEXT_UNSUPPORTED'}
         proof = {'read_only': True, 'native_function_invoked': False, 'status': 'not_read'}
-        if context.get('observer') != 'FRA' or context.get('game_sha256') != native.GAME_SHA256:
+        observer = context.get('observer')
+        if (not isinstance(observer, str) or re.fullmatch(r'[A-Z0-9]{3}', observer) is None
+                or context.get('game_sha256') != native.GAME_SHA256):
             return unknown, proof
         try:
             session = getattr(getattr(self.base_source, 'diplomacy_tools', None), 'session', None)
@@ -170,7 +171,7 @@ class JournalPendingMattersSource:
             if directory is None:
                 return dict(unknown, reason='NATIVE_PENDING_INSTALLATION_UNAVAILABLE'), proof
             capture = self.pending_capture or native.capture
-            report = capture(Path(directory) / 'installation.json', 'FRA')
+            report = capture(Path(directory) / 'installation.json', observer)
             if not isinstance(report, dict):
                 raise ValueError('NATIVE_PENDING_REPORT_INVALID')
             access = report.get('access', {})
@@ -185,7 +186,7 @@ class JournalPendingMattersSource:
                     reason = 'NATIVE_PENDING_CAPTURE_UNAVAILABLE'
                 return dict(unknown, reason=reason), proof
             identity = report.get('identity', {})
-            if (report.get('schema') != native.SCHEMA or report.get('country') != 'FRA'
+            if (report.get('schema') != native.SCHEMA or report.get('country') != observer
                     or report.get('game_sha256') != native.GAME_SHA256
                     or report.get('profile_sha256') != native.PROFILE_SHA256
                     or report.get('read_only') is not True or report.get('native_function_invoked') is not False
@@ -196,9 +197,9 @@ class JournalPendingMattersSource:
                     or not self._native_dates_match(report, context)
                     or not isinstance(report.get('player_country'), str)
                     or re.fullmatch(r'[A-Z0-9]{3}', report['player_country']) is None
-                    or report['player_country'] == 'FRA'):
+                    or report['player_country'] == observer):
                 return dict(unknown, reason='NATIVE_PENDING_REPORT_BINDING_UNVERIFIED'), proof
-            value = native.validate_value(report.get('value'))
+            value = native.validate_value(report.get('value'), observer=observer)
             proof.update(binding_verified=True, observed_game_date=report['game_date'],
                          player_country=report['player_country'])
             lookup = {'status': 'unknown', 'reason': 'NATIVE_PENDING_PROPOSAL_LOOKUP_UNAVAILABLE'}
@@ -313,8 +314,7 @@ class JournalPendingMattersSource:
 
     def change_comparison(self, query, sample, context):
         if (not self.native_pending or query.get('topic') != 'C03'
-                or query.get('fields') != ['pending_matters'] or not _ready(context)
-                or context.get('observer') != 'FRA'):
+                or query.get('fields') != ['pending_matters'] or not _ready(context)):
             return None
         fields = sample.get('fields', {})
         field = fields.get('pending_matters', {})
@@ -326,7 +326,8 @@ class JournalPendingMattersSource:
         if (set(fields) != {'pending_matters'} or field.get('status') != 'known'
                 or native.get('status') != 'known' or proof.get('binding_verified') is not True
                 or proof.get('consistent') is not True or provenance.get('journal_only') is not False
-                or scope.get('session_id') != context.get('session_id') or scope.get('observer') != 'FRA'):
+                or scope.get('session_id') != context.get('session_id')
+                or scope.get('observer') != context.get('observer')):
             return None
         selection = {'journal_scope': scope, 'parameters': query.get('parameters', {}),
                      'native_profile': proof.get('profile_sha256')}

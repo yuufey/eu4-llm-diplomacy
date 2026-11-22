@@ -9,7 +9,7 @@ from .catalog import get_topic, validate_query as _validate_catalog_query
 from .model import InformationError, digest
 from .observation_time import dates_match
 from .sources import _result, _source_info
-from .trade_income import _context_reason, _identity, _session_binding
+from .trade_income import _identity, _observer_context_reason, _session_binding
 
 
 _FIELDS = ("land_commitments", "war_commitments", "economic_support", "expiry", "source")
@@ -42,7 +42,7 @@ class NativeCommitmentsSource:
         topic = get_topic("R07")
         topic.update(
             status="available", source=type(self).__name__,
-            object_types=["country_pair", "war"], observer_roles=["actor"], observer_scope=["FRA"],
+            object_types=["country_pair", "war"], observer_roles=["actor"], observer_scope=[],
             supported_versions=["1.37.4"], visibility="visible_scope",
             context_scope="country_pair", triggers=["query", "periodic", "change"],
             change_detection="sampled_state_comparison_not_lossless_events",
@@ -63,7 +63,7 @@ class NativeCommitmentsSource:
             "economic_support": {
                 "coverage": "partial", "source": type(self).__name__, "complete": False,
                 "unit": "economic_support_evidence", "scale": 1, "period": "current",
-                "supported_object_types": ["country_pair"], "supported_observer": "FRA",
+                "supported_object_types": ["country_pair"],
                 "basis": "native_current_bilateral_subsidy_and_reparations_records",
                 "paths": ["economic_support.value.active_payment_obligations",
                           "economic_support.value.registered_subsidy_evidence"],
@@ -91,21 +91,21 @@ class NativeCommitmentsSource:
         if normalized["parameters"]:
             raise InformationError("invalid_parameters", "R07 takes no parameters")
         obj = normalized["object"]
+        observer = context.get('observer') if context is not None else None
         if obj["type"] == "country_pair":
             if (not isinstance(obj.get("actor"), str) or _TAG.fullmatch(obj["actor"]) is None
                     or not isinstance(obj.get("recipient"), str)
                     or _TAG.fullmatch(obj["recipient"]) is None):
                 raise InformationError("invalid_object", "R07 requires two country tags")
-            if obj["actor"] != "FRA":
-                raise InformationError("observer_scope_mismatch", "R07 actor must be logical observer FRA")
-            if obj["recipient"] == "FRA":
-                raise InformationError("invalid_object", "R07 recipient must differ from observer FRA")
-        if context is not None and context.get("observer") != "FRA":
-            raise InformationError("observer_scope_mismatch", "R07 requires logical observer FRA")
+            if obj['recipient'] == obj['actor']:
+                raise InformationError('invalid_object', 'R07 recipient must differ from the observer')
         if obj['type'] == 'war' and 'land_commitments' in normalized['fields']:
-            if (obj.get('actor') != 'FRA' or not isinstance(obj.get('recipient'), str)
-                    or not _TAG.fullmatch(obj['recipient']) or obj['recipient'] == 'FRA'):
-                raise InformationError('invalid_object', 'Land commitments require FRA and a war opponent')
+            actor, recipient = obj.get('actor'), obj.get('recipient')
+            if (not isinstance(actor, str) or not _TAG.fullmatch(actor)
+                    or not isinstance(recipient, str) or not _TAG.fullmatch(recipient) or actor == recipient):
+                raise InformationError('invalid_object', 'Land commitments require the observer and a war opponent')
+        if observer is not None and obj.get('actor') is not None and obj['actor'] != observer:
+            raise InformationError('observer_scope_mismatch', 'R07 requires the configured observer as actor')
         return normalized
 
     def _read_preparation(self, query, context):
@@ -113,13 +113,14 @@ class NativeCommitmentsSource:
 
         base = self.foreign_economy_source.base_source
         installation, creation, reason = _session_binding(base)
-        reason = reason or _context_reason(context, 'FRA')
+        reason = reason or _observer_context_reason(context)
         proof = {'reader': 'war_preparation_capture', 'read_only': True}
         if reason:
             return {'status': 'unavailable', 'reason': reason}, proof
         country = query['object']['recipient']
         try:
-            report = (self.war_capture or capture_module.capture)(installation, country)
+            report = (self.war_capture(installation, country) if self.war_capture is not None
+                      else capture_module.capture(installation, country, observer=context['observer']))
             if not capture_module.validate_capture(report, context, creation, country):
                 raise ValueError('WAR_PREPARATION_CAPTURE_INVALID')
             field = deepcopy(report['observation']['backend']['targets'][0]['fields']['R07.war_commitments'])
@@ -132,7 +133,7 @@ class NativeCommitmentsSource:
     def _read_economic(self, query, context):
         base = getattr(self.foreign_economy_source, 'base_source', None)
         installation, creation, reason = _session_binding(base)
-        reason = reason or _context_reason(context, 'FRA')
+        reason = reason or _observer_context_reason(context)
         proof = {'reader': 'ongoing_economic_commitments_capture', 'read_only': True}
         report = None
         try:
@@ -141,7 +142,8 @@ class NativeCommitmentsSource:
             from . import ongoing_economic_commitments_capture as capture_module
 
             country = query['object']['recipient']
-            report = (self.economic_capture or capture_module.capture)(installation, country)
+            report = (self.economic_capture(installation, country) if self.economic_capture is not None
+                      else capture_module.capture(installation, country, observer=context['observer']))
             if not capture_module.validate_capture(report, context, creation, country):
                 raise ValueError('ECONOMIC_COMMITMENTS_CAPTURE_INVALID')
             fields = capture_module.project_fields(report)
@@ -178,7 +180,10 @@ class NativeCommitmentsSource:
 
         base = self.foreign_economy_source.base_source
         installation, creation, reason = _session_binding(base)
-        reason = reason or _context_reason(context, 'FRA')
+        reason = reason or _observer_context_reason(context)
+        obj = query['object']
+        if reason is None and obj['type'] != 'country' and obj.get('actor') != context.get('observer'):
+            reason = 'LAND_COMMITMENTS_OBSERVER_SCOPE_MISMATCH'
         if reason:
             return {'status': 'unavailable', 'reason': reason}, {}
         selected_war = None
@@ -191,9 +196,14 @@ class NativeCommitmentsSource:
                 if identity.get('status') != 'known':
                     return deepcopy(identity), proof
                 selected_war = identity['value']
+                requested = query['object'].get('war_id')
+                if requested is not None and selected_war != requested:
+                    raise ValueError('LAND_COMMITMENTS_WAR_CHANGED')
                 proof['war_context_source'] = 'W01'
                 proof['war_id'] = selected_war
-            report = (self.land_capture or capture_module.capture)(installation)
+            observer = context['observer']
+            report = (self.land_capture(installation) if self.land_capture is not None
+                      else capture_module.capture(installation, observer=observer))
             if not capture_module.validate_capture(report, context, creation):
                 raise ValueError('LAND_COMMITMENTS_CAPTURE_INVALID')
             field = capture_module.field_from_capture(report)
@@ -222,14 +232,18 @@ class NativeCommitmentsSource:
                     row['war_leader'] = leader.get('country') if leader.get('status') == 'known' else None
             field.pop('raw_inputs', None)
             from .land_promise_history import attach_observed_promisors
-            field, proof['land_promise_association'] = attach_observed_promisors(
-                field, context, self.land_promise_history_reader)
+            scope_enabled = observer == 'FRA' or getattr(base, '_land_promise_enabled', False)
+            history_reader = self.land_promise_history_reader if scope_enabled else None
+            field, association = attach_observed_promisors(field, context, history_reader)
+            if not scope_enabled and field['value']:
+                association['gaps'] = ['LAND_PROMISE_OBSERVATION_SCOPE_UNAVAILABLE']
+            proof['land_promise_association'] = association
             return field, proof
         except Exception as exc:
             return {'status': 'unknown', 'reason': 'LAND_COMMITMENTS_READ_FAILED:' + type(exc).__name__}, proof
 
     def read_land_for_country(self, country, context):
-        """Share the admitted land read with country-oriented adapters, including FRA."""
+        """Share the admitted land read with country-oriented adapters."""
         if not isinstance(country, str) or _TAG.fullmatch(country) is None:
             raise InformationError('invalid_object', 'Land commitments require a country tag')
         return self._read_land({'object': {'type': 'country', 'country': country}}, context)
@@ -242,7 +256,7 @@ class NativeCommitmentsSource:
         provenance = info.get("provenance") if isinstance(info, Mapping) else None
         if (not isinstance(info, Mapping) or info.get("name") != "NativeForeignEconomySource"
                 or info.get("mode") != before.get("mode")
-                or info.get("observer") != "FRA"
+                or info.get("observer") != before.get('observer')
                 or info.get("session_id") != before.get("session_id")
                 or not dates_match(before.get("game_date"), upstream.get("game_date"))
                 or upstream.get("objects") != [{"type": "country", "country": recipient}]
@@ -261,7 +275,7 @@ class NativeCommitmentsSource:
                 "upstream_result_sha256": result_hash}, None
 
     @staticmethod
-    def _component(upstream):
+    def _component(upstream, observer):
         fields = upstream.get("fields") if isinstance(upstream, Mapping) else None
         outer = fields.get("subsidies") if isinstance(fields, Mapping) else None
         if not isinstance(outer, Mapping):
@@ -282,12 +296,12 @@ class NativeCommitmentsSource:
         if component.get("status") != "known":
             reason = component.get("reason")
             return None, reason if isinstance(reason, str) and reason else "R07_F03_SUBSIDY_COMPONENT_UNKNOWN"
-        if not NativeCommitmentsSource._known_pair_component(component):
+        if not NativeCommitmentsSource._known_pair_component(component, observer):
             return None, "R07_F03_SUBSIDY_COMPONENT_INVALID"
         return deepcopy(dict(component)), None
 
     @staticmethod
-    def _known_pair_component(component):
+    def _known_pair_component(component, observer):
         if (component.get("scope") != "observer_target_pair_only"
                 or component.get("unit") != "bilateral_subsidies_relation"
                 or type(component.get("scale")) is not int or component.get("scale") != 1
@@ -324,8 +338,8 @@ class NativeCommitmentsSource:
                 or payer_tag == recipient_tag):
             return False
         role = contract.get("observer_role")
-        if ((role == "payer" and payer_tag != "FRA")
-                or (role == "recipient" and recipient_tag != "FRA")
+        if ((role == "payer" and payer_tag != observer)
+                or (role == "recipient" and recipient_tag != observer)
                 or role not in {"payer", "recipient"}):
             return False
         amount = contract.get("monthly_nominal_amount")
@@ -334,16 +348,17 @@ class NativeCommitmentsSource:
                 and amount.get("scale") == 1000 and amount.get("period") == "month")
 
     @staticmethod
-    def _bind_component_target(component, target):
-        if not NativeCommitmentsSource._known_pair_component(component):
+    def _bind_component_target(component, target, observer):
+        if not NativeCommitmentsSource._known_pair_component(component, observer):
             return False
         if not component["pair_relation"]["present"]:
             return True
         contract = component["contracts"][0]
-        return {contract["payer"]["tag"], contract["recipient"]["tag"]} == {"FRA", target}
+        return {contract["payer"]["tag"], contract["recipient"]["tag"]} == {observer, target}
 
     def _project_known(self, component, upstream, evidence_hashes, recipient, observed_at):
-        if not self._bind_component_target(component, recipient):
+        observer = upstream['source']['observer']
+        if not self._bind_component_target(component, recipient, observer):
             return None
         obligations = {"status": "unknown", "reason": "CURRENT_PAYMENT_OBLIGATIONS_NOT_CAPTURED"}
         subsidies_value = upstream.get("fields", {}).get("subsidies", {}).get("value", {})
@@ -367,7 +382,7 @@ class NativeCommitmentsSource:
             "observation_date": observed_at,
             "session_id": upstream["source"].get("session_id"),
             "component_sha256": digest(component),
-            "scope": {"observer": "FRA", "actor": "FRA", "recipient": recipient,
+            "scope": {"observer": observer, "actor": observer, "recipient": recipient,
                       "relation": "observer_target_pair_only",
                       "complete_country_contracts": False},
         }
@@ -398,6 +413,8 @@ class NativeCommitmentsSource:
         except Exception:
             before = {}
         current = before if isinstance(before, dict) else (deepcopy(context) if isinstance(context, dict) else {})
+        if context is None:
+            query = self.validate_query(query, current)
         needed = [name for name in query["fields"] if name in _SUPPORTED_FIELDS]
         economic_fields = {}
         captured_context = deepcopy(current)
@@ -469,7 +486,7 @@ class NativeCommitmentsSource:
         if not needed:
             return result()
 
-        reason = _context_reason(before, "FRA") if isinstance(before, dict) else "R07_CONTEXT_UNAVAILABLE"
+        reason = _observer_context_reason(before)
         if reason is not None:
             for name in needed:
                 fields[name] = {"status": "unavailable", "reason": reason}
@@ -492,7 +509,7 @@ class NativeCommitmentsSource:
             after = self.context()
         except Exception:
             after = {}
-        if (not isinstance(after, dict) or _context_reason(after, "FRA") is not None
+        if (not isinstance(after, dict) or _observer_context_reason(after) is not None
                 or _identity(before) != _identity(after)):
             for name in needed:
                 fields[name] = {"status": "unavailable", "reason": "R07_CONTEXT_CHANGED_DURING_READ"}
@@ -513,7 +530,7 @@ class NativeCommitmentsSource:
             current = after
             return result()
         provenance.update(hashes)
-        component, component_reason = self._component(upstream)
+        component, component_reason = self._component(upstream, before['observer'])
         if component_reason is not None:
             for name in needed:
                 fields[name] = {"status": "unknown", "reason": component_reason}
@@ -548,7 +565,7 @@ class NativeCommitmentsSource:
         selected = set(query.get('fields', []))
         if (query.get('topic') != 'R07' or selected != set(fields) or not selected
                 or not selected <= {'land_commitments', 'war_commitments', 'economic_support', 'expiry'}
-                or _context_reason(context, 'FRA')
+                or _observer_context_reason(context)
                 or any(field.get('status') != 'known' for field in fields.values())):
             return None
         support = fields.get('economic_support')

@@ -213,7 +213,7 @@ def _wrap_i32(value: int) -> int:
 
 
 def _permission_result(permission: Any, base: int,
-                       target: Mapping[str, Any]) -> tuple[str, str | None]:
+                       target: Mapping[str, Any], observer_tag: str) -> tuple[str, str | None]:
     if not isinstance(permission, Mapping):
         return "unknown", "COUNTRY_VIEW_PERMISSION_REQUIRED"
     if permission.get("status") == "unknown":
@@ -262,12 +262,13 @@ def _permission_result(permission: Any, base: int,
     observer, observer_error = checked_permission_binding("observer")
     if observer_error is not None:
         return "unknown", observer_error
-    if observer is None or observer.get("tag") != "FRA":
-        return "unknown", "COUNTRY_VIEW_OBSERVER_NOT_FRA"
+    if observer is None or observer.get("tag") != observer_tag:
+        return "unknown", ("COUNTRY_VIEW_OBSERVER_NOT_FRA" if observer_tag == "FRA"
+                           else "COUNTRY_VIEW_OBSERVER_TAG_MISMATCH")
     permission_target, target_error = checked_permission_binding("target")
     if target_error is not None:
         return "unknown", target_error
-    if permission_target is None or permission_target.get("tag") == "FRA":
+    if permission_target is None or permission_target.get("tag") == observer_tag:
         return "unknown", "COUNTRY_VIEW_PERMISSION_TARGET_MISMATCH"
     if _identity(permission_target) != _identity(target):
         return "unknown", "COUNTRY_VIEW_PERMISSION_TARGET_MISMATCH"
@@ -367,7 +368,8 @@ def _read_manpower(reader: _BudgetReader, base: int, target_pointer: int,
 
 def read_fields(reader: Any, base: int, target_binding: Mapping[str, Any],
                 fields: tuple[str, ...] | list[str], *,
-                permission: Mapping[str, Any] | None = None) -> dict[str, dict[str, Any]]:
+                permission: Mapping[str, Any] | None = None,
+                observer_tag: str = "FRA") -> dict[str, dict[str, Any]]:
     """Read only ``F02.manpower`` for a parent-bound and admitted target.
 
     Country-table resolution is rechecked through the existing bounded pure
@@ -384,12 +386,12 @@ def read_fields(reader: Any, base: int, target_binding: Mapping[str, Any],
         if field != FIELD_ID:
             result[field] = _unknown("UNSUPPORTED_FIELD")
             continue
-        result[field] = _read_one(reader, base, target_binding, permission)
+        result[field] = _read_one(reader, base, target_binding, permission, observer_tag)
     return result
 
 
 def _read_one(reader: Any, base: int, target_binding: Mapping[str, Any],
-              permission: Mapping[str, Any] | None) -> dict[str, Any]:
+              permission: Mapping[str, Any] | None, observer_tag: str) -> dict[str, Any]:
     raw_inputs = _empty_raw(target_binding, permission)
     try:
         base_value, target_pointer, retained = _country_binding._parse_target(base, target_binding)
@@ -398,7 +400,7 @@ def _read_one(reader: Any, base: int, target_binding: Mapping[str, Any],
     raw_inputs["module_base"] = hex(base_value)
     raw_inputs["target_binding"] = _json_copy(retained)
 
-    permission_status, permission_reason = _permission_result(permission, base_value, retained)
+    permission_status, permission_reason = _permission_result(permission, base_value, retained, observer_tag)
     if permission_status != "admitted":
         return _field(permission_status, reason=permission_reason, raw_inputs=raw_inputs)
 

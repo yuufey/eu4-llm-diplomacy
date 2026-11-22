@@ -434,7 +434,20 @@ $manifest = [ordered]@{ version = $observerVersion; experiment_id = $Experiment;
     dll = $dll; sources = @($sources); compiler_arguments = $arguments }
 $manifest.native_war_participants_query = $true
 $manifest.native_territorial_interest_query = $true
-$manifest.native_territorial_interest_query_wire = 23
+$manifest.native_territorial_interest_query_wire = 24
+if ($NativeCountryControl) {
+    $manifest.native_information_observer_configuration = $true
+    $manifest.native_information_observer_protocol = "EU4INFO1"
+    $manifest.native_country_modifier_scoped_schema = 2
+    $manifest.native_relation_change_scoped_schema = 6
+    $manifest.native_war_declaration_scoped_schema = 2
+    $manifest.native_land_promise_scoped_schema = 2
+    $manifest.native_mission_completion_scoped_schema = 3
+    $manifest.native_mission_availability_scoped_schema = 2
+    $manifest.native_mission_condition_scoped_schema = 4
+    $manifest.native_expiry_scoped_wire = 2
+    $manifest.native_rival_change_scoped_schema = 4
+}
 if ($BattleEndState) {
     $manifest.information_battle_end_state = $true
     $manifest.information_battle_end_state_wire = 9

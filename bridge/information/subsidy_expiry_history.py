@@ -28,12 +28,12 @@ class NativeSubsidyExpiryHistorySource:
     def catalog(self):
         topic = get_topic('H02')
         topic.update(source=type(self).__name__, context_scope='recorded',
-                     observer_roles=['actor', 'recipient'], observer_scope=['FRA'])
+                     observer_roles=['actor', 'recipient'], observer_scope=[])
         topic['fields'] = {FIELD: {
             'coverage': 'available', 'complete': True, 'source': type(self).__name__,
             'unit': 'subsidy_expiry_events', 'period': 'observed_history',
             'native_source_available': observation.EVENT_TYPE in self.base_source.event_types,
-            'description': '已采集的FRA付款或收款补贴合同自然到期，含双方、月额和实际移除日期。',
+            'description': '观察国付款或收款的补贴合同自然到期，含双方、月额和实际移除日期。',
             'event_filter': {'types': [observation.EVENT_TYPE]},
         }}
         return [topic]
@@ -81,7 +81,8 @@ class NativeSubsidyExpiryHistorySource:
                 'event_date': _date(fields['event_date']['value'])}
 
     def _native(self, query, context, event=None):
-        if context.get('observer') != 'FRA':
+        if (event is None and context.get('observer') != 'FRA'
+                and observation.EVENT_TYPE not in self.base_source.event_types):
             return {'status': 'unavailable', 'reason': 'SUBSIDY_EXPIRY_OBSERVER_SCOPE_MISMATCH'}
         if query['parameters'].get('event_type', observation.EVENT_TYPE) != observation.EVENT_TYPE:
             return {'status': 'known', 'value': [], 'complete': True}

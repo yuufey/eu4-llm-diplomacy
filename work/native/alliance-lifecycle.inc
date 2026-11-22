@@ -247,10 +247,15 @@ extern "C" { void* bridge_serializer_original=nullptr; }
 extern "C" void bridge_serializer_observe(void* wrapper);
 
 static bool lifecycle_country_of_interest(uint64_t handle) {
-    uint32_t tag=static_cast<uint32_t>(handle&0xffffff);
-    // Bound the event rate by the controlled and experiment endpoints.
-    // Country database slot numbers are resolved per session, not assumed.
-    return tag==0x415246 || tag==0x524f50 || tag==0x564153 || tag==0x54494c;
+#if defined(BRIDGE_NATIVE_COUNTRY_CONTROL) && defined(BRIDGE_COUNTRY_MODIFIER_OBSERVATION)
+    return observation_control_country_handle_tag_only(handle)
+        || observation_information_country_handle(handle);
+#else
+    // Historical diagnostic builds used these fixed sample endpoints.
+    const uint32_t tag=static_cast<uint32_t>(handle&0xffffff);
+    return tag==0x415246 || tag==0x524f50 || tag==0x564153 || tag==0x54494c
+        || observation_control_country_handle_tag_only(handle);
+#endif
 }
 
 static void lifecycle_copy_query(char (&destination)[65]) {

@@ -1,4 +1,4 @@
-"""Foreign F02 technology, manpower, and diplomacy force statistics for FRA."""
+"""Foreign F02 technology, manpower, and diplomacy force statistics."""
 from __future__ import annotations
 
 from collections.abc import Mapping
@@ -10,7 +10,7 @@ from typing import Any
 
 from .model import InformationError, canonical
 from .sources import _result, _source_info
-from .trade_income import NativeTradeIncomeSource, _context_reason, _identity, _session_binding
+from .trade_income import NativeTradeIncomeSource, _observer_context_reason, _identity, _session_binding
 from . import foreign_quality_projection as _quality_projection
 
 _TAG=re.compile(r'[A-Z0-9]{3}\Z')
@@ -252,10 +252,11 @@ def _public_force_field(item: Mapping[str, Any], public_name: str,
 
 
 def _public_admission_details(country_view: Mapping[str, Any] | None,
-                              stats_permission: Mapping[str, Any] | None) -> dict[str, Any]:
+                              stats_permission: Mapping[str, Any] | None,
+                              observer: str) -> dict[str, Any]:
     if country_view is not None and country_view.get('status')=='known':
         cv={'status':'known','admitted':country_view['admitted'],
-            'observer':'FRA','projected_observer_view':True,'actual_UI_observed':False}
+            'observer':observer,'projected_observer_view':True,'actual_UI_observed':False}
     else:
         cv={'status':_UNKNOWN,'reason':_safe_reason(
             (country_view or {}).get('reason'),'COUNTRY_VIEW_ADMISSION_UNKNOWN')}
@@ -274,7 +275,7 @@ def _public_admission_details(country_view: Mapping[str, Any] | None,
 
 def _public_visibility(country_view: Mapping[str, Any] | None,
                        stats_permission: Mapping[str, Any] | None,
-                       *, target: str, view_conflict: bool=False,
+                       *, target: str, observer: str, view_conflict: bool=False,
                        conflict_reason: str='COUNTRY_VIEW_CAPTURE_DISAGREEMENT',
                        force_country_view: Mapping[str, Any] | None=None,
                        force_stats_permission: Mapping[str, Any] | None=None,
@@ -297,12 +298,12 @@ def _public_visibility(country_view: Mapping[str, Any] | None,
         tech_view={'status':_UNKNOWN,'reason':'COUNTRY_VIEW_ADMISSION_UNKNOWN'}
     elif country_view.get('status')=='known':
         admitted=country_view['admitted']
-        tech_view={'admitted':admitted,'observer':'FRA','target':target,'actual_UI_observed':False,
+        tech_view={'admitted':admitted,'observer':observer,'target':target,'actual_UI_observed':False,
                    'projected_observer_view':True}
     else:
         tech_view={'status':_UNKNOWN,'reason':country_view.get('reason','COUNTRY_VIEW_ADMISSION_UNKNOWN')}
-    manpower_admission=_public_admission_details(country_view,stats_permission)
-    force_admission=_public_admission_details(force_view,force_stats)
+    manpower_admission=_public_admission_details(country_view,stats_permission,observer)
+    force_admission=_public_admission_details(force_view,force_stats,observer)
     value={'military_technology':tech_view,
         'manpower':manpower_admission,
         'army':force_admission,
@@ -310,7 +311,7 @@ def _public_visibility(country_view: Mapping[str, Any] | None,
         'military_quality':{'status':_UNKNOWN,'reason':'QUALITY_PERMISSION_NOT_EVALUATED'},
         'other_F02_fields':{'status':_UNKNOWN,'reason':'OTHER_F02_FIELDS_NOT_IMPLEMENTED'}}
     if quality_country_view is not None or quality_permission is not None:
-        details=_public_admission_details(quality_country_view,quality_permission)
+        details=_public_admission_details(quality_country_view,quality_permission,observer)
         details['quality_page_permission']=details.pop('military_stats_permission')
         value['military_quality']=details
     return {'status':'known','unit':'field_admission','period':'current','complete':False,
@@ -332,7 +333,7 @@ class NativeForeignTechnologySource(NativeTradeIncomeSource):
     def catalog(self):
         common={'coverage':'partial','complete':False,'supported_versions':['1.37.4'],
             'source':'bridge.information.foreign_technology_capture.capture',
-            'supported_observers':['FRA'],'supported_object_types':['country'],
+            'supported_object_types':['country'],
             'period':'current','runtime_validation':'native_cache_and_observer_projection_observed',
             'gaps':['OBSERVER_PREDICATE_PROJECTION_NOT_ACTUAL_UI_OBSERVATION',
                     'MAIN_THREAD_ATOMICITY_NOT_PROVEN','NATIVE_CACHE_FRESHNESS_NOT_PROVEN']}
@@ -378,16 +379,16 @@ class NativeForeignTechnologySource(NativeTradeIncomeSource):
                 'military_technology':{**deepcopy(common),'unit':'technology_level','scale':1,'raw':True,
                     'basis':'native_country_technology_level_cache',
                     'value_origin':'copied_native_country_technology_cache',
-                    'description':'按FRA绑定重索引原生外交国家查看条件；通过后读取目标mil_tech缓存，未观察实际UI',
+                    'description':'以当前观察国核对原生外交国家查看条件，通过后读取目标军事科技缓存',
                     'raw_semantics':'signed int32 target technology cache; scale1; not the next-level preview',
                     'paths':['observation.backend.targets[0].technology.value']},
                 'manpower':manpower,'visibility':visibility,
                 'visible_army':army,'visible_navy':navy,'military_quality':quality},
-            'object_types':['country'],'observer_roles':[],'observer_scope':['FRA'],
+            'object_types':['country'],'observer_roles':[],'observer_scope':[],
             'parameters':{'type':'object','properties':{},'additionalProperties':False},
             'supported_versions':['1.37.4'],'triggers':['query','periodic'],
             'source':type(self).__name__,'context_scope':'visible_scope','visibility':'visible_scope',
-            'scope_note':'按逻辑FRA观察方核对字段准入；不切国或调用native/UI，质量逐组件保留未知，完整战场视野仍待补齐'}]
+            'scope_note':'以会话配置的观察国核对字段准入，质量组件可单独返回未知'}]
 
     def validate_query(self,query,context=None):
         if (not isinstance(query,dict) or set(query)-{'topic','object','fields','parameters'}
@@ -397,8 +398,12 @@ class NativeForeignTechnologySource(NativeTradeIncomeSource):
         if (not isinstance(obj,dict) or set(obj)!={'type','country'} or obj.get('type')!='country'
                 or not isinstance(obj.get('country'),str) or not _TAG.fullmatch(obj['country'])):
             raise InformationError('invalid_object','F02 requires one three-letter country tag')
-        if obj['country']=='FRA':
-            raise InformationError('invalid_object','Use N03 for the FRA observer country')
+        observer = (context.get('observer') if isinstance(context, dict)
+                    else getattr(self.base_source, 'operator_observer', None))
+        if context is not None and (not isinstance(observer, str) or not _TAG.fullmatch(observer)):
+            raise InformationError('observer_scope_mismatch','F02 requires a bound observer country')
+        if obj['country']==observer:
+            raise InformationError('invalid_object','F02 requires a country other than the observer')
         fields=query.get('fields')
         if (not isinstance(fields,list) or not fields or len(fields)>len(_FIELDS)
                 or any(not isinstance(field,str) or field not in _FIELDS for field in fields)
@@ -406,15 +411,14 @@ class NativeForeignTechnologySource(NativeTradeIncomeSource):
             raise InformationError('invalid_fields','Unsupported F02 foreign fields')
         if not isinstance(query.get('parameters',{}),dict) or query.get('parameters',{}):
             raise InformationError('invalid_parameters','Foreign technology has no extra parameters')
-        if context is not None and (not isinstance(context,dict) or context.get('observer')!='FRA'):
-            raise InformationError('observer_scope_mismatch','The verified logical observer is FRA')
         return {'topic':'F02','object':deepcopy(obj),'fields':list(fields),'parameters':{}}
 
     def read(self,query,context=None):
         current=deepcopy(context) if isinstance(context,dict) else self.context()
         normalized=self.validate_query(query,current)
         target=normalized['object']['country'];requested=normalized['fields']
-        provenance={'read_only':True,'native_function_invoked':False,'observer':'FRA','target':target,
+        observer=current['observer']
+        provenance={'read_only':True,'native_function_invoked':False,'observer':observer,'target':target,
                     'visibility_basis':'combined_country_view_and_military_stats_permission',
                     'actual_UI_observed':False,'capture_report_sha256_by_source':{}}
 
@@ -428,14 +432,14 @@ class NativeForeignTechnologySource(NativeTradeIncomeSource):
             state='unavailable' if unavailable else _UNKNOWN
             return result({field:{'status':state,'reason':reason} for field in requested})
 
-        reason=_context_reason(current)
+        reason=_observer_context_reason(current)
         if reason:
             return failure(reason.replace('TRADE_INCOME','FOREIGN_TECH'),True)
         try:
             before=self.context()
         except Exception:
             return failure('FOREIGN_TECH_CONTEXT_UNAVAILABLE',True)
-        if _context_reason(before) or _identity(before)!=_identity(current):
+        if _observer_context_reason(before) or _identity(before)!=_identity(current):
             return failure('FOREIGN_TECH_CONTEXT_STALE',True)
         installation,creation,reason=_session_binding(self.base_source)
         if reason or installation is None or creation is None:
@@ -464,12 +468,12 @@ class NativeForeignTechnologySource(NativeTradeIncomeSource):
             except Exception:
                 context_changed=True
                 return
-            if (_context_reason(call_before) or _identity(call_before)!=_identity(before)):
+            if (_observer_context_reason(call_before) or _identity(call_before)!=_identity(before)):
                 context_changed=True
                 return
             report=None;call_error=None
             try:
-                report=capture(installation,country=target,observer='FRA')
+                report=capture(installation,country=target,observer=observer)
             except Exception as exc:
                 call_error='CAPTURE_FAILED:'+type(exc).__name__
             try:
@@ -477,7 +481,7 @@ class NativeForeignTechnologySource(NativeTradeIncomeSource):
             except Exception:
                 context_changed=True
                 return
-            if (_context_reason(call_after) or _identity(call_after)!=_identity(call_before)
+            if (_observer_context_reason(call_after) or _identity(call_after)!=_identity(call_before)
                     or _identity(call_after)!=_identity(before)):
                 context_changed=True
                 return
@@ -523,7 +527,7 @@ class NativeForeignTechnologySource(NativeTradeIncomeSource):
             after=self.context()
         except Exception:
             context_changed=True;after={}
-        if (_context_reason(after) or _identity(after)!=_identity(before)):
+        if (_observer_context_reason(after) or _identity(after)!=_identity(before)):
             context_changed=True
         if context_changed:
             provenance['capture_failures']=capture_failures
@@ -639,7 +643,7 @@ class NativeForeignTechnologySource(NativeTradeIncomeSource):
                                       if isinstance(item,Mapping) and item.get('status')=='known'),
                                      next((item for item in view_candidates if item is not None),None))
             fields['visibility']=_public_visibility(view_for_visibility,stats_permission,
-                target=target,view_conflict=gate_conflict is not None,
+                target=target,observer=observer,view_conflict=gate_conflict is not None,
                 conflict_reason=gate_conflict or 'COUNTRY_VIEW_CAPTURE_DISAGREEMENT',
                 force_country_view=forces_view,force_stats_permission=forces_stats,
                 force_capture_used=('forces' in reports),quality_country_view=quality_view,

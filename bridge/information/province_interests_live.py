@@ -1,4 +1,4 @@
-"""Read current province core/claim memberships for the logical FRA observer."""
+"""Read current province core and claim memberships for the session observer."""
 from __future__ import annotations
 
 from copy import deepcopy
@@ -10,7 +10,7 @@ from .catalog import get_topic
 from .model import InformationError, canonical
 from .province_interest_parameters import parameters_schema, validate_parameters
 from .sources import _result, _source_info
-from .trade_income import _context_reason as _base_reason, _identity, _session_binding
+from .trade_income import _observer_context_reason as _base_reason, _identity, _session_binding
 
 FIELDS = ('cores', 'claims')
 ALL_FIELDS = frozenset(get_topic('G01')['fields'])
@@ -38,8 +38,8 @@ class NativeProvinceInterestsSource:
             'value_origin': 'copied_native_canonical_country_references',
             'basis': 'native_province_membership_after_positive_actor_discovery',
             'supported_object_types': ['province'],
-            'description': '逻辑法国已发现省份的当前核心国家列表。' if name == 'cores'
-                           else '逻辑法国已发现省份的当前宣称国家列表。',
+            'description': '观察国已发现省份的当前核心国家列表。' if name == 'cores'
+                           else '观察国已发现省份的当前宣称国家列表。',
             'gaps': ['COUNTRY_REVERSE_ENUMERATION_NOT_IMPLEMENTED',
                      'COMPLETE_PROVINCE_UI_VISIBILITY_NOT_PROVEN',
                      'CORE_TYPE_DETAILS_NOT_CAPTURED' if name == 'cores'
@@ -73,7 +73,7 @@ class NativeProvinceInterestsSource:
 
     @staticmethod
     def _context_reason(context):
-        reason = _base_reason(context, 'FRA')
+        reason = _base_reason(context)
         return reason.replace('TRADE_INCOME_', 'PROVINCE_INTEREST_', 1) if reason else None
 
     def read(self, query, context=None):
@@ -82,7 +82,8 @@ class NativeProvinceInterestsSource:
         selected = [name for name in query['fields'] if name in FIELDS]
         fields = {name: {'status': 'unsupported', 'reason': 'G01_FIELD_NOT_IMPLEMENTED'}
                   for name in query['fields']}
-        provenance = {'observer': 'FRA', 'read_only': True, 'native_function_invoked': False,
+        observer = current.get('observer')
+        provenance = {'observer': observer, 'read_only': True, 'native_function_invoked': False,
                       'actual_UI_observed': False, 'full_province_visibility_complete': False}
 
         def result(ctx):
@@ -118,7 +119,7 @@ class NativeProvinceInterestsSource:
         try:
             module = import_module('.province_interest_capture', __package__)
             capture = self.capture if self.capture is not None else module.capture
-            report = capture(installation, province_id=province_id, observer='FRA')
+            report = capture(installation, province_id=province_id, observer=observer)
         except Exception:
             return failure('PROVINCE_INTEREST_CAPTURE_FAILED', before)
         try:

@@ -85,7 +85,7 @@ extern "C" void country_modifier_insert_observe(void* country, void* instance, u
     uintptr_t game = 0;
     int32_t date = 0;
     const bool relevant = installed && caller == base + owned::kCreatorReturnRva
-        && read(owner + 0x20, reference) && (reference & 0xffffffu) == 0x415246u;
+        && read(owner + 0x20, reference) && observation_information_country_handle(reference);
     bool captured = false;
     if (relevant && !thread_changed && frame_thread == GetCurrentThreadId()
         && !transport_fault && read(base + 0x233fe58, game) && read(game + 0x1dd0, date)) {
@@ -119,7 +119,7 @@ extern "C" void country_modifier_remove_observe(void* country, void* instance
 #endif
     const bool relevant = installed
         && (caller == base + removal::kPredicateReturnRva || caller == base + removal::kReligionReturnRva)
-        && read(owner + 0x20, reference) && (reference & 0xffffffu) == 0x415246u;
+        && read(owner + 0x20, reference) && observation_information_country_handle(reference);
     bool captured = false;
     if (relevant && !thread_changed && frame_thread == GetCurrentThreadId()
         && !transport_fault && read(base + 0x233fe58, game) && read(game + 0x1dd0, date)) {
@@ -272,18 +272,26 @@ static void flush() noexcept {
         event = events[head];
         ReleaseSRWLockExclusive(&queue_lock);
         const auto& value = event.value;
+        const char tag[4]={static_cast<char>(value.country),static_cast<char>(value.country>>8),
+                           static_cast<char>(value.country>>16),0};
+#ifdef BRIDGE_NATIVE_COUNTRY_CONTROL
+        constexpr unsigned schema=2;
+#else
+        constexpr unsigned schema=1;
+#endif
         char message[1024]{};
         const int bytes = snprintf(message, sizeof(message),
-            "{\"event\":\"%s\",\"schema_version\":1,"
-            "\"session_id\":\"%lu-%llx\",\"sequence\":%llu,\"country\":\"FRA\","
+            "{\"event\":\"%s\",\"schema_version\":%u,"
+            "\"session_id\":\"%lu-%llx\",\"sequence\":%llu,\"country\":\"%.3s\","
             "\"country_fullref\":\"0x%llx\",\"modifier_id\":\"%s\",\"date_raw\":%d,"
             "\"start_date_raw\":%d,\"end_date_raw\":%d,\"flags\":[%u,%u,%u,%u],"
             "\"source\":\"%s\",\"complete\":true}\n",
             event.expired ? "native_country_modifier_expired" :
                 (event.removed ? "native_country_modifier_removed" : "native_country_modifier_added"),
+            schema,
             static_cast<unsigned long>(GetCurrentProcessId()),
             static_cast<unsigned long long>(observation_creation),
-            static_cast<unsigned long long>(event.sequence), static_cast<unsigned long long>(value.country),
+            static_cast<unsigned long long>(event.sequence),tag,static_cast<unsigned long long>(value.country),
             value.key.data(), value.date, value.start_date, value.end_date,
             static_cast<unsigned>(value.flags[0]), static_cast<unsigned>(value.flags[1]),
             static_cast<unsigned>(value.flags[2]), static_cast<unsigned>(value.flags[3]),

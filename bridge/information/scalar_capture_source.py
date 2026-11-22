@@ -5,15 +5,16 @@ from importlib import import_module
 import re
 
 from .catalog import get_topic, _validate_schema
-from .country_state import _parameter_schema
+from .country_state import _is_country, _parameter_schema
 from .model import InformationError, canonical
 from .sources import _result, _source_info
-from .trade_income import _context_reason, _identity, _session_binding
+from .trade_income import _context_reason, _identity, _observer_context_reason, _session_binding
 
 
 class ScalarCaptureSource:
     """Subclasses declare a pinned capture; all native access stays in it."""
     event_types = ()
+    observer_scoped = False
 
     def __init__(self, base_source, *, capture=None):
         self.base_source, self.capture = base_source, capture
@@ -24,17 +25,20 @@ class ScalarCaptureSource:
     def catalog(self):
         topic = get_topic(self.TOPIC)
         topic.update(status='available', source=type(self).__name__, observer_roles=['country'],
-                     observer_scope=['FRA'], visibility='country_scope', context_scope='country_scope',
+                     observer_scope=[] if self.observer_scoped else ['FRA'],
+                     visibility='country_scope', context_scope='country_scope',
                      supported_versions=['1.37.4'], triggers=['query', 'periodic'])
         topic['parameters'] = _parameter_schema(self.TOPIC)
         topic['fields'] = {self.FIELD: {
             'coverage': 'partial', 'complete': False, 'source': self.CAPTURE_MODULE + '.capture',
             'unit': self.UNIT, 'scale': self.SCALE, 'period': 'current', 'basis': self.BASIS,
-            'value_origin': self.VALUE_ORIGIN, 'supported_countries': ['FRA'],
+            'value_origin': self.VALUE_ORIGIN,
             'description': self.DESCRIPTION, 'raw_semantics': 'value == raw; physical quantity = raw / scale',
             'gaps': ['MODIFIER_PROCESSOR_PATH_NOT_IMPLEMENTED', 'CALCULATING_CACHE_PATH_NOT_IMPLEMENTED',
                      'CACHE_FRESHNESS_NOT_PROVEN', 'MAIN_THREAD_ATOMICITY_NOT_PROVEN'],
         }}
+        if not self.observer_scoped:
+            topic['fields'][self.FIELD]['supported_countries'] = ['FRA']
         return [topic]
 
     def validate_query(self, query, context=None):
@@ -43,16 +47,21 @@ class ScalarCaptureSource:
             raise InformationError('invalid_parameters', 'Invalid scalar query')
         if query['topic'] != self.TOPIC:
             raise InformationError('unknown_topic', 'Unsupported scalar topic')
-        if query['object'] != {'type': 'country', 'country': 'FRA'}:
-            raise InformationError('observer_scope_mismatch', 'This scalar requires the FRA country object')
+        obj = query['object']
+        if (not isinstance(obj, dict) or set(obj) != {'type', 'country'}
+                or obj.get('type') != 'country' or not _is_country(obj.get('country'))):
+            raise InformationError('invalid_object', 'This scalar requires a country object')
+        country = obj['country']
+        if not self.observer_scoped and country != 'FRA':
+            raise InformationError('observer_scope_mismatch', 'This scalar is limited to the FRA observer')
         if query['fields'] != [self.FIELD]:
             raise InformationError('unknown_field', 'Select the declared scalar field once')
         parameters = query.get('parameters', {})
         _validate_schema(parameters, _parameter_schema(self.TOPIC), 'parameters')
-        if parameters.get('reference_recipient') == 'FRA':
+        if parameters.get('reference_recipient') == country:
             raise InformationError('invalid_parameters', 'reference_recipient must name another country')
-        if context is not None and context.get('observer') not in (None, 'FRA'):
-            raise InformationError('observer_scope_mismatch', 'Scalar observer is FRA')
+        if context is not None and context.get('observer') not in (None, country):
+            raise InformationError('observer_scope_mismatch', 'This scalar is limited to the configured observer country')
         return dict(deepcopy(query), parameters=deepcopy(parameters))
 
     def _field(self, status, reason=None, value=None):
@@ -85,8 +94,9 @@ class ScalarCaptureSource:
         except Exception:
             current = {}
         normalized = self.validate_query(query, current)
+        country = normalized['object']['country']
         provenance = {'read_only': True, 'native_function_invoked': False,
-                      'observer': 'FRA', 'context_guard': 'not_read'}
+                      'observer': country, 'context_guard': 'not_read'}
         field = self._field('unknown', 'NATIVE_SCALAR_NOT_READ')
 
         def result():
@@ -94,11 +104,16 @@ class ScalarCaptureSource:
             source.update(context_scope='country_scope', projection_version=1)
             return _result(normalized, current, {self.FIELD: deepcopy(field)}, False, source)
 
+        def context_reason(context):
+            if self.observer_scoped:
+                return _observer_context_reason(context)
+            return _context_reason(context, country)
+
         try:
-            if _context_reason(current, 'FRA') is not None:
+            if context_reason(current) is not None:
                 raise ValueError('NATIVE_SCALAR_CONTEXT_UNAVAILABLE')
             before = self.context()
-            if _context_reason(before, 'FRA') is not None or _identity(before) != _identity(current):
+            if context_reason(before) is not None or _identity(before) != _identity(current):
                 raise ValueError('NATIVE_SCALAR_CONTEXT_STALE')
             installation, creation, error = _session_binding(self.base_source)
             if error or installation is None or creation is None:
@@ -106,13 +121,13 @@ class ScalarCaptureSource:
             module, report, failed = None, None, False
             try:
                 module = import_module(self.CAPTURE_MODULE)
-                report = (self.capture or module.capture)(installation, observer='FRA')
+                report = (self.capture or module.capture)(installation, observer=country)
             except Exception:
                 failed = True
             # Context/session are checked after every attempted capture, including failures.
             after = self.context()
             final_installation, final_creation, final_error = _session_binding(self.base_source)
-            if (_context_reason(after, 'FRA') is not None or _identity(before) != _identity(after)
+            if (context_reason(after) is not None or _identity(before) != _identity(after)
                     or final_error or installation != final_installation or creation != final_creation):
                 raise ValueError('NATIVE_SCALAR_CONTEXT_CHANGED_DURING_CAPTURE')
             if failed or module is None:

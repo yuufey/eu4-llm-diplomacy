@@ -253,7 +253,7 @@ def test_malformed_or_private_projection_is_retracted(tmp_path, projection):
 
 
 @pytest.mark.parametrize("foreign_tag", ["ENG", "POR"])
-def test_foreign_country_selector_and_non_fra_observer_never_capture(tmp_path, foreign_tag):
+def test_foreign_country_selector_is_denied_and_configured_country_is_sampled(tmp_path, foreign_tag):
     source, base, backend = make_source(tmp_path)
     foreign = source.read(make_query(obj={"type": "country", "country": foreign_tag}),
                           base.context())
@@ -261,9 +261,9 @@ def test_foreign_country_selector_and_non_fra_observer_never_capture(tmp_path, f
     assert foreign["fields"][FIELD]["reason"] == "C02_OBSERVER_DISCOVERY_VIEW_ONLY"
 
     base.current["observer"] = "ENG"
-    wrong_observer = source.read(make_query(), base.context())
-    assert wrong_observer["fields"][FIELD]["status"] == "unavailable"
-    assert backend.captures == backend.validations == backend.projections == []
+    configured = source.read(make_query(), base.context())
+    assert configured["fields"][FIELD]["status"] == "known"
+    assert backend.captures[0][1] == 'ENG'
 
 
 def test_physical_client_tag_does_not_determine_nonplayer_admission(tmp_path):

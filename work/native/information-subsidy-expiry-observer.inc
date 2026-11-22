@@ -5,6 +5,11 @@
 namespace subsidy_expiry_observer {
 namespace owned = information::subsidy_expiry;
 namespace plan = owned::entry;
+#ifdef BRIDGE_NATIVE_COUNTRY_CONTROL
+constexpr unsigned kWire = 2;
+#else
+constexpr unsigned kWire = 1;
+#endif
 constexpr unsigned kCapacity = 64;
 struct Event final {
     owned::Value value{};
@@ -58,15 +63,29 @@ extern "C" uintptr_t subsidy_remove_observe(uintptr_t instance) {
         int32_t date = 0;
         if (!thread_changed && frame_thread == GetCurrentThreadId()
             && read(base + 0x233fe58, game) && read(game + 0x1dd0, date)) {
-            decision = owned::begin(reader, {base, date, true}, instance, caller, pending);
+            owned::Context context{base, date, true};
+#ifdef BRIDGE_NATIVE_COUNTRY_CONTROL
+            context.observable = observation_information_country_handle;
+#endif
+            decision = owned::begin(reader, context, instance, caller, pending);
         } else decision = owned::Decision::unreadable;
     }
     // Preserve the original invocation and return value even when capture fails.
     const uintptr_t result = original(instance);
     owned::Value value{};
     if (decision == owned::Decision::ready) {
-        if (owned::finish(reader, pending, value)) queue(value);
-        else note_drop();
+        if (owned::finish(reader, pending, value)) {
+#ifndef BRIDGE_NATIVE_COUNTRY_CONTROL
+            queue(value);
+#else
+            for (const auto endpoint : {value.payer, value.recipient}) {
+                if (observation_information_country_handle(endpoint)) {
+                    value.observer = endpoint;
+                    queue(value);
+                }
+            }
+#endif
+        } else note_drop();
     } else if (decision == owned::Decision::unreadable) note_drop();
     return result;
 }
@@ -150,12 +169,12 @@ static void flush() noexcept {
             "\"sequence\":%llu,\"date_raw\":%d,\"payer_ref\":\"0x%llx\","
             "\"recipient_ref\":\"0x%llx\",\"observer_ref\":\"0x%llx\","
             "\"start_date_raw\":%d,\"end_date_raw\":%d,\"monthly_amount_raw\":%d,"
-            "\"source\":\"subsidy_record_expiry_remove_return\",\"wire\":1}\n",
+            "\"source\":\"subsidy_record_expiry_remove_return\",\"wire\":%u}\n",
             static_cast<unsigned long>(GetCurrentProcessId()),
             static_cast<unsigned long long>(observation_creation),
             static_cast<unsigned long long>(event.sequence), value.date,
             static_cast<unsigned long long>(value.payer), static_cast<unsigned long long>(value.recipient),
-            static_cast<unsigned long long>(value.observer), value.start, value.end, value.amount);
+            static_cast<unsigned long long>(value.observer), value.start, value.end, value.amount, kWire);
         if (bytes < 0 || static_cast<size_t>(bytes) >= sizeof(message)) { transport_fault = true; return; }
         if (!append(message, static_cast<size_t>(bytes))) return;
         AcquireSRWLockExclusive(&queue_lock);

@@ -1,8 +1,9 @@
-"""Own read-only F03 observations for nonplayer FRA with separate page scopes."""
+"""Own read-only F03 observations with independently verified page scopes."""
 from __future__ import annotations
 
 from collections.abc import Mapping
 from copy import deepcopy
+from functools import partial
 import hashlib
 import json
 from pathlib import Path
@@ -93,7 +94,8 @@ def _permission_field(permissions: dict[str, Any]) -> dict[str, Any]:
             "basis": _visibility.BASIS, "raw_inputs": {"permissions": deepcopy(permissions)}}
 
 
-def _read_backend(reader: Any, base: int, country: str, profile: Mapping[str, Any]) -> dict[str, Any]:
+def _read_backend(reader: Any, base: int, country: str, profile: Mapping[str, Any],
+                  *, observer_country: str = OBSERVER) -> dict[str, Any]:
     scans = {}
 
     def admission(read, module_base, scan, observer, target):
@@ -107,15 +109,16 @@ def _read_backend(reader: Any, base: int, country: str, profile: Mapping[str, An
 
     def fields(read, module_base, target_binding, requested):
         scan = scans.get(country)
-        observer = scan.get("requested", {}).get(OBSERVER) if isinstance(scan, Mapping) else None
+        observer = scan.get("requested", {}).get(observer_country) if isinstance(scan, Mapping) else None
         permissions = {}
         if isinstance(observer, Mapping):
             permissions = {page: _visibility.read_permission(read, module_base, observer, target_binding, page=page)
                            for page in _visibility.PAGES}
+            scope = {"logical_observer": observer_country} if observer_country != OBSERVER else {}
             reparations_permission = _reparations.read_permission(
-                read, module_base, observer, target_binding)
+                read, module_base, observer, target_binding, **scope)
             subsidies_permission = _subsidies.read_permission(
-                read, module_base, observer, target_binding)
+                read, module_base, observer, target_binding, **scope)
             principal_permission = _principal.read_permission(
                 read, module_base, observer, target_binding)
         else:
@@ -145,15 +148,16 @@ def _read_backend(reader: Any, base: int, country: str, profile: Mapping[str, An
             result[VISIBILITY_FIELD] = _permission_field(permissions)
         return result
 
-    return _backend.read_two_pass(reader, base, OBSERVER, [country], FIELDS,
+    return _backend.read_two_pass(reader, base, observer_country, [country], FIELDS,
                                   read_fields=fields, admission_reader=admission)
 
 
-def _observe(reader, base, country, profile):
+def _observe(reader, base, country, profile, *, observer=OBSERVER):
     guarded_profile = {**profile, "code_guards": [*profile["code_guards"],
                                                  *profile.get("data_guards", [])]}
     observation = _owner._observe(reader, base, country, guarded_profile,
-        backend_reader=lambda read, module_base, target: _read_backend(read, module_base, target, profile))
+        backend_reader=lambda read, module_base, target: _read_backend(
+            read, module_base, target, profile, observer_country=observer))
     # Each private pair permission binds a fresh signed game date.  A mismatch
     # withdraws that child independently of the income cache or the other pair.
     context = observation.get("context_before") if isinstance(observation, Mapping) else None
@@ -192,12 +196,14 @@ def _observe(reader, base, country, profile):
 
 def capture(installation: Path, country: str, *, observer: str = OBSERVER) -> dict[str, Any]:
     return _owner._capture_common(installation, country, observer=observer, schema=SCHEMA,
-        profile_sha256=PROFILE_SHA256, load_profile=_load_profile, observe=_observe)
+        profile_sha256=PROFILE_SHA256, load_profile=_load_profile,
+        observe=partial(_observe, observer=observer), observer_scoped=True)
 
 
 def validate_capture(report: Any, context: Mapping[str, Any], creation: int, country: str) -> bool:
     return _owner._validate_capture_common(report, context, creation, country, schema=SCHEMA,
-        profile_sha256=PROFILE_SHA256, load_profile=_load_profile, observe=_observe, require_access=True)
+        profile_sha256=PROFILE_SHA256, load_profile=_load_profile,
+        observe=partial(_observe, observer=context.get("observer")), require_access=True, observer_scoped=True)
 
 
 __all__ = ["capture", "validate_capture", "SCHEMA", "PROFILE_FILE", "PROFILE_SHA256",

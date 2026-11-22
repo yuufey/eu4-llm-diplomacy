@@ -1,4 +1,4 @@
-"""Bounded read-only inventory of FRA's recipient-owned native pending list."""
+"""Bounded read-only inventory of the observer’s recipient-owned native pending list."""
 from copy import deepcopy
 import hashlib
 import json
@@ -35,7 +35,8 @@ def read_queue(read, country_pointer, recipient_ref, module_base, session_id, re
                contract=None, *, game_date=None):
     """Read all counted links; expose list-entry identities and recognized parties."""
     contract = load_contract() if contract is None else contract
-    if memory._tag_from_fullref(recipient_ref) != 'FRA':
+    observer = memory._tag_from_fullref(recipient_ref)
+    if observer is None:
         raise ValueError('NATIVE_PENDING_OBSERVER_MISMATCH')
     if game_date is not None and (type(game_date) is not int or not 0 < game_date < 2**31):
         raise ValueError('NATIVE_PENDING_GAME_DATE_INVALID')
@@ -91,7 +92,7 @@ def read_queue(read, country_pointer, recipient_ref, module_base, session_id, re
                     actor_tag = resolve_country(actor)
                     recipient_tag = resolve_country(recipient)
                     if (not isinstance(actor_tag, str) or re.fullmatch(r'[A-Z0-9]{3}', actor_tag) is None
-                            or actor_tag == 'FRA' or recipient_tag != 'FRA'):
+                            or actor_tag == observer or recipient_tag != observer):
                         raise ValueError('NATIVE_PENDING_PARTY_INVALID')
                     entry = {'recognition': 'recognized', 'action_id': action,
                              'actor': actor_tag, 'recipient': recipient_tag, 'phase': 'initiate'}
@@ -118,9 +119,11 @@ def read_queue(read, country_pointer, recipient_ref, module_base, session_id, re
             'private': {'country_pointer': hex(country_pointer), 'roots_hex': roots.hex(), 'nodes': nodes}}
 
 
-def validate_value(value, contract=None):
-    """Validate the closed public projection independently of private diagnostics."""
+def validate_value(value, contract=None, *, observer='FRA'):
+    """Validate the public projection for the bound recipient."""
     contract = load_contract() if contract is None else contract
+    if not isinstance(observer, str) or re.fullmatch(r'[A-Z0-9]{3}', observer) is None:
+        raise ValueError('NATIVE_PENDING_OBSERVER_MISMATCH')
     required = {'scope', 'native_queue_count', 'recognized_entry_count', 'unresolved_entry_count',
                 'entries', 'identity_scope', 'list_traversal_complete',
                 'payload_details_complete', 'response_contexts_available'}
@@ -147,7 +150,7 @@ def validate_value(value, contract=None):
             if (set(entry) not in (expected_keys, expected_keys | {'deadline'})
                     or entry['action_id'] not in contract['action_vtable_rvas']
                     or not isinstance(entry['actor'], str) or re.fullmatch(r'[A-Z0-9]{3}', entry['actor']) is None
-                    or entry['actor'] == 'FRA' or entry['recipient'] != 'FRA' or entry['phase'] != 'initiate'):
+                    or entry['actor'] == observer or entry['recipient'] != observer or entry['phase'] != 'initiate'):
                 raise ValueError('NATIVE_PENDING_PUBLIC_ACTION_INVALID')
             if 'deadline' in entry:
                 deadline = entry['deadline']
@@ -166,7 +169,7 @@ def validate_value(value, contract=None):
     return deepcopy(value)
 
 
-def _snapshot(reader, base, base_profile, contract, session_id, budget):
+def _snapshot(reader, base, base_profile, contract, session_id, budget, observer):
     layout = memory._profile_layout(base_profile)
 
     def read(address, size):
@@ -178,7 +181,7 @@ def _snapshot(reader, base, base_profile, contract, session_id, budget):
     game = int.from_bytes(read(base + layout['game_global_rva'], 8), 'little')
     date = int.from_bytes(read(game + layout['game_date_offset'], 4), 'little', signed=True)
     player = int.from_bytes(read(game + 0x1e60, 8), 'little')
-    country, scan = memory._find_country(reader, base, 'FRA', base_profile, budget)
+    country, scan = memory._find_country(reader, base, observer, base_profile, budget)
     recipient = int(scan['country_handle'], 0)
     table, count = int(scan['table_pointer'], 0), scan['country_count']
     resolved = {}
@@ -213,7 +216,7 @@ def capture(installation, country='FRA'):
     kernel, handle = None, None
     budget = memory._ReadBudget()
     try:
-        if country != 'FRA':
+        if not isinstance(country, str) or re.fullmatch(r'[A-Z0-9]{3}', country) is None:
             raise ValueError('NATIVE_PENDING_OBSERVER_UNSUPPORTED')
         contract, base_profile = load_contract(), memory._load_profile()
         document = memory._load_installation(Path(installation))
@@ -223,8 +226,8 @@ def capture(installation, country='FRA'):
             raise OSError('OpenProcess failed')
         base = memory._capture_identity(report, document, kernel, handle)
         reader = memory.AddressBoundedRPM(kernel, handle, base)
-        first = _snapshot(reader, base, base_profile, contract, document['session_id'], budget)
-        second = _snapshot(reader, base, base_profile, contract, document['session_id'], budget)
+        first = _snapshot(reader, base, base_profile, contract, document['session_id'], budget, country)
+        second = _snapshot(reader, base, base_profile, contract, document['session_id'], budget, country)
         report.update(before=first, after=second)
         after_base = memory._capture_identity(report, document, kernel, handle)
         snapshots_match = without_clock(first) == without_clock(second)
@@ -232,7 +235,8 @@ def capture(installation, country='FRA'):
         if not snapshots_match or not dates_are_monotonic or base != after_base:
             raise ValueError('NATIVE_PENDING_SNAPSHOT_CHANGED')
         report.update(status='observed', consistent=True, game_date=first['game_date'],
-                      player_country=first['player_country'], value=validate_value(first['value'], contract))
+                      player_country=first['player_country'],
+                      value=validate_value(first['value'], contract, observer=country))
     except Exception as exc:
         report['reason'] = (str(exc) if isinstance(exc, ValueError)
                             and re.fullmatch(r'NATIVE_PENDING_[A-Z_]{1,100}', str(exc))

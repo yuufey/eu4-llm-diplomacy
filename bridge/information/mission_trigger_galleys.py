@@ -5,8 +5,8 @@ def _s32(value):
     value &= 0xffffffff
     return value-0x100000000 if value & 0x80000000 else value
 
-def count_galleys(reader,module_base,country_pointer):
-    observed=forces.read_fields(reader,module_base,country_pointer,country='FRA')
+def count_galleys(reader, module_base, country_pointer, *, country='FRA'):
+    observed = forces.read_fields(reader, module_base, country_pointer, country=country)
     if observed.get('status')!='observed':
         raise ValueError('GALLEY_FORCE_RECORDS_UNAVAILABLE:'+str(observed.get('reason')))
     groups=observed['groups'];records=observed['records'];raw_total=0

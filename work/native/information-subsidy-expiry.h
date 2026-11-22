@@ -19,6 +19,11 @@ struct Context final {
     Address module = 0;
     std::int32_t date = 0;
     bool bound_frame_thread = false;
+    bool (*observable)(std::uint64_t) noexcept = nullptr;
+
+    bool observes(std::uint64_t reference) const noexcept {
+        return observable ? observable(reference) : (reference & 0xffffff) == 0x415246;
+    }
 };
 
 struct Value final {
@@ -57,7 +62,8 @@ inline Value value(const std::array<unsigned char, 0x48>& bytes, const Context& 
     Value result{};
     result.payer = shared::field<std::uint64_t>(bytes, 0x10);
     result.recipient = shared::field<std::uint64_t>(bytes, 0x18);
-    result.observer = (result.payer & 0xffffff) == 0x415246 ? result.payer : result.recipient;
+    result.observer = context.observes(result.payer) ? result.payer
+        : context.observes(result.recipient) ? result.recipient : 0;
     result.date = context.date;
     result.start = shared::field<std::int32_t>(bytes, 0x20);
     result.amount = shared::field<std::int32_t>(bytes, 0x40);
@@ -109,7 +115,7 @@ Decision begin(Reader& reader, const Context& context, Address instance,
     if (detail::shared::field<Address>(bytes, 0) != context.module + kRecordTableRva)
         return Decision::ignored;
     const Value value = detail::value(bytes, context);
-    if ((value.observer & 0xffffff) != 0x415246 || value.payer == value.recipient
+    if (!value.observer || value.payer == value.recipient
         || bytes[0x28] != 0 || context.date <= value.end) return Decision::ignored;
     if (!detail::canonical(copy, context.module, value.payer)
         || !detail::canonical(copy, context.module, value.recipient)) return Decision::unreadable;

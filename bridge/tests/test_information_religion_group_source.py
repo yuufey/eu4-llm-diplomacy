@@ -116,7 +116,7 @@ def test_catalog_and_fra_observer_allow_fra_or_other_country_target(tmp_path, mo
         assert topic["triggers"] == ["query", "periodic"]
         assert topic["context_scope"] == "visible_scope"
         assert topic["visibility"] == "visible_scope"
-        assert topic["observer_scope"] == ["FRA"]
+        assert topic["observer_scope"] == []
 
         result = source.read(_group_query(target), base.context())
         field = result["fields"]["religion_group"]
@@ -262,13 +262,13 @@ def test_invalid_fields_objects_and_parameters_are_rejected_before_capture(tmp_p
     assert calls == []
 
 
-def test_observer_mismatch_raises_and_stale_pre_capture_context_is_unavailable(
+def test_observer_mismatch_and_stale_pre_capture_context_are_unavailable(
         tmp_path, monkeypatch):
     source, base, _, calls, _ = _make_source(tmp_path, monkeypatch)
     wrong_observer = base.context()
     wrong_observer["observer"] = "POR"
-    with pytest.raises(InformationError, match="FRA"):
-        source.read(_group_query("ENG"), wrong_observer)
+    wrong = source.read(_group_query("ENG"), wrong_observer)["fields"]["religion_group"]
+    assert wrong["reason"] == "RELIGION_GROUP_CONTEXT_STALE"
 
     stale = base.context()
     stale["game_date"] += 1

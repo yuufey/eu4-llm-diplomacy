@@ -242,10 +242,12 @@ def test_capture_read_error_and_live_context_drift_do_not_project_a_fort_level(t
     assert drift_captures == [(drift_dir / "installation.json", PROVINCE_ID, "FRA")]
 
 
-def test_capture_uses_profiled_owner_and_existing_generic_g02_double_pass(monkeypatch):
+@pytest.mark.parametrize('observer_tag', ['FRA', 'TUR'])
+def test_capture_uses_profiled_owner_and_existing_generic_g02_double_pass(monkeypatch, observer_tag):
     calls = {}
 
-    def fake_read_two_pass(reader, base, province_id, *, observer, fields, read_fields):
+    def fake_read_two_pass(reader, base, province_id, *, observer, fields, read_fields, observer_scoped):
+        assert observer_scoped is True
         calls["two_pass"] = (reader, base, province_id, observer, fields, read_fields)
         return {"status": "observed", "consistency": {"status": "stable"}}
 
@@ -253,7 +255,8 @@ def test_capture_uses_profiled_owner_and_existing_generic_g02_double_pass(monkey
         return {"stable": True, "backend": backend_reader(reader, base, country)}
 
     def fake_capture_common(installation, country, *, observer, schema, profile_sha256,
-                            load_profile, observe, allow_observer_target):
+                            load_profile, observe, allow_observer_target, observer_scoped):
+        assert observer_scoped is True
         calls["capture_common"] = {
             "installation": installation,
             "country": country,
@@ -274,17 +277,17 @@ def test_capture_uses_profiled_owner_and_existing_generic_g02_double_pass(monkey
     monkeypatch.setattr(capture_module._owner, "_observe", fake_observe)
     monkeypatch.setattr(capture_module._owner, "_capture_common", fake_capture_common)
 
-    report = capture_module.capture(Path("installation.json"), PROVINCE_ID, observer="FRA")
+    report = capture_module.capture(Path("installation.json"), PROVINCE_ID, observer=observer_tag)
 
     assert report["schema"] == capture_module.SCHEMA
-    assert report["observer"] == "FRA"
+    assert report["observer"] == observer_tag
     assert report["object"] == {"type": "province", "province_id": PROVINCE_ID}
     assert report["capture"]["observation"]["stable"] is True
     two_pass = calls["two_pass"]
-    assert two_pass[2:5] == (PROVINCE_ID, "FRA", (RAW_FIELD,))
+    assert two_pass[2:5] == (PROVINCE_ID, observer_tag, (RAW_FIELD,))
     assert two_pass[5] is fort_memory.read_fields
     capture_args = calls["capture_common"]
-    assert capture_args["country"] == capture_args["observer"] == "FRA"
+    assert capture_args["country"] == capture_args["observer"] == observer_tag
     assert capture_args["schema"] == capture_module.INNER_SCHEMA
     assert capture_args["profile_sha256"] == capture_module.PROFILE_SHA256
     assert callable(capture_args["load_profile"])

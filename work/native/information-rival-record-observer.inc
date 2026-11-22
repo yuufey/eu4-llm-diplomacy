@@ -18,31 +18,41 @@ struct RecordChange final {
     entry::Kind path = entry::Kind::add;
 };
 static int format(const RecordChange& record, uint64_t sequence, unsigned long pid,
-                  uint64_t creation, char* output, size_t capacity) noexcept {
+                  uint64_t creation, char* output, size_t capacity, uint64_t observer = 0) noexcept {
     const auto& value = record.value;
     const bool add = record.path == entry::Kind::add;
+#ifdef BRIDGE_NATIVE_COUNTRY_CONTROL
+    constexpr unsigned schema = 4;
+#else
+    constexpr unsigned schema = 2;
+    if (!observer) observer = legacy::observes(value.actor) ? value.actor : value.target;
+#endif
     if (!output || !capacity || !sequence || !pid || !creation
         || (record.path != entry::Kind::add && record.path != entry::Kind::remove)
         || value.kind != (add ? owned::Kind::set : owned::Kind::remove) || value.old_rival
         || !legacy::valid_tag(value.actor) || !legacy::valid_tag(value.target) || value.actor == value.target
-        || ((value.actor & 0xffffffu) != 0x415246u && (value.target & 0xffffffu) != 0x415246u)
+        || (observer != value.actor && observer != value.target)
+#ifndef BRIDGE_NATIVE_COUNTRY_CONTROL
+        || !legacy::observes(observer)
+#endif
         || owned::classify(value.kind,value.date,value.before,value.after) != owned::Outcome::changed
         || value.after.target.active != add) return 0;
-    char actor[4]{}, target[4]{};
+    char actor[4]{}, target[4]{}, country[4]{};
     for (unsigned byte = 0; byte < 3; ++byte) {
         actor[byte] = static_cast<char>(value.actor >> (byte*8));
         target[byte] = static_cast<char>(value.target >> (byte*8));
+        country[byte] = static_cast<char>(observer >> (byte*8));
     }
     const int bytes = snprintf(output,capacity,
-        "{\"event\":\"native_rival_changed\",\"schema_version\":2,\"session_id\":\"%lu-%llx\","
-        "\"sequence\":%llu,\"country\":\"FRA\",\"actor\":\"%s\",\"target\":\"%s\",\"old_rival\":\"---\","
+        "{\"event\":\"native_rival_changed\",\"schema_version\":%u,\"session_id\":\"%lu-%llx\","
+        "\"sequence\":%llu,\"country\":\"%.3s\",\"actor\":\"%s\",\"target\":\"%s\",\"old_rival\":\"---\","
         "\"actor_fullref\":\"0x%llx\",\"target_fullref\":\"0x%llx\",\"old_rival_fullref\":\"0x0\","
         "\"operation\":\"%s\",\"date_raw\":%d,\"before\":{\"count\":%d,\"target_active\":%s,"
         "\"target_since_date_raw\":%d,\"old_active\":false,\"old_since_date_raw\":-1},"
         "\"after\":{\"count\":%d,\"target_active\":%s,\"target_since_date_raw\":%d,"
         "\"old_active\":false,\"old_since_date_raw\":-1},\"source\":\"%s\","
         "\"observation_path\":\"%s\",\"count_basis\":\"active_nonretired_nodes\",\"complete\":true}\n",
-        pid,static_cast<unsigned long long>(creation),static_cast<unsigned long long>(sequence),actor,target,
+        schema,pid,static_cast<unsigned long long>(creation),static_cast<unsigned long long>(sequence),country,actor,target,
         static_cast<unsigned long long>(value.actor),static_cast<unsigned long long>(value.target),
         add ? "set" : "remove",value.date,value.before.count,value.before.target.active ? "true" : "false",
         value.before.target.since_date,value.after.count,value.after.target.active ? "true" : "false",
@@ -56,10 +66,10 @@ static bool publish(const RecordChange& record) noexcept {
 }
 
 static int format_event(const owned::Change& value, unsigned char path, uint64_t sequence,
-                        char* output, size_t capacity) noexcept {
+                        uint64_t observer, char* output, size_t capacity) noexcept {
     if (path != 1 && path != 2) return 0;
     return format({value,path == 1 ? entry::Kind::add : entry::Kind::remove},sequence,
-                  static_cast<unsigned long>(GetCurrentProcessId()),observation_creation,output,capacity);
+                  static_cast<unsigned long>(GetCurrentProcessId()),observation_creation,output,capacity,observer);
 }
 
 struct Command final { owned::Kind kind{}; uint64_t actor = 0, target = 0, old_rival = 0; };
@@ -166,8 +176,7 @@ static Pending begin(entry::Kind kind, uintptr_t owner, uint64_t target) noexcep
     uint64_t actor = 0;
     if (owner < 0x10000 || owner > UINT64_C(0x00007fffffffffdb)
         || !read(owner+0x20,actor)) { legacy::note_drop(); return pending; }
-    constexpr uint64_t france = 0x415246u;
-    pending.relevant = (actor & 0xffffffu) == france || (target & 0xffffffu) == france;
+    pending.relevant = legacy::observes(actor) || legacy::observes(target);
     if (!pending.relevant) return pending;
     if (covered(kind,actor,target)) { pending.relevant = false; return pending; }
     auto& record = pending.record;

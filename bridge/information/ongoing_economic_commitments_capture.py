@@ -32,7 +32,7 @@ def _load_profile():
     return profile
 
 
-def _observe(reader, base, country, profile, *, installation=None, observer_binding=None):
+def _observe(reader, base, country, profile, *, observer='FRA', installation=None, observer_binding=None):
     current = {}
 
     def admission(read, module_base, scan, observer, target):
@@ -53,7 +53,7 @@ def _observe(reader, base, country, profile, *, installation=None, observer_bind
         return {name: result[name] for name in requested}
 
     def backend(read, module_base, target):
-        return _backend.read_two_pass(read, module_base, 'FRA', [target], FIELDS,
+        return _backend.read_two_pass(read, module_base, observer, [target], FIELDS,
                                       read_fields=fields, admission_reader=admission)
 
     return _subsidy_capture._observe_guarded(reader, base, country, profile, backend_reader=backend,
@@ -63,7 +63,7 @@ def _observe(reader, base, country, profile, *, installation=None, observer_bind
 def capture(installation, country, *, observer='FRA'):
     return _owner._capture_common(installation, country, observer=observer, schema=SCHEMA,
         profile_sha256=PROFILE_SHA256, load_profile=_load_profile,
-        observe=partial(_observe, installation=installation))
+        observe=partial(_observe, observer=observer, installation=installation), observer_scoped=True)
 
 
 def validate_capture(report, context, creation, country):
@@ -71,8 +71,8 @@ def validate_capture(report, context, creation, country):
         return _subsidy_capture.validate_capture(report, context, creation, country)
     return _owner._validate_capture_common(report, context, creation, country, schema=SCHEMA,
         profile_sha256=PROFILE_SHA256, load_profile=_load_profile,
-        observe=partial(_observe, observer_binding=_subsidy_capture._capture_binding(report)),
-        require_access=True)
+        observe=partial(_observe, observer=context.get('observer'), observer_binding=_subsidy_capture._capture_binding(report)),
+        require_access=True, observer_scoped=True)
 
 
 def _merge_lists(fields):

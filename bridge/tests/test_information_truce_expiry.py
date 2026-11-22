@@ -45,6 +45,55 @@ def forbidden(*_args, **_kwargs):
     pytest.fail('Truce event/history replay attempted another primary or native read')
 
 
+def test_configured_turkish_expiry_receipts_feed_c04_and_h02(tmp_path):
+    from bridge import claim_expiry_observation as claim, subsidy_expiry_observation as subsidy
+    from bridge.information.claim_expiry_history import NativeClaimExpiryHistorySource
+    from bridge.information.subsidy_expiry_history import NativeSubsidyExpiryHistorySource
+    from bridge.tests.test_claim_expiry_observation import (
+        native_ack as claim_ack, native_event as claim_event, reference as claim_ref,
+    )
+    from bridge.tests.test_subsidy_expiry_observation import native_ack as subsidy_ack, native_event as subsidy_event
+
+    ack = subsidy_ack() | claim_ack() | native_ack()
+    ack.update(version=65, observer='TUR', native_country_control_configuration=True,
+        native_country_control_protocol='EU4CONTROL1', native_country_control_ack='native_controlled_countries_set',
+        native_country_control_request='controlled-countries.req', native_information_observer_configuration=True,
+        native_country_modifier_scoped_schema=2, native_expiry_scoped_wire=2)
+    events = []
+    for event in (
+        native_event(actor='TUR', recipient='SAV'),
+        claim_event(claimant='TUR', owner='SAV', claimant_ref=claim_ref('TUR', 43)),
+        subsidy_event(payer='TUR', recipient='SAV'),
+    ):
+        first, second = [value for key, value in event.items() if key.endswith('_ref') and key != 'observer_ref']
+        events.append(dict(event, wire=2, observer_ref=first, session_id=SESSION_ID))
+        events.append(dict(event, wire=2, observer_ref=second, session_id=SESSION_ID, sequence=2))
+    session, journal, _ = make_source(tmp_path, ack=ack, session_id=SESSION_ID, observer='TUR', events=events)
+    try:
+        assert {module.SCOPED_CAPABILITY for module in (observation, claim, subsidy)} <= session.installation_capabilities()
+        session.observed_countries = ('TUR', 'SAV')
+        from bridge.diplomacy import DiplomacyTools
+        from bridge.information.sources import DiplomacySource
+        primary = DiplomacySource(DiplomacyTools(journal, session), observer='TUR')
+        history = [NativeTruceExpiryHistorySource(primary), NativeClaimExpiryHistorySource(primary),
+                   NativeSubsidyExpiryHistorySource(primary)]
+        with closing(InformationService(CompositeSource(primary, history), tmp_path/'scoped.sqlite3')) as service:
+            for adapter in history:
+                adapter.history_reader = service.observed_events
+            assert service.tick()['results'] == []
+            context = primary.context()
+            for module, adapter, field in zip((observation, claim, subsidy), history,
+                                               ('truce_expiry', 'claim_expiry', 'subsidy_expiry')):
+                event, = service.observed_events(context, event_types=[module.EVENT_TYPE])['events']
+                assert event['observer'] == 'TUR' and event['payload']['scope'] == module.CONFIGURED_SCOPE
+                assert event['source']['native_sequence'] == 1
+                result = adapter.read(dict(query(), fields=[field]), context)
+                assert result['fields'][field]['value'][0]['event_id'] == event['event_id']
+                assert not module.valid_event_snapshot(event, dict(context, observer='SAV'))
+    finally:
+        journal.close()
+
+
 def test_actual_controlled_expiry_keeps_native_date_through_shared_history(tmp_path):
     fixture_path = Path(__file__).parent / 'fixtures' / 'information_truce_expired_FRA_KLE_live_1374.json'
     fixture = json.loads(fixture_path.read_text(encoding='utf-8'))

@@ -1,4 +1,4 @@
-"""Own a read-only FRA observation of the current province trade-power cache.
+"""Own a read-only observation of the current province trade-power cache.
 
 The shared capture owner supplies process/session identity, a read-only handle,
 code guards, two-pass replay, and cleanup. The province reader supplies the
@@ -13,6 +13,7 @@ from pathlib import Path
 from typing import Any
 
 from . import foreign_technology_capture as _owner
+from . import province_state_capture as _base
 from . import province_state_memory as _province
 from . import province_trade_power_memory as _leaf
 
@@ -75,26 +76,25 @@ def _load_profile() -> dict[str, Any]:
                 or not isinstance(item.get("sha256"), str)
                 or len(item["sha256"]) != 64):
             raise ValueError("PROVINCE_TRADE_POWER_PROFILE_DEPENDENCY")
-        path = (ROOT / item["path"]).resolve()
-        path.relative_to(ROOT)
-        if path.stat().st_size != item["bytes"] or _owner._sha(path) != item["sha256"]:
+        if not _base._matches_reviewed_layout(item):
             raise ValueError("PROVINCE_TRADE_POWER_PROFILE_DEPENDENCY")
     return profile
 
 
-def _observe_for(province_id: int):
+def _observe_for(province_id: int, observer: str = "FRA"):
     def observe(reader, module_base, country, profile):
-        if country != "FRA" or not _valid_id(province_id):
+        if country != observer or not _valid_id(province_id):
             raise ValueError("PROVINCE_TRADE_POWER_OBSERVER_SCOPE")
 
         def backend(read, base, observer_country):
-            if observer_country != "FRA":
+            if observer_country != observer:
                 raise ValueError("PROVINCE_TRADE_POWER_OBSERVER_SCOPE")
             return _province.read_two_pass(
                 read,
                 base,
                 province_id,
-                observer="FRA",
+                observer=observer,
+                observer_scoped=True,
                 fields=(_leaf.FIELD_PROVINCE_TRADE_POWER,),
                 read_fields=_leaf.read_fields,
             )
@@ -111,21 +111,21 @@ def _observe_for(province_id: int):
 
 
 def capture(installation: Path, province_id: int, *, observer: str = "FRA") -> dict[str, Any]:
-    if not _valid_id(province_id) or observer != "FRA":
+    if not _valid_id(province_id) or not isinstance(observer, str) or not _owner._TAG.fullmatch(observer):
         raise ValueError("PROVINCE_TRADE_POWER_REQUEST_SCOPE")
     inner = _owner._capture_common(
         installation,
-        "FRA",
+        observer,
         observer=observer,
         schema=INNER_SCHEMA,
         profile_sha256=PROFILE_SHA256,
         load_profile=_load_profile,
-        observe=_observe_for(province_id),
-        allow_observer_target=True,
+        observe=_observe_for(province_id, observer),
+        allow_observer_target=True, observer_scoped=True,
     )
     return {
         "schema": SCHEMA,
-        "observer": "FRA",
+        "observer": observer,
         "object": {"type": "province", "province_id": province_id},
         "capture": inner,
     }
@@ -133,11 +133,13 @@ def capture(installation: Path, province_id: int, *, observer: str = "FRA") -> d
 
 def validate_capture(report: Any, context: dict[str, Any], creation: int,
                      province_id: int) -> bool:
+    observer = context.get("observer") if isinstance(context, dict) else None
     if not _valid_id(province_id) or not isinstance(report, dict):
         return False
     if set(report) != {"schema", "observer", "object", "capture"}:
         return False
-    if report["schema"] != SCHEMA or report["observer"] != "FRA":
+    if (not isinstance(observer, str) or not _owner._TAG.fullmatch(observer)
+            or report["schema"] != SCHEMA or report["observer"] != observer):
         return False
     expected = {"type": "province", "province_id": province_id}
     if not _owner._same(report["object"], expected):
@@ -146,12 +148,12 @@ def validate_capture(report: Any, context: dict[str, Any], creation: int,
         report["capture"],
         context,
         creation,
-        "FRA",
+        observer,
         schema=INNER_SCHEMA,
         profile_sha256=PROFILE_SHA256,
         load_profile=_load_profile,
-        observe=_observe_for(province_id),
-        allow_observer_target=True,
+        observe=_observe_for(province_id, observer),
+        allow_observer_target=True, observer_scoped=True,
         require_access=True,
     )
 

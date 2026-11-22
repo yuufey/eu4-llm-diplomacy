@@ -321,11 +321,15 @@ def test_cleanup_failure_downgrades_report(monkeypatch, tmp_path: Path) -> None:
     assert not memory.validate_capture(report, CONTEXT, CREATION)
 
 
-def test_real_validator_and_adapter_project_synthetic_capture(monkeypatch, tmp_path: Path) -> None:
+@pytest.mark.parametrize("country", ["FRA", "TUR", "D01"])
+def test_real_validator_and_adapter_project_synthetic_capture(monkeypatch, tmp_path: Path, country: str) -> None:
     """Exercise adapter -> real capture -> real validator without target access."""
-    _install_capture(monkeypatch, _reader(targets=["PAP", "BUR"]))
+    reader = _reader(targets=["PAP", "BUR"])
+    layout = memory._profile_layout(memory._load_profile())
+    reader.qword(FRA + layout["country_fullref_offset"], _fullref(country, 5))
+    _install_capture(monkeypatch, reader)
     base = SimpleNamespace(
-        context=lambda: dict(CONTEXT),
+        context=lambda: dict(CONTEXT, observer=country),
         session=SimpleNamespace(
             directory=tmp_path, creation_filetime=CREATION,
             record={"session_id": SESSION_ID, "creation_filetime": CREATION},
@@ -334,7 +338,7 @@ def test_real_validator_and_adapter_project_synthetic_capture(monkeypatch, tmp_p
     )
     source = adapter.NativeCountryRivalsSource(
         base, capture=lambda installation, country: memory.capture(installation, country))
-    query = {"topic": "R03", "object": {"type": "country", "country": "FRA"},
+    query = {"topic": "R03", "object": {"type": "country", "country": country},
              "fields": ["rivals"], "parameters": {}}
     result = source.read(query, base.context())
     assert result["fields"]["rivals"]["status"] == "known"

@@ -1,8 +1,8 @@
 """Bounded private reader for the native diplomatic military-stats gate.
 
 The parent is responsible for installation/session identity, complete country
-binding scans, and observer role admission.  This leaf rechecks the supplied
-FRA and target references, then projects the saved native permission rule.  It
+binding scans, and observer role admission. This leaf rechecks the bound
+observer and target references, then projects the saved native permission rule. It
 does not call game code or establish public visibility by itself.
 """
 from __future__ import annotations
@@ -159,11 +159,11 @@ def _known(admitted: bool, mode: str, observer: Mapping[str, Any],
 
 
 def read_permission(reader: Any, base: int, observer_binding: Any,
-                    target_binding: Any) -> dict[str, Any]:
+                    target_binding: Any, *, observer_tag: str = OBSERVER_TAG) -> dict[str, Any]:
     """Project the native observer-to-target military-stats permission test.
 
     The caller must already have validated the fixed build/session, completed
-    country-manager scan, and FRA non-player role.  This leaf rechecks only
+    country-manager scan, and the observer's role. This leaf rechecks only
     the two supplied country slots and never scans the full table.
     """
     trace = _TraceReader(reader)
@@ -181,8 +181,9 @@ def read_permission(reader: Any, base: int, observer_binding: Any,
             raise _Unknown("OBSERVER_BINDING_INVALID") from exc
         if parsed_base != base:
             raise _Unknown("OBSERVER_BINDING_INVALID")
-        if observer_row.get("tag") != OBSERVER_TAG:
-            raise _Unknown("OBSERVER_NOT_FRA")
+        if observer_row.get("tag") != observer_tag:
+            raise _Unknown("OBSERVER_NOT_FRA" if observer_tag == OBSERVER_TAG
+                           else "OBSERVER_TAG_MISMATCH")
         try:
             parsed_base, target_pointer, target_row = _country_scale._parse_target(
                 base, target_binding)

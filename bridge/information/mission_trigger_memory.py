@@ -567,7 +567,8 @@ def capture_triggers(reader: Any, module_base: int, country_pointer: int,
                      country_scope_reader: Any = None, dlc_reader: Any = None,
                      dynamic_scope_reader: Any = None,
                      count_domain_reader: Any = None,
-                     task_selector: dict[str, str] | None = None) -> dict[str, Any]:
+                     task_selector: dict[str, str] | None = None,
+                     country: str = "FRA") -> dict[str, Any]:
     """Capture/evaluate task trigger trees from observed loaded task pointers."""
     if (isinstance(module_base, bool) or not isinstance(module_base, int)
             or not _mission_task_memory._valid_pointer(module_base)):
@@ -711,7 +712,7 @@ def capture_triggers(reader: Any, module_base: int, country_pointer: int,
                             or type(pointer) is not int
                             or not _mission_task_memory._valid_pointer(pointer)
                             or type(observed_fullref) is not int or observed_fullref != fullref
-                            or ((tag == "FRA") != (pointer == country_pointer))):
+                            or ((tag == country) != (pointer == country_pointer))):
                         country_scope_bindings[fullref] = {
                             "status": "unknown", "reason": "country_scope_binding_contract_invalid",
                         }
@@ -821,7 +822,7 @@ def capture_triggers(reader: Any, module_base: int, country_pointer: int,
                 result = {'status': 'unknown', 'reason': 'count_domain_invalid'}
             ids = result.get('province_ids')
             if result.get('status') == 'known' and (
-                    result.get('country') != 'FRA' or result.get('country_pointer') != country_pointer
+                    result.get('country') != country or result.get('country_pointer') != country_pointer
                     or result.get('root_reference') != root_country_reference('count_domain')
                     or not isinstance(ids, list) or len(ids) > MAX_COUNT_DOMAIN
                     or any(type(pid) is not int or not 1 <= pid < 65536 for pid in ids)):
@@ -1358,7 +1359,7 @@ def capture_triggers(reader: Any, module_base: int, country_pointer: int,
                     'native_pointer': _public_pointer(node_pointer, module_base),
                     'condition_name': ('num_of_owned_provinces_with' if mode == 0 else
                         'num_of_provinces_owned_or_owned_by_non_sovereign_subjects_with'),
-                    'scope': {'kind': 'owned_provinces', 'country': 'FRA',
+                    'scope': {'kind': 'owned_provinces', 'country': country,
                               'mode': 'owned' if mode == 0 else 'non_sovereign_subjects'},
                     'metric': metric, 'filter': template, 'samples': samples,
                     'evaluation': evaluation}
@@ -1425,7 +1426,7 @@ def capture_triggers(reader: Any, module_base: int, country_pointer: int,
                                              module_base, str(reason),
                                              compare_extra=dict(extra, fullref=fullref))
                     tag = binding["tag"]
-                    bound_pointer = country_pointer if tag == "FRA" else binding["pointer"]
+                    bound_pointer = binding["pointer"]
                     group = _read_group_contract(metadata, module_base, node_pointer,
                                                  label, verify_parser=False)
                     if group["vtable"] != vtable:

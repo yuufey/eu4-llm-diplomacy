@@ -52,7 +52,7 @@ def native(sequence=1, *, name='french_reconquest', schema=1,
         'source': observation.SOURCE if schema == 1 else observation.SET_SOURCE,
         'complete': True,
     }
-    if schema == 2:
+    if schema in (2, 3):
         event['completion_path'] = completion_path
     event.update(changes)
     return event
@@ -66,7 +66,7 @@ def snapshot_from_native(event):
         'event_id': public['event_id'],
         'event_type': observation.EVENT_TYPE,
         'session_id': SESSION,
-        'observer': 'FRA',
+        'observer': public['payload']['country'],
         'game_date': public['game_date'],
         'collected_game_date': DATE + 1,
         'objects': deepcopy(public['objects']),
@@ -103,6 +103,20 @@ def test_wire1_ack_and_archive_shape_remain_compatible(version):
     snap = snapshot_from_native(event)
     context = {'session_id': SESSION, 'observer': 'FRA', 'game_sha256': GAME_SHA}
     assert observation.valid_event_snapshot(snap, context)
+
+
+def test_new_scope_can_bind_turkish_mission_and_reject_foreign_replay():
+    event = native(schema=3, name='turkish_mission', country='TUR', country_fullref=fullref('TUR'))
+    snapshot = snapshot_from_native(event)
+    assert snapshot['payload']['country'] == 'TUR'
+    assert snapshot['payload']['scope'] == observation.CONFIGURED_SET_SCOPE
+    context = {'session_id': SESSION, 'observer': 'TUR', 'game_sha256': GAME_SHA}
+    assert observation.valid_event_snapshot(snapshot, context)
+    assert not observation.valid_event_snapshot(snapshot, context | {'observer': 'FRA'})
+    assert observation.public_observation(event | {'country': 'ENG'}, SESSION) is None
+    collector = observation.Collector(SESSION)
+    collector.observe(event, allow_set=True, allow_scoped=True)
+    assert collector.batch(0)['events'][0]['payload']['country'] == 'TUR'
 
 
 def test_new_wire_ack_requires_both_capabilities_exact_scope_and_wire():
@@ -160,6 +174,7 @@ def test_capability_scope_selection_and_date_semantics_are_explicit():
     assert observation.DATE_SEMANTICS_BY_SCOPE == {
         observation.SCOPE: observation.DATE_SEMANTICS,
         observation.SET_SCOPE: observation.SET_DATE_SEMANTICS,
+        observation.CONFIGURED_SET_SCOPE: observation.SET_DATE_SEMANTICS,
     }
 
 
@@ -180,7 +195,7 @@ def test_wire2_public_payload_preserves_path_and_printable_name(path, name):
 
 
 @pytest.mark.parametrize('changes', [
-    {'schema_version': True}, {'schema_version': 1.0}, {'schema_version': 3},
+    {'schema_version': True}, {'schema_version': 1.0}, {'schema_version': 4},
     {'sequence': True}, {'date_raw': True}, {'complete': 1},
     {'completed_before': 0}, {'completed_before': True},
     {'completed_after': 1}, {'completed_after': False},
@@ -197,7 +212,7 @@ def test_wire1_malformed_or_mixed_rows_are_rejected(changes):
 
 @pytest.mark.parametrize('changes', [
     {'schema_version': True}, {'schema_version': 1}, {'schema_version': 2.0},
-    {'schema_version': 3}, {'sequence': True}, {'date_raw': True}, {'complete': 1},
+    {'schema_version': 4}, {'sequence': True}, {'date_raw': True}, {'complete': 1},
     {'completed_before': 1}, {'completed_before': True},
     {'completed_after': 0}, {'completed_after': False},
     {'country': 'POR'}, {'country_fullref': fullref('ENG')},

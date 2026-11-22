@@ -10,8 +10,9 @@ from .country_existence_memory import read_existence
 SCHEMA = 'information.country_discovery_memory.v2'
 
 
-def read_two_pass(reader, module_base, observer='FRA'):
-    result = _base._read_two_pass(reader, module_base, observer, existence_reader=read_existence)
+def read_two_pass(reader, module_base, observer='FRA', *, observer_scoped=False):
+    result = _base._read_two_pass(reader, module_base, observer, existence_reader=read_existence,
+                                  observer_scoped=observer_scoped)
     result['schema'] = SCHEMA
     return result
 

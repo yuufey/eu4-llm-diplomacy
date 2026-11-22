@@ -12,7 +12,7 @@ from . import country_occupation_memory as _occupation
 from . import average_unrest_memory as _unrest
 from .model import InformationError
 from .sources import _result, _source_info
-from .trade_income import NativeTradeIncomeSource, _context_reason, _session_binding
+from .trade_income import NativeTradeIncomeSource, _observer_context_reason, _session_binding
 
 
 SCHEMA = 'information.foreign_pressure_capture.v1'
@@ -73,15 +73,15 @@ def read_war_exhaustion(read, binding, spec):
             'raw_hex': raw.hex(), 'scale': spec['scale'], 'unit': spec['unit']}
 
 
-def _observe_for(fields):
+def _observe_for(fields, observer='FRA'):
     def observe(reader, base, country, profile):
         bindings, rows = {}, {}
 
-        def admission(read, module_base, scan, observer, target):
+        def admission(read, module_base, scan, observer_tag, target):
             bindings.update(scan['requested'])
             rows.clear()
             rows.update({row['fullref']: row for row in scan['rows'] if row['fullref']})
-            return _owner._bound_admission(read, module_base, scan, observer, target)
+            return _owner._bound_admission(read, module_base, scan, observer_tag, target)
 
         def read_fields(read, module_base, binding, selected):
             result = {}
@@ -98,13 +98,13 @@ def _observe_for(fields):
             if 'occupied' in fields:
                 try:
                     result['F04.occupied'] = _occupation.read_occupation(read, module_base,
-                        binding, bindings['FRA'], rows, profile['occupation'])
+                        binding, bindings[observer], rows, profile['occupation'])
                 except Exception as exc:
                     result['F04.occupied'] = {'status': 'unknown', 'reason': str(exc)}
             return result
 
         def backend(read, module_base, target):
-            return _countries.read_two_pass(read, module_base, 'FRA', [target],
+            return _countries.read_two_pass(read, module_base, observer, [target],
                 fields=['F04.' + name for name in fields], admission_reader=admission,
                 read_fields=read_fields)
 
@@ -119,14 +119,16 @@ def _observe(reader, base, country, profile):
 def capture(installation, country, *, observer='FRA', fields=None):
     fields = ['war_exhaustion'] if fields is None else list(fields)
     report = _owner._capture_common(installation, country, observer=observer, schema=SCHEMA,
-        profile_sha256=PROFILE_SHA256, load_profile=_load_profile, observe=_observe_for(fields))
+        profile_sha256=PROFILE_SHA256, load_profile=_load_profile,
+        observe=_observe_for(fields, observer), observer_scoped=True)
     report['request']['fields'] = fields
     return report
 
 
 def validate_capture(report, context, creation, country, fields=None):
     fields = ['war_exhaustion'] if fields is None else fields
-    if not isinstance(report, dict) or report.get('request', {}).get('fields', ['war_exhaustion']) != fields:
+    if (not isinstance(report, dict) or not isinstance(context, dict)
+            or report.get('request', {}).get('fields', ['war_exhaustion']) != fields):
         return False
     legacy = report.get('profile_sha256') == _LEGACY_PROFILE_SHA256
     occupation = report.get('profile_sha256') == _OCCUPATION_PROFILE_SHA256
@@ -136,7 +138,7 @@ def validate_capture(report, context, creation, country, fields=None):
         _load_occupation_profile if occupation else _load_profile)
     return _owner._validate_capture_common(report, context, creation, country,
         schema=SCHEMA, profile_sha256=profile_sha, load_profile=loader,
-        observe=_observe_for(fields), require_access=True)
+        observe=_observe_for(fields, context.get('observer')), require_access=True, observer_scoped=True)
 
 
 class NativeForeignPressureSource(NativeTradeIncomeSource):
@@ -160,7 +162,7 @@ class NativeForeignPressureSource(NativeTradeIncomeSource):
                     'scale': 1000, 'period': 'current', 'source': __name__ + '.capture',
                     'description': '目标国家平均叛乱度，保留负值，以点数表示',
                     'basis': 'native_country_average_unrest_cache'}},
-            'object_types': ['country'], 'observer_roles': [], 'observer_scope': ['FRA'],
+            'object_types': ['country'], 'observer_roles': [], 'observer_scope': [],
             'parameters': {'type': 'object', 'properties': {}, 'additionalProperties': False},
             'supported_versions': ['1.37.4'], 'triggers': ['query', 'periodic'],
             'source': type(self).__name__, 'context_scope': 'visible_scope',
@@ -173,7 +175,7 @@ class NativeForeignPressureSource(NativeTradeIncomeSource):
         obj = query.get('object')
         if (not isinstance(obj, dict) or set(obj) != {'type', 'country'}
                 or obj.get('type') != 'country' or not isinstance(obj.get('country'), str)
-                or not _TAG.fullmatch(obj['country']) or obj['country'] == 'FRA'):
+                or not _TAG.fullmatch(obj['country'])):
             raise InformationError('invalid_object', 'F04 requires a foreign country tag')
         fields = query.get('fields')
         if (not isinstance(fields, list) or not fields or any(name not in FIELDS for name in fields)
@@ -181,8 +183,12 @@ class NativeForeignPressureSource(NativeTradeIncomeSource):
             raise InformationError('invalid_fields', 'Unsupported F04 fields')
         if query.get('parameters', {}) != {}:
             raise InformationError('invalid_parameters', 'F04 has no extra parameters')
-        if context is not None and (not isinstance(context, dict) or context.get('observer') != 'FRA'):
-            raise InformationError('observer_scope_mismatch', 'The supported observer is FRA')
+        if context is not None:
+            observer = context.get('observer') if isinstance(context, dict) else None
+            if not isinstance(observer, str) or not _TAG.fullmatch(observer):
+                raise InformationError('observer_scope_mismatch', 'F04 requires a configured observer country')
+            if obj['country'] == observer:
+                raise InformationError('invalid_object', 'F04 requires a foreign country tag')
         return {'topic': 'F04', 'object': deepcopy(obj), 'fields': list(fields), 'parameters': {}}
 
     def read(self, query, context=None):
@@ -192,13 +198,13 @@ class NativeForeignPressureSource(NativeTradeIncomeSource):
         fields = {name: {'status': 'unknown', 'reason': 'FOREIGN_PRESSURE_CAPTURE_UNAVAILABLE'}
                   for name in query['fields']}
         installation, creation, session_reason = _session_binding(self.base_source)
-        reason = _context_reason(current) or session_reason
+        reason = _observer_context_reason(current) or session_reason
         if reason:
             for field in fields.values():
                 field['reason'] = reason
         else:
             try:
-                arguments = {'country': country, 'observer': 'FRA'}
+                arguments = {'country': country, 'observer': current['observer']}
                 if query['fields'] != ['war_exhaustion']:
                     arguments['fields'] = query['fields']
                 report = (self.capture or capture)(installation, **arguments)

@@ -20,39 +20,45 @@ from bridge.tests.test_information_foreign_economy import BaseSource
 NODE = 0x6800000000
 
 
-def make_capture(country="ENG", *, admitted=True, changed=False):
+def make_capture(country="ENG", *, admitted=True, changed=False, observer="FRA"):
     profile = capture._load_profile()
     image, fixture = faith_fixture._make_image("ENG", profile, admitted=admitted)
+    if observer != "FRA":
+        binding = fixture["bindings"].pop("FRA")
+        fullref = (fixture["refs"].pop("FRA") & ~0xffffff) | int.from_bytes(observer.encode("ascii"), "little")
+        fixture["bindings"][observer] = binding
+        fixture["refs"][observer] = fullref
+        image.put_u64(binding["country_pointer"] + 0x20, fullref)
     for tag, row in fixture["bindings"].items():
         pointer = row["country_pointer"]
         image.put_u64(pointer + memory.TARGET_OFFSET, 0)
         image.put(pointer + memory.MEMBERS_OFFSET, b"\0" * 24)
-    fra = fixture["bindings"]["FRA"]["country_pointer"]
+    observer_pointer = fixture["bindings"][observer]["country_pointer"]
     eng = fixture["bindings"]["ENG"]["country_pointer"]
     admission = parent_fixture.admission
-    own_slot = fixture["bindings"]["FRA"]["slot"]
+    own_slot = fixture["bindings"][observer]["slot"]
     own_row = parent_fixture.RELATION_TABLE + own_slot * admission.RELATION_ROW_STRIDE
     image.put_u64(own_row + admission.RELATION_ROW_OWNER_OFFSET, parent_fixture.RELATION_OWNER)
-    image.put_u64(own_row + admission.RELATION_ROW_RECIPIENT_FULLREF_OFFSET, fixture["refs"]["FRA"])
+    image.put_u64(own_row + admission.RELATION_ROW_RECIPIENT_FULLREF_OFFSET, fixture["refs"][observer])
     own_counter = (parent_fixture.RELATION_COUNTERS + admission.RELATION_COUNTER_FIRST_OFFSET
                    + own_slot * admission.RELATION_COUNTER_STRIDE)
     image.put_i32(own_counter, 1)
-    image.put(fra + memory.MEMBERS_OFFSET, struct.pack("<QQiB3x", NODE, NODE, 1, 0))
+    image.put(observer_pointer + memory.MEMBERS_OFFSET, struct.pack("<QQiB3x", NODE, NODE, 1, 0))
     image.put(NODE, struct.pack("<QQQB7x", fixture["refs"]["ENG"], 0, 0, 0))
-    image.put_u64(eng + memory.TARGET_OFFSET, fixture["refs"]["FRA"])
+    image.put_u64(eng + memory.TARGET_OFFSET, fixture["refs"][observer])
     if changed:
         def change_target(memory_image, address, _size, label, count):
             if label == "coalition.ENG.target" and count == 2:
                 memory_image.put_u64(address, 0)
         image.on_read = change_target
     reader = parent_fixture.RecordingReader(image)
-    observation = capture._observe(reader, parent_fixture.MODULE_BASE, country, profile)
+    observation = capture._observe(reader, parent_fixture.MODULE_BASE, country, profile, observer=observer)
     identity = {"binding_verified": True, "process_creation_filetime": parent_fixture.CREATION,
                 "process_path": "synthetic-eu4.exe", "process_path_sha256": capture._owner.EXE_SHA256}
     report = {
         "schema": capture.SCHEMA, "status": "observed", "completed": True,
         "profile_sha256": capture.PROFILE_SHA256,
-        "request": {"country": country, "observer": "FRA", "creation_filetime": parent_fixture.CREATION,
+        "request": {"country": country, "observer": observer, "creation_filetime": parent_fixture.CREATION,
                     "session_id": parent_fixture.SESSION_ID},
         "identity": identity, "identity_after": deepcopy(identity),
         "module_base": hex(parent_fixture.MODULE_BASE), "observation": observation,
@@ -63,7 +69,7 @@ def make_capture(country="ENG", *, admitted=True, changed=False):
                    "limit_bytes": capture._owner.MAX_READ_BYTES,
                    "calls": reader.calls, "bytes_requested": reader.bytes_requested},
     }
-    context = {"status": "ready", "mode": "live", "observer": "FRA",
+    context = {"status": "ready", "mode": "live", "observer": observer,
                "session_id": parent_fixture.SESSION_ID, "game_version": "1.37.4",
                "game_sha256": capture._owner.EXE_SHA256, "game_date": parent_fixture.GAME_DATE}
     return report, context
@@ -80,6 +86,14 @@ def test_exact_trace_replay_preserves_both_coalition_directions(country, expecte
     assert capture.validate_capture(report, context, parent_fixture.CREATION, country)
     fields = report["observation"]["backend"]["targets"][0]["fields"]
     assert [fields[name]["value"] for name in memory.FIELDS] == list(expected)
+
+
+def test_coalition_uses_turkish_view_and_rejects_replay_under_other_observer():
+    report, context = make_capture(observer="TUR")
+    assert capture.validate_capture(report, context, parent_fixture.CREATION, "ENG")
+    fields = report["observation"]["backend"]["targets"][0]["fields"]
+    assert fields[memory.FIELDS[1]]["value"] == ["TUR"]
+    assert not capture.validate_capture(report, context | {"observer": "FRA"}, parent_fixture.CREATION, "ENG")
 
 
 def test_change_between_passes_keeps_only_the_unaffected_field_known():

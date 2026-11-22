@@ -112,12 +112,12 @@ def _make_image(country: str, profile: dict[str, Any], *,
                 admitted: bool = True, hidden_heir: bool = False,
                 no_heir: bool = False, ruler_regency: int = 0,
                 heir_regency: int = 0, name_runtime_layout: str = "vanilla",
-                name_runtime_tamper: str | None = None):
+                name_runtime_tamper: str | None = None, observer='FRA'):
     entries = {
-        "FRA": (122, 0x1200, 5),
+        observer: (122, 0x1200, 5),
         "POR": (189, 0x5500, 3),
     }
-    if country != "FRA":
+    if country != observer:
         entries[country] = (300, 0x4500, 9)
     image, bindings, _unused_vectors = backend_fixture.make_reader(entries, count=310)
     refs = {
@@ -125,7 +125,7 @@ def _make_image(country: str, profile: dict[str, Any], *,
         for tag, row in entries.items()
     }
 
-    # Keep POR as the physical player and FRA as the logical observer.
+    # Keep POR as the physical player with another country as the observer.
     image.put_u64(MODULE_BASE + 0x233FE58, WORLD)
     image.put_i32(WORLD + 0x1DD0, GAME_DATE)
     image.put_u64(WORLD + 0x1E60, refs["POR"])
@@ -137,7 +137,7 @@ def _make_image(country: str, profile: dict[str, Any], *,
     for index, (_name, rva) in enumerate(admission.SPECIAL_TARGET_SLOT_RVAS):
         image.put_i32(MODULE_BASE + rva, -10 - index)
 
-    observer_pointer = bindings["FRA"]["country_pointer"]
+    observer_pointer = bindings[observer]["country_pointer"]
     target_pointer = bindings[country]["country_pointer"]
     target_slot = entries[country][0]
     relation_row = RELATION_TABLE + target_slot * admission.RELATION_ROW_STRIDE
@@ -323,7 +323,7 @@ def _bundle(country: str = "ENG", *, profile: dict[str, Any] | None = None,
             no_heir: bool = False, ruler_regency: int = 0,
             heir_regency: int = 0, reader: Any | None = None,
             name_runtime_layout: str = "vanilla",
-            name_runtime_tamper: str | None = None):
+            name_runtime_tamper: str | None = None, observer='FRA'):
     profile = capture._load_profile() if profile is None else profile
     image, fixture = _make_image(
         country,
@@ -334,10 +334,10 @@ def _bundle(country: str = "ENG", *, profile: dict[str, Any] | None = None,
         ruler_regency=ruler_regency,
         heir_regency=heir_regency,
         name_runtime_layout=name_runtime_layout,
-        name_runtime_tamper=name_runtime_tamper,
+        name_runtime_tamper=name_runtime_tamper, observer=observer,
     )
     reader = parent_fixture.RecordingReader(image) if reader is None else reader(image)
-    observation = capture._observe(reader, MODULE_BASE, country, profile)
+    observation = capture._observe(reader, MODULE_BASE, country, profile, observer=observer)
     identity = {
         "binding_verified": True,
         "process_creation_filetime": CREATION,
@@ -350,7 +350,7 @@ def _bundle(country: str = "ENG", *, profile: dict[str, Any] | None = None,
         "completed": observation.get("stable") is True,
         "request": {
             "country": country,
-            "observer": "FRA",
+            "observer": observer,
             "creation_filetime": CREATION,
             "session_id": SESSION_ID,
         },
@@ -375,13 +375,21 @@ def _bundle(country: str = "ENG", *, profile: dict[str, Any] | None = None,
         "errors": [],
     }
     context = {
-        "observer": "FRA",
+        "observer": observer,
         "session_id": SESSION_ID,
         "game_version": "1.37.4",
         "game_sha256": capture._owner.EXE_SHA256,
         "game_date": GAME_DATE,
     }
     return report, context, CREATION, {"image": image, "reader": reader, **fixture}
+
+
+def test_non_french_observer_replays_person_and_ruler_binding(pinned_profile):
+    report, context, creation, _ = _bundle('ENG', profile=pinned_profile, observer='TUR')
+    assert capture.validate_capture(report, context, creation, 'ENG')
+    target = report['observation']['backend']['targets'][0]
+    assert target['tag'] == 'ENG' and target['fields']['S04.ruler']['status'] == 'known'
+    assert not capture.validate_capture(report, dict(context, observer='FRA'), creation, 'ENG')
 
 
 def _profile_int(value: Any) -> int:

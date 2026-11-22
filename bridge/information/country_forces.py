@@ -17,8 +17,7 @@ from .model import InformationError, canonical
 from .observation_time import context_identity, dates_match
 from .sources import _result, _source_info
 from .trade_income import (
-    NativeTradeIncomeSource, _COUNTRY, _VERSION, _GAME_SHA256,
-    _context_reason, _session_binding,
+    NativeTradeIncomeSource, _VERSION, _observer_context_reason, _session_binding,
 )
 
 
@@ -38,7 +37,7 @@ def _metadata(field):
     return {"coverage": "partial", "complete": False,
             "source": "NativeCountryForcesSource", "basis": BASIS,
             "unit": ("regiments" if army else "ships") if field.endswith("size") else "unit_category_counts",
-            "scale": 1, "period": "current", "supported_countries": [_COUNTRY],
+            "scale": 1, "period": "current",
             "description": {
                 "army_size": "本国现存陆军团记录数量，附原生 strength 总和及单位",
                 "navy_size": "本国现存舰船记录数量，附原生 strength 总和及单位",
@@ -127,7 +126,7 @@ def _projection(records):
 
 
 class NativeCountryForcesSource(NativeTradeIncomeSource):
-    """Expose the fixed-build FRA unit record collection through N02."""
+    """Expose the configured observer country's native unit records through N02."""
 
     event_types = ()
 
@@ -142,7 +141,7 @@ class NativeCountryForcesSource(NativeTradeIncomeSource):
         if not keys or self.localization_reader is None:
             return
         try:
-            localized = self.localization_reader.localized_text(_COUNTRY, context, keys)
+            localized = self.localization_reader.localized_text(context["observer"], context, keys)
             entries = localized["entries"] if localized.get("status") == "known" else {}
             if not isinstance(entries, Mapping):
                 entries = {}
@@ -166,7 +165,7 @@ class NativeCountryForcesSource(NativeTradeIncomeSource):
                  "fields": {f: _metadata(f) for f in FIELDS},
                  "parameters": _parameter_schema("N02"),
                  "object_types": ["country"], "observer_roles": ["country"],
-                 "observer_scope": [_COUNTRY], "supported_versions": [_VERSION],
+                 "observer_scope": [], "supported_versions": [_VERSION],
                  "triggers": ["query", "periodic"], "context_scope": "country_scope",
                  "visibility": "country_scope", "source": type(self).__name__}]
 
@@ -177,8 +176,9 @@ class NativeCountryForcesSource(NativeTradeIncomeSource):
         obj, fields = query.get("object"), query.get("fields")
         if not isinstance(obj, dict) or set(obj) != {"type", "country"} or obj.get("type") != "country":
             raise InformationError("invalid_object", "A country object is required")
-        if obj.get("country") != _COUNTRY:
-            raise InformationError("observer_scope_mismatch", "Only the verified FRA observer is supported")
+        country = obj.get("country")
+        if not isinstance(country, str) or not re.fullmatch(r"[A-Z0-9]{3}", country):
+            raise InformationError("invalid_object", "Expected a country tag")
         if (not isinstance(fields, list) or not fields or any(not isinstance(f, str) for f in fields)
                 or len(set(fields)) != len(fields) or set(fields) - set(FIELDS)):
             raise InformationError("invalid_fields", "Expected unique supported forces fields")
@@ -187,19 +187,20 @@ class NativeCountryForcesSource(NativeTradeIncomeSource):
             raise InformationError("invalid_parameters", "Unknown country forces parameters")
         if "reference_recipient" in parameters:
             ref = parameters["reference_recipient"]
-            if not isinstance(ref, str) or not re.fullmatch(r"[A-Z0-9]{3}", ref) or ref == _COUNTRY:
+            if not isinstance(ref, str) or not re.fullmatch(r"[A-Z0-9]{3}", ref) or ref == country:
                 raise InformationError("invalid_parameters", "reference_recipient must be a distinct country tag")
-        if context is not None and (not isinstance(context, dict) or context.get("observer", _COUNTRY) != _COUNTRY):
-            raise InformationError("observer_scope_mismatch", "Invalid FRA observer context")
+        if context is not None and (not isinstance(context, dict) or context.get("observer", country) != country):
+            raise InformationError("observer_scope_mismatch", "Unit records are limited to the configured observer country")
         return {"topic": "N02", "object": deepcopy(obj), "fields": list(fields),
                 "parameters": deepcopy(parameters)}
 
     def read(self, query, context=None):
         current = deepcopy(context) if isinstance(context, dict) else self.context()
         normalized = self.validate_query(query, current)
+        country = normalized["object"]["country"]
         provenance = {"read_only": True, "native_function_invoked": False,
                       "adapter": "bridge.information.country_forces_memory.capture",
-                      "country": _COUNTRY, "basis": BASIS}
+                      "country": country, "basis": BASIS}
 
         def result(fields):
             source = _source_info(type(self).__name__, current, complete=False, provenance=provenance)
@@ -211,14 +212,14 @@ class NativeCountryForcesSource(NativeTradeIncomeSource):
             return result({f: {"status": "unavailable" if unavailable else "unknown", "reason": reason}
                            for f in normalized["fields"]})
 
-        reason = _context_reason(current)
+        reason = _observer_context_reason(current)
         if reason:
             return failure(reason.replace("TRADE_INCOME", "COUNTRY_FORCES"), True)
         try:
             before = self.context()
         except Exception:
             before = {}
-        if (_context_reason(before) or
+        if (_observer_context_reason(before) or
                 context_identity(before, _CONTEXT_IDENTITY_KEYS) !=
                 context_identity(current, _CONTEXT_IDENTITY_KEYS)):
             return failure("COUNTRY_FORCES_CONTEXT_STALE", True)
@@ -229,24 +230,24 @@ class NativeCountryForcesSource(NativeTradeIncomeSource):
             module = import_module(".country_forces_memory", __package__)
             if self.capture is None:
                 report = module.capture(
-                    installation, country=_COUNTRY,
+                    installation, country=country,
                     include_type_keys=any(field.endswith("_composition") for field in normalized["fields"]))
             else:
-                report = self.capture(installation, country=_COUNTRY)
+                report = self.capture(installation, country=country)
         except Exception as exc:
             return failure("COUNTRY_FORCES_CAPTURE_FAILED:" + type(exc).__name__)
         try:
             after = self.context()
         except Exception:
             after = {}
-        if (_context_reason(after) or
+        if (_observer_context_reason(after) or
                 context_identity(after, _CONTEXT_IDENTITY_KEYS) !=
                 context_identity(before, _CONTEXT_IDENTITY_KEYS) or
                 not dates_match(current.get("game_date"), before.get("game_date"),
                                 after.get("game_date"))):
             return failure("COUNTRY_FORCES_CONTEXT_CHANGED_DURING_CAPTURE")
         try:
-            valid = module.validate_capture(report, before, creation, _COUNTRY)
+            valid = module.validate_capture(report, before, creation, country)
         except Exception:
             valid = False
         if valid is not True:
@@ -263,7 +264,7 @@ class NativeCountryForcesSource(NativeTradeIncomeSource):
                 final_context = self.context()
             except Exception:
                 final_context = {}
-            if (_context_reason(final_context) or
+            if (_observer_context_reason(final_context) or
                     context_identity(final_context, _CONTEXT_IDENTITY_KEYS) !=
                     context_identity(after, _CONTEXT_IDENTITY_KEYS) or
                     not dates_match(after.get("game_date"), final_context.get("game_date"))):

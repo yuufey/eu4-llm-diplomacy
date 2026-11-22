@@ -25,6 +25,7 @@ from ..war_participants import project_war_participants
 from .. import support_roles
 from .. import proposal_expiry
 from .. import country_modifier_observation
+from ..country_control_runtime import OBSERVATION_CAPABILITY
 from .. import subsidy_expiry_observation
 from .. import truce_expiry_observation
 from .. import claim_expiry_observation
@@ -135,20 +136,20 @@ def _module_hash(record: dict) -> str | None:
     return None
 
 
-def _observer_hint(session: Any, tools: Any = None, record: dict | None = None) -> str | None:
-    """Extract a controlled country only from an explicit trusted binding."""
+def _observer_hint(session: Any, tools: Any = None, record: dict | None = None,
+                   *, include_controlled: bool = True) -> str | None:
+    """Read the trusted observer binding, optionally falling back to legacy control metadata."""
 
     record = record or _record_of(session)
-    candidates = [
-        getattr(session, "observer", None),
-        getattr(session, "controlled_country", None),
-        getattr(session, "decision_country", None),
-        getattr(tools, "observer", None),
-        getattr(tools, "controlled_country", None),
-        getattr(tools, "decision_country", None),
-        record.get("observer"), record.get("controlled_country"),
-        record.get("decision_country"), record.get("country"),
-    ]
+    candidates = [getattr(session, "observer", None), getattr(tools, "observer", None),
+                  record.get("observer")]
+    if include_controlled:
+        candidates.extend([getattr(session, "controlled_country", None),
+                           getattr(session, "decision_country", None),
+                           getattr(tools, "controlled_country", None),
+                           getattr(tools, "decision_country", None),
+                           record.get("controlled_country"), record.get("decision_country"),
+                           record.get("country")])
     for candidate in candidates:
         if isinstance(candidate, str) and re.fullmatch(r"[A-Z0-9]{3}", candidate):
             return candidate
@@ -163,16 +164,15 @@ def _observer_hint(session: Any, tools: Any = None, record: dict | None = None) 
         except Exception:
             ack = None
         if isinstance(ack, dict):
-            for key in ("observer", "controlled_country", "decision_country"):
+            keys = ("observer", "controlled_country", "decision_country") if include_controlled else ("observer",)
+            for key in keys:
                 candidate = ack.get(key)
                 if isinstance(candidate, str) and re.fullmatch(r"[A-Z0-9]{3}", candidate):
                     return candidate
             scope = ack.get("authority_scope")
             if isinstance(scope, str):
-                match = re.search(
-                    r"(?:outbound|controlled|decision_country|observer)\s*[:= ]\s*([A-Z0-9]{3})",
-                    scope,
-                )
+                role = r"(?:outbound|controlled|decision_country|observer)" if include_controlled else r"observer"
+                match = re.search(rf"\b{role}\s*[:= ]\s*([A-Z0-9]{{3}})\b", scope)
                 if match:
                     return match.group(1)
     return None
@@ -601,6 +601,19 @@ class DiplomacySource:
     _mission_availability_enabled = False
     _mission_condition_enabled = False
     _mission_province_condition_enabled = False
+    _modifier_scope = country_modifier_observation.SCOPE
+    _relation_scope = relation_observation.SCOPE
+    _war_declaration_scope = war_declaration_observation.SCOPE
+    _land_promise_scope = land_promise_observation.SCOPE
+    _mission_scope = mission_observation.SCOPE
+    _mission_availability_scope = mission_availability_observation.SCOPE
+    _mission_condition_scope = mission_condition_observation.SCOPE
+    _mission_province_condition_scope = mission_condition_observation.PROVINCE_SCOPE
+    _subsidy_expiry_scope = subsidy_expiry_observation.SCOPE
+    _truce_expiry_scope = truce_expiry_observation.SCOPE
+    _claim_expiry_scope = claim_expiry_observation.SCOPE
+    _rival_command_scope = rival_observation.SCOPE
+    _rival_record_scope = rival_observation.RECORD_SCOPE
 
     def __init__(self, diplomacy_tools=None, *, observer: str | None = None,
                  declaration_rules=None, declaration_roles=None):
@@ -613,44 +626,82 @@ class DiplomacySource:
         capability_reader = getattr(self.session, 'installation_capabilities', None)
         try:
             capabilities = capability_reader() if callable(capability_reader) else ()
-            self._modifier_events_enabled = (
-                (observer or _observer_hint(self.session, diplomacy_tools)) == 'FRA'
+            selected_observer = observer or _observer_hint(self.session, diplomacy_tools)
+            if OBSERVATION_CAPABILITY in capabilities:
+                self._modifier_scope = country_modifier_observation.CONFIGURED_SCOPE
+                modifier_country_observed = selected_observer in getattr(self.session, 'observed_countries', ())
+            else:
+                modifier_country_observed = selected_observer == 'FRA'
+            self._modifier_events_enabled = (modifier_country_observed
                 and country_modifier_observation.CAPABILITY in capabilities)
             self._modifier_removals_enabled = (self._modifier_events_enabled
                 and country_modifier_observation.REMOVE_CAPABILITY in capabilities)
             self._modifier_expiry_enabled = (self._modifier_removals_enabled
                 and country_modifier_observation.EXPIRY_CAPABILITY in capabilities)
-            self._subsidy_expiry_enabled = (
-                (observer or _observer_hint(self.session, diplomacy_tools)) == 'FRA'
-                and subsidy_expiry_observation.CAPABILITY in capabilities)
-            self._truce_expiry_enabled = (
-                (observer or _observer_hint(self.session, diplomacy_tools)) == 'FRA'
-                and truce_expiry_observation.CAPABILITY in capabilities)
-            self._claim_expiry_enabled = (
-                (observer or _observer_hint(self.session, diplomacy_tools)) == 'FRA'
-                and claim_expiry_observation.CAPABILITY in capabilities)
-            self._land_promise_enabled = (
-                (observer or _observer_hint(self.session, diplomacy_tools)) == 'FRA'
+            subsidy_expiry_scoped = subsidy_expiry_observation.SCOPED_CAPABILITY in capabilities
+            self._subsidy_expiry_scope = (subsidy_expiry_observation.CONFIGURED_SCOPE
+                if subsidy_expiry_scoped else subsidy_expiry_observation.SCOPE)
+            self._subsidy_expiry_enabled = (subsidy_expiry_observation.CAPABILITY in capabilities and (
+                selected_observer in getattr(self.session, 'observed_countries', ())
+                if subsidy_expiry_scoped else selected_observer == 'FRA'))
+            truce_expiry_scoped = truce_expiry_observation.SCOPED_CAPABILITY in capabilities
+            self._truce_expiry_scope = (truce_expiry_observation.CONFIGURED_SCOPE
+                if truce_expiry_scoped else truce_expiry_observation.SCOPE)
+            self._truce_expiry_enabled = (truce_expiry_observation.CAPABILITY in capabilities and (
+                selected_observer in getattr(self.session, 'observed_countries', ())
+                if truce_expiry_scoped else selected_observer == 'FRA'))
+            claim_expiry_scoped = claim_expiry_observation.SCOPED_CAPABILITY in capabilities
+            self._claim_expiry_scope = (claim_expiry_observation.CONFIGURED_SCOPE
+                if claim_expiry_scoped else claim_expiry_observation.SCOPE)
+            self._claim_expiry_enabled = (claim_expiry_observation.CAPABILITY in capabilities and (
+                selected_observer in getattr(self.session, 'observed_countries', ())
+                if claim_expiry_scoped else selected_observer == 'FRA'))
+            if land_promise_observation.SCOPED_CAPABILITY in capabilities:
+                self._land_promise_scope = land_promise_observation.CONFIGURED_SCOPE
+                promise_country_observed = selected_observer in getattr(self.session, "observed_countries", ())
+            else:
+                promise_country_observed = selected_observer == "FRA"
+            self._land_promise_enabled = (promise_country_observed
                 and land_promise_observation.CAPABILITY in capabilities)
-            self._rival_events_enabled = (
-                (observer or _observer_hint(self.session, diplomacy_tools)) == 'FRA'
-                and rival_observation.CAPABILITY in capabilities)
+            rival_scoped = rival_observation.SCOPED_CAPABILITY in capabilities
+            self._rival_command_scope = (rival_observation.CONFIGURED_COMMAND_SCOPE
+                if rival_scoped else rival_observation.SCOPE)
+            self._rival_record_scope = (rival_observation.CONFIGURED_RECORD_SCOPE
+                if rival_scoped else rival_observation.RECORD_SCOPE)
+            self._rival_events_enabled = (rival_observation.CAPABILITY in capabilities and (
+                selected_observer in getattr(self.session, 'observed_countries', ())
+                if rival_scoped else selected_observer == 'FRA'))
             self._rival_records_enabled = (self._rival_events_enabled
                 and rival_observation.RECORD_CAPABILITY in capabilities)
-            self._war_declarations_enabled = (
-                (observer or _observer_hint(self.session, diplomacy_tools)) == 'FRA'
+            if war_declaration_observation.SCOPED_CAPABILITY in capabilities:
+                self._war_declaration_scope = war_declaration_observation.CONFIGURED_SCOPE
+                war_country_observed = selected_observer in getattr(self.session, "observed_countries", ())
+            else:
+                war_country_observed = selected_observer == "FRA"
+            self._war_declarations_enabled = (war_country_observed
                 and war_declaration_observation.CAPABILITY in capabilities)
-            self._relation_events_enabled = (
-                (observer or _observer_hint(self.session, diplomacy_tools)) == 'FRA'
-                and relation_observation.CAPABILITY in capabilities)
-            self._mission_events_enabled = (
-                (observer or _observer_hint(self.session, diplomacy_tools)) == 'FRA'
-                and mission_observation.CAPABILITY in capabilities)
+            self._relation_scope = relation_observation.scope_for_capabilities(capabilities)
+            relation_country_observed = (selected_observer in getattr(self.session, 'observed_countries', ())
+                if self._relation_scope == relation_observation.CONFIGURED_RECORD_SCOPE else selected_observer == 'FRA')
+            self._relation_events_enabled = relation_country_observed and self._relation_scope is not None
+            self._mission_scope = mission_observation.scope_for_capabilities(capabilities)
+            mission_country_observed = (selected_observer in getattr(self.session, 'observed_countries', ())
+                if self._mission_scope == mission_observation.CONFIGURED_SET_SCOPE else selected_observer == 'FRA')
+            self._mission_events_enabled = mission_country_observed and self._mission_scope is not None
+            configured_observer = selected_observer in getattr(self.session, 'observed_countries', ())
+            availability_scoped = mission_availability_observation.SCOPED_CAPABILITY in capabilities
+            self._mission_availability_scope = (mission_availability_observation.CONFIGURED_SCOPE
+                if availability_scoped else mission_availability_observation.SCOPE)
             self._mission_availability_enabled = (
-                (observer or _observer_hint(self.session, diplomacy_tools)) == 'FRA'
+                (configured_observer if availability_scoped else selected_observer == 'FRA')
                 and mission_availability_observation.CAPABILITY in capabilities)
+            condition_scoped = mission_condition_observation.SCOPED_CAPABILITY in capabilities
+            self._mission_condition_scope = (mission_condition_observation.CONFIGURED_ROOT_SCOPE
+                if condition_scoped else mission_condition_observation.SCOPE)
+            self._mission_province_condition_scope = (mission_condition_observation.CONFIGURED_PROVINCE_SCOPE
+                if condition_scoped else mission_condition_observation.PROVINCE_SCOPE)
             self._mission_condition_enabled = (
-                (observer or _observer_hint(self.session, diplomacy_tools)) == 'FRA'
+                (configured_observer if condition_scoped else selected_observer == 'FRA')
                 and mission_condition_observation.CAPABILITY in capabilities)
             self._mission_province_condition_enabled = (self._mission_condition_enabled
                 and mission_condition_observation.PROVINCE_CAPABILITY in capabilities)
@@ -711,36 +762,38 @@ class DiplomacySource:
                 topic['native_subsidy_expiry'] = {
                     'capture_available': self._subsidy_expiry_enabled,
                     'event_type': subsidy_expiry_observation.EVENT_TYPE,
-                    'scope': subsidy_expiry_observation.SCOPE,
+                    'scope': self._subsidy_expiry_scope,
                     'mode': 'live', 'projection': 'event_snapshot',
                     'date_semantics': subsidy_expiry_observation.DATE_SEMANTICS,
                 }
                 topic['native_truce_expiry'] = {
                     'capture_available': self._truce_expiry_enabled,
                     'event_type': truce_expiry_observation.EVENT_TYPE,
-                    'scope': truce_expiry_observation.SCOPE,
+                    'scope': self._truce_expiry_scope,
                     'mode': 'live', 'projection': 'event_snapshot',
                     'date_semantics': truce_expiry_observation.DATE_SEMANTICS,
                 }
                 topic['native_claim_expiry'] = {
                     'capture_available': self._claim_expiry_enabled,
                     'event_type': claim_expiry_observation.EVENT_TYPE,
-                    'scope': claim_expiry_observation.SCOPE,
+                    'scope': self._claim_expiry_scope,
                     'mode': 'live', 'projection': 'event_snapshot',
                     'date_semantics': claim_expiry_observation.DATE_SEMANTICS,
                 }
                 topic['native_land_promise'] = {
                     'capture_available': self._land_promise_enabled,
                     'event_type': land_promise_observation.EVENT_TYPE,
-                    'scope': land_promise_observation.SCOPE,
+                    'scope': self._land_promise_scope,
                     'mode': 'live', 'projection': 'event_snapshot',
                     'date_semantics': land_promise_observation.DATE_SEMANTICS,
                 }
                 topic['native_mission_condition'] = {
                     'capture_available': self._mission_condition_enabled,
                     'event_type': mission_condition_observation.EVENT_TYPE,
-                    'scope': (mission_condition_observation.COMBINED_SCOPE
-                              if self._mission_province_condition_enabled else mission_condition_observation.SCOPE),
+                    'scope': self._mission_condition_scope if not self._mission_province_condition_enabled else (
+                        mission_condition_observation.CONFIGURED_COMBINED_SCOPE
+                        if self._mission_condition_scope == mission_condition_observation.CONFIGURED_ROOT_SCOPE
+                        else mission_condition_observation.COMBINED_SCOPE),
                     'mode': 'live', 'projection': 'event_snapshot',
                     'sampling': 'native_root_condition_return', 'initial_observation': 'baseline_only',
                     'event_date_semantics': 'after_observation_date',
@@ -750,14 +803,14 @@ class DiplomacySource:
                     'max_root_conditions_per_task': 128, 'max_tracked_tasks': 4096,
                     'native_gap_on_limit': True, 'eligibility_may_remain_false': True,
                     'direct_area_province_holding_covered': self._mission_province_condition_enabled,
-                    'province_condition_scope': (mission_condition_observation.PROVINCE_SCOPE
+                    'province_condition_scope': (self._mission_province_condition_scope
                                                  if self._mission_province_condition_enabled else None),
                     'max_province_observations_per_evaluation': 128,
                 }
                 topic['native_mission_availability'] = {
                     'capture_available': self._mission_availability_enabled,
                     'event_type': mission_availability_observation.EVENT_TYPE,
-                    'scope': mission_availability_observation.SCOPE,
+                    'scope': self._mission_availability_scope,
                     'mode': 'live', 'projection': 'event_snapshot',
                     'sampling': 'native_predicate_return', 'initial_observation': 'baseline_only',
                     'event_date_semantics': 'after_observation_date',
@@ -794,7 +847,7 @@ class DiplomacySource:
                 }
                 topic['native_war_declaration'] = {
                     'capture_available': self._war_declarations_enabled,
-                    'event_type': war_declaration_observation.EVENT_TYPE, 'scope': war_declaration_observation.SCOPE,
+                    'event_type': war_declaration_observation.EVENT_TYPE, 'scope': self._war_declaration_scope,
                     'mode': 'live', 'projection': 'event_snapshot', 'participant_snapshot': 'native_war_side_vectors',
                     'actor_role': 'command_actor', 'recipient_role': 'command_target',
                     'attacker_defender_labels_verified': True,
@@ -805,7 +858,10 @@ class DiplomacySource:
                 topic['native_rival_change'] = {
                     'capture_available': self._rival_events_enabled,
                     'event_type': rival_observation.EVENT_TYPE,
-                    'scope': rival_observation.COMBINED_SCOPE if self._rival_records_enabled else rival_observation.SCOPE,
+                    'scope': self._rival_command_scope if not self._rival_records_enabled else (
+                        rival_observation.CONFIGURED_COMBINED_SCOPE
+                        if self._rival_command_scope == rival_observation.CONFIGURED_COMMAND_SCOPE
+                        else rival_observation.COMBINED_SCOPE),
                     'mode': 'live', 'projection': 'event_snapshot',
                     'complete_scope': ('observed_membership_changes_at_command_or_record_returns'
                                        if self._rival_records_enabled else 'observed_membership_changes_at_three_command_returns'),
@@ -819,7 +875,7 @@ class DiplomacySource:
                 topic['native_country_modifier_addition'] = {
                     'capture_available': self._modifier_events_enabled,
                     'event_type': country_modifier_observation.EVENT_TYPE,
-                    'scope': country_modifier_observation.SCOPE,
+                    'scope': self._modifier_scope,
                     'mode': 'live', 'complete_scope': 'single_added_record',
                     'projection': 'event_snapshot',
                     'removal_or_expiry_available': self._modifier_removals_enabled,
@@ -827,14 +883,14 @@ class DiplomacySource:
                 topic['native_country_modifier_removal'] = {
                     'capture_available': self._modifier_removals_enabled,
                     'event_type': country_modifier_observation.REMOVE_EVENT_TYPE,
-                    'scope': country_modifier_observation.SCOPE,
+                    'scope': self._modifier_scope,
                     'mode': 'live', 'complete_scope': 'single_removed_record',
                     'projection': 'event_snapshot', 'expiry_available': self._modifier_expiry_enabled,
                 }
                 topic['native_country_modifier_expiry'] = {
                     'capture_available': self._modifier_expiry_enabled,
                     'event_type': country_modifier_observation.EXPIRY_EVENT_TYPE,
-                    'scope': country_modifier_observation.SCOPE,
+                    'scope': self._modifier_scope,
                     'mode': 'live', 'complete_scope': 'single_native_expired_record',
                     'projection': 'event_snapshot',
                 }
@@ -915,13 +971,18 @@ class DiplomacySource:
             health = {"status": "unready", "complete": False,
                       "reasons": [{"code": "SESSION_HEALTH_FAILED",
                                    "message": str(exc)}]}
-        hint = _observer_hint(session, self.diplomacy_tools)
+        hint = _observer_hint(session, self.diplomacy_tools,
+                              include_controlled=self.operator_observer is None)
+        scoped_observer = (self.operator_observer is not None
+                           and self.operator_observer in getattr(session, "observed_countries", ()))
+        if scoped_observer:
+            health = {key: value for key, value in health.items() if key != "observer"}
         context = _context_from_health(
             session, health, mode="live",
             observer=self.operator_observer or hint,
         )
         context["observer_binding"] = "operator_configuration" if self.operator_observer else "installation_binding"
-        if self.operator_observer and ((hint and hint != self.operator_observer)
+        if self.operator_observer and not scoped_observer and ((hint and hint != self.operator_observer)
                 or (health.get("observer") is not None and health["observer"] != self.operator_observer)):
             context.update(status="unready", complete=False)
             context.setdefault("reasons", []).append({"code": "OBSERVER_AUTHORITY_SCOPE_MISMATCH"})
@@ -1703,7 +1764,7 @@ class DiplomacySource:
             fields, complete = _field_result(normalized['fields'], event, get_topic('C04'))
             source = _source_info('NativeSubsidyExpiryObservation', context, complete=complete)
             source.update(event_id=event['event_id'], projection='event_snapshot',
-                          coverage=subsidy_expiry_observation.SCOPE,
+                          coverage=event['payload']['scope'],
                           collected_game_date=context.get('game_date'),
                           date_semantics=subsidy_expiry_observation.DATE_SEMANTICS)
             return _result(normalized, dict(context, game_date=event['game_date']),
@@ -1718,7 +1779,7 @@ class DiplomacySource:
             fields, complete = _field_result(normalized['fields'], event, get_topic('C04'))
             source = _source_info('NativeTruceExpiryObservation', context, complete=complete)
             source.update(event_id=event['event_id'], projection='event_snapshot',
-                          coverage=truce_expiry_observation.SCOPE,
+                          coverage=event['payload']['scope'],
                           collected_game_date=context.get('game_date'),
                           date_semantics=truce_expiry_observation.DATE_SEMANTICS)
             return _result(normalized, dict(context, game_date=event['game_date']),
@@ -1733,7 +1794,7 @@ class DiplomacySource:
             fields, complete = _field_result(normalized['fields'], event, get_topic('C04'))
             source = _source_info('NativeClaimExpiryObservation', context, complete=complete)
             source.update(event_id=event['event_id'], projection='event_snapshot',
-                          coverage=claim_expiry_observation.SCOPE,
+                          coverage=event['payload']['scope'],
                           collected_game_date=context.get('game_date'),
                           date_semantics=claim_expiry_observation.DATE_SEMANTICS)
             return _result(normalized, dict(context, game_date=event['game_date']),
@@ -1748,7 +1809,7 @@ class DiplomacySource:
             fields, complete = _field_result(normalized['fields'], event, get_topic('C04'))
             source = _source_info('NativeLandPromiseObservation', context, complete=complete)
             source.update(event_id=event['event_id'], projection='event_snapshot',
-                          coverage=land_promise_observation.SCOPE,
+                          coverage=event['payload']['scope'],
                           collected_game_date=context.get('game_date'),
                           date_semantics=land_promise_observation.DATE_SEMANTICS)
             return _result(normalized, dict(context, game_date=event['game_date']),
@@ -1764,7 +1825,7 @@ class DiplomacySource:
             complete = False
             source = _source_info('NativeMissionConditionObservation', context, complete=complete)
             source.update(event_id=event['event_id'], projection='event_snapshot',
-                          coverage=mission_condition_observation.SCOPE,
+                          coverage=event['payload']['scope'],
                           collected_game_date=context.get('game_date'),
                           date_semantics=mission_condition_observation.DATE_SEMANTICS)
             snapshot_context = dict(context, game_date=event['game_date'])
@@ -1779,7 +1840,7 @@ class DiplomacySource:
             fields, complete = _field_result(normalized['fields'], event, get_topic('C04'))
             source = _source_info('NativeMissionAvailabilityObservation', context, complete=complete)
             source.update(event_id=event['event_id'], projection='event_snapshot',
-                          coverage=mission_availability_observation.SCOPE,
+                          coverage=event['payload']['scope'],
                           collected_game_date=context.get('game_date'),
                           date_semantics=mission_availability_observation.DATE_SEMANTICS)
             snapshot_context = dict(context, game_date=event['game_date'])
@@ -1825,7 +1886,7 @@ class DiplomacySource:
             if 'event_payload' in fields:
                 fields['event_payload']['value'] = war_declaration_observation.project_role_labels(event['payload'])
             source.update(event_id=event['event_id'], projection='event_snapshot',
-                          coverage=war_declaration_observation.SCOPE, collected_game_date=context.get('game_date'),
+                          coverage=event['payload']['scope'], collected_game_date=context.get('game_date'),
                           date_semantics=war_declaration_observation.DATE_SEMANTICS,
                           role_basis=war_declaration_observation.ROLE_BASIS)
             snapshot_context = dict(context, game_date=event['game_date'])
@@ -1855,7 +1916,7 @@ class DiplomacySource:
             fields, complete = _field_result(normalized['fields'], event, get_topic('C04'))
             source = _source_info('NativeCountryModifierObservation', context, complete=complete)
             source.update(event_id=event.get('event_id'), projection='event_snapshot',
-                          coverage=country_modifier_observation.SCOPE,
+                          coverage=event['payload']['scope'],
                           collected_game_date=context.get('game_date'),
                           date_semantics=event['source']['date_semantics'])
             snapshot_context = dict(context, game_date=event.get('game_date'))
@@ -2090,7 +2151,7 @@ class DiplomacySource:
         if self._subsidy_expiry_enabled:
             if type(subsidy_expiry_sequence) is not int or not 0 <= subsidy_expiry_sequence <= 2**63 - 1:
                 raise InformationError('invalid_cursor', 'subsidy_expiry_sequence must be a nonnegative integer')
-            if (current.get('status') == 'ready' and current.get('observer') == 'FRA'
+            if (current.get('status') == 'ready'
                     and current.get('session_id') == getattr(self.session, 'session_id', None)):
                 try:
                     batch = self.session.read_native_subsidy_expiry_events(
@@ -2098,16 +2159,21 @@ class DiplomacySource:
                     gaps.extend(batch['gaps'])
                     for observation in batch['events']:
                         native_sequence = observation['native_sequence']
+                        country = observation['payload'].get('observer', 'FRA')
+                        if (country != current.get('observer')
+                                or observation['payload'].get('scope') != self._subsidy_expiry_scope):
+                            subsidy_expiry_sequence = native_sequence
+                            continue
                         candidate = {
                             'event_id': observation['event_id'], 'event_type': subsidy_expiry_observation.EVENT_TYPE,
-                            'session_id': current['session_id'], 'observer': 'FRA',
+                            'session_id': current['session_id'], 'observer': country,
                             'game_date': observation['game_date'], 'collected_game_date': current.get('game_date'),
                             'objects': _copy(observation['objects']), 'payload': _copy(observation['payload']),
                             'complete': True, 'sequence': sequence + 1,
                             'source': {'name': 'ObserverSession.read_native_subsidy_expiry_events',
                                        'mode': 'live', 'session_id': current['session_id'],
                                        'native_sequence': native_sequence, 'complete': True,
-                                       'scope': subsidy_expiry_observation.SCOPE,
+                                       'scope': self._subsidy_expiry_scope,
                                        'date_semantics': subsidy_expiry_observation.DATE_SEMANTICS},
                         }
                         if not subsidy_expiry_observation.valid_event_snapshot(candidate, current):
@@ -2124,7 +2190,7 @@ class DiplomacySource:
         if self._truce_expiry_enabled:
             if type(truce_expiry_sequence) is not int or not 0 <= truce_expiry_sequence <= 2**63 - 1:
                 raise InformationError('invalid_cursor', 'truce_expiry_sequence must be a nonnegative integer')
-            if (current.get('status') == 'ready' and current.get('observer') == 'FRA'
+            if (current.get('status') == 'ready'
                     and current.get('session_id') == getattr(self.session, 'session_id', None)):
                 try:
                     batch = self.session.read_native_truce_expiry_events(
@@ -2132,16 +2198,21 @@ class DiplomacySource:
                     gaps.extend(batch['gaps'])
                     for observation in batch['events']:
                         native_sequence = observation['native_sequence']
+                        country = observation['payload'].get('observer', 'FRA')
+                        if (country != current.get('observer')
+                                or observation['payload'].get('scope') != self._truce_expiry_scope):
+                            truce_expiry_sequence = native_sequence
+                            continue
                         candidate = {
                             'event_id': observation['event_id'], 'event_type': truce_expiry_observation.EVENT_TYPE,
-                            'session_id': current['session_id'], 'observer': 'FRA',
+                            'session_id': current['session_id'], 'observer': country,
                             'game_date': observation['game_date'], 'collected_game_date': current.get('game_date'),
                             'objects': _copy(observation['objects']), 'payload': _copy(observation['payload']),
                             'complete': True, 'sequence': sequence + 1,
                             'source': {'name': 'ObserverSession.read_native_truce_expiry_events',
                                        'mode': 'live', 'session_id': current['session_id'],
                                        'native_sequence': native_sequence, 'complete': True,
-                                       'scope': truce_expiry_observation.SCOPE,
+                                       'scope': self._truce_expiry_scope,
                                        'date_semantics': truce_expiry_observation.DATE_SEMANTICS},
                         }
                         if not truce_expiry_observation.valid_event_snapshot(candidate, current):
@@ -2158,7 +2229,7 @@ class DiplomacySource:
         if self._claim_expiry_enabled:
             if type(claim_expiry_sequence) is not int or not 0 <= claim_expiry_sequence <= 2**63 - 1:
                 raise InformationError('invalid_cursor', 'claim_expiry_sequence must be a nonnegative integer')
-            if (current.get('status') == 'ready' and current.get('observer') == 'FRA'
+            if (current.get('status') == 'ready'
                     and current.get('session_id') == getattr(self.session, 'session_id', None)):
                 try:
                     batch = self.session.read_native_claim_expiry_events(
@@ -2166,16 +2237,21 @@ class DiplomacySource:
                     gaps.extend(batch['gaps'])
                     for observation in batch['events']:
                         native_sequence = observation['native_sequence']
+                        country = observation['payload'].get('observer', 'FRA')
+                        if (country != current.get('observer')
+                                or observation['payload'].get('scope') != self._claim_expiry_scope):
+                            claim_expiry_sequence = native_sequence
+                            continue
                         candidate = {
                             'event_id': observation['event_id'], 'event_type': claim_expiry_observation.EVENT_TYPE,
-                            'session_id': current['session_id'], 'observer': 'FRA',
+                            'session_id': current['session_id'], 'observer': country,
                             'game_date': observation['game_date'], 'collected_game_date': current.get('game_date'),
                             'objects': _copy(observation['objects']), 'payload': _copy(observation['payload']),
                             'complete': True, 'sequence': sequence + 1,
                             'source': {'name': 'ObserverSession.read_native_claim_expiry_events',
                                        'mode': 'live', 'session_id': current['session_id'],
                                        'native_sequence': native_sequence, 'complete': True,
-                                       'scope': claim_expiry_observation.SCOPE,
+                                       'scope': self._claim_expiry_scope,
                                        'date_semantics': claim_expiry_observation.DATE_SEMANTICS},
                         }
                         if not claim_expiry_observation.valid_event_snapshot(candidate, current):
@@ -2191,7 +2267,7 @@ class DiplomacySource:
         if self._land_promise_enabled:
             if type(land_promise_sequence) is not int or not 0 <= land_promise_sequence <= 2**63 - 1:
                 raise InformationError('invalid_cursor', 'land_promise_sequence must be a nonnegative integer')
-            if (current.get('status') == 'ready' and current.get('observer') == 'FRA'
+            if (current.get('status') == 'ready'
                     and current.get('session_id') == getattr(self.session, 'session_id', None)):
                 try:
                     batch = self.session.read_native_land_promise_events(
@@ -2199,9 +2275,13 @@ class DiplomacySource:
                     gaps.extend(batch['gaps'])
                     for observation in batch['events']:
                         native_sequence = observation['native_sequence']
+                        country = observation['payload'].get('observer', 'FRA')
+                        if country != current.get('observer') or observation['payload'].get('scope') != self._land_promise_scope:
+                            land_promise_sequence = native_sequence
+                            continue
                         candidate = {
                             'event_id': observation['event_id'], 'event_type': land_promise_observation.EVENT_TYPE,
-                            'session_id': current['session_id'], 'observer': 'FRA',
+                            'session_id': current['session_id'], 'observer': country,
                             'actor': observation['payload']['promisor'],
                             'recipient': observation['payload']['beneficiary'],
                             'game_date': observation['game_date'], 'collected_game_date': current.get('game_date'),
@@ -2210,7 +2290,7 @@ class DiplomacySource:
                             'source': {'name': 'ObserverSession.read_native_land_promise_events',
                                        'mode': 'live', 'session_id': current['session_id'],
                                        'native_sequence': native_sequence, 'complete': True,
-                                       'scope': land_promise_observation.SCOPE,
+                                       'scope': self._land_promise_scope,
                                        'date_semantics': land_promise_observation.DATE_SEMANTICS},
                         }
                         if not land_promise_observation.valid_event_snapshot(candidate, current):
@@ -2227,13 +2307,17 @@ class DiplomacySource:
         if self._modifier_events_enabled:
             if type(modifier_sequence) is not int or not 0 <= modifier_sequence <= 2**63 - 1:
                 raise InformationError('invalid_cursor', 'country_modifier_sequence must be a nonnegative integer')
-            if (current.get('status') == 'ready' and current.get('observer') == 'FRA'
+            if (current.get('status') == 'ready'
                     and current.get('session_id') == getattr(self.session, 'session_id', None)):
                 try:
                     batch = self.session.read_native_country_modifier_events(after_sequence=modifier_sequence, refresh=False)
                     gaps.extend(batch['gaps'])
                     for observation in batch['events']:
                         native_sequence = observation['native_sequence']
+                        modifier_sequence = native_sequence
+                        country = observation['payload'].get('country')
+                        if country != current.get('observer') or observation['payload'].get('scope') != self._modifier_scope:
+                            continue
                         event_type = country_modifier_observation.CHANGE_EVENT_TYPES.get(observation['payload'].get('change'))
                         if event_type is None:
                             raise InformationError('invalid_source_result', 'COUNTRY_MODIFIER_CHANGE_INVALID')
@@ -2243,21 +2327,20 @@ class DiplomacySource:
                             raise InformationError('invalid_source_result', 'COUNTRY_MODIFIER_EXPIRY_NOT_AVAILABLE')
                         candidate = {
                             'event_id': observation['event_id'], 'event_type': event_type,
-                            'session_id': current['session_id'], 'observer': 'FRA',
+                            'session_id': current['session_id'], 'observer': country,
                             'game_date': observation['game_date'], 'collected_game_date': current.get('game_date'),
-                            'objects': [{'type': 'country', 'country': 'FRA'}],
+                            'objects': [{'type': 'country', 'country': country}],
                             'payload': _copy(observation['payload']), 'complete': True, 'sequence': sequence + 1,
                             'source': {'name': 'ObserverSession.read_native_country_modifier_events',
                                        'mode': 'live', 'session_id': current['session_id'],
                                        'native_sequence': native_sequence, 'complete': True,
-                                       'scope': country_modifier_observation.SCOPE,
+                                       'scope': self._modifier_scope,
                                        'date_semantics': country_modifier_observation.EVENT_SEMANTICS[event_type][1]},
                         }
                         if not country_modifier_observation.valid_event_snapshot(candidate, current):
                             raise InformationError('invalid_source_result', 'COUNTRY_MODIFIER_EVENT_INVALID')
                         sequence += 1
                         events.append(candidate)
-                        modifier_sequence = native_sequence
                 except Exception:
                     gaps.append('COUNTRY_MODIFIER_READ_FAILED')
             else:
@@ -2267,16 +2350,23 @@ class DiplomacySource:
         if self._rival_events_enabled:
             if type(rival_sequence) is not int or not 0 <= rival_sequence <= 2**63 - 1:
                 raise InformationError('invalid_cursor', 'rival_sequence must be a nonnegative integer')
-            if (current.get('status') == 'ready' and current.get('observer') == 'FRA'
+            if (current.get('status') == 'ready'
                     and current.get('session_id') == getattr(self.session, 'session_id', None)):
                 try:
                     batch = self.session.read_native_rival_events(after_sequence=rival_sequence, refresh=False)
                     gaps.extend(batch['gaps'])
+                    scopes = {self._rival_command_scope}
+                    if self._rival_records_enabled:
+                        scopes.add(self._rival_record_scope)
                     for observation in batch['events']:
                         native_sequence = observation['native_sequence']
+                        country = observation['payload'].get('country')
+                        if country != current.get('observer') or observation['payload'].get('scope') not in scopes:
+                            rival_sequence = native_sequence
+                            continue
                         candidate = {
                             'event_id': observation['event_id'], 'event_type': rival_observation.EVENT_TYPE,
-                            'session_id': current['session_id'], 'observer': 'FRA',
+                            'session_id': current['session_id'], 'observer': country,
                             'game_date': observation['game_date'], 'collected_game_date': current.get('game_date'),
                             'objects': _copy(observation['objects']), 'payload': _copy(observation['payload']),
                             'complete': True, 'sequence': sequence + 1,
@@ -2299,22 +2389,26 @@ class DiplomacySource:
         if self._war_declarations_enabled:
             if type(war_sequence) is not int or not 0 <= war_sequence <= 2**63 - 1:
                 raise InformationError('invalid_cursor', 'war_declaration_sequence must be a nonnegative integer')
-            if (current.get('status') == 'ready' and current.get('observer') == 'FRA'
+            if (current.get('status') == 'ready'
                     and current.get('session_id') == getattr(self.session, 'session_id', None)):
                 try:
                     batch = self.session.read_native_war_declaration_events(after_sequence=war_sequence, refresh=False)
                     gaps.extend(batch['gaps'])
                     for observation in batch['events']:
                         native_sequence = observation['native_sequence']
+                        country = observation['payload'].get('country')
+                        if country != current.get('observer') or observation['payload'].get('scope') != self._war_declaration_scope:
+                            war_sequence = native_sequence
+                            continue
                         candidate = {
                             'event_id': observation['event_id'], 'event_type': war_declaration_observation.EVENT_TYPE,
-                            'session_id': current['session_id'], 'observer': 'FRA',
+                            'session_id': current['session_id'], 'observer': country,
                             'game_date': observation['game_date'], 'collected_game_date': current.get('game_date'),
                             'objects': _copy(observation['objects']), 'payload': _copy(observation['payload']),
                             'complete': True, 'sequence': sequence + 1,
                             'source': {'name': 'ObserverSession.read_native_war_declaration_events', 'mode': 'live',
                                        'session_id': current['session_id'], 'native_sequence': native_sequence,
-                                       'complete': True, 'scope': war_declaration_observation.SCOPE,
+                                       'complete': True, 'scope': self._war_declaration_scope,
                                        'date_semantics': war_declaration_observation.DATE_SEMANTICS},
                         }
                         if not war_declaration_observation.valid_event_snapshot(candidate, current):
@@ -2331,16 +2425,20 @@ class DiplomacySource:
         if self._relation_events_enabled:
             if type(relation_sequence) is not int or not 0 <= relation_sequence <= 2**63 - 1:
                 raise InformationError('invalid_cursor', 'relation_sequence must be a nonnegative integer')
-            if (current.get('status') == 'ready' and current.get('observer') == 'FRA'
+            if (current.get('status') == 'ready'
                     and current.get('session_id') == getattr(self.session, 'session_id', None)):
                 try:
                     batch = self.session.read_native_relation_events(after_sequence=relation_sequence, refresh=False)
                     gaps.extend(batch['gaps'])
                     for observation in batch['events']:
                         native_sequence = observation['native_sequence']
+                        country = observation['payload'].get('country')
+                        if country != current.get('observer') or observation['payload'].get('scope') != self._relation_scope:
+                            relation_sequence = native_sequence
+                            continue
                         candidate = {
                             'event_id': observation['event_id'], 'event_type': relation_observation.EVENT_TYPE,
-                            'session_id': current['session_id'], 'observer': 'FRA',
+                            'session_id': current['session_id'], 'observer': country,
                             'game_date': observation['game_date'], 'collected_game_date': current.get('game_date'),
                             'objects': _copy(observation['objects']), 'payload': _copy(observation['payload']),
                             'complete': True, 'sequence': sequence + 1,
@@ -2363,16 +2461,20 @@ class DiplomacySource:
         if self._mission_events_enabled:
             if type(mission_sequence) is not int or not 0 <= mission_sequence <= 2**63 - 1:
                 raise InformationError('invalid_cursor', 'mission_sequence must be a nonnegative integer')
-            if (current.get('status') == 'ready' and current.get('observer') == 'FRA'
+            if (current.get('status') == 'ready'
                     and current.get('session_id') == getattr(self.session, 'session_id', None)):
                 try:
                     batch = self.session.read_native_mission_events(after_sequence=mission_sequence, refresh=False)
                     gaps.extend(batch['gaps'])
                     for observation in batch['events']:
                         native_sequence = observation['native_sequence']
+                        country = observation['payload'].get('country')
+                        if country != current.get('observer') or observation['payload'].get('scope') != self._mission_scope:
+                            mission_sequence = native_sequence
+                            continue
                         candidate = {
                             'event_id': observation['event_id'], 'event_type': mission_observation.EVENT_TYPE,
-                            'session_id': current['session_id'], 'observer': 'FRA',
+                            'session_id': current['session_id'], 'observer': country,
                             'game_date': observation['game_date'], 'collected_game_date': current.get('game_date'),
                             'objects': _copy(observation['objects']), 'payload': _copy(observation['payload']),
                             'complete': True, 'sequence': sequence + 1,
@@ -2396,7 +2498,7 @@ class DiplomacySource:
         if self._mission_availability_enabled:
             if type(mission_availability_sequence) is not int or not 0 <= mission_availability_sequence <= 2**63 - 1:
                 raise InformationError('invalid_cursor', 'mission_availability_sequence must be a nonnegative integer')
-            if (current.get('status') == 'ready' and current.get('observer') == 'FRA'
+            if (current.get('status') == 'ready'
                     and current.get('session_id') == getattr(self.session, 'session_id', None)):
                 try:
                     batch = self.session.read_native_mission_availability_events(
@@ -2404,15 +2506,20 @@ class DiplomacySource:
                     gaps.extend(batch['gaps'])
                     for observation in batch['events']:
                         native_sequence = observation['native_sequence']
+                        country = observation['payload'].get('country')
+                        if (country != current.get('observer')
+                                or observation['payload'].get('scope') != self._mission_availability_scope):
+                            mission_availability_sequence = native_sequence
+                            continue
                         candidate = {
                             'event_id': observation['event_id'], 'event_type': mission_availability_observation.EVENT_TYPE,
-                            'session_id': current['session_id'], 'observer': 'FRA',
+                            'session_id': current['session_id'], 'observer': country,
                             'game_date': observation['game_date'], 'collected_game_date': current.get('game_date'),
                             'objects': _copy(observation['objects']), 'payload': _copy(observation['payload']),
                             'complete': True, 'sequence': sequence+1,
                             'source': {'name': 'ObserverSession.read_native_mission_availability_events', 'mode': 'live',
                                        'session_id': current['session_id'], 'native_sequence': native_sequence,
-                                       'complete': True, 'scope': mission_availability_observation.SCOPE,
+                                       'complete': True, 'scope': self._mission_availability_scope,
                                        'date_semantics': mission_availability_observation.DATE_SEMANTICS},
                         }
                         if not mission_availability_observation.valid_event_snapshot(candidate, current):
@@ -2429,17 +2536,24 @@ class DiplomacySource:
         if self._mission_condition_enabled:
             if type(mission_condition_sequence) is not int or not 0 <= mission_condition_sequence <= 2**63 - 1:
                 raise InformationError('invalid_cursor', 'mission_condition_sequence must be a nonnegative integer')
-            if (current.get('status') == 'ready' and current.get('observer') == 'FRA'
+            if (current.get('status') == 'ready'
                     and current.get('session_id') == getattr(self.session, 'session_id', None)):
                 try:
                     batch = self.session.read_native_mission_condition_events(
                         after_sequence=mission_condition_sequence, refresh=False)
                     gaps.extend(batch['gaps'])
+                    scopes = {self._mission_condition_scope}
+                    if self._mission_province_condition_enabled:
+                        scopes.add(self._mission_province_condition_scope)
                     for observation in batch['events']:
                         native_sequence = observation['native_sequence']
+                        country = observation['payload'].get('country')
+                        if country != current.get('observer') or observation['payload'].get('scope') not in scopes:
+                            mission_condition_sequence = native_sequence
+                            continue
                         candidate = {
                             'event_id': observation['event_id'], 'event_type': mission_condition_observation.EVENT_TYPE,
-                            'session_id': current['session_id'], 'observer': 'FRA',
+                            'session_id': current['session_id'], 'observer': country,
                             'game_date': observation['game_date'], 'collected_game_date': current.get('game_date'),
                             'objects': _copy(observation['objects']), 'payload': _copy(observation['payload']),
                             'complete': False, 'sequence': sequence+1,

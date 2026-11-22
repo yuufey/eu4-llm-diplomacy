@@ -37,6 +37,23 @@ def test_current_leader_and_observed_sender_retain_their_distinct_meanings():
     assert history.call_args.kwargs['payload_filters'] == {'war_id': WAR_ID, 'beneficiary': 'SAV'}
 
 
+def test_turkish_observer_can_match_a_scoped_promise_receipt():
+    from bridge.tests.test_land_promise_observation import fullref
+
+    raw = native_event(promisor="TUR")
+    raw.update(wire=2, observer_ref=fullref("TUR"))
+    public = observation.public_observation(raw, SESSION)
+    assert public["payload"]["observer"] == "TUR"
+    event = snapshot()
+    event.update(observer="TUR", payload=public["payload"], objects=public["objects"])
+    event["source"]["scope"] = observation.CONFIGURED_SCOPE
+    configured = context(observer="TUR")
+    result, proof = attach_observed_promisors(field(), configured, reader([event]))
+    assert result["value"][0]["observed_promisor"] == "TUR"
+    assert proof["complete"] is True
+    assert not observation.valid_event_snapshot(event, context())
+
+
 def test_latest_observed_promise_is_ordered_by_native_date_then_sequence():
     result, proof = attach_observed_promisors(field(), context(), reader([
         snapshot(2, 'ENG'), snapshot(1), snapshot(3, 'BUR', date_raw=DATE - 24)]))

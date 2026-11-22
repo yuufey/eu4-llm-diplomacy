@@ -120,7 +120,8 @@ def test_tampered_derived_value_is_rejected_without_discarding_another_known_rec
 def test_capture_scope_schema_and_readonly_shared_owner(monkeypatch):
     monkeypatch.setattr(capture.owner,'_capture_common',lambda *a,**k:k)
     result=capture.capture('installation','ENG')
-    assert result['schema']==capture.SCHEMA and result['observe'] is m._observe
+    assert result['schema'] == capture.SCHEMA and result['observe'].func is m._observe
+    assert result['observe'].keywords == {'observer': 'FRA'} and result['observer_scoped'] is True
     with pytest.raises(ValueError):capture.capture('installation','FRA')
     assert not capture.validate_capture({'schema':'wrong'},{},1,'ENG')
 

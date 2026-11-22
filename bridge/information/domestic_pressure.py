@@ -22,7 +22,6 @@ _VERSION = "1.37.4"
 _GAME_SHA256 = (
     "b23fa0e1f698d31b01cdd1c3817a675805d8c6286cb66f9c231e6e2a42544d77"
 )
-_COUNTRY = "FRA"
 _FIELDS = ("stability", "war_exhaustion", "corruption", "religious_unity", "overextension", "unrest")
 _UNITS = {
     "stability": "stability",
@@ -72,7 +71,8 @@ def _context_reason(context: Any) -> str | None:
         return "DOMESTIC_PRESSURE_LIVE_CONTEXT_UNAVAILABLE"
     if context.get("mode") != "live":
         return "DOMESTIC_PRESSURE_LIVE_CONTEXT_REQUIRED"
-    if context.get("observer") != _COUNTRY:
+    observer = context.get("observer")
+    if not isinstance(observer, str) or re.fullmatch(r"[A-Z0-9]{3}", observer) is None:
         return "DOMESTIC_PRESSURE_OBSERVER_SCOPE_MISMATCH"
     if context.get("game_version") != _VERSION:
         return "DOMESTIC_PRESSURE_GAME_VERSION_MISMATCH"
@@ -316,7 +316,7 @@ def _provenance(report: dict[str, Any] | None = None, *, reason: str | None = No
         "read_only": True,
         "native_function_invoked": False,
         "scope": "country_scope",
-        "supported_country": _COUNTRY,
+        "supported_country": report.get("country") if isinstance(report, dict) else None,
         "target_build": {"version": _VERSION, "game_sha256": _GAME_SHA256},
         "context_identity_keys": list(_CONTEXT_KEYS),
         "capture_report_hash_algorithm": "sha256(canonical_json_utf8;information.model.canonical)",
@@ -427,7 +427,7 @@ def _global_report_reason(report: Any, context: dict[str, Any], creation_filetim
         report.get("status") != "observed"
         or report.get("read_only") is not True
         or report.get("native_function_invoked") is not False
-        or report.get("country") != _COUNTRY
+        or report.get("country") != context.get("observer")
         or report.get("completed") is not True
     ):
         return "DOMESTIC_PRESSURE_CAPTURE_CONTRACT_INVALID"
@@ -566,7 +566,7 @@ _CATALOG_ITEM = {
     "status": "available",
     "fields": {
         field: {
-            # Fixed-build FRA query and paused periodic reads have separate
+            # Fixed-build query and paused periodic reads have separate
             # native-reference and real MCP acceptance evidence.
             "coverage": "available",
             "runtime_validation": "validated",
@@ -576,13 +576,12 @@ _CATALOG_ITEM = {
             "raw": True,
             "raw_semantics": f"field_results.{field}.raw / 1000",
             "paths": [f"field_results.{field}.raw"],
-            "supported_countries": [_COUNTRY],
         }
         for field in _FIELDS
     },
     "object_types": ["country"],
     "observer_roles": ["country"],
-    "observer_scope": [_COUNTRY],
+    "observer_scope": [],
     "parameters": {
         "type": "object", "properties": {}, "required": [], "additionalProperties": False,
     },
@@ -594,7 +593,7 @@ _CATALOG_ITEM = {
     "visibility": "country_scope",
     "context_scope": "country_scope",
     "scope_note": (
-        "只读取显式请求的FRA观察国家；不由存档、用户路径或公开外交检查推导国内资源。"
+        "按当前会话的观察国读取该国的国内状态。"
         " 固定1.37.4的主动查询和暂停时周期读取已实机核验；"
         "变化采样仍不等同于无损事件，双遍读取不保证主线程原子快照或世界代际。"
     ),
@@ -657,8 +656,9 @@ class NativeDomesticPressureSource:
         obj = query.get("object")
         if not isinstance(obj, dict) or set(obj) != {"type", "country"}:
             raise InformationError("invalid_object", "N04 queries require type and country only")
-        if obj.get("type") != "country" or obj.get("country") != _COUNTRY:
-            raise InformationError("observer_scope_mismatch", "N04 supports the verified FRA observer only")
+        country = obj.get("country")
+        if obj.get("type") != "country" or not isinstance(country, str) or not re.fullmatch(r"[A-Z0-9]{3}", country):
+            raise InformationError("invalid_object", "N04 requires a country tag")
         fields = query.get("fields")
         if (
             not isinstance(fields, list)
@@ -676,8 +676,8 @@ class NativeDomesticPressureSource:
         if context is not None:
             if not isinstance(context, dict):
                 raise InformationError("invalid_context", "context must be an object")
-            if context.get("observer") is not None and context.get("observer") != _COUNTRY:
-                raise InformationError("observer_scope_mismatch", "N04 is outside the verified FRA observer scope")
+            if context.get("observer") is not None and context.get("observer") != country:
+                raise InformationError("observer_scope_mismatch", "N04 is limited to the configured observer country")
         normalized = {
             "topic": "N04", "object": deepcopy(obj), "fields": list(fields), "parameters": {},
         }
@@ -724,7 +724,10 @@ class NativeDomesticPressureSource:
             before = self.context()
         except InformationError:
             before = current
+        country = normalized["object"]["country"]
         reason = _context_reason(before)
+        if reason is None and before.get("observer") != country:
+            reason = "DOMESTIC_PRESSURE_OBSERVER_SCOPE_MISMATCH"
         if reason is not None:
             return self._result(
                 normalized, before,
@@ -766,7 +769,7 @@ class NativeDomesticPressureSource:
                 False, _provenance(reason=reason), source_complete=False,
             )
         try:
-            report = capture(installation, _COUNTRY, list(normalized["fields"]))
+            report = capture(installation, country, list(normalized["fields"]))
         except Exception as exc:
             reason = "DOMESTIC_PRESSURE_CAPTURE_FAILED:" + type(exc).__name__
             return self._result(

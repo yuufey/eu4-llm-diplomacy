@@ -6,6 +6,7 @@ from types import SimpleNamespace
 import pytest
 
 from bridge.information import province_goods_sources as goods_module
+from bridge.information import province_modifier_sources_capture as capture_module
 from bridge.information.composite import CompositeSource
 from bridge.information.final_attributes import NativeFinalAttributesSource
 from bridge.information.province_goods_sources import (
@@ -18,6 +19,8 @@ from bridge.information.province_goods_sources import (
     validate_public_breakdown,
 )
 from bridge.information.catalog import list_topics
+from bridge.tests import test_information_province_modifier_sources_memory as leaf_fixture
+from bridge.tests import test_information_province_state_memory as state_fixture
 from bridge.tests.test_information_province_state import Base, CREATION
 from bridge.tests.test_information_war_exhaustion import _context
 
@@ -88,10 +91,10 @@ def _leaf_value(**updates):
 
 
 def _report(*, value=None, field_status="known", consistency="stable", consistency_reason=None,
-            province_id=PROVINCE_ID):
+            province_id=PROVINCE_ID, observer="FRA"):
     gate = {
         "status": "known", "admitted": True,
-        "observer_nonplayer_role": {"observer": "FRA", "verified": True},
+        "observer_nonplayer_role": {"observer": observer, "verified": True},
     }
     discovery = {"status": "known", "value": True}
     field = {
@@ -119,7 +122,7 @@ def _report(*, value=None, field_status="known", consistency="stable", consisten
     game_date = _context()["game_date"]
     return {
         "schema": SCHEMA_V2,
-        "observer": "FRA",
+        "observer": observer,
         "object": {"type": "province", "province_id": province_id},
         "capture": {
             "schema": INNER_SCHEMA_V2,
@@ -132,7 +135,7 @@ def _report(*, value=None, field_status="known", consistency="stable", consisten
                 "backend": {
                     "status": "observed",
                     "consistency": {"status": "stable"},
-                    "observer": {"tag": "FRA"},
+                    "observer": {"tag": observer},
                     "targets": [target],
                 },
             },
@@ -153,10 +156,11 @@ class _Quality:
         raise AssertionError("province source projection must not call N03")
 
 
-def _provider(tmp_path, monkeypatch, *, report=None, valid=True, version=2, after_capture=None):
-    context = _context()
+def _provider(tmp_path, monkeypatch, *, report=None, valid=True, version=2, after_capture=None,
+              observer="FRA"):
+    context = {**_context(), "observer": observer}
     base = Base(tmp_path, context)
-    actual_report = deepcopy(report if report is not None else _report())
+    actual_report = deepcopy(report if report is not None else _report(observer=observer))
     captures = []
     validations = []
 
@@ -198,10 +202,11 @@ def _query():
     }
 
 
+@pytest.mark.parametrize("observer", ("FRA", "TUR"))
 def test_v2_projects_all_23_slots_and_four_direct_conditions_through_single_n09_owner(
-        tmp_path, monkeypatch):
-    quality = _Quality(_context())
-    provider, base, captures, validations, imported = _provider(tmp_path, monkeypatch)
+        tmp_path, monkeypatch, observer):
+    quality = _Quality({**_context(), "observer": observer})
+    provider, base, captures, validations, imported = _provider(tmp_path, monkeypatch, observer=observer)
     source = NativeFinalAttributesSource(quality, province_breakdown_source=provider)
 
     result = source.read(_query(), quality.context())
@@ -231,12 +236,42 @@ def test_v2_projects_all_23_slots_and_four_direct_conditions_through_single_n09_
     assert "0x998" not in repr(result)
     assert "raw_inputs" not in repr(result)
     assert quality.calls == []
-    assert captures == [(tmp_path / "installation.json", PROVINCE_ID, "FRA")]
-    assert validations[0][1]["observer"] == "FRA"
+    assert captures == [(tmp_path / "installation.json", PROVINCE_ID, observer)]
+    assert validations[0][1]["observer"] == observer
     assert validations[0][2:] == (CREATION, PROVINCE_ID)
     assert imported[0][0] == ".province_modifier_sources_capture"
     assert result["source"]["provenance"]["delegations"][FIELD_GOODS_SOURCE]["profile_sha256"] == PROFILE_SHA
     assert provider.catalog() == []
+
+
+def test_v2_capture_walks_current_observer_discovery_and_native_modifier_bytes():
+    profile = capture_module._load_profile()
+    image = state_fixture.make_turkish_image()
+    module_base = state_fixture.BASES[0]
+    province_id = state_fixture.PROVINCE_ID
+    record = state_fixture.RECORDS + province_id * state_fixture.province_memory.RECORD_STRIDE
+    leaf = leaf_fixture.setup_candidate(aggregate_raw=11, components={0: ("devastation", 11)})
+    assert leaf_fixture.BASE == module_base
+    for address, byte in leaf.bytes.items():
+        if leaf_fixture.RECORD <= address < leaf_fixture.RECORD + 0x10000:
+            address += record - leaf_fixture.RECORD
+        image.data[address] = byte
+    for guard in profile["code_guards"]:
+        image.put(module_base + int(guard["rva"], 0), bytes.fromhex(guard["bytes"]))
+    table = profile["layout"]["province_goods_sources"]["callback_table"]
+    image.put(module_base + int(table["rva"], 0), b"".join(
+        (module_base + int(rva, 0)).to_bytes(8, "little") for rva in table["target_rvas"]
+    ))
+    image.put_i32(state_fixture.WORLD + 0x1DD0, _context()["game_date"])
+
+    turkey = capture_module._observe_for(province_id, "TUR")(image, module_base, "TUR", profile)
+    france = capture_module._observe_for(province_id, "FRA")(image, module_base, "FRA", profile)
+    assert turkey["stable"] is True and france["stable"] is True
+    turkey_field = turkey["backend"]["targets"][0]["fields"][FIELD_GOODS_SOURCE]
+    france_field = france["backend"]["targets"][0]["fields"][FIELD_GOODS_SOURCE]
+    assert turkey_field["status"] == "known"
+    assert turkey_field["value"]["aggregate_raw"] == 11
+    assert france_field["reason"] == "PROVINCE_DISCOVERY_NOT_ESTABLISHED"
 
 
 def test_v2_accepts_other_cached_sources_without_a_devastation_row(tmp_path, monkeypatch):

@@ -1,4 +1,4 @@
-"""Decode sampled native mission eligibility changes for FRA.
+"""Decode sampled native mission eligibility changes for configured observers.
 
 An event reports a change between two successful native predicate evaluations.
 The first sample only establishes a baseline. These records do not represent
@@ -14,15 +14,17 @@ from .native_change_observation import NativeChangeCollector
 
 GAME_SHA256 = relation_observation.GAME_SHA256
 CAPABILITY = 'native_mission_availability_observation'
+SCOPED_CAPABILITY = 'native_mission_availability_configured_observers'
 EVENT_TYPE = 'mission_availability_changed'
 NATIVE_EVENT = 'native_mission_availability_changed'
 NATIVE_GAP = 'native_mission_availability_capture_gap'
 SOURCE = 'mission_eligibility_native_return'
 DATE_SEMANTICS = 'native_mission_eligibility_observation_game_date'
 SCOPE = 'FRA_native_task_eligibility_return'
+CONFIGURED_SCOPE = 'configured_observer_native_task_eligibility_return'
 MAX_EVENTS = 1024
 _HEX_NAME = re.compile(r'(?:[0-9a-f]{2}){1,256}')
-_REFERENCE = re.compile(r'0x[0-9a-f]{1,16}')
+_TAG = re.compile(r'[A-Z0-9]{3}')
 _NATIVE_FIELDS = {
     'event', 'schema_version', 'session_id', 'sequence', 'country', 'country_fullref',
     'date_raw', 'previous_observed_date_raw', 'mission_id_hex',
@@ -32,7 +34,6 @@ _PAYLOAD_FIELDS = {
     'country', 'mission_id', 'eligible_before', 'eligible_after',
     'previous_observed_date_raw', 'scope',
 }
-_FRA_FULLREF_LOW = int.from_bytes(b'FRA', 'little')
 
 
 def _integer(value, minimum, maximum):
@@ -40,8 +41,11 @@ def _integer(value, minimum, maximum):
 
 
 def _valid_payload(payload, date):
-    if (not isinstance(payload, dict) or set(payload) != _PAYLOAD_FIELDS
-            or payload.get('country') != 'FRA' or payload.get('scope') != SCOPE
+    if not isinstance(payload, dict) or set(payload) != _PAYLOAD_FIELDS:
+        return False
+    country, scope = payload.get('country'), payload.get('scope')
+    if (not isinstance(country, str) or _TAG.fullmatch(country) is None
+            or scope not in (SCOPE, CONFIGURED_SCOPE) or (scope == SCOPE and country != 'FRA')
             or not _integer(date, 1, 2**31 - 1)
             or not _integer(payload.get('previous_observed_date_raw'), 1, 2**31 - 1)
             or payload['previous_observed_date_raw'] > date
@@ -73,20 +77,12 @@ def supported_ack(ack, game_sha256):
             and ack.get('native_mission_availability_scope') == SCOPE)
 
 
-def _canonical_fra_fullref(value):
-    if not isinstance(value, str) or _REFERENCE.fullmatch(value) is None:
-        return False
-    reference = int(value, 16)
-    return (reference & 0xffffff == _FRA_FULLREF_LOW
-            and ((reference >> 32) & 0xffff) < 4096)
-
-
 def public_observation(event, session_id):
     if (not isinstance(session_id, str) or not session_id or len(session_id) > 256
             or not isinstance(event, dict) or set(event) != _NATIVE_FIELDS
             or event.get('event') != NATIVE_EVENT or event.get('session_id') != session_id
-            or event.get('country') != 'FRA'
-            or type(event.get('schema_version')) is not int or event['schema_version'] != 1
+            or type(event.get('schema_version')) is not int or event['schema_version'] not in (1, 2)
+            or (event['schema_version'] == 1 and event.get('country') != 'FRA')
             or not _integer(event.get('sequence'), 1, 2**63 - 1)
             or event.get('source') != SOURCE or event.get('complete') is not True):
         return None
@@ -97,7 +93,7 @@ def public_observation(event, session_id):
             or type(event.get('eligible_before')) is not bool
             or type(event.get('eligible_after')) is not bool
             or event['eligible_before'] is event['eligible_after']
-            or not _canonical_fra_fullref(event.get('country_fullref'))):
+            or not mission_observation._valid_fullref(event.get('country_fullref'), event.get('country'))):
         return None
     encoded_name = event.get('mission_id_hex')
     if not isinstance(encoded_name, str) or _HEX_NAME.fullmatch(encoded_name) is None:
@@ -107,9 +103,10 @@ def public_observation(event, session_id):
     except UnicodeError:
         return None
     payload = {
-        'country': 'FRA', 'mission_id': name,
+        'country': event['country'], 'mission_id': name,
         'eligible_before': event['eligible_before'], 'eligible_after': event['eligible_after'],
-        'previous_observed_date_raw': previous_date, 'scope': SCOPE,
+        'previous_observed_date_raw': previous_date,
+        'scope': CONFIGURED_SCOPE if event['schema_version'] == 2 else SCOPE,
     }
     if not _valid_payload(payload, date):
         return None
@@ -125,14 +122,15 @@ def valid_event_snapshot(event, context):
         return False
     session_id = context.get('session_id')
     payload, source = event.get('payload'), event.get('source')
+    if not _valid_payload(payload, event.get('game_date')):
+        return False
     if (not isinstance(session_id, str) or not session_id or len(session_id) > 256
-            or event.get('session_id') != session_id or event.get('observer') != 'FRA'
-            or context.get('observer') != 'FRA' or context.get('game_sha256') != GAME_SHA256
+            or event.get('session_id') != session_id or event.get('observer') != payload['country']
+            or context.get('observer') != payload['country'] or context.get('game_sha256') != GAME_SHA256
             or event.get('event_type') != EVENT_TYPE or event.get('complete') is not True
-            or not _valid_payload(payload, event.get('game_date'))
             or event.get('objects') != objects(payload)
             or not isinstance(source, dict) or source.get('session_id') != session_id
-            or source.get('scope') != SCOPE or source.get('mode') != 'live'
+            or source.get('scope') != payload['scope'] or source.get('mode') != 'live'
             or source.get('complete') is not True or source.get('date_semantics') != DATE_SEMANTICS
             or not _integer(source.get('native_sequence'), 1, 2**63 - 1)):
         return False
@@ -144,3 +142,11 @@ class Collector(NativeChangeCollector):
         super().__init__(session_id, native_event=NATIVE_EVENT, native_gap=NATIVE_GAP,
             health_key='mission_availability_source', prefix='MISSION_AVAILABILITY',
             decoder=public_observation, max_events=MAX_EVENTS)
+
+    def observe(self, event, *, allow_scoped=False):
+        if (isinstance(event, dict) and event.get('event') == NATIVE_EVENT
+                and event.get('session_id') == self.session_id
+                and event.get('schema_version') != (2 if allow_scoped else 1)):
+            self.gaps.add(self.prefix + '_OBSERVATION_INVALID')
+            return
+        super().observe(event)

@@ -163,7 +163,7 @@ def test_projection_rejects_unvalidated_packet(change):
     assert capture.project_field(report)["status"] == "unknown"
 
 
-def test_capture_is_fixed_fra_and_passes_self_target_flag(monkeypatch, tmp_path):
+def test_capture_uses_configured_observer_and_passes_self_target_flag(monkeypatch, tmp_path):
     calls = []
 
     def fake_common(*args, **kwargs):
@@ -171,14 +171,14 @@ def test_capture_is_fixed_fra_and_passes_self_target_flag(monkeypatch, tmp_path)
         return {"status": "observed"}
 
     monkeypatch.setattr(capture._owner, "_capture_common", fake_common)
-    assert capture.capture(tmp_path / "installation.json") == {"status": "observed"}
-    assert calls[0][0][1] == "FRA"
+    assert capture.capture(tmp_path / "installation.json", observer='TUR') == {"status": "observed"}
+    assert calls[0][0][1] == "TUR"
+    assert calls[0][1]['observer_scoped'] is True
     assert calls[0][1]["allow_observer_target"] is True
     assert calls[0][1]["schema"] == capture.SCHEMA
     assert calls[0][1]["load_profile"] is capture._quality_capture._load_profile
-    assert calls[0][1]["observe"] is capture._quality_capture._observe
-    with pytest.raises(ValueError, match="OBSERVER_SCOPE"):
-        capture.capture(tmp_path / "installation.json", observer="POR")
+    assert calls[0][1]["observe"].func is capture._quality_capture._observe
+    assert calls[0][1]["observe"].keywords == {'observer': 'TUR'}
     assert len(calls) == 1
 
 

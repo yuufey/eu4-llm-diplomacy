@@ -12,6 +12,7 @@ from copy import deepcopy
 from datetime import datetime, timezone
 import hashlib
 import json
+import re
 from pathlib import Path
 from typing import Any, Mapping, Sequence
 
@@ -786,9 +787,9 @@ def capture(installation: Path, country: str, fields: Sequence[str] | None = Non
         report["probe_script_sha256"] = _sha256_file(Path(__file__).resolve())
     except OSError as exc:
         report["errors"].append({"stage": "probe_identity", "status": "unknown", "error": str(exc)})
-    if country != EXPECTED_COUNTRY:
+    if not isinstance(country, str) or re.fullmatch(r"[A-Z0-9]{3}", country) is None:
         report["status"] = "unsupported_country"
-        report["errors"].append({"stage": "request", "status": "unknown", "error": "Only FRA is permitted"})
+        report["errors"].append({"stage": "request", "status": "unknown", "error": "Invalid country tag"})
         _apply_cleanup(report, None, None)
         return report
 

@@ -328,7 +328,7 @@ class CustomLocalizationMemoryTests(unittest.TestCase):
         self.assertTrue(all(value["status"] == "unknown" for value in report["methods"].values()))
 
     def test_request_unknown_and_bounded_address_fail_without_process(self):
-        unsupported = cm.capture(Path("missing.json"), "ENG", [cm.METHODS[0]])
+        unsupported = cm.capture(Path("missing.json"), "eng", [cm.METHODS[0]])
         self.assertEqual(unsupported["status"], "unsupported_country")
         self.assertEqual(unsupported["cleanup"]["handle_close"]["status"], "not_opened")
         invalid = cm.capture(Path("missing.json"), "FRA", ["Unsupported"])

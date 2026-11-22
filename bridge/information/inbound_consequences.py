@@ -11,7 +11,7 @@ _RELATION_FIELDS = {
 }
 
 
-def project_relation_consequences(native, action, actor):
+def project_relation_consequences(native, action, actor, recipient):
     """Project the existing primary-relation response contract from an absent state."""
     specification = _RELATION_FIELDS.get(action)
     if specification is None:
@@ -20,10 +20,10 @@ def project_relation_consequences(native, action, actor):
     allowed_families = (None, family) if action == 'offer_alliance' else (family,)
     if native.get('family') not in allowed_families or native.get(field) is not False:
         return None
-    change = {'relation': family, 'actor': actor, 'recipient': 'FRA',
+    change = {'relation': family, 'actor': actor, 'recipient': recipient,
               'before': False, 'after': True, 'unit': 'boolean', 'scale': 1}
     if action == 'support_independence':
-        roles = validate_public_roles(native.get('support_roles'), actor, 'FRA')
+        roles = validate_public_roles(native.get('support_roles'), actor, recipient)
         if (roles is None or native.get('native_current_support_independence') is not False
                 or native.get('native_current_support_independence_readable') is not True):
             return None
@@ -32,21 +32,21 @@ def project_relation_consequences(native, action, actor):
         if (native.get('military_access_active') is not False
                 or native.get('military_access_state_verified') is not True):
             return None
-        change.update(beneficiary=actor, grantor='FRA')
+        change.update(beneficiary=actor, grantor=recipient)
     elif action == 'offer_vassalization':
         if (native.get('native_current_vassalization') is not False
                 or native.get('native_current_vassalization_readable') is not True):
             return None
-        change.update(overlord=actor, subject='FRA')
+        change.update(overlord=actor, subject=recipient)
     else:
-        change.update(symmetric=True, countries=[actor, 'FRA'])
+        change.update(symmetric=True, countries=[actor, recipient])
     return {
         'accept': {'changes': [change], 'legality': 'checked_for_current_inspection'},
         'reject': {'changes': [dict(change, after=False)], 'legality': 'not_inspected'},
     }
 
 
-def project_favor_consequences(quote, parameters, actor):
+def project_favor_consequences(quote, parameters, actor, recipient):
     terms = parameters['favor_trade']
     amount, price = terms['amount'], terms['favors']
     current = quote['favors'].get('current_raw')
@@ -60,7 +60,7 @@ def project_favor_consequences(quote, parameters, actor):
     changes = []
     if kind == 'trust':
         trust = quote.get('trust')
-        if (not isinstance(trust, dict) or trust.get('trustor') != 'FRA'
+        if (not isinstance(trust, dict) or trust.get('trustor') != recipient
                 or trust.get('trusted') != actor or trust.get('direction') != 'recipient_to_actor'
                 or trust.get('unit') != 'trust' or type(trust.get('scale')) is not int
                 or trust['scale'] != 1 or type(trust.get('value')) not in (int, float)
@@ -70,14 +70,14 @@ def project_favor_consequences(quote, parameters, actor):
         after = conditional_settlement(before, amount['raw'], kind, NATIVE_ACCEPT)
         if after is None:
             return None
-        changes.append({'resource': 'trust', 'country': 'FRA', 'counterparty': actor,
+        changes.append({'resource': 'trust', 'country': recipient, 'counterparty': actor,
                         'before_raw': before['recipient_trust_raw'], 'after_raw': after['recipient_trust_raw'],
                         'delta_raw': after['recipient_trust_raw'] - before['recipient_trust_raw'],
                         'unit': 'trust', 'scale': 1, 'direction': 'recipient_to_actor'})
     elif kind == 'men':
         manpower = quote.get('manpower')
         if (not isinstance(manpower, dict) or manpower.get('actor') != actor
-                or manpower.get('recipient') != 'FRA' or manpower.get('unit') != 'men'
+                or manpower.get('recipient') != recipient or manpower.get('unit') != 'men'
                 or type(manpower.get('scale')) is not int or manpower['scale'] != 1):
             return None
         before.update(actor_manpower_raw=manpower.get('actor_raw'),
@@ -85,15 +85,15 @@ def project_favor_consequences(quote, parameters, actor):
         after = conditional_settlement(before, amount['raw'], kind, NATIVE_ACCEPT)
         if after is None:
             return None
-        for country, key in ((actor, 'actor_manpower_raw'), ('FRA', 'recipient_manpower_raw')):
+        for country, key in ((actor, 'actor_manpower_raw'), (recipient, 'recipient_manpower_raw')):
             changes.append({'resource': 'manpower', 'country': country, 'unit': 'men', 'scale': 1,
                             'before_raw': before[key], 'after_raw': after[key],
                             'delta_raw': after[key] - before[key]})
     else:
-        for country, sign in ((actor, 1), ('FRA', -1)):
+        for country, sign in ((actor, 1), (recipient, -1)):
             changes.append({'resource': 'treasury', 'country': country, 'unit': 'ducats',
                             'scale': 1000, 'delta_raw': sign * amount['raw']})
-    changes.append({'resource': 'favors', 'country': actor, 'counterparty': 'FRA',
+    changes.append({'resource': 'favors', 'country': actor, 'counterparty': recipient,
                     'unit': 'favors', 'scale': 1000, 'before_raw': current,
                     'after_raw': current - price['cost_raw'], 'delta_raw': -price['cost_raw']})
     rejected = []

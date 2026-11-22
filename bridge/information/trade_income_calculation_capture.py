@@ -17,6 +17,11 @@ PROFILE_FILE = Path(__file__).with_name('profiles') / 'trade-income-calculation-
 PROFILE_SHA256 = '335116cf4e225e860c993ed7b11a826e222416c10e246b3d4bafd4bd5175cf07'
 SCHEMA = 'information.trade_income_calculation_capture.v1'
 PREFIX = 'trade_income_calculation.'
+_REVIEWED_DEPENDENCIES = {
+    **_shared._REVIEWED_DEPENDENCIES,
+    'bridge/information/trade_power_sum_capture.py': (
+        9427, 'b0ccba3d05072dfab0e4952d93703a6e98f6a4f5ced7a72b1a90d20dd8d880e0'),
+}
 
 
 def _digest(value):
@@ -33,14 +38,7 @@ def _load_profile():
             or profile.get('executable', {}).get('sha256') != _trade.EXPECTED_EXE_SHA256):
         raise ValueError('INCOME_PROFILE_IDENTITY')
     for entry in profile['source_evidence'] + profile['layout_dependencies']:
-        path = (ROOT / entry['path']).resolve()
-        path.relative_to(ROOT)
-        if not 0 < path.stat().st_size <= 10 * 1024 * 1024:
-            raise ValueError('INCOME_DEPENDENCY_SIZE')
-        with path.open('rb') as stream:
-            digest = hashlib.file_digest(stream, 'sha256').hexdigest()
-        if path.stat().st_size != entry['bytes'] or digest != entry['sha256']:
-            raise ValueError('INCOME_DEPENDENCY_PIN')
+        _shared._check_dependency(ROOT, entry, 'INCOME', reviewed=_REVIEWED_DEPENDENCIES)
     if profile['layout'] != {'node_cash': '0xb0', 'node_writer_gate': '0xd0',
             'row_share': '0x2c', 'row_income': '0x34', 'row_pre_income': '0x38',
             'country_base_pointer': '0x2440', 'base_value': '0x20',

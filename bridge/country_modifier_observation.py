@@ -33,6 +33,7 @@ EVENT_SEMANTICS = {
 }
 CHANGE_EVENT_TYPES = {semantics[0]: kind for kind, semantics in EVENT_SEMANTICS.items()}
 SCOPE = 'FRA_direct_temporary_records'
+CONFIGURED_SCOPE = 'configured_observer_direct_temporary_records'
 MAX_EVENTS = 1024
 _KEY = re.compile(r'[A-Za-z0-9_.-]{1,127}')
 _FIELDS = frozenset({'event', 'schema_version', 'session_id', 'sequence', 'country',
@@ -107,18 +108,24 @@ def supported_expiry_ack(ack, game_sha256):
             and ack['native_country_modifier_expiry_wire'] == 1)
 
 
-def public_observation(event, session_id):
+def public_observation(event, session_id, *, allow_scoped=False):
     kind = event.get('event') if isinstance(event, dict) else None
     semantics = NATIVE_SEMANTICS.get(kind) if isinstance(kind, str) else None
     if semantics is None:
         return None
     change, source = semantics
+    schema = event.get('schema_version')
+    country = event.get('country')
+    if (type(schema) is not int or schema not in ((1, 2) if allow_scoped else (1,))
+            or not isinstance(country, str) or re.fullmatch(r'[A-Z0-9]{3}', country) is None
+            or (schema == 1 and country != 'FRA')):
+        return None
+    scope = CONFIGURED_SCOPE if schema == 2 else SCOPE
     if (not isinstance(session_id, str) or not session_id or len(session_id) > 256
             or not isinstance(event, dict) or set(event) != _FIELDS
             or event.get('session_id') != session_id
-            or type(event.get('schema_version')) is not int or event['schema_version'] != 1
             or not _integer(event.get('sequence'), 1, 2**63 - 1)
-            or event.get('country') != 'FRA' or event.get('source') != source
+            or event.get('source') != source
             or event.get('complete') is not True
             or not _integer(event.get('date_raw'), 0, 2**31 - 1)
             or not _valid_values(event.get('modifier_id'), event.get('start_date_raw'),
@@ -130,13 +137,14 @@ def public_observation(event, session_id):
     if not isinstance(reference, str) or re.fullmatch(r'0x[0-9a-f]{1,16}', reference) is None:
         return None
     reference = int(reference, 16)
-    if reference & 0xffffff != 0x415246 or ((reference >> 32) & 0xffff) >= 4096:
+    if (reference & 0xffffff != int.from_bytes(country.encode('ascii'), 'little')
+            or ((reference >> 32) & 0xffff) >= 4096):
         return None
     return {'event_id': _event_id(session_id, event['sequence'], change), 'native_sequence': event['sequence'],
             'game_date': event['date_raw'], 'payload': {
-                'country': 'FRA', 'modifier_id': event['modifier_id'], 'change': change,
+                'country': country, 'modifier_id': event['modifier_id'], 'change': change,
                 'start_date_raw': event['start_date_raw'], 'end_date_raw': event['end_date_raw'],
-                'flags_raw': list(event['flags']), 'scope': SCOPE}}
+                'flags_raw': list(event['flags']), 'scope': scope}}
 
 
 def valid_event_snapshot(event, context):
@@ -148,19 +156,24 @@ def valid_event_snapshot(event, context):
     if semantics is None:
         return False
     change, date_semantics = semantics
+    country = context.get('observer')
+    scope = payload.get('scope') if isinstance(payload, dict) else None
+    if (not isinstance(country, str) or re.fullmatch(r'[A-Z0-9]{3}', country) is None
+            or scope not in (SCOPE, CONFIGURED_SCOPE) or (scope == SCOPE and country != 'FRA')):
+        return False
     if (not isinstance(session_id, str) or not session_id or len(session_id) > 256
             or event.get('session_id') != session_id
-            or event.get('observer') != 'FRA' or context.get('observer') != 'FRA'
+            or event.get('observer') != country
             or context.get('game_sha256') != GAME_SHA256 or event.get('complete') is not True
             or not _integer(event.get('game_date'), 0, 2**31 - 1)
-            or event.get('objects') != [{'type': 'country', 'country': 'FRA'}]
+            or event.get('objects') != [{'type': 'country', 'country': country}]
             or not isinstance(payload, dict)
             or set(payload) != {'country', 'modifier_id', 'change', 'start_date_raw', 'end_date_raw', 'flags_raw', 'scope'}
-            or payload.get('country') != 'FRA' or payload.get('change') != change or payload.get('scope') != SCOPE
+            or payload.get('country') != country or payload.get('change') != change
             or not _valid_values(payload.get('modifier_id'), payload.get('start_date_raw'),
                                  payload.get('end_date_raw'), payload.get('flags_raw'))
             or not isinstance(source, dict) or source.get('session_id') != session_id
-            or source.get('scope') != SCOPE or source.get('mode') != 'live' or source.get('complete') is not True
+            or source.get('scope') != scope or source.get('mode') != 'live' or source.get('complete') is not True
             or source.get('date_semantics') != date_semantics
             or not _integer(source.get('native_sequence'), 1, 2**63 - 1)):
         return False
@@ -181,7 +194,7 @@ class Collector:
         self.gaps = set()
         self.last_status = None
 
-    def observe(self, event, *, allow_removal=False, allow_expiry=False):
+    def observe(self, event, *, allow_removal=False, allow_expiry=False, allow_scoped=False):
         if not isinstance(event, dict) or event.get('session_id') != self.session_id:
             return
         kind = event.get('event')
@@ -214,7 +227,7 @@ class Collector:
                 and not (kind == REMOVE_NATIVE_EVENT and allow_removal is True)
                 and not (kind == EXPIRY_NATIVE_EVENT and allow_expiry is True)):
             return
-        public = public_observation(event, self.session_id)
+        public = public_observation(event, self.session_id, allow_scoped=allow_scoped)
         if public is None:
             self.gaps.add('COUNTRY_MODIFIER_OBSERVATION_INVALID')
             return

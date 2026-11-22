@@ -20,15 +20,15 @@ def _load_profile():
     return profile
 
 
-def _observe_for(node_id):
+def _observe_for(node_id, observer="FRA"):
     def observe(reader, base, country, profile):
-        if country != "FRA" or not legacy._valid_id(node_id):
+        if country != observer or not legacy._valid_id(node_id):
             raise ValueError("TRADE_VALUE_OBSERVER_SCOPE")
 
-        def backend(read, module_base, observer):
+        def backend(read, module_base, bound_observer):
             identity = legacy._values.find_node(read, module_base, node_id)
             center = identity.get("center_province_id")
-            if (observer != "FRA" or identity.get("status") != "known"
+            if (bound_observer != observer or identity.get("status") != "known"
                     or identity.get("node_id") != node_id or type(center) is not int or not 1 <= center < 65536):
                 raise ValueError("TRADE_VALUE_NODE_IDENTITY_UNKNOWN")
 
@@ -38,8 +38,8 @@ def _observe_for(node_id):
                 fields = values.read_fields(limiter, value_base, binding, FIELDS, node_id=node_id)
                 return {alias: fields[name] for alias, name in zip(legacy._GATE_FIELDS, FIELDS)}
 
-            result = legacy._province.read_two_pass(read, module_base, center, observer="FRA",
-                                                    fields=legacy._GATE_FIELDS, read_fields=field_reader)
+            result = legacy._province.read_two_pass(read, module_base, center, observer=observer,
+                fields=legacy._GATE_FIELDS, read_fields=field_reader, observer_scoped=True)
             for target in result.get("targets", []):
                 for key in ("fields", "field_consistency"):
                     rows = target.get(key, {})
@@ -54,28 +54,36 @@ def _observe_for(node_id):
 
 
 def capture(installation, node_id, *, observer="FRA"):
-    if observer != "FRA" or not legacy._valid_id(node_id):
+    if (not isinstance(observer, str) or not legacy._owner._TAG.fullmatch(observer)
+            or not legacy._valid_id(node_id)):
         raise ValueError("TRADE_VALUE_REQUEST_SCOPE")
     inner = legacy._owner._capture_common(
-        installation, "FRA", observer=observer, schema=INNER_SCHEMA,
+        installation, observer, observer=observer, schema=INNER_SCHEMA,
         profile_sha256=values.PROFILE_SHA256, load_profile=_load_profile,
-        observe=_observe_for(node_id), allow_observer_target=True)
-    return {"schema": SCHEMA, "observer": "FRA", "object": {"type": "trade_node", "node_id": node_id},
+        observe=_observe_for(node_id, observer), allow_observer_target=True, observer_scoped=True)
+    return {"schema": SCHEMA, "observer": observer, "object": {"type": "trade_node", "node_id": node_id},
             "capture": inner}
 
 
 def validate_capture(report, context, creation, node_id):
     if isinstance(report, dict) and report.get("schema") == legacy.SCHEMA:
         return legacy.validate_capture(report, context, creation, node_id)
+    observer = context.get("observer") if isinstance(context, dict) else None
     if (not legacy._valid_id(node_id) or not isinstance(report, dict)
             or set(report) != {"schema", "observer", "object", "capture"}
-            or report["schema"] != SCHEMA or report["observer"] != "FRA"
+            or report["schema"] != SCHEMA or report["observer"] != observer
             or not legacy._owner._same(report["object"], {"type": "trade_node", "node_id": node_id})):
         return False
+    inner = report['capture']
+    profile_sha256 = values.PROFILE_SHA256
+    if (observer == 'FRA' and isinstance(inner, dict)
+            and inner.get('profile_sha256') == values.LEGACY_PROFILE_SHA256):
+        profile_sha256 = values.LEGACY_PROFILE_SHA256
     return legacy._owner._validate_capture_common(
-        report["capture"], context, creation, "FRA", schema=INNER_SCHEMA,
-        profile_sha256=values.PROFILE_SHA256, load_profile=_load_profile,
-        observe=_observe_for(node_id), allow_observer_target=True, require_access=True)
+        inner, context, creation, observer, schema=INNER_SCHEMA,
+        profile_sha256=profile_sha256, load_profile=_load_profile,
+        observe=_observe_for(node_id, observer), allow_observer_target=True,
+        require_access=True, observer_scoped=True)
 
 
 def project_fields(report):
@@ -87,8 +95,8 @@ def project_fields(report):
         return {name.removeprefix("T03."): legacy._unknown("TRADE_VALUE_CAPTURE_SHAPE_INVALID") for name in FIELDS}
     view = {**report, "schema": legacy.SCHEMA,
             "capture": {**report["capture"], "schema": legacy.INNER_SCHEMA}}
-    result = legacy.project_fields(view)
-    target = legacy._target(view)
+    result = legacy.project_fields(view, observer_scoped=True)
+    target = legacy._target(view, observer_scoped=True)
     if target is None:
         result["collected_value"] = legacy._unknown("TRADE_VALUE_ADMISSION_NOT_ESTABLISHED")
         return result

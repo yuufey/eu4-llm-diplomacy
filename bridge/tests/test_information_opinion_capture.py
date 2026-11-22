@@ -9,9 +9,9 @@ from bridge.information import country_reference_memory
 from bridge.tests.test_information_opinion_memory import Memory
 
 
-def setup(monkeypatch):
-    memory = Memory()
-    scan = {'status':'observed', 'requested':{'FRA':memory.fra,'ENG':memory.eng}}
+def setup(monkeypatch, observer='FRA'):
+    memory = Memory(observer)
+    scan = {'status':'observed', 'requested':{observer:memory.fra,'ENG':memory.eng}}
     monkeypatch.setattr(country_reference_memory, 'resolve_countries',
                         lambda *args, **kwargs:deepcopy(scan))
     return memory
@@ -60,13 +60,15 @@ def test_changed_native_opinion_guard_is_still_rejected():
         capture._owner._guards(reader, base, profile)
 
 
-def test_both_directions_are_compared_independently(monkeypatch):
-    memory = setup(monkeypatch)
-    result = capture._backend_read(memory, 0x140000000, 'ENG', admission_reader=admitted)
+@pytest.mark.parametrize('observer', ['FRA', 'TUR'])
+def test_both_directions_are_compared_independently(monkeypatch, observer):
+    memory = setup(monkeypatch, observer)
+    result = capture._backend_read(memory, 0x140000000, 'ENG', admission_reader=admitted, observer=observer)
     assert result['status'] == 'observed'
     assert result['consistency']['status'] == 'stable'
     fields = result['targets'][0]['fields']
     assert [fields[name]['value']['opinion'] for name in capture.FIELDS] == [-200,177]
+    assert [fields[name]['value']['holder'] for name in capture.FIELDS] == [observer, 'ENG']
     assert len(memory.reads) == 36
 
 

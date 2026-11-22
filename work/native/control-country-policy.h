@@ -180,7 +180,7 @@ inline bool parse_revision(Field field,std::uint64_t& revision) noexcept {
 }
 
 inline ParseResult parse_request(const char* bytes,std::size_t length,
-    Request& output) noexcept {
+    Request& output,const char* prefix="EU4CONTROL1") noexcept {
     output=Request{};
     if (!bytes) return ParseResult{ParseError::null_input};
     if (length==0 || length>kMaxWireBytes) return ParseResult{ParseError::invalid_length};
@@ -199,7 +199,7 @@ inline ParseResult parse_request(const char* bytes,std::size_t length,
         start=index+1;
     }
     if (field_count!=4) return ParseResult{ParseError::invalid_field_count};
-    if (!equals(fields[0],"EU4CONTROL1")) return ParseResult{ParseError::invalid_prefix};
+    if (!equals(fields[0],prefix)) return ParseResult{ParseError::invalid_prefix};
     if (!parse_session(fields[1],output.session_id)) return ParseResult{ParseError::invalid_session};
     if (!parse_revision(fields[2],output.revision)) return ParseResult{ParseError::invalid_revision};
     if (equals(fields[3],"-")) return ParseResult{ParseError::ok};

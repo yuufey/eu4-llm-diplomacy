@@ -2,7 +2,7 @@
 
 The low-level reader is intentionally imported only for a live read.  This
 adapter consumes the country-resources parent report and exposes the bounded
-trade-node cache for the verified FRA observer.  It never invokes a game
+trade-node cache for the configured observer country. It never invokes a game
 function, uses a mission/localization resolver, or turns a missing node into
 zero.
 """
@@ -74,7 +74,6 @@ _CATALOG_ITEM = {
                 "trade_node: matching trade_income.nodes[].income_raw / 1000"
             ),
             "paths": ["trade_income.total_raw", "trade_income.nodes[].income_raw"],
-            "supported_countries": [_COUNTRY],
             "period": _PERIOD,
             "basis": _BASIS,
             "value_origin": _COUNTRY_ORIGIN,
@@ -93,7 +92,6 @@ _CATALOG_ITEM = {
                 "trade_node: the copied native eligible predicate as a bool"
             ),
             "paths": ["trade_income.nodes[].eligible"],
-            "supported_countries": [_COUNTRY],
             "period": _COLLECTION_PERIOD,
             "basis": _COLLECTION_BASIS,
             "value_origin": _COLLECTION_ORIGIN,
@@ -117,7 +115,6 @@ _CATALOG_ITEM = {
                 "country: ordered active rows only"
             ),
             "paths": ["trade_income.nodes[].flag_ae", "trade_income.nodes[].eligible"],
-            "supported_countries": [_COUNTRY],
             "period": _MERCHANT_TASK_PERIOD,
             "basis": _MERCHANT_TASK_BASIS,
             "value_origin": _MERCHANT_TASK_ORIGIN,
@@ -130,7 +127,7 @@ _CATALOG_ITEM = {
     },
     "object_types": ["country", "trade_node"],
     "observer_roles": ["country"],
-    "observer_scope": [_COUNTRY],
+    "observer_scope": [],
     "parameters": {
         "type": "object", "properties": {}, "required": [],
         "additionalProperties": False,
@@ -142,7 +139,7 @@ _CATALOG_ITEM = {
     "visibility": "country_scope",
     "context_scope": "country_scope",
     "scope_note": (
-        "仅读取固定1.37.4、FRA观察者的原生贸易节点国家收入缓存；"
+        "读取 1.37.4 观察国的原生贸易节点收入缓存。"
         "缓存新鲜度及完整GUI预算重算仍未闭合。"
     ),
 }
@@ -194,6 +191,13 @@ def _identity(context: Mapping[str, Any]) -> tuple[Any, ...]:
 
 def _context_reason(context: Any, country: str = _COUNTRY) -> str | None:
     reason = NativeCountryStateSource._monarch_points_context_reason(context, country)
+    return reason.replace("MONARCH_POINTS_", "TRADE_INCOME_", 1) if reason else None
+
+
+def _observer_context_reason(context: Any) -> str | None:
+    observer = context.get("observer") if isinstance(context, dict) else None
+    reason = NativeCountryStateSource._monarch_points_context_reason(
+        context, observer, observer_scoped=True)
     return reason.replace("MONARCH_POINTS_", "TRADE_INCOME_", 1) if reason else None
 
 
@@ -325,11 +329,11 @@ def _low_level_module():
     return trade_income_memory
 
 
-def _record_shape_reason(record: Any) -> str | None:
+def _record_shape_reason(record: Any, country: str = _COUNTRY) -> str | None:
     if not isinstance(record, Mapping) or record.get("status") != "observed":
         return "TRADE_INCOME_RECORD_INVALID"
     if (
-        record.get("country") != _COUNTRY
+        record.get("country") != country
         or record.get("basis") != _BASIS
         or record.get("unit") != _UNIT
         or record.get("scale") != _SCALE
@@ -386,7 +390,7 @@ def _record_shape_reason(record: Any) -> str | None:
     return None
 
 
-def _record_reason(record: Any) -> str | None:
+def _record_reason(record: Any, country: str = _COUNTRY) -> str | None:
     module = _low_level_module()
     if module is None:
         return "TRADE_INCOME_VALIDATOR_UNAVAILABLE"
@@ -407,20 +411,20 @@ def _record_reason(record: Any) -> str | None:
         and record.get("profile_sha256") != expected
     ):
         return "TRADE_INCOME_PROFILE_PIN_INVALID"
-    return _record_shape_reason(record)
+    return _record_shape_reason(record, country)
 
 
-def _capture_record_reason(report: Any) -> str | None:
+def _capture_record_reason(report: Any, country: str = _COUNTRY) -> str | None:
     if not isinstance(report, Mapping):
         return "TRADE_INCOME_PARENT_CAPTURE_INVALID"
     top = report.get("trade_income")
-    reason = _record_reason(top)
+    reason = _record_reason(top, country)
     if reason is not None:
         return reason
     for snapshot_name in ("before", "after"):
         snapshot = report.get(snapshot_name)
         child = snapshot.get("trade_income") if isinstance(snapshot, Mapping) else None
-        reason = _record_reason(child)
+        reason = _record_reason(child, country)
         if reason is not None:
             return f"TRADE_INCOME_{snapshot_name.upper()}_{reason.removeprefix('TRADE_INCOME_')}"
         try:
@@ -539,7 +543,7 @@ def _record_provenance(
 
 
 class NativeTradeIncomeSource:
-    """Expose the native FRA trade-node country-income cache."""
+    """Expose the configured observer's native trade-node income cache."""
 
     event_types: tuple[str, ...] = ()
 
@@ -581,8 +585,8 @@ class NativeTradeIncomeSource:
                 "invalid_object", "T05 queries require country or node_id object selectors only"
             )
         if obj.get("type") == "country":
-            if set(obj) != {"type", "country"} or obj.get("country") != _COUNTRY:
-                raise InformationError("observer_scope_mismatch", "T05 supports the verified FRA observer only")
+            if set(obj) != {"type", "country"} or not isinstance(obj.get("country"), str) or not re.fullmatch(r"[A-Z0-9]{3}", obj["country"]):
+                raise InformationError("invalid_object", "T05 requires a country tag")
         elif obj.get("type") == "trade_node":
             if set(obj) != {"type", "node_id"} or (
                     not isinstance(obj.get("node_id"), str)
@@ -609,8 +613,8 @@ class NativeTradeIncomeSource:
             if not isinstance(context, dict):
                 raise InformationError("invalid_context", "context must be an object")
             observer = context.get("observer")
-            if observer is not None and observer != _COUNTRY:
-                raise InformationError("observer_scope_mismatch", "T05 is outside the verified FRA observer scope")
+            if observer is not None and obj['type'] == 'country' and observer != obj['country']:
+                raise InformationError("observer_scope_mismatch", "T05 is limited to the configured observer country")
         normalized = {
             "topic": _TOPIC,
             "object": deepcopy(obj),
@@ -792,9 +796,10 @@ class NativeTradeIncomeSource:
         current = supplied if supplied is not None else self.context()
         normalized = self.validate_query(query, current)
         requested = normalized["fields"]
+        country = current.get('observer')
         provenance: dict[str, Any] = {
             "adapter": "bridge.information.country_resources_memory.capture",
-            "country": _COUNTRY,
+            "country": country,
             "read_only": True,
             "native_function_invoked": False,
             "unit": _UNIT,
@@ -811,7 +816,7 @@ class NativeTradeIncomeSource:
         def result(ctx: dict[str, Any], fields: dict[str, dict[str, Any]]) -> dict[str, Any]:
             return self._result(normalized, ctx, fields, provenance)
 
-        reason = _context_reason(current)
+        reason = _observer_context_reason(current)
         if reason is not None:
             provenance["context_guard"]["status"] = "unavailable"
             return result(current, self._failure_fields(requested, reason, unavailable=True))
@@ -822,7 +827,7 @@ class NativeTradeIncomeSource:
                 before = self.context()
             except Exception:
                 before = {}
-            before_reason = _context_reason(before)
+            before_reason = _observer_context_reason(before)
             if before_reason is not None:
                 provenance["context_guard"]["status"] = "unavailable"
                 return result(before, self._failure_fields(requested, before_reason, unavailable=True))
@@ -846,7 +851,7 @@ class NativeTradeIncomeSource:
         report: Any = None
         capture_error: str | None = None
         try:
-            report = capture(installation, _COUNTRY, include_trade_income=True)
+            report = capture(installation, country, include_trade_income=True)
         except Exception as exc:
             capture_error = "TRADE_INCOME_CAPTURE_FAILED:" + type(exc).__name__
 
@@ -856,7 +861,7 @@ class NativeTradeIncomeSource:
             after = self.context()
         except Exception:
             after = {}
-        after_reason = _context_reason(after)
+        after_reason = _observer_context_reason(after)
         if (
             after_reason is not None
             or _identity(before) != _identity(after)
@@ -879,13 +884,13 @@ class NativeTradeIncomeSource:
                 include_nodes=False,
             )
         provenance["context_guard"]["status"] = "capture_invalid"
-        reason = _parent_report_reason(report, before, _COUNTRY, creation_filetime)
+        reason = _parent_report_reason(report, before, country, creation_filetime)
         if reason is not None:
             provenance["capture_reason"] = reason
             if isinstance(report, Mapping) and isinstance(report.get("trade_income"), Mapping):
                 provenance["trade_income"]["reason"] = reason
             return result(before, self._failure_fields(requested, reason, unavailable=False))
-        reason = _capture_record_reason(report)
+        reason = _capture_record_reason(report, country)
         if reason is not None:
             provenance["capture_reason"] = reason
             if isinstance(report, Mapping) and isinstance(report.get("trade_income"), Mapping):

@@ -30,8 +30,8 @@ class NativeModifierLifecycleHistorySource:
     def catalog(self):
         topic = get_topic('H02')
         topic.update(source=type(self).__name__, context_scope='session_scope',
-                     observer_roles=['country'], observer_scope=['FRA'],
-                     scope_note='当前会话已采集的FRA直接临时国家修正新增、移除及自然到期事件。')
+                     observer_roles=['country'], observer_scope=[],
+                     scope_note='读取当前会话为观察国采集的直接临时国家修正新增、移除及自然到期事件。')
         topic['fields'] = {FIELD: {
             'coverage': 'partial', 'source': type(self).__name__,
             'unit': 'modifier_lifecycle', 'period': 'observed_history',
@@ -50,21 +50,23 @@ class NativeModifierLifecycleHistorySource:
     def _legacy(query):
         return any(key in query['parameters'] for key in ('request_id', 'case'))
 
-    @staticmethod
-    def _scope_reason(query, context):
+    def _scope_reason(self, query, context):
         obj = query['object']
         if obj['type'] == 'country_pair':
             return 'MODIFIER_LIFECYCLE_COUNTRY_PAIR_NOT_APPLICABLE'
-        if context.get('observer') != 'FRA' or (
-                obj['type'] == 'country' and obj['country'] != 'FRA'):
+        observer = context.get('observer')
+        scope = getattr(self.base_source, '_modifier_scope', observation.SCOPE)
+        if (not isinstance(observer, str) or (obj['type'] == 'country' and obj['country'] != observer)
+                or (scope == observation.SCOPE and observer != 'FRA')):
+            return 'MODIFIER_LIFECYCLE_COUNTRY_NOT_OBSERVED'
+        if scope == observation.CONFIGURED_SCOPE and not self.base_source._modifier_events_enabled:
             return 'MODIFIER_LIFECYCLE_COUNTRY_NOT_OBSERVED'
         kind = query['parameters'].get('event_type')
         if kind is not None and kind not in EVENT_TYPES:
             return 'MODIFIER_LIFECYCLE_EVENT_TYPE_NOT_APPLICABLE'
         return None
 
-    @staticmethod
-    def _result(query, context, field, *, projection, event=None, gaps=None):
+    def _result(self, query, context, field, *, projection, event=None, gaps=None):
         fields = {name: {'status': 'unsupported', 'reason': 'H02_FIELD_NOT_IMPLEMENTED'}
                   for name in query['fields']}
         if FIELD in fields:
@@ -72,7 +74,7 @@ class NativeModifierLifecycleHistorySource:
         complete = all(value.get('status') == 'known' and value.get('complete') is True
                        for value in fields.values())
         source = _source_info('NativeModifierLifecycleHistorySource', context, complete=complete)
-        source.update(projection=projection, coverage=observation.SCOPE)
+        source.update(projection=projection, coverage=getattr(self.base_source, '_modifier_scope', observation.SCOPE))
         if gaps:
             source['gaps'] = deepcopy(gaps)
         if event is not None:

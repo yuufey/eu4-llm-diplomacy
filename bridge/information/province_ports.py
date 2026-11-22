@@ -1,4 +1,4 @@
-"""Expose the verified logical-FRA province has-port predicate through G04."""
+"""Expose the province has-port predicate through G04."""
 from __future__ import annotations
 
 from collections.abc import Mapping
@@ -14,7 +14,7 @@ from .province_port_memory import FIELD_HAS_PORT
 from .sources import _result, _source_info
 from .trade_income import (
     NativeTradeIncomeSource,
-    _context_reason as _base_reason,
+    _observer_context_reason as _base_reason,
     _identity,
     _session_binding,
 )
@@ -58,7 +58,7 @@ def _public_reason(value: Any, fallback: str) -> str:
     return fallback
 
 
-def _positive_admission(value: Any) -> bool:
+def _positive_admission(value: Any, observer: str) -> bool:
     if not isinstance(value, Mapping):
         return False
     role = value.get("observer_nonplayer_role")
@@ -67,7 +67,7 @@ def _positive_admission(value: Any) -> bool:
         and type(value.get("admitted")) is bool
         and value["admitted"] is True
         and isinstance(role, Mapping)
-        and role.get("observer") == "FRA"
+        and role.get("observer") == observer
         and role.get("verified") is True
     )
 
@@ -81,11 +81,11 @@ def _positive_discovery(value: Any) -> bool:
     )
 
 
-def _backend_target(report: Any, province_id: int) -> tuple[dict[str, Any] | None, str | None]:
+def _backend_target(report: Any, province_id: int, observer: str) -> tuple[dict[str, Any] | None, str | None]:
     """Return one independently bound target from the strictly replayed capture."""
     if not isinstance(report, Mapping) or report.get("schema") != _SCHEMA:
         return None, "PROVINCE_PORT_CAPTURE_INVALID"
-    if report.get("observer") != "FRA":
+    if report.get("observer") != observer:
         return None, "PROVINCE_PORT_CAPTURE_OBSERVER_MISMATCH"
     outer = report.get("object")
     if (not isinstance(outer, Mapping) or set(outer) != {"type", "province_id"}
@@ -104,8 +104,8 @@ def _backend_target(report: Any, province_id: int) -> tuple[dict[str, Any] | Non
     if (not isinstance(backend, Mapping) or backend.get("status") != "observed"
             or not isinstance(consistency, Mapping) or consistency.get("status") != "stable"):
         return None, "PROVINCE_PORT_BACKEND_UNSTABLE"
-    observer = backend.get("observer")
-    if not isinstance(observer, Mapping) or observer.get("tag") != "FRA":
+    observer_binding = backend.get("observer")
+    if not isinstance(observer_binding, Mapping) or observer_binding.get("tag") != observer:
         return None, "PROVINCE_PORT_BACKEND_OBSERVER_MISMATCH"
     targets = backend.get("targets")
     if not isinstance(targets, list) or len(targets) != 1 or not isinstance(targets[0], Mapping):
@@ -116,7 +116,7 @@ def _backend_target(report: Any, province_id: int) -> tuple[dict[str, Any] | Non
     admissions = target.get("admission_by_pass")
     discoveries = target.get("discovery_by_pass")
     if (not isinstance(admissions, Mapping) or not isinstance(discoveries, Mapping)
-            or any(not _positive_admission(admissions.get(phase)) for phase in _PASSPHASES)
+            or any(not _positive_admission(admissions.get(phase), observer) for phase in _PASSPHASES)
             or any(not _positive_discovery(discoveries.get(phase)) for phase in _PASSPHASES)):
         return None, "PROVINCE_PORT_ADMISSION_OR_DISCOVERY_UNVERIFIED"
     consistency = target.get("field_consistency")
@@ -167,14 +167,13 @@ class NativeProvincePortSource(NativeTradeIncomeSource):
             source=type(self).__name__,
             object_types=["province"],
             observer_roles=[],
-            observer_scope=["FRA"],
+            observer_scope=[],
             supported_versions=["1.37.4"],
             triggers=["query", "periodic"],
             parameters=deepcopy(_FIELDS_SCHEMA),
             context_scope="visible_scope",
             visibility="visible_scope",
-            scope_note=("只读取逻辑FRA视角下已通过准入和发现校验的省份has_port谓词；"
-                        "不证明完整港口设施、通行资格或界面渲染。"),
+            scope_note="读取观察国已发现省份的港口状态。",
             fields={FIELD: {
                 "coverage": "partial",
                 "complete": False,
@@ -182,7 +181,6 @@ class NativeProvincePortSource(NativeTradeIncomeSource):
                 "period": "current",
                 "basis": BASIS,
                 "value_origin": "copied_native_province_has_port_scope_predicate",
-                "supported_observers": ["FRA"],
                 "supported_province_id_range": [1, _MAX_PROVINCE_ID],
                 "runtime_validation": "province_port_capture.validate_capture",
                 "gaps": [
@@ -213,9 +211,8 @@ class NativeProvincePortSource(NativeTradeIncomeSource):
         parameters = query.get("parameters", {})
         if not isinstance(parameters, dict) or parameters:
             raise InformationError("invalid_parameters", "G04 ports has no extra parameters")
-        if context is not None and (not isinstance(context, dict)
-                                    or context.get("observer") not in (None, "FRA")):
-            raise InformationError("observer_scope_mismatch", "G04 ports is verified for logical FRA")
+        if context is not None and not isinstance(context, dict):
+            raise InformationError('invalid_context', 'Province context must be an object')
         normalized = {
             "topic": "G04",
             "object": deepcopy(obj),
@@ -227,7 +224,7 @@ class NativeProvincePortSource(NativeTradeIncomeSource):
 
     @staticmethod
     def _context_reason(context: Any) -> str | None:
-        reason = _base_reason(context, "FRA")
+        reason = _base_reason(context)
         return reason.replace("TRADE_INCOME_", "PROVINCE_PORT_", 1) if reason else None
 
     @staticmethod
@@ -253,9 +250,10 @@ class NativeProvincePortSource(NativeTradeIncomeSource):
     def read(self, query: dict[str, Any], context: dict[str, Any] | None = None) -> dict[str, Any]:
         current = deepcopy(context) if isinstance(context, dict) else self.context()
         normalized = self.validate_query(query, current)
+        observer = current.get('observer')
         province_id = normalized["object"]["province_id"]
         provenance: dict[str, Any] = {
-            "observer": "FRA",
+            "observer": observer,
             "province_id": province_id,
             "read_only": True,
             "native_function_invoked": False,
@@ -301,7 +299,7 @@ class NativeProvincePortSource(NativeTradeIncomeSource):
         report = None
         capture_error = None
         try:
-            report = capture(installation, province_id=province_id, observer="FRA")
+            report = capture(installation, province_id=province_id, observer=observer)
         except Exception as exc:
             capture_error = f"PROVINCE_PORT_CAPTURE_FAILED:{type(exc).__name__}"
         try:
@@ -326,7 +324,7 @@ class NativeProvincePortSource(NativeTradeIncomeSource):
         if valid is not True:
             return self._failure(normalized, before, "PROVINCE_PORT_CAPTURE_INVALID", provenance)
 
-        target, envelope_error = _backend_target(report, province_id)
+        target, envelope_error = _backend_target(report, province_id, observer)
         if target is None:
             return self._failure(normalized, before, envelope_error or "PROVINCE_PORT_CAPTURE_INVALID",
                                  provenance)

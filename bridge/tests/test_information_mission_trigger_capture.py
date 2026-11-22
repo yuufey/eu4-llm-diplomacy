@@ -49,18 +49,23 @@ def fixture():
     reader.dword_put(country+0xdc4,1000000,signed=True)
     return reader,module,country
 
-def capture(reader,module,*,close=True,snapshot=None):
+def capture(reader,module,*,close=True,snapshot=None, observer="FRA"):
     kernel=FakeCaptureKernel(module,close_result=close)
     with ExitStack() as stack:
         for item in _capture_patches(reader,kernel,snapshot=snapshot):
             stack.enter_context(item)
-        report=mm.capture(Path('fake-installation.json'),'FRA',include_tasks=True,
+        report=mm.capture(Path('fake-installation.json'),observer,include_tasks=True,
             include_prerequisites=True,include_conditions=True,include_triggers=True)
     assert len(kernel.closed)==1
     return report
 
-def test_owner_capture_reads_loaded_tree_and_derives_true_without_native_call():
-    reader,module,_country=fixture();report=capture(reader,module)
+@pytest.mark.parametrize('observer', ('FRA', 'TUR'))
+def test_owner_capture_reads_loaded_tree_and_derives_true_without_native_call(observer):
+    reader, module, country = fixture()
+    reader.qword_put(country + mm.COUNTRY_HANDLE_OFFSET,
+                     (122 << 32) | int.from_bytes(observer.encode('ascii'), 'little'))
+    report = capture(reader, module, observer=observer)
+    assert report['request']['country'] == observer
     assert report['status']=='observed'
     assert report['doublepass']['trigger_consistent'] is True
     assert report['mission_triggers']['tasks'][0]['tree']['evaluation']=={'status':'known','satisfied':True}

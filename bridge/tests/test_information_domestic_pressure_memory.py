@@ -318,10 +318,22 @@ def test_request_bounds_and_country_are_rejected_before_open(capture_setup):
         assert report["status"] == "invalid_request"
         assert report["completed"] is False
         assert report["cleanup"]["handle_close"]["status"] == "not_opened"
-    report = dpm.capture(Path("fake-installation.json"), "SAV")
+    report = dpm.capture(Path("fake-installation.json"), "invalid-tag")
     assert report["status"] == "unsupported_country"
     assert report["completed"] is False
     assert kernel.closed == []
+
+
+def test_non_fra_capture_binds_both_snapshots_to_requested_country(capture_setup):
+    profile, kernel = capture_setup
+    handle = (COUNTRY_INDEX << 32) | int.from_bytes(b"TUR", "little")
+    _put_qword(kernel.memory, COUNTRY_POINTER + _profile_int(profile["country"]["handle_offset"]), handle)
+
+    report = dpm.capture(Path("fake-installation.json"), "TUR")
+    assert report["status"] == "observed"
+    assert report["field_results"]["war_exhaustion"]["raw"] == 0
+    for name in ("before", "after"):
+        assert report[name]["country_scan"]["matches"][0]["tag"] == "TUR"
 
 
 def test_default_fields_can_be_omitted(capture_setup):

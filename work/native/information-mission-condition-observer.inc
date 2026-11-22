@@ -75,7 +75,12 @@ static void note_drop(const char* reason = "unspecified") noexcept {
 
 static uint64_t begin(uint64_t country, uintptr_t definition, const names::Name& mission, int32_t date) noexcept {
     if (!installed || transport_fault) return 0;
-    if (depth == 16 || !names::valid(mission) || date <= 0 || (country&0xffffffu) != 0x415246u) {
+#ifdef BRIDGE_NATIVE_COUNTRY_CONTROL
+    if (!observation_information_country_handle(country)) return 0;
+#else
+    if ((country & 0xffffffu) != 0x415246u) return 0;
+#endif
+    if (depth == 16 || !names::valid(mission) || date <= 0) {
         note_drop("scope_limit_or_invalid_input");
         return 0;
     }
@@ -260,17 +265,23 @@ static void flush() noexcept {
         if (event.province_id) std::snprintf(province_fields, sizeof(province_fields),
             ",\"child_index\":%u,\"child_count\":%u,\"province_id\":%u",
             event.child_index, event.child_count, event.province_id);
+        const char country[4]={static_cast<char>(event.country),static_cast<char>(event.country>>8),
+                               static_cast<char>(event.country>>16),0};
+#ifdef BRIDGE_NATIVE_COUNTRY_CONTROL
+        const unsigned schema=event.province_id?4u:3u;
+#else
+        const unsigned schema=event.province_id?2u:1u;
+#endif
         const int bytes = std::snprintf(message, sizeof(message),
             "{\"event\":\"native_mission_condition_changed\",\"schema_version\":%u,\"session_id\":\"%lu-%llx\","
-            "\"sequence\":%llu,\"country\":\"FRA\",\"country_fullref\":\"0x%llx\",\"date_raw\":%d,"
+            "\"sequence\":%llu,\"country\":\"%.3s\",\"country_fullref\":\"0x%llx\",\"date_raw\":%d,"
             "\"previous_observed_date_raw\":%d,\"mission_id_hex\":\"%s\",\"condition_index\":%u,"
             "\"condition_node\":\"0x%llx\",\"condition_method_rva\":%llu,"
             "\"satisfied_before\":%s,\"satisfied_after\":%s,\"native_return_before\":\"0x%llx\","
             "\"native_return_after\":\"0x%llx\",\"root_condition_count\":%u,\"observed_condition_count\":%u,"
             "\"source\":\"%s\",\"complete\":false%s}\n",
-            event.province_id ? 2u : 1u,
-            static_cast<unsigned long>(GetCurrentProcessId()), static_cast<unsigned long long>(observation_creation),
-            static_cast<unsigned long long>(event.sequence), static_cast<unsigned long long>(event.country), event.date,
+            schema,static_cast<unsigned long>(GetCurrentProcessId()), static_cast<unsigned long long>(observation_creation),
+            static_cast<unsigned long long>(event.sequence),country,static_cast<unsigned long long>(event.country),event.date,
             event.change.previous_date, name_hex, event.change.index,
             static_cast<unsigned long long>(event.node.child), static_cast<unsigned long long>(event.node.callee-base),
             (event.change.before&0xff) ? "true" : "false", (event.change.after&0xff) ? "true" : "false",

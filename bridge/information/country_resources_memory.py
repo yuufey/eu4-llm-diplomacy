@@ -506,7 +506,7 @@ def _snapshot(
     if include_trade_income:
         try:
             from . import trade_income_memory as _trade
-            result["trade_income"] = _trade.read_fields(reader, module_base, country_pointer)
+            result["trade_income"] = _trade.read_fields(reader, module_base, country_pointer, country)
         except Exception as exc:
             from . import trade_income_memory as _trade
             result["trade_income"] = _trade.retract_record(
@@ -1179,6 +1179,7 @@ def capture(
     include_country_modifiers: bool = False,
     include_trade_power_sum: bool = False,
     trade_income_node_id: str | None = None,
+    observer_scoped: bool = False,
 ) -> dict[str, Any]:
     """Capture one bounded two-pass observation without writing files."""
     installation = Path(installation)
@@ -1203,7 +1204,8 @@ def capture(
         **report_options,
     )
     for option, enabled in (("include_country_loans", include_country_loans),
-                            ("include_country_modifiers", include_country_modifiers)):
+                            ("include_country_modifiers", include_country_modifiers),
+                            ("observer_scoped", observer_scoped)):
         if type(enabled) is not bool:
             report["status"] = "invalid_request"
             report["errors"].append({"stage": "request", "status": "unknown",
@@ -1347,9 +1349,12 @@ def capture(
         report["probe_script_sha256"] = _sha256_file(Path(__file__).resolve())
     except OSError as exc:
         report["errors"].append({"stage": "probe_identity", "status": "unknown", "error": str(exc)})
-    if country != EXPECTED_COUNTRY:
+    own_country_fields = (observer_scoped or include_monthly_economy or include_trade_income
+                          or include_country_loans or include_country_modifiers or include_military_quality)
+    if (not isinstance(country, str) or re.fullmatch(r"[A-Z0-9]{3}", country) is None
+            or (country != EXPECTED_COUNTRY and not own_country_fields)):
         report["status"] = "unsupported_country"
-        report["errors"].append({"stage": "request", "status": "unknown", "error": "Only FRA is permitted"})
+        report["errors"].append({"stage": "request", "status": "unknown", "error": "Country outside enabled reader scope"})
         _apply_cleanup(report, None, None)
         return report
 

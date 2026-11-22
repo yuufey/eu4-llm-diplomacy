@@ -127,13 +127,13 @@
     },
     {
       "path": "bridge/information/foreign_manpower_memory.py",
-      "bytes": 19827,
-      "sha256": "b04c474f5d940853cce4ceb941afaa0e57fd457e6b9ce45541dc3c3ac1e368c8"
+      "bytes": 20046,
+      "sha256": "1fb228b732d1cc26733d49079198d694616031ee70900942d242a9770befafc1"
     },
     {
       "path": "bridge/information/foreign_military_visibility_memory.py",
-      "bytes": 15024,
-      "sha256": "095a8cee07c5c9f7a12fc00dc1df8f1578a2e32fe62235f4c813cce9fb20a6e5"
+      "bytes": 15148,
+      "sha256": "336c6f4d35d644281ceef2d362a0278edb235544efa03f236b55f2f3ae49d344"
     },
     {
       "path": "bridge/information/country_reference_memory.py",
@@ -167,13 +167,13 @@
     },
     {
       "path": "bridge/information/foreign_force_statistics_memory.py",
-      "bytes": 35055,
-      "sha256": "03f44f55733a54be8fde099accbf451a6d714276d05a234d3db34079570c7caf"
+      "bytes": 35096,
+      "sha256": "04e0a09640b3641a61cd2326c61de3b7450c95b66be4fd764bdacb802736029d"
     },
     {
       "path": "bridge/information/foreign_manpower_capture.py",
-      "bytes": 8780,
-      "sha256": "ec26e379ffeb6c4c7b0c492aab465db35850cd51d89caeafcfbcb54127e3fc22"
+      "bytes": 9150,
+      "sha256": "660a6efdaf036b8356a88592667a3d6487057e21c9ef61ef838d6aa5b3b4997d"
     }
   ],
   "code_guards": [

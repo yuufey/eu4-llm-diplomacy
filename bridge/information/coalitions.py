@@ -7,7 +7,7 @@ from .catalog import get_topic, validate_query
 from .model import InformationError, canonical
 from .observation_time import dates_match
 from .sources import _result, _source_info
-from .trade_income import NativeTradeIncomeSource, _context_reason, _identity, _session_binding
+from .trade_income import NativeTradeIncomeSource, _identity, _observer_context_reason, _session_binding
 
 
 FIELDS = ("coalition_members", "targets")
@@ -20,7 +20,7 @@ class NativeCoalitionsSource(NativeTradeIncomeSource):
     def catalog(self):
         topic = get_topic("R03")
         topic.update(source=type(self).__name__, status="available", object_types=["country"],
-                     observer_roles=[], observer_scope=["FRA"], supported_versions=["1.37.4"],
+                     observer_roles=[], observer_scope=[], supported_versions=["1.37.4"],
                      context_scope="visible_scope", visibility="visible_scope",
                      triggers=["query", "periodic", "change"],
                      parameters={"type": "object", "properties": {}, "additionalProperties": False})
@@ -63,7 +63,7 @@ class NativeCoalitionsSource(NativeTradeIncomeSource):
             return result({field: {"status": status, "reason": reason}
                            for field in normalized["fields"]})
 
-        if (_context_reason(current) or _context_reason(before)
+        if (_observer_context_reason(current) or _observer_context_reason(before)
                 or _identity(current) != _identity(before)):
             return failure("COALITION_CONTEXT_UNAVAILABLE", "unavailable")
         installation, creation, reason = _session_binding(self.base_source)
@@ -71,9 +71,9 @@ class NativeCoalitionsSource(NativeTradeIncomeSource):
             return failure("COALITION_INSTALLATION_UNAVAILABLE", "unavailable")
         try:
             capture = self.capture if self.capture is not None else coalition_capture.capture
-            report = capture(installation, country, observer="FRA")
+            report = capture(installation, country, observer=before["observer"])
             after = self.context()
-            if (_context_reason(after) or _identity(after) != _identity(before)
+            if (_observer_context_reason(after) or _identity(after) != _identity(before)
                     or not dates_match(current.get("game_date"), before.get("game_date"),
                                        after.get("game_date"))):
                 return failure("COALITION_CONTEXT_CHANGED_DURING_CAPTURE")

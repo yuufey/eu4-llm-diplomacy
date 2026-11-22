@@ -1,11 +1,13 @@
 """Reuse the typed bilateral record capture with independent schedule guards."""
 from copy import deepcopy
 from collections.abc import Mapping
+from functools import partial
 from pathlib import Path
 import hashlib
 import json
 import re
 from . import opinion_modifiers_memory as records
+from . import opinion_capture as opinion
 from . import foreign_technology_capture as owner
 
 ROOT=Path(__file__).resolve().parents[2]
@@ -24,22 +26,29 @@ def _load_profile():
         raise ValueError('OPINION_END_DATES_PROFILE_BASE')
     for item in own['dependencies']:
         path=(ROOT/item['path']).resolve(strict=True);path.relative_to(ROOT)
-        if path.stat().st_size!=item['bytes'] or not 0<item['bytes']<=16*1024*1024:
+        size = path.stat().st_size
+        if not 0 < size <= 16 * 1024 * 1024:
             raise ValueError('OPINION_END_DATES_DEPENDENCY_SIZE')
         with path.open('rb') as stream:digest=hashlib.file_digest(stream,'sha256').hexdigest()
-        if digest!=item['sha256']:raise ValueError('OPINION_END_DATES_DEPENDENCY_PIN')
+        if not opinion._record_layout_matches(item, size, digest):
+            raise ValueError('OPINION_END_DATES_DEPENDENCY_PIN')
     merged=deepcopy(records._load_profile())
     merged.update(profile_id=PROFILE_ID,profile_version=1)
     merged['code_guards'].extend(own['code_guards'])
     return merged
 
 def capture(installation,country,*,observer='FRA'):
-    if observer!='FRA' or not isinstance(country,str) or not re.fullmatch(r'[A-Z0-9]{3}',country) or country=='FRA':
+    if not isinstance(observer, str) or not owner._TAG.fullmatch(observer):
+        raise ValueError('OPINION_OBSERVER_TAG_INVALID')
+    if not isinstance(country,str) or not re.fullmatch(r'[A-Z0-9]{3}',country) or country==observer:
         raise ValueError('OPINION_END_DATES_REQUEST_SCOPE')
     return owner._capture_common(installation,country,observer=observer,schema=SCHEMA,
-        profile_sha256=PROFILE_SHA256,load_profile=_load_profile,observe=records._observe)
+        profile_sha256=PROFILE_SHA256,load_profile=_load_profile,
+        observe=partial(records._observe, observer=observer), observer_scoped=True)
 
 def validate_capture(report,context,creation,country):
     if not isinstance(report,Mapping) or report.get('schema')!=SCHEMA:return False
     return owner._validate_capture_common(report,context,creation,country,schema=SCHEMA,
-        profile_sha256=PROFILE_SHA256,load_profile=_load_profile,observe=records._observe,require_access=True)
+        profile_sha256=PROFILE_SHA256,load_profile=_load_profile,
+        observe=partial(records._observe, observer=context.get('observer')),
+        require_access=True, observer_scoped=True)

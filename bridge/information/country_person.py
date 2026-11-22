@@ -19,7 +19,7 @@ from .model import InformationError, canonical
 from .sources import _result, _source_info
 from .trade_income import (
     NativeTradeIncomeSource,
-    _context_reason as _base_context_reason,
+    _observer_context_reason as _base_context_reason,
     _identity,
     _session_binding,
 )
@@ -32,7 +32,6 @@ _POINTER_LIKE = re.compile(r"0x[0-9a-fA-F]{6,}")
 _TOPIC = "S04"
 _FIELD_KEYS = ("ruler", "heir", "dynasty", "personal_union")
 _BACKEND_FIELDS = {name: f"S04.{name}" for name in _FIELD_KEYS}
-_OBSERVER = "FRA"
 _VERSION = "1.37.4"
 _BASIS = "native_monarch_heir_dynasty_and_personal_union_panel_projection"
 _VALUE_ORIGIN = "copied_native_country_person_panel_inputs"
@@ -61,7 +60,6 @@ class NativeCountryPersonSource(NativeTradeIncomeSource):
                 "basis": _BASIS,
                 "value_origin": _VALUE_ORIGIN,
                 "paths": [f"observation.backend.targets[0].fields['{backend_name}']"],
-                "supported_observers": [_OBSERVER],
                 "runtime_validation": "country_person_capture.validate_capture",
                 "gaps": [
                     "FULL_UI_LABEL_NOT_COMPLETE",
@@ -76,7 +74,7 @@ class NativeCountryPersonSource(NativeTradeIncomeSource):
             "fields": fields,
             "object_types": ["country"],
             "observer_roles": [],
-            "observer_scope": [_OBSERVER],
+            "observer_scope": [],
             "parameters": {
                 "type": "object",
                 "properties": {},
@@ -89,7 +87,7 @@ class NativeCountryPersonSource(NativeTradeIncomeSource):
             "context_scope": "visible_scope",
             "visibility": "visible_scope",
             "scope_note": (
-                "FRA是逻辑观察方，查询对象为单个国家且可包括FRA；"
+                "查询对象是观察国自身或其已获准查看的国家。"
                 "四字段均为partial。ruler只投影已读人物组件与PERSONAL_UNION_WITH显示分支，"
                 "不代表完整标题/摄政/技能提示；heir隐藏分支不代表没有继承人；"
                 "personal_union只表示该人物面板显示用的上级统治者支路，"
@@ -136,11 +134,8 @@ class NativeCountryPersonSource(NativeTradeIncomeSource):
         parameters = query.get("parameters", {})
         if not isinstance(parameters, dict) or parameters:
             raise InformationError("invalid_parameters", "S04 has no extra parameters")
-        if context is not None and (
-            not isinstance(context, dict) or context.get("observer") != _OBSERVER
-        ):
-            raise InformationError(
-                "observer_scope_mismatch", "The verified logical observer is FRA")
+        if context is not None and not isinstance(context, dict):
+            raise InformationError("invalid_context", "S04 context must be an object")
         return {
             "topic": _TOPIC,
             "object": deepcopy(obj),
@@ -150,7 +145,7 @@ class NativeCountryPersonSource(NativeTradeIncomeSource):
 
     @staticmethod
     def _context_reason(context: dict) -> str | None:
-        reason = _base_context_reason(context, _OBSERVER)
+        reason = _base_context_reason(context)
         return reason.replace("TRADE_INCOME_", "COUNTRY_PERSON_", 1) if reason else None
 
     @staticmethod
@@ -450,10 +445,11 @@ class NativeCountryPersonSource(NativeTradeIncomeSource):
         normalized = self.validate_query(query, current)
         target = normalized["object"]["country"]
         requested = normalized["fields"]
+        observer = current.get('observer')
         provenance = {
             "read_only": True,
             "native_function_invoked": False,
-            "observer": _OBSERVER,
+            "observer": observer,
             "target": target,
             "basis": _BASIS,
             "actual_UI_observed": False,
@@ -516,7 +512,7 @@ class NativeCountryPersonSource(NativeTradeIncomeSource):
         report = None
         capture_error: str | None = None
         try:
-            report = capture(installation, country=target, observer=_OBSERVER)
+            report = capture(installation, country=target, observer=observer)
         except Exception as exc:
             capture_error = "COUNTRY_PERSON_CAPTURE_FAILED:" + type(exc).__name__
 
@@ -561,8 +557,8 @@ class NativeCountryPersonSource(NativeTradeIncomeSource):
             ).hexdigest()
             observation = report["observation"]
             backend = observation["backend"]
-            observer = backend["observer"]
-            if not isinstance(observer, Mapping) or observer.get("tag") != _OBSERVER:
+            observer_binding = backend["observer"]
+            if not isinstance(observer_binding, Mapping) or observer_binding.get("tag") != observer:
                 raise ValueError("observer identity")
             targets = backend["targets"]
             if (

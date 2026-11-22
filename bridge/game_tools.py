@@ -116,10 +116,15 @@ class GameTools:
                 f"Controlled country: {self.control.controlled_country or 'none (read only)'}. "
                 "For inbound accept/reject the recipient is the decision country."
             )
+        self.diplomacy_execution_error = getattr(service, "diplomacy_execution_error", None)
         self._definitions = deepcopy(list(DIPLOMACY_TOOL_DEFINITIONS))
-        if getattr(self.diplomacy, "can_recall_diplomat", False) is True:
+        if self.diplomacy_execution_error is not None:
+            self._definitions = [item for item in self._definitions if item["name"] != "execute_diplomatic_action"]
+            self.instructions += " Diplomacy execution is unavailable because the native country set could not be confirmed."
+        elif getattr(self.diplomacy, "can_recall_diplomat", False) is True:
             self._definitions.append(deepcopy(_RECALL_DEFINITION))
         self.clock = getattr(service, "game_time_control", None)
+        self.game_time_control_error = getattr(service, "game_time_control_error", None)
         if self.clock is not None:
             self._definitions.append(deepcopy(GAME_TIME_DEFINITION))
             self.instructions += " set_game_speed controls the game clock in this observer test."
@@ -132,7 +137,9 @@ class GameTools:
 
     def call(self, name: str, arguments: Any = None) -> Any:
         if name == GAME_TIME_TOOL and self.clock is None:
-            raise InformationError("permission_denied", "Clock control is disabled")
+            raise InformationError(*(self.game_time_control_error or ("permission_denied", "Clock control is disabled")))
+        if name in ("execute_diplomatic_action", RECALL_TOOL) and self.diplomacy_execution_error is not None:
+            raise InformationError(*self.diplomacy_execution_error)
         if not isinstance(name, str) or name not in self._schemas:
             return self.information.call(name, arguments)
         arguments = {} if arguments is None else arguments
@@ -160,12 +167,32 @@ class GameTools:
                         actor = self.control.authorize_listing(arguments.get("actor"), arguments.get("recipient"))
                         if actor is not None:
                             arguments["actor"] = actor
-                return getattr(self.diplomacy, name)(**arguments)
+                result = getattr(self.diplomacy, name)(**arguments)
+                if self.diplomacy_execution_error is not None:
+                    self._mark_diplomacy_execution_unavailable(name, result)
+                return result
             except DiplomacyPermissionError as error:
                 raise InformationError("permission_denied", str(error)) from error
             except InformationError:
                 raise
             except ValueError as error:
                 raise InformationError("invalid_parameters", str(error)) from error
+
+    def _mark_diplomacy_execution_unavailable(self, name: str, result: dict) -> None:
+        code, message = self.diplomacy_execution_error
+        if name == "inspect_diplomatic_action":
+            result.setdefault("interface_support", {}).update(execute="unavailable", execute_reason_code=code)
+            result["authorization"] = {"status": "unavailable", "complete": True,
+                                       "reasons": [{"code": code, "text": message}]}
+        elif name == "list_diplomatic_actions":
+            result["execution_unavailable"] = {"code": code, "message": message}
+            for group in ("actions", "incoming_action_definitions"):
+                for action in result.get(group, ()):
+                    for phase in action.get("phases", {}).values():
+                        phase.update(execute="unavailable", execute_reason_code=code)
+                        phase.pop("execute_protocol", None)
+                        phase.pop("execute_protocol_reason_code", None)
+            for proposal in result.get("incoming_proposals", ()):
+                proposal.pop("execute", None)
 
     dispatch = call

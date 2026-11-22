@@ -55,8 +55,6 @@ def read_fields(reader, base, province_binding, province_scan, observer_binding,
         base, record, binding = _province._validate_binding(base, province_binding)
         _, owner, retained = _country._parse_target(base, owner_binding)
         _, observer, observer_retained = _country._parse_target(base, observer_binding)
-        if observer_retained['tag'] != 'FRA':
-            raise _Unknown('PROVINCE_VALUE_OBSERVER_INVALID')
         if province_scan.get('status') != 'observed':
             raise _Unknown('PROVINCE_VALUE_PROVINCE_SCAN_UNVERIFIED')
         world_expected = int(province_scan['world']['pointer'], 0)

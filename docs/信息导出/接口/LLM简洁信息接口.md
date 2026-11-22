@@ -195,11 +195,11 @@ country视图的current_forces复用N02、F02的现有军力来源。本国输�
 }
 ```
 
-war视图使用actor=FRA和recipient选择当前战争，同一国家对有多场战争时通过war_id选择。W01的简洁输出通过war_candidates给出可选战争对象，每项包含type、war_id、actor和recipient，可直接作为下一次查询的object。默认输出带本次选中的war_id。occupations、blockades和current_forces均按our_side、opposing_side组织各成员国家的数据，双方归属复用W01的完整参战名单。
+`war` 视图的 `actor` 填当前会话配置的观察国，`recipient` 填对手。两国同时参与多场战争时，用 `war_id` 选定其中一场。W01 在 `war_candidates` 中给出可直接用作下一次查询 `object` 的对象，每项包含 `type`、`war_id`、`actor` 和 `recipient`。默认输出包含本次选定的 `war_id`。`occupations`、`blockades` 和 `current_forces` 根据 W01 的参战名单，按 `our_side` 和 `opposing_side` 列出双方国家的数据。
 
 war_id在当前采集会话中标识具体战争对象。战争移出游戏的当前活跃战争名单、对象析构或同一地址创建新战争对象时，原编号退休。新对象取得新编号。退休编号的实时查询返回无可用值，重新查询W01可取得当前编号。已保存战报保留原编号，用于该会话的历史筛选。
 
-统计口径为这些参战国的当前全国状态。战争视图的current_forces对各国使用army_soldiers和navy_ships，人数来自已有原生士兵统计。本国经逻辑观察国身份绑定读取，外国沿用可见统计条件。各字段共用批量国家绑定，每批最多8国。
+`current_forces` 在战争视图中提供各参战国的当前全国军力，`army_soldiers` 为士兵数，`navy_ships` 为舰船数。查询逐国检查外国军力的可见条件。`country` 视图查询法国观察国自身时沿用 N02 的 `army_regiments`，其他观察国的本国查询使用 `army_soldiers`。各字段每批共用最多 8 国的身份核对结果。
 
 ```json
 {

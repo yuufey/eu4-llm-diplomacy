@@ -91,15 +91,15 @@ def _parse_hex(value: Any, reason: str) -> int:
     return parsed
 
 
-def _validated_binding(binding: Any, role: str) -> dict[str, Any]:
+def _validated_binding(binding: Any, role: str, *, observer_tag=OBSERVER_TAG) -> dict[str, Any]:
     if not isinstance(binding, dict):
         raise _Unknown(f"{role.upper()}_BINDING_INVALID")
     tag = binding.get("tag")
     if (type(tag) is not str or len(tag) != 3
             or not all("A" <= char <= "Z" or "0" <= char <= "9" for char in tag)):
         raise _Unknown(f"{role.upper()}_TAG_INVALID")
-    if role == "observer" and tag != OBSERVER_TAG:
-        raise _Unknown("OBSERVER_MUST_BE_FRA")
+    if role == "observer" and tag != observer_tag:
+        raise _Unknown("OBSERVER_MUST_BE_FRA" if observer_tag == OBSERVER_TAG else "OBSERVER_BINDING_MISMATCH")
     slot = binding.get("slot")
     if type(slot) is not int or not 0 <= slot < MAX_COUNTRY_SLOTS:
         raise _Unknown(f"{role.upper()}_SLOT_INVALID")
@@ -159,8 +159,8 @@ def _unknown(reason: str, raw_inputs: dict[str, Any], budget: _BudgetReader) -> 
 
 
 def read_knowledge(reader: Any, module_base: int, observer_binding: Any,
-                   target_binding: Any, province_header: Any) -> dict[str, Any]:
-    """Read target capital's native knowledge predicate for the FRA slot.
+                   target_binding: Any, province_header: Any, *, observer_tag=OBSERVER_TAG) -> dict[str, Any]:
+    """Read the target capital's native knowledge predicate for the observer slot.
 
     The first native read is target country ``+0x14b0``. A pointer that does
     not identify an exact indexed province record is unknown. If the capital's
@@ -173,7 +173,7 @@ def read_knowledge(reader: Any, module_base: int, observer_binding: Any,
         if (type(module_base) is not int or not _province._is_user_address(module_base)
                 or module_base & 7):
             raise _Unknown("MODULE_BASE_INVALID")
-        observer = _validated_binding(observer_binding, "observer")
+        observer = _validated_binding(observer_binding, "observer", observer_tag=observer_tag)
         target = _validated_binding(target_binding, "target")
         if not callable(getattr(reader, "read", None)) and not callable(reader):
             raise _Unknown("READER_INVALID")

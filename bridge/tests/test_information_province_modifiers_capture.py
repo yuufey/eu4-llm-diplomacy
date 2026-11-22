@@ -43,7 +43,8 @@ def _leaf_result(keys=KEYS, *, rows=None, status="partial"):
 def _patch_owner(monkeypatch, leaf_result):
     calls = {"read_two_pass": [], "observe": [], "capture_common": []}
 
-    def fake_read_two_pass(reader, module_base, province_id, *, observer, fields, read_fields):
+    def fake_read_two_pass(reader, module_base, province_id, *, observer, fields, read_fields, observer_scoped):
+        assert observer_scoped is True
         calls["read_two_pass"].append((reader, module_base, province_id, observer, fields, read_fields))
         binding = {
             "province_id": province_id,
@@ -66,7 +67,8 @@ def _patch_owner(monkeypatch, leaf_result):
 
     def fake_capture_common(installation, country, *, observer, schema,
                             profile_sha256, load_profile, observe,
-                            allow_observer_target=False):
+                            allow_observer_target=False, observer_scoped=False):
+        assert observer_scoped is True
         calls["capture_common"].append({
             "installation": installation,
             "country": country,
@@ -92,7 +94,7 @@ def _patch_owner(monkeypatch, leaf_result):
     return calls
 
 
-def test_capture_uses_fra_owner_and_projects_true_false_unknown_with_raw_leaf():
+def test_capture_projects_true_false_unknown_with_raw_leaf():
     # Exercise the actual callback through its owner is done in the next test;
     # this case focuses on shape projection without process access.
     result = _leaf_result()
@@ -112,27 +114,28 @@ def test_capture_uses_fra_owner_and_projects_true_false_unknown_with_raw_leaf():
     assert projected["gaps"] == result["gaps"]
 
 
-def test_capture_calls_profiled_owner_and_existing_g02_double_pass(monkeypatch):
+@pytest.mark.parametrize("observer", ("FRA", "TUR"))
+def test_capture_calls_profiled_owner_and_existing_g02_double_pass(monkeypatch, observer):
     raw = _leaf_result()
     calls = _patch_owner(monkeypatch, raw)
 
-    report = capture.capture(Path("installation.json"), PROVINCE_ID, KEYS, observer="FRA")
+    report = capture.capture(Path("installation.json"), PROVINCE_ID, KEYS, observer=observer)
 
     assert set(report) == {"schema", "observer", "object", "modifier_keys", "capture"}
     assert report["schema"] == capture.SCHEMA
-    assert report["observer"] == "FRA"
+    assert report["observer"] == observer
     assert report["object"] == {"type": "province", "province_id": PROVINCE_ID}
     assert report["modifier_keys"] == KEYS
     assert report["capture"]["schema"] == capture.INNER_SCHEMA
     owner_args = calls["capture_common"][0]
     assert owner_args["installation"] == Path("installation.json")
-    assert owner_args["country"] == owner_args["observer"] == "FRA"
+    assert owner_args["country"] == owner_args["observer"] == observer
     assert owner_args["schema"] == capture.INNER_SCHEMA
     assert owner_args["profile_sha256"] == capture.PROFILE_SHA256
     assert owner_args["load_profile"] is capture._load_profile
     assert owner_args["allow_observer_target"] is True
     callback = calls["read_two_pass"][0]
-    assert callback[1:5] == (BASE, PROVINCE_ID, "FRA", (capture.FIELD,))
+    assert callback[1:5] == (BASE, PROVINCE_ID, observer, (capture.FIELD,))
     assert callback[5] is not None
     field = report["capture"]["observation"]["backend"]["fields"][capture.FIELD]
     assert field["status"] == "known"
@@ -229,6 +232,7 @@ def test_validate_capture_enforces_outer_key_order_and_require_access(monkeypatc
     assert args[4]["profile_sha256"] == capture.PROFILE_SHA256
     assert args[4]["load_profile"] is capture._load_profile
     assert args[4]["allow_observer_target"] is True
+    assert args[4]["observer_scoped"] is True
     assert args[4]["require_access"] is True
 
     calls.clear()

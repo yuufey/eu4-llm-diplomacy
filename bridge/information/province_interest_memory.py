@@ -328,8 +328,9 @@ def _invalid_result(province_id: Any, observer: Any) -> dict[str, Any]:
 
 def read_two_pass(reader: Any, base: int, province_id: int, *,
                   observer: str = "FRA",
-                  fields: list[str] | tuple[str, ...] = FIELDS) -> dict[str, Any]:
-    """Read selected G01 province-interest fields behind shared FRA gates.
+                  fields: list[str] | tuple[str, ...] = FIELDS,
+                  observer_scoped=False) -> dict[str, Any]:
+    """Read selected G01 province-interest fields behind shared admission gates.
 
     The returned packet follows ``province_state_memory``'s two-pass envelope,
     but exposes only G01 field names.  The core and claim members are private
@@ -342,7 +343,7 @@ def read_two_pass(reader: Any, base: int, province_id: int, *,
     aliases = tuple(_FIELD_ALIASES[field] for field in selected)
     result = _state.read_two_pass(
         reader, base, province_id, observer=observer,
-        fields=aliases, read_fields=_read_fields)
+        fields=aliases, read_fields=_read_fields, observer_scoped=observer_scoped)
     result = deepcopy(result)
     result["schema"] = SCHEMA
 

@@ -1,6 +1,6 @@
 """Expose a validated current province trade-power cache annotation internally.
 
-This reader reuses the FRA session owner, province admission/discovery checks,
+This reader reuses the session owner and province admission and discovery checks,
 and strict capture replay. It never invokes a game function and does not infer
 an acquisition delta, UI rendering, or cache refresh time.
 """
@@ -18,7 +18,7 @@ from .province_trade_power_memory import FIELD_PROVINCE_TRADE_POWER
 from .province_trade_value_memory import FIELD as _VALUE_CALCULATION_FIELD
 from .trade_income import (
     NativeTradeIncomeSource,
-    _context_reason as _base_context_reason,
+    _observer_context_reason as _base_context_reason,
     _identity,
     _session_binding,
 )
@@ -73,7 +73,7 @@ def _public_reason(value: Any, fallback: str) -> str:
     return fallback
 
 
-def _positive_admission(value: Any) -> bool:
+def _positive_admission(value: Any, observer: str) -> bool:
     if not isinstance(value, Mapping):
         return False
     role = value.get("observer_nonplayer_role")
@@ -82,7 +82,7 @@ def _positive_admission(value: Any) -> bool:
         and type(value.get("admitted")) is bool
         and value["admitted"] is True
         and isinstance(role, Mapping)
-        and role.get("observer") == "FRA"
+        and role.get("observer") == observer
         and role.get("verified") is True
     )
 
@@ -135,7 +135,8 @@ def _capture_target(
     """Extract one target only after the module-level strict replay succeeded."""
     if not isinstance(report, Mapping) or set(report) != {"schema", "observer", "object", "capture"}:
         return None, "PROVINCE_TRADE_POWER_CAPTURE_ENVELOPE_INVALID"
-    if report.get("schema") != _CAPTURE_SCHEMA or report.get("observer") != "FRA":
+    observer = context.get("observer")
+    if report.get("schema") != _CAPTURE_SCHEMA or report.get("observer") != observer:
         return None, "PROVINCE_TRADE_POWER_CAPTURE_IDENTITY_INVALID"
     outer = report.get("object")
     if (not isinstance(outer, Mapping) or set(outer) != {"type", "province_id"}
@@ -155,8 +156,8 @@ def _capture_target(
         return None, "PROVINCE_TRADE_POWER_CAPTURE_CLEANUP_UNVERIFIED"
 
     request = inner.get("request")
-    if (not isinstance(request, Mapping) or request.get("country") != "FRA"
-            or request.get("observer") != "FRA"
+    if (not isinstance(request, Mapping) or request.get("country") != observer
+            or request.get("observer") != observer
             or request.get("session_id") != context.get("session_id")
             or type(request.get("creation_filetime")) is not int
             or request["creation_filetime"] != creation):
@@ -176,11 +177,11 @@ def _capture_target(
 
     backend = observation.get("backend")
     consistency = backend.get("consistency") if isinstance(backend, Mapping) else None
-    observer = backend.get("observer") if isinstance(backend, Mapping) else None
+    backend_observer = backend.get("observer") if isinstance(backend, Mapping) else None
     if (not isinstance(backend, Mapping) or backend.get("status") != "observed"
             or not isinstance(consistency, Mapping) or consistency.get("status") != "stable"):
         return None, "PROVINCE_TRADE_POWER_BACKEND_UNSTABLE"
-    if not isinstance(observer, Mapping) or observer.get("tag") != "FRA":
+    if not isinstance(backend_observer, Mapping) or backend_observer.get("tag") != observer:
         return None, "PROVINCE_TRADE_POWER_BACKEND_OBSERVER_MISMATCH"
     targets = backend.get("targets")
     if not isinstance(targets, list) or len(targets) != 1 or not isinstance(targets[0], Mapping):
@@ -192,7 +193,7 @@ def _capture_target(
     admissions = target.get("admission_by_pass")
     discoveries = target.get("discovery_by_pass")
     if (not isinstance(admissions, Mapping) or not isinstance(discoveries, Mapping)
-            or any(not _positive_admission(admissions.get(phase)) for phase in _PASS_PHASES)
+            or any(not _positive_admission(admissions.get(phase), observer) for phase in _PASS_PHASES)
             or any(not _positive_discovery(discoveries.get(phase)) for phase in _PASS_PHASES)):
         return None, "PROVINCE_TRADE_POWER_ADMISSION_OR_DISCOVERY_UNVERIFIED"
 
@@ -272,7 +273,7 @@ def _project_numeric_modifiers(target):
     return result
 
 
-def _project_country_modifiers(target):
+def _project_country_modifiers(target, observer):
     result = {}
     for field, role in _COUNTRY_FIELDS.items():
         item = {'status': 'unknown', 'reason': 'PROVINCE_TRADE_POWER_COUNTRY_INPUT_UNKNOWN',
@@ -287,7 +288,7 @@ def _project_country_modifiers(target):
                     and set(value) == {'country', 'raw', 'scale', 'unit'}
                     and isinstance(value.get('country'), str)
                     and re.fullmatch(r'[A-Z0-9]{3}', value['country'])
-                    and (role != 'observer' or value['country'] == 'FRA')
+                    and (role != 'observer' or value['country'] == observer)
                     and type(value.get('raw')) is int and _INT32_MIN <= value['raw'] <= _INT32_MAX
                     and type(value.get('scale')) is int and value['scale'] == 1000
                     and value.get('unit') == 'ratio'):
@@ -297,7 +298,7 @@ def _project_country_modifiers(target):
     return result
 
 
-def _project_calculation(target, cache_value):
+def _project_calculation(target, cache_value, observer):
     result = {'status': 'unknown', 'reason': 'PROVINCE_TRADE_POWER_CALCULATION_INPUT_UNKNOWN',
               'basis': _CALCULATION_BASIS, 'period': 'current', 'partial': True, 'complete': False,
               'argument_mode': 'cache_writer_zero_additional_inputs',
@@ -332,7 +333,7 @@ def _project_calculation(target, cache_value):
                 or not _INT32_MIN <= bonus <= _INT32_MAX or (not active and bonus != 0)):
             return result
         numeric = _project_numeric_modifiers(target)
-        controller = _project_country_modifiers(target)['controller']
+        controller = _project_country_modifiers(target, observer)['controller']
         if controller['status'] != 'known' or any(v['status'] != 'known' for v in numeric.values()):
             return result
         from .province_trade_power_calculation import calculate_current
@@ -346,7 +347,7 @@ def _project_calculation(target, cache_value):
     return result
 
 
-def _project_node_allocation(target, cache_value):
+def _project_node_allocation(target, cache_value, observer):
     result = {'status': 'unknown', 'reason': 'PROVINCE_NODE_ALLOCATION_INPUT_UNKNOWN',
         'basis': _ALLOCATION_BASIS, 'period': 'current', 'partial': True, 'complete': False,
         'component': 'TP_PROVINCE_POWER', 'cache_refresh_timing_verified': False,
@@ -369,7 +370,7 @@ def _project_node_allocation(target, cache_value):
             or type(value['province_id']) is not int or value['province_id'] != target['province_id']
             or type(value['center_province_id']) is not int or not 1 <= value['center_province_id'] <= _MAX_PROVINCE_ID
             or not isinstance(value['recipient_country'], str) or re.fullmatch(r'[A-Z0-9]{3}', value['recipient_country']) is None
-            or value['observer_country'] != 'FRA'
+            or value['observer_country'] != observer
             or type(value['member_count']) is not int or not 1 <= value['member_count'] <= 512
             or type(value['observed_member_count']) is not int or not 1 <= value['observed_member_count'] <= value['member_count']
             or type(value['owner_present']) is not bool or type(value['observer_sum_complete']) is not bool
@@ -381,7 +382,7 @@ def _project_node_allocation(target, cache_value):
             return result
     if value['contribution_raw'] != (cache_value['raw'] if value['owner_present'] else 0):
         return result
-    if value['observer_contribution_raw'] != (value['contribution_raw'] if value['recipient_country'] == 'FRA' else 0):
+    if value['observer_contribution_raw'] != (value['contribution_raw'] if value['recipient_country'] == observer else 0):
         return result
     if value['observer_sum_complete']:
         if (value['observed_member_count'] != value['member_count']
@@ -492,7 +493,7 @@ def _project_value_calculation(target, province_id):
 
 
 class NativeProvinceTradePowerReader(NativeTradeIncomeSource):
-    """Read a validated current FRA province trade-power cache annotation."""
+    """Read validated trade power from a province discovered by the observer."""
 
     event_types: tuple[str, ...] = ()
 
@@ -523,7 +524,7 @@ class NativeProvinceTradePowerReader(NativeTradeIncomeSource):
 
     @staticmethod
     def _context_reason(context: Any) -> str | None:
-        reason = _base_context_reason(context, "FRA")
+        reason = _base_context_reason(context)
         return reason.replace("TRADE_INCOME_", "PROVINCE_TRADE_POWER_", 1) if reason else None
 
     @staticmethod
@@ -556,7 +557,7 @@ class NativeProvinceTradePowerReader(NativeTradeIncomeSource):
                 "name": "NativeProvinceTradePowerReader",
                 "mode": "live",
                 "status": source_status,
-                "observer": "FRA",
+                "observer": context.get("observer"),
                 "session_id": context.get("session_id")
                     if isinstance(context.get("session_id"), str) else None,
                 "provenance": deepcopy(dict(provenance)),
@@ -584,7 +585,6 @@ class NativeProvinceTradePowerReader(NativeTradeIncomeSource):
         public_id = province_id if type(province_id) is int else 0
         empty_context: dict[str, Any] = {}
         provenance: dict[str, Any] = {
-            "observer": "FRA",
             "province_id": public_id,
             "read_only": True,
             "native_function_invoked": False,
@@ -621,7 +621,9 @@ class NativeProvinceTradePowerReader(NativeTradeIncomeSource):
                 "PROVINCE_TRADE_POWER_CONTEXT_INVALID", provenance,
                 "PROVINCE_TRADE_POWER_CONTEXT_INVALID",
             )
+        observer = current.get("observer")
         provenance.update({
+            "observer": observer,
             "session_id": current.get("session_id")
                 if isinstance(current.get("session_id"), str) else None,
         })
@@ -688,7 +690,7 @@ class NativeProvinceTradePowerReader(NativeTradeIncomeSource):
         report = None
         capture_failed = False
         try:
-            report = capture(installation, province_id=province_id, observer="FRA")
+            report = capture(installation, province_id=province_id, observer=observer)
         except Exception:
             capture_failed = True
 
@@ -763,11 +765,11 @@ class NativeProvinceTradePowerReader(NativeTradeIncomeSource):
         if self.with_numeric_inputs:
             result['numeric_modifiers'] = _project_numeric_modifiers(target)
         if self.with_country_inputs:
-            result['country_modifiers'] = _project_country_modifiers(target)
+            result['country_modifiers'] = _project_country_modifiers(target, observer)
         if self.with_calculation:
-            result['calculation'] = _project_calculation(target, value)
+            result['calculation'] = _project_calculation(target, value, observer)
         if self.with_node_allocation:
-            result['node_allocation'] = _project_node_allocation(target, value)
+            result['node_allocation'] = _project_node_allocation(target, value, observer)
         if self.with_value_calculation:
             result['value_calculation'] = _project_value_calculation(target, province_id)
         if self.with_node_cash:

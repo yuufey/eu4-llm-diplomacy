@@ -1,4 +1,4 @@
-"""Own a current, bounded positive-index discovery sweep for logical FRA.
+"""Own a current, bounded positive-index discovery sweep for the configured observer.
 
 The existing province profile owns session/role and base layout evidence.
 This independent profile adds the discovery word-count layout and guards;
@@ -6,6 +6,7 @@ the saved-snapshot parser and the established G02 reader remain separate.
 """
 from __future__ import annotations
 
+from functools import partial
 import hashlib
 import json
 from pathlib import Path
@@ -18,7 +19,8 @@ from . import province_discovery_memory_v2 as _memory
 
 ROOT = Path(__file__).resolve().parents[2]
 PROFILE_FILE = Path(__file__).with_name('profiles') / 'province-discovery-memory-1374-v1-sampling-r1.json'
-PROFILE_SHA256 = '342be128660a95b0f633754770295deefd7226495ad5be515dd14ab473ba3298'
+PROFILE_SHA256 = 'b0d9be15fcb59eabd45c42d352908235131833088f99652703b88ef6809aff17'
+_LEGACY_PROFILE_SHA256 = '342be128660a95b0f633754770295deefd7226495ad5be515dd14ab473ba3298'
 PROFILE_ID = 'province-discovery-memory-1374'
 SCHEMA = 'information.province_discovery_capture.v1'
 INNER_SCHEMA = 'information.province_discovery_observer_snapshot.v1'
@@ -103,11 +105,12 @@ def _load_profile():
     return profile
 
 
-def _observe(reader, module_base, country, profile):
+def _observe(reader, module_base, country, profile, *, observer="FRA"):
     def backend(read, base, target):
-        if target != 'FRA':
+        if target != observer:
             raise ValueError('DISCOVERY_OBSERVER_SCOPE')
-        result = _memory.read_two_pass(read, base, 'FRA')
+        options = {'observer_scoped': True} if observer != 'FRA' else {}
+        result = _memory.read_two_pass(read, base, observer, **options)
         return {'schema': INNER_SCHEMA,
             'status': 'observed' if result['status'] == 'known' else 'unknown',
             'consistency': result['consistency'], 'targets': [{
@@ -118,15 +121,20 @@ def _observe(reader, module_base, country, profile):
 
 
 def capture(installation, *, observer='FRA'):
-    return _owner._capture_common(installation, 'FRA', observer=observer, schema=SCHEMA,
-        profile_sha256=PROFILE_SHA256, load_profile=_load_profile, observe=_observe,
-        allow_observer_target=True)
+    return _owner._capture_common(installation, observer, observer=observer, schema=SCHEMA,
+        profile_sha256=PROFILE_SHA256, load_profile=_load_profile, observe=partial(_observe, observer=observer),
+        allow_observer_target=True, observer_scoped=True)
 
 
 def validate_capture(report, context, creation):
-    return _owner._validate_capture_common(report, context, creation, 'FRA',
-        schema=SCHEMA, profile_sha256=PROFILE_SHA256, load_profile=_load_profile,
-        observe=_observe, allow_observer_target=True, require_access=True)
+    observer = context.get('observer') if isinstance(context, dict) else None
+    profile_sha256 = PROFILE_SHA256
+    if observer == 'FRA' and isinstance(report, dict) and report.get('profile_sha256') == _LEGACY_PROFILE_SHA256:
+        profile_sha256 = _LEGACY_PROFILE_SHA256
+    return _owner._validate_capture_common(report, context, creation, observer,
+        schema=SCHEMA, profile_sha256=profile_sha256, load_profile=_load_profile,
+        observe=partial(_observe, observer=observer), allow_observer_target=True, require_access=True,
+        observer_scoped=True)
 
 
 def project_fields(report):

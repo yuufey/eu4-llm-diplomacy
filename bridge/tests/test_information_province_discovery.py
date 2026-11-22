@@ -248,18 +248,19 @@ def test_malformed_or_private_projection_is_retracted(tmp_path, projection):
     assert len(backend.captures) == len(backend.validations) == len(backend.projections) == 1
 
 
-def test_foreign_selector_and_non_fra_observer_never_capture(tmp_path):
+def test_country_selector_must_match_the_configured_observer(tmp_path):
     source, base, backend = make_source(tmp_path)
     foreign = source.read(make_query(obj={"type": "country", "country": "ENG"}),
                           base.context())
     assert foreign["fields"][FIELD]["status"] == "not_applicable"
     assert foreign["fields"][FIELD]["reason"] == "C02_OBSERVER_DISCOVERY_VIEW_ONLY"
 
-    base.current["observer"] = "ENG"
-    wrong_observer = source.read(make_query(), base.context())
-    assert wrong_observer["fields"][FIELD]["status"] == "unavailable"
-    assert wrong_observer["fields"][FIELD]["reason"] == "C02_OBSERVER_SCOPE_MISMATCH"
     assert backend.captures == backend.validations == backend.projections == []
+
+    base.current["observer"] = "ENG"
+    scoped = source.read(make_query(obj={"type": "country", "country": "ENG"}), base.context())
+    assert scoped["fields"][FIELD]["status"] == "known"
+    assert backend.captures[0][1] == "ENG"
 
 
 def test_physical_view_is_not_used_to_infer_observer_controller_role(tmp_path):

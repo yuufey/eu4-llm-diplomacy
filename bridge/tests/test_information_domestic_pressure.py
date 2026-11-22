@@ -209,16 +209,16 @@ def _source(tmp_path: Path, *, report=None, session: _Session | None = None):
     return NativeDomesticPressureSource(base, capture=capture), base, session, calls
 
 
-def test_catalog_exposes_legacy_and_partial_unity_fields_in_the_fixed_fra_scope(tmp_path: Path) -> None:
+def test_catalog_exposes_pressure_fields_in_the_current_observer_scope(tmp_path: Path) -> None:
     source, _, _, _ = _source(tmp_path)
     topic = source.catalog()[0]
     assert topic["topic_id"] == "N04"
-    # The live acceptance applies only to the declared fixed-build FRA scope.
     assert topic["status"] == "available"
     assert list(topic["fields"]) == [*FIELDS, "religious_unity", "overextension", "unrest"]
     assert all(topic["fields"][field]["coverage"] == "available" for field in FIELDS)
     assert all(topic["fields"][field]["runtime_validation"] == "validated" for field in FIELDS)
-    assert all(topic["fields"][field]["supported_countries"] == ["FRA"] for field in FIELDS)
+    assert topic["observer_roles"] == ["country"]
+    assert topic["observer_scope"] == []
     assert topic["supported_versions"] == ["1.37.4"]
     assert [topic["fields"][field]["unit"] for field in FIELDS] == [
         "stability", "war_exhaustion", "corruption"
@@ -229,7 +229,6 @@ def test_catalog_exposes_legacy_and_partial_unity_fields_in_the_fixed_fra_scope(
     assert unity["runtime_validation"] == "normal_cache_without_processors_observed"
     assert unity["unit"] == "fraction"
     assert unity["scale"] == 1000
-    assert unity["supported_countries"] == ["FRA"]
     assert unity["value_origin"] == "derived_from_copied_native_inputs"
     assert unity["upper_clamp"] is False
     overextension = topic["fields"]["overextension"]
@@ -302,9 +301,9 @@ def test_known_zero_negative_and_raw_hex_are_preserved(tmp_path: Path) -> None:
     ],
 )
 def test_scope_and_parameters_are_strict(tmp_path: Path, bad_query: dict) -> None:
-    source, _, _, calls = _source(tmp_path)
+    source, base, _, calls = _source(tmp_path)
     with pytest.raises(InformationError):
-        source.validate_query(bad_query)
+        source.validate_query(bad_query, base.context())
     assert calls == []
 
 

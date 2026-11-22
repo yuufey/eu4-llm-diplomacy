@@ -93,12 +93,12 @@ class NativeRelationSource(NativeSubjectRelationSource):
             "title": "本国关系网与选定国家对（部分类型）", "status": "available",
             "object_types": ["country_pair", "country"], "parameters": _parameters(),
             "relation_types_by_object": {"country_pair": list(_FAMILIES), "country": list(_NETWORK_FAMILIES)},
-            "observer_roles": ["country"], "observer_scope": ["FRA"],
+            "observer_roles": ["country"], "observer_scope": [],
             "supported_versions": ["1.37.4"], "triggers": ["query", "periodic", "change"],
             "change_detection": "sampled_state_comparison_not_lossless_events",
             "source": "NativeRelationSource",
             "visibility": "visible_scope", "context_scope": "adapter_managed",
-            "scope_note": "国家对支持九类；FRA国家视图枚举联盟、联姻、贸易联盟以及双向驻港权、保证、显式军事访问，共六类。完整关系网与期限继续开发。",
+            "scope_note": "国家对支持九类。观察国关系网支持联盟、联姻、贸易联盟、驻港权、保证和显式军事访问，共六类。",
             "fields": {field: {
                 "coverage": "partial", "complete": False, "unit": "relation_records",
                 "source": "native_diplomacy_inspections_and_current_relation_caches",
@@ -127,8 +127,6 @@ class NativeRelationSource(NativeSubjectRelationSource):
                     or obj["actor"] == obj["recipient"]):
                 raise InformationError("invalid_object", "R01 requires two distinct country_pair endpoints")
             actor = obj["actor"]
-        if actor != "FRA":
-            raise InformationError("observer_scope_mismatch", "R01 actor must be the verified FRA observer")
         fields = query["fields"]
         if (not isinstance(fields, list) or not fields or any(not isinstance(f, str) for f in fields)
                 or len(set(fields)) != len(fields) or set(fields) - set(_FIELDS)):
@@ -142,8 +140,11 @@ class NativeRelationSource(NativeSubjectRelationSource):
                 or any(not isinstance(f, str) for f in families)
                 or len(set(families)) != len(families) or set(families) - set(supported)):
             raise InformationError("invalid_parameters", "relation_types must be a nonempty unique list supported by this object view")
-        if context is not None and (not isinstance(context, dict) or context.get("observer", "FRA") != "FRA"):
-            raise InformationError("observer_scope_mismatch", "R01 is outside the FRA observer context")
+        if context is not None:
+            if not isinstance(context, dict):
+                raise InformationError("invalid_context", "context must be an object")
+            if context.get("observer") is not None and context["observer"] != actor:
+                raise InformationError("observer_scope_mismatch", "R01 actor must match the configured observer country")
         normalized = {"topic": "R01", "object": deepcopy(obj), "fields": list(fields),
                       "parameters": {"relation_types": list(families)}}
         canonical(normalized)
@@ -159,7 +160,7 @@ class NativeRelationSource(NativeSubjectRelationSource):
                               "fleet_basing_memory.capture", "trade_league_memory.capture",
                               "directed_relation_memory.capture"],
             "inspection_calls": deepcopy(calls), "phase": "initiate",
-            "scope": scope, "global_relation_claim": False,
+            "scope": scope, "observer_scope": context.get("observer"), "global_relation_claim": False,
             "atomic_snapshot_claim": False,
         }
         if reason:
@@ -394,7 +395,10 @@ class NativeRelationSource(NativeSubjectRelationSource):
             if (_identity_snapshot(context) != _identity_snapshot(before)
                     or not dates_match(context["game_date"], before["game_date"])):
                 return fail("BASE_CONTEXT_CHANGED_BEFORE_QUERY", unavailable=True)
-        if normalized["object"]["type"] == "country":
+        obj = normalized["object"]
+        if obj.get("actor", obj.get("country")) != before["observer"]:
+            return fail("OBSERVER_SCOPE_MISMATCH", unavailable=True)
+        if obj["type"] == "country":
             return self._read_network(normalized, before)
         inspector = getattr(getattr(self.base_source, "diplomacy_tools", None), "inspect_diplomatic_action", None)
 

@@ -27,7 +27,7 @@ import re
 import sqlite3
 import threading
 import uuid
-from typing import Any, Iterator, Mapping
+from typing import Any, Iterator, Mapping, NamedTuple
 
 
 REQUEST_STATES = frozenset(
@@ -332,6 +332,12 @@ class EvidenceRecord:
         }
 
 
+class ResponseLogCursor(NamedTuple):
+    device: int
+    file_id: int
+    offset: int
+
+
 @dataclass(frozen=True)
 class RequestRecord:
     experiment_id: str
@@ -357,6 +363,7 @@ class RequestRecord:
     last_evidence_sha256: str | None
     principal: str | None = None
     decision_country: str | None = None
+    response_log_cursor: ResponseLogCursor | None = None
 
     @property
     def payload_fingerprint(self) -> str:
@@ -522,6 +529,7 @@ class DurableJournal:
                 native_receipt_json TEXT,
                 principal TEXT,
                 decision_country TEXT,
+                response_log_cursor TEXT,
                 PRIMARY KEY (experiment_id, session_id, request_id)
             )
             """
@@ -598,13 +606,13 @@ class DurableJournal:
                     payload_sha256, status, result_json, created_at,
                     updated_at, submission_id, submission_token, claimed_at,
                     submitted_at, native_receipt_json, principal,
-                    decision_country
+                    decision_country, response_log_cursor
                 )
                 SELECT experiment_id, session_id, request_id, payload_json,
                        payload_sha256, status, result_json, created_at,
                        updated_at, submission_id, submission_token, claimed_at,
                        submitted_at, native_receipt_json, principal,
-                       decision_country
+                       decision_country, response_log_cursor
                   FROM diplomacy_requests
                 """
             )
@@ -678,6 +686,7 @@ class DurableJournal:
                     native_receipt_json TEXT,
                     principal TEXT,
                     decision_country TEXT,
+                    response_log_cursor TEXT,
                     PRIMARY KEY (experiment_id, session_id, request_id)
                 );
 
@@ -707,22 +716,19 @@ class DurableJournal:
             # Keep databases created by older journal revisions readable.  The
             # migration is additive for columns and rebuilds only the request
             # CHECK constraint when it predates the executed terminal state.
-            columns = {
-                row[1]
-                for row in self._connection.execute(
-                    "PRAGMA table_info(diplomacy_requests)"
-                ).fetchall()
-            }
-            for name, definition in (
-                ("claimed_at", "TEXT"),
-                ("native_receipt_json", "TEXT"),
-                ("principal", "TEXT"),
-                ("decision_country", "TEXT"),
-            ):
-                if name not in columns:
-                    self._connection.execute(
-                        f"ALTER TABLE diplomacy_requests ADD COLUMN {name} {definition}"
-                    )
+            with self._transaction() as connection:
+                columns = {
+                    row[1]
+                    for row in connection.execute("PRAGMA table_info(diplomacy_requests)")
+                }
+                for name in (
+                    "claimed_at", "native_receipt_json", "principal", "decision_country",
+                    "response_log_cursor",
+                ):
+                    if name not in columns:
+                        connection.execute(
+                            f"ALTER TABLE diplomacy_requests ADD COLUMN {name} TEXT"
+                        )
             self._migrate_status_constraint()
 
     def _context(
@@ -815,6 +821,7 @@ class DurableJournal:
     def _record(row: sqlite3.Row) -> RequestRecord:
         payload_json = str(row["payload_json"])
         result_json = row["result_json"]
+        cursor_json = row["response_log_cursor"]
         return RequestRecord(
             experiment_id=str(row["experiment_id"]),
             request_id=str(row["request_id"]),
@@ -847,6 +854,9 @@ class DurableJournal:
             last_evidence_sha256=row["last_evidence_sha256"],
             principal=row["principal"],
             decision_country=row["decision_country"],
+            response_log_cursor=(
+                ResponseLogCursor(*json.loads(cursor_json)) if cursor_json is not None else None
+            ),
         )
 
     def _require_row(
@@ -1581,6 +1591,7 @@ class DurableJournal:
         claim_token: str,
         native_receipt: Any,
         *,
+        response_log_cursor: ResponseLogCursor | None = None,
         experiment_id: str | None = None,
         session_id: str | None = None,
     ) -> RequestRecord:
@@ -1590,6 +1601,8 @@ class DurableJournal:
         persisted as both request metadata and an evidence event so a restart
         can distinguish a claimed-but-never-submitted request from one that
         reached the native transport.
+        The optional response cursor is only a private starting point for
+        scanning the installation log.
         """
 
         experiment, session = self._context(experiment_id, session_id)
@@ -1622,12 +1635,14 @@ class DurableJournal:
                 """
                 UPDATE diplomacy_requests
                    SET status = 'submitted', native_receipt_json = ?,
-                       submitted_at = ?, updated_at = ?
+                       response_log_cursor = ?, submitted_at = ?, updated_at = ?
                  WHERE experiment_id = ? AND session_id = ? AND request_id = ?
                    AND status = 'constructed' AND submission_token = ?
                 """,
                 (
                     receipt_json,
+                    (_canonical_json(response_log_cursor)
+                     if response_log_cursor is not None else None),
                     now,
                     now,
                     experiment,
@@ -1638,6 +1653,36 @@ class DurableJournal:
             )
             self._insert_evidence(connection, experiment, session, evidence)
             return self._record(self._require_row(connection, experiment, session, request))
+
+    def checkpoint_response_log(
+        self, record: RequestRecord, cursor: ResponseLogCursor, *,
+        result: Any = _MISSING, event_id: str | None = None,
+    ) -> None:
+        """Checkpoint a scan and any nonterminal result in one transaction."""
+        previous = record.response_log_cursor
+        if cursor == previous:
+            return
+        if result is not _MISSING:
+            evidence = self._normalize_evidence(
+                record.request_id, "native_response", result, "native_response",
+                None, event_id, None,
+            )
+        with self._transaction() as connection:
+            advanced = connection.execute(
+                """
+                UPDATE diplomacy_requests SET response_log_cursor = ?
+                 WHERE experiment_id = ? AND session_id = ? AND request_id = ?
+                   AND submitted_at IS NOT NULL
+                   AND status IN ('submitted', 'executing', 'waiting_response', 'unknown')
+                   AND response_log_cursor IS ?
+                """,
+                (_canonical_json(cursor), record.experiment_id, record.session_id,
+                 record.request_id, _canonical_json(previous) if previous is not None else None),
+            )
+            if advanced.rowcount and result is not _MISSING:
+                self._apply_result_json(connection, record.experiment_id, record.session_id,
+                                        record.request_id, result, _utc_now())
+                self._insert_evidence(connection, record.experiment_id, record.session_id, evidence)
 
     def mark_executed(
         self,

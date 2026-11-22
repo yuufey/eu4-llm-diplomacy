@@ -50,9 +50,10 @@ def _fullref(tag: str, slot: int, generation: int) -> int:
 
 
 def _write_capture_context(image: Any, *, country: str, admitted: bool,
-                           physical_tag: str = "POR", human_fra: bool = False) -> dict[str, int]:
+                           physical_tag: str = "POR", human_fra: bool = False,
+                           observer: str = "FRA") -> dict[str, int]:
     bindings = {
-        "FRA": {"slot": 122, "generation": 0x1200},
+        observer: {"slot": 122, "generation": 0x1200},
         "POR": {"slot": 189, "generation": 0x5500},
         country: {"slot": 300, "generation": 0x4500},
     }
@@ -71,12 +72,12 @@ def _write_capture_context(image: Any, *, country: str, admitted: bool,
     image.put_u64(WORLD + 0x1E68, 0)
     image.put_u64(WORLD + 0xA60, 1)
     image.put_u64(WORLD + 0x1D48, CONTROLLER_TYPES)
-    image.put(CONTROLLER_TYPES + bindings["FRA"]["slot"] * 4,
+    image.put(CONTROLLER_TYPES + bindings[observer]["slot"] * 4,
               (1 if human_fra else 0).to_bytes(4, "little", signed=True))
 
     # Make the actual observer->target relation-counter path known.  The
     # relation row carries the complete target fullref, not a tag-only stub.
-    observer_pointer = pointers["FRA"]
+    observer_pointer = pointers[observer]
     target_pointer = pointers[country]
     target_ref = refs[country]
     image.put_u64(observer_pointer + admission.RELATION_TABLE_OFFSET, RELATION_TABLE)
@@ -95,10 +96,10 @@ def _write_capture_context(image: Any, *, country: str, admitted: bool,
         image.put_u64(target_pointer + admission.COUNTRY_CAPITAL_OFFSET, CAPITAL)
         image.put(CAPITAL + admission.CAPITAL_VIEW_FLAGS_OFFSET, b"\x10")
         image.put_u64(CAPITAL + admission.CAPITAL_OBSERVER_BITSET_OFFSET, OBSERVER_BITSET)
-        word_address = (OBSERVER_BITSET + (bindings["FRA"]["slot"] >> 5)
+        word_address = (OBSERVER_BITSET + (bindings[observer]["slot"] >> 5)
                         * admission.CAPITAL_OBSERVER_BITSET_WORD_STRIDE)
         image.put(word_address, b"\x00" * admission.CAPITAL_OBSERVER_BITSET_WORD_STRIDE)
-    return {"physical_fullref": refs[physical_tag], "observer_fullref": refs["FRA"],
+    return {"physical_fullref": refs[physical_tag], "observer_fullref": refs[observer],
             "target_fullref": target_ref, "target_pointer": target_pointer,
             "relation_row": row, "relation_counter_address": counter_address,
             "human_count": 1, "controller_types_pointer": CONTROLLER_TYPES,

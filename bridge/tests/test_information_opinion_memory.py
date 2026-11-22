@@ -11,8 +11,8 @@ def binding(tag, slot, pointer):
 
 
 class Memory:
-    def __init__(self):
-        self.fra = binding('FRA', 3, 0x20000)
+    def __init__(self, observer='FRA'):
+        self.fra = binding(observer, 3, 0x20000)
         self.eng = binding('ENG', 5, 0x30000)
         self.cells = {}
         self.reads = []

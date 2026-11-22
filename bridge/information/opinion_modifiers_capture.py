@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
+from functools import partial
 import re
 from typing import Any
 
@@ -20,8 +21,8 @@ _TAG = re.compile(r"[A-Z0-9]{3}\Z")
 
 def capture(installation, country: str, *, observer: str = OBSERVER) -> dict[str, Any]:
     """Capture one selected non-observer country through the shared owner."""
-    if (observer != OBSERVER or not isinstance(country, str) or _TAG.fullmatch(country) is None
-            or country == OBSERVER):
+    if (not isinstance(observer, str) or _TAG.fullmatch(observer) is None
+            or not isinstance(country, str) or _TAG.fullmatch(country) is None or country == observer):
         raise ValueError("OPINION_MODIFIERS_REQUEST_SCOPE")
     return _owner._capture_common(
         installation,
@@ -30,7 +31,7 @@ def capture(installation, country: str, *, observer: str = OBSERVER) -> dict[str
         schema=SCHEMA,
         profile_sha256=PROFILE_SHA256,
         load_profile=_memory._load_profile,
-        observe=_memory._observe,
+        observe=partial(_memory._observe, observer=observer), observer_scoped=True,
     )
 
 
@@ -47,7 +48,7 @@ def validate_capture(report: Any, context: Mapping[str, Any], creation: int,
         schema=SCHEMA,
         profile_sha256=PROFILE_SHA256,
         load_profile=_memory._load_profile,
-        observe=_memory._observe,
+        observe=partial(_memory._observe, observer=context.get('observer')), observer_scoped=True,
         require_access=True,
     )
 

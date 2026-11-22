@@ -1,18 +1,21 @@
 #pragma once
 
-// Bounded, allocation-free authority hand-off ledger.
+// Fixed-capacity live authority hand-off ledger with growable terminal
+// deduplication history.
 //
 // This header deliberately contains no native calls, file I/O, address
 // discovery, or policy decisions.  The caller supplies the trusted object
 // identities, the pipeline proof bit, and the current session/tick context.
 // Every identity contains a generation so an address reuse cannot silently
-// match an older grant.
+// match an older grant. Terminal history grows with no-throw allocations and
+// is only written by the explicit release operation, outside live bindings.
 
 #include <array>
 #include <cstddef>
 #include <cstdint>
 #include <cstring>
 #include <limits>
+#include <new>
 #include "declarewar-payload.h"
 #include "peace-payload-ref.h"
 
@@ -344,10 +347,15 @@ public:
     // also clears every old identity and serial so a process/session change
     // cannot reuse a prior grant.
     void reset_session_epoch(std::uint64_t session_epoch) noexcept {
+        clear_terminal_history();
         session_epoch_=session_epoch;
         entries_={};
         next_seed_serial_=0;
         next_claim_serial_=0;
+    }
+
+    ~AllianceAuthorityLedger() noexcept {
+        clear_terminal_history();
     }
 
     SeedResult seed(const Context& context,const char* request_id,
@@ -379,7 +387,8 @@ public:
             output.result=make_result(ErrorCode::invalid_argument);
             return output;
         }
-        if (find_request(request_id)!=kInvalidSlot) {
+        if (find_request(request_id)!=kInvalidSlot
+            || request_in_terminal_history(request_id)) {
             output.result=make_result(ErrorCode::duplicate_request);
             return output;
         }
@@ -449,6 +458,9 @@ public:
             return make_result(ErrorCode::ambiguous_header,result.slot,
                 entry->seed_serial);
         }
+        if (header_in_terminal_history(header))
+            return make_result(ErrorCode::ambiguous_header,result.slot,
+                entry->seed_serial);
         entry->source_header=header;
         entry->source_header_bound=true;
         entry->state=State::serialized;
@@ -740,6 +752,27 @@ public:
             entry->claim_serial?entry->claim_serial:entry->seed_serial);
     }
 
+    // Release a terminal record only after the caller has established that no
+    // active binding can still consume it. The request ID and any serialized
+    // native header are copied into exact history before the live slot is
+    // cleared. On allocation failure, the terminal entry remains available
+    // for retry and no deduplication evidence is lost.
+    OperationResult release_terminal(const Context& context,
+        const SeedReceipt& receipt) noexcept {
+        Entry* entry=nullptr;
+        OperationResult result=acquire_seed(context,receipt,entry);
+        if (!result.ok()) return result;
+        if (entry->state!=State::consumed && entry->state!=State::invalidated)
+            return make_result(ErrorCode::invalid_stage,result.slot,
+                entry->claim_serial?entry->claim_serial:entry->seed_serial);
+        if (!remember_terminal(*entry))
+            return make_result(ErrorCode::capacity_full,result.slot,
+                entry->seed_serial);
+        const std::uint64_t seed_serial=entry->seed_serial;
+        *entry=Entry{};
+        return make_result(ErrorCode::ok,result.slot,seed_serial);
+    }
+
     OperationResult target_destroyed(const Context& context,
         const ClaimTicket& ticket,Phase phase,ObjectRef wrapper,
         ObjectRef action) noexcept {
@@ -821,6 +854,8 @@ public:
     }
 
 private:
+    static constexpr std::size_t kTerminalHistoryBucketCount=256;
+
     struct Entry {
         char request_id[kMaxRequestId+1]{};
         State state=State::empty;
@@ -845,7 +880,21 @@ private:
         bool target_alive=false;
     };
 
+    struct TerminalHistoryRecord {
+        char request_id[kMaxRequestId+1]{};
+        NativeHeader source_header{};
+        std::uint64_t request_hash=0;
+        std::uint64_t header_hash=0;
+        bool source_header_bound=false;
+        TerminalHistoryRecord* next_request=nullptr;
+        TerminalHistoryRecord* next_header=nullptr;
+    };
+
     std::array<Entry,kLedgerCapacity> entries_{};
+    std::array<TerminalHistoryRecord*,kTerminalHistoryBucketCount>
+        terminal_requests_{};
+    std::array<TerminalHistoryRecord*,kTerminalHistoryBucketCount>
+        terminal_headers_{};
     std::uint64_t session_epoch_=0;
     std::uint64_t next_seed_serial_=0;
     std::uint64_t next_claim_serial_=0;
@@ -1113,6 +1162,94 @@ private:
                 && entries_[i].source_header_bound
                 && entries_[i].source_header==header) return i;
         return kInvalidSlot;
+    }
+
+    static std::uint64_t hash_request_id(const char* request_id) noexcept {
+        std::uint64_t hash=UINT64_C(14695981039346656037);
+        for (std::size_t i=0;i<=kMaxRequestId && request_id[i]!=0;++i) {
+            hash^=static_cast<unsigned char>(request_id[i]);
+            hash*=UINT64_C(1099511628211);
+        }
+        return hash;
+    }
+
+    static std::uint64_t hash_header(NativeHeader header) noexcept {
+        std::uint64_t hash=UINT64_C(14695981039346656037);
+        const std::uint8_t bytes[]={
+            static_cast<std::uint8_t>(header.origin),
+            static_cast<std::uint8_t>(header.origin>>8u),
+            header.flags,
+            static_cast<std::uint8_t>(header.seq),
+            static_cast<std::uint8_t>(header.seq>>8u),
+            static_cast<std::uint8_t>(header.seq>>16u),
+            static_cast<std::uint8_t>(header.seq>>24u)
+        };
+        for (std::uint8_t byte: bytes) {
+            hash^=byte;
+            hash*=UINT64_C(1099511628211);
+        }
+        return hash;
+    }
+
+    static std::size_t history_bucket(std::uint64_t hash) noexcept {
+        return static_cast<std::size_t>(
+            hash&(kTerminalHistoryBucketCount-1u));
+    }
+
+    bool request_in_terminal_history(const char* request_id) const noexcept {
+        const std::uint64_t hash=hash_request_id(request_id);
+        for (const TerminalHistoryRecord* record=
+                terminal_requests_[history_bucket(hash)];
+            record;record=record->next_request) {
+            if (record->request_hash==hash
+                && request_equal(record->request_id,request_id)) return true;
+        }
+        return false;
+    }
+
+    bool header_in_terminal_history(NativeHeader header) const noexcept {
+        const std::uint64_t hash=hash_header(header);
+        for (const TerminalHistoryRecord* record=
+                terminal_headers_[history_bucket(hash)];
+            record;record=record->next_header) {
+            if (record->header_hash==hash
+                && record->source_header==header) return true;
+        }
+        return false;
+    }
+
+    bool remember_terminal(const Entry& entry) noexcept {
+        TerminalHistoryRecord* record=
+            new (std::nothrow) TerminalHistoryRecord{};
+        if (!record) return false;
+
+        std::memcpy(record->request_id,entry.request_id,kMaxRequestId+1);
+        record->request_hash=hash_request_id(record->request_id);
+        record->source_header=entry.source_header;
+        record->source_header_bound=entry.source_header_bound;
+        if (entry.source_header_bound)
+            record->header_hash=hash_header(entry.source_header);
+
+        const std::size_t request_bucket=history_bucket(record->request_hash);
+        record->next_request=terminal_requests_[request_bucket];
+        terminal_requests_[request_bucket]=record;
+        if (record->source_header_bound) {
+            const std::size_t header_bucket=history_bucket(record->header_hash);
+            record->next_header=terminal_headers_[header_bucket];
+            terminal_headers_[header_bucket]=record;
+        }
+        return true;
+    }
+
+    void clear_terminal_history() noexcept {
+        for (TerminalHistoryRecord*& head: terminal_requests_) {
+            while (head) {
+                TerminalHistoryRecord* next=head->next_request;
+                delete head;
+                head=next;
+            }
+        }
+        terminal_headers_={};
     }
 
     bool identity_in_use(ObjectRef wrapper,ObjectRef action,

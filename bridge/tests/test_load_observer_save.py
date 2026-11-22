@@ -15,7 +15,7 @@ def test_verifies_observer_after_native_startup_pause(tmp_path, monkeypatch):
         '{"event":"popup_confirmation_callbacks_returned"}\n', encoding="utf-8")
     raw = 56456976
     health = {"status": "ready", "date_raw": raw}
-    session = SimpleNamespace(record=dict(initial), health=lambda: health)
+    session = SimpleNamespace(record=dict(initial), physical_player_health=lambda: health)
     monkeypatch.setattr(subject, "game_exe", lambda: tmp_path / "eu4.exe")
     monkeypatch.setattr(subject, "ObserverSession", lambda *args: session)
     monkeypatch.setattr(subject, "wait_runtime_ready", lambda session: health)

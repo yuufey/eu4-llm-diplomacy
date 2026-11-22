@@ -1,4 +1,4 @@
-"""Identity-bound FRA aggregate military-modifier capture and projection.
+"""Identity-bound aggregate military-modifier capture and projection.
 
 This is an independent public wrapper around the already pinned foreign-quality
 observation.  It deliberately keeps the quality reader/profile and the shared
@@ -9,7 +9,9 @@ table or expose native addresses/raw-input traces.
 from __future__ import annotations
 
 from collections.abc import Mapping
+from functools import partial
 import math
+import re
 from typing import Any
 
 from . import foreign_quality_capture as _quality_capture
@@ -42,36 +44,37 @@ _I32_MAX = (1 << 31) - 1
 
 
 def capture(installation, *, observer: str = OBSERVER) -> dict[str, Any]:
-    """Capture only the logical FRA target through the shared readonly owner."""
-    if observer != OBSERVER:
-        raise ValueError("OWN_MILITARY_MODIFIERS_OBSERVER_SCOPE")
+    """Capture the logical observer through the shared readonly owner."""
     return _owner._capture_common(
         installation,
-        OBSERVER,
+        observer,
         observer=observer,
         schema=SCHEMA,
         profile_sha256=PROFILE_SHA256,
         load_profile=_quality_capture._load_profile,
-        observe=_quality_capture._observe,
+        observe=partial(_quality_capture._observe, observer=observer),
         allow_observer_target=True,
+        observer_scoped=True,
     )
 
 
 def validate_capture(report: Any, context: Mapping[str, Any], creation: int) -> bool:
-    """Strictly replay a saved FRA self-target capture without attaching."""
-    if not isinstance(report, dict) or report.get("schema") != SCHEMA:
+    """Strictly replay a saved self-target capture without attaching."""
+    if not isinstance(report, dict) or not isinstance(context, Mapping) or report.get("schema") != SCHEMA:
         return False
+    observer = context.get('observer')
     return _owner._validate_capture_common(
         report,
         context,
         creation,
-        OBSERVER,
+        observer,
         schema=SCHEMA,
         profile_sha256=PROFILE_SHA256,
         load_profile=_quality_capture._load_profile,
-        observe=_quality_capture._observe,
+        observe=partial(_quality_capture._observe, observer=observer),
         allow_observer_target=True,
         require_access=True,
+        observer_scoped=True,
     )
 
 
@@ -84,7 +87,7 @@ def _unknown(reason: str) -> dict[str, Any]:
 
 
 def _target(report: Any) -> Mapping[str, Any] | None:
-    """Return only the stable, single FRA target from a completed report.
+    """Return only the stable observer target from a completed report.
 
     Full saved-trace validation is owned by :func:`validate_capture` and its
     caller supplies the bound session context/creation time.  This projection
@@ -99,9 +102,9 @@ def _target(report: Any) -> Mapping[str, Any] | None:
         return None
     request = report.get("request")
     cleanup = report.get("cleanup")
-    if (not isinstance(request, Mapping)
-            or request.get("country") != OBSERVER
-            or request.get("observer") != OBSERVER
+    observer = request.get("observer") if isinstance(request, Mapping) else None
+    if (not isinstance(observer, str) or not re.fullmatch(r"[A-Z0-9]{3}", observer)
+            or request.get("country") != observer
             or not isinstance(cleanup, Mapping)
             or cleanup.get("status") != "closed"
             or cleanup.get("closed") is not True
@@ -118,7 +121,7 @@ def _target(report: Any) -> Mapping[str, Any] | None:
             or backend["consistency"].get("status") != "stable"):
         return None
     try:
-        item = _technology._backend_item(report, OBSERVER)
+        item = _technology._backend_item(report, observer)
     except (KeyError, TypeError, ValueError, IndexError):
         return None
     if not isinstance(item, Mapping):
@@ -159,7 +162,7 @@ def _selected_unknowns(reason: str) -> dict[str, dict[str, dict[str, Any]]]:
 
 
 def project_field(report: Any) -> dict[str, Any]:
-    """Whitelist the three selected aggregate modifiers from a validated FRA target.
+    """Whitelist the three selected aggregate modifiers from the validated observer.
 
     The quality projection may know any subset of its twelve components.  This
     function reports ``known`` only if at least one of the three selected

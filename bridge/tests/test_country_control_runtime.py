@@ -32,11 +32,12 @@ class FakeSession:
         return {"status": self._health_status}
 
 
-def _ack_for_request(request_line: bytes, *, accepted: bool = True) -> dict:
+def _ack_for_request(request_line: bytes, *, accepted: bool = True, wire="EU4CONTROL1",
+                     event=runtime.ACK_EVENT) -> dict:
     header, session_id, revision, country_text = request_line.decode("ascii").strip().split("\t")
-    assert header == "EU4CONTROL1"
+    assert header == wire
     return {
-        "event": runtime.ACK_EVENT,
+        "event": event,
         "session_id": session_id,
         "revision": int(revision),
         "countries": [] if country_text == "-" else country_text.split(","),
@@ -44,8 +45,9 @@ def _ack_for_request(request_line: bytes, *, accepted: bool = True) -> dict:
     }
 
 
-def _start_ack_writer(session: FakeSession, *, mutate=None, accepted: bool = True):
-    request = session.directory / runtime.REQUEST_NAME
+def _start_ack_writer(session: FakeSession, *, mutate=None, accepted: bool = True,
+                      request_name=runtime.REQUEST_NAME, wire="EU4CONTROL1", event=runtime.ACK_EVENT):
+    request = session.directory / request_name
     log = session.directory / "control-probe.jsonl"
     baseline = request.read_bytes() if request.exists() else None
     finished = threading.Event()
@@ -65,7 +67,7 @@ def _start_ack_writer(session: FakeSession, *, mutate=None, accepted: bool = Tru
                         time.sleep(0.002)
                         continue
                     if content and content != baseline:
-                        ack = _ack_for_request(content, accepted=accepted)
+                        ack = _ack_for_request(content, accepted=accepted, wire=wire, event=event)
                         if mutate is not None:
                             mutate(ack)
                         try:
@@ -130,6 +132,19 @@ def _join_responder(thread, failures):
     thread.join(timeout=3.0)
     assert not thread.is_alive(), "fake native responder did not finish"
     assert failures == []
+
+
+def test_observation_scope_uses_separate_channel_and_never_changes_control_request(tmp_path):
+    session = FakeSession(tmp_path, capabilities={runtime.CAPABILITY, runtime.OBSERVATION_CAPABILITY})
+    control_file = tmp_path / runtime.REQUEST_NAME
+    control_file.write_bytes(b"EU4CONTROL1\tsession-1\t1\tENG\n")
+    responder, _, failures = _start_ack_writer(
+        session, request_name="information-observers.req", wire="EU4INFO1",
+        event="native_information_observers_set")
+    result = runtime.configure_native_observation(session, ["TUR"], timeout=1.0)
+    _join_responder(responder, failures)
+    assert result["countries"] == ["TUR"]
+    assert control_file.read_bytes() == b"EU4CONTROL1\tsession-1\t1\tENG\n"
 
 
 def test_new_native_configuration_normalizes_tags_and_supports_empty_set(tmp_path):

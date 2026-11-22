@@ -5,7 +5,7 @@ import hashlib
 from . import foreign_country_memory as _countries
 from . import foreign_pressure as _pressure
 from . import foreign_technology_capture as _owner
-from .trade_income import _context_reason, _session_binding
+from .trade_income import _observer_context_reason, _session_binding
 
 
 SCHEMA = 'information.war_pressure_capture.v1'
@@ -14,23 +14,25 @@ PROFILE_SHA256 = hashlib.sha256(
 MAX_TARGETS = _countries.MAX_TARGETS
 
 
-def _normalize(countries):
+def _normalize(countries, observer):
     countries = list(countries)
-    if (not countries or len(countries) > MAX_TARGETS or len(set(countries)) != len(countries)
-            or any(not isinstance(tag, str) or _pressure._TAG.fullmatch(tag) is None
-                   or tag == 'FRA' for tag in countries)):
+    if (not isinstance(observer, str) or not _pressure._TAG.fullmatch(observer)
+            or not countries or len(countries) > MAX_TARGETS
+            or any(not isinstance(tag, str) or not _pressure._TAG.fullmatch(tag)
+                   or tag == observer for tag in countries)
+            or len(set(countries)) != len(countries)):
         raise ValueError('WAR_PRESSURE_BATCH_SCOPE')
     return countries
 
 
-def _observe_for(countries):
+def _observe_for(countries, observer='FRA'):
     def observe(reader, base, anchor, profile):
         def fields(read, module_base, binding, selected):
             return {_pressure.FIELD: _pressure.read_war_exhaustion(
                 read, binding, profile['pressure_scalar'])}
 
         def backend(read, module_base, target):
-            return _countries.read_two_pass(read, module_base, 'FRA', countries,
+            return _countries.read_two_pass(read, module_base, observer, countries,
                 fields=[_pressure.FIELD], admission_reader=_owner._bound_admission,
                 read_fields=fields)
 
@@ -38,26 +40,28 @@ def _observe_for(countries):
     return observe
 
 
-def capture(installation, countries):
-    countries = _normalize(countries)
-    report = _owner._capture_common(installation, countries[0], observer='FRA',
+def capture(installation, countries, *, observer='FRA'):
+    countries = _normalize(countries, observer)
+    report = _owner._capture_common(installation, countries[0], observer=observer,
         schema=SCHEMA, profile_sha256=PROFILE_SHA256,
-        load_profile=_pressure._load_legacy_profile, observe=_observe_for(countries))
+        load_profile=_pressure._load_legacy_profile, observe=_observe_for(countries, observer),
+        observer_scoped=True)
     report['request']['countries'] = countries
     return report
 
 
 def validate_capture(report, context, creation, countries):
+    observer = context.get('observer') if isinstance(context, dict) else None
     try:
-        countries = _normalize(countries)
+        countries = _normalize(countries, observer)
     except (TypeError, ValueError):
         return False
     if not isinstance(report, dict) or report.get('request', {}).get('countries') != countries:
         return False
     return _owner._validate_capture_common(report, context, creation, countries[0],
         schema=SCHEMA, profile_sha256=PROFILE_SHA256,
-        load_profile=_pressure._load_legacy_profile, observe=_observe_for(countries),
-        require_access=True)
+        load_profile=_pressure._load_legacy_profile, observe=_observe_for(countries, observer),
+        require_access=True, observer_scoped=True)
 
 
 def read_countries(source, countries, context):
@@ -75,13 +79,13 @@ def read_countries(source, countries, context):
         individual(countries)
         return values
     installation, creation, reason = _session_binding(source.base_source)
-    reason = reason or _context_reason(context, 'FRA')
+    reason = reason or _observer_context_reason(context)
     if reason:
         return {country: {'status': 'unknown', 'reason': reason} for country in countries}
     for start in range(0, len(countries), MAX_TARGETS):
         batch = countries[start:start + MAX_TARGETS]
         try:
-            report = capture(installation, batch)
+            report = capture(installation, batch, observer=context['observer'])
             if not validate_capture(report, context, creation, batch):
                 raise ValueError('WAR_PRESSURE_CAPTURE_INVALID')
             values.update({target['tag']: deepcopy(target['fields'][_pressure.FIELD])

@@ -14,6 +14,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <cstring>
+#include <new>
 
 namespace bridge::rival_command_authority {
 
@@ -262,16 +263,34 @@ public:
     explicit RivalCommandAuthorityLedger(std::uint64_t session_epoch) noexcept
         : session_epoch_(session_epoch) {}
 
+    ~RivalCommandAuthorityLedger() noexcept { clear_history(); }
+
     RivalCommandAuthorityLedger(const RivalCommandAuthorityLedger&)=delete;
     RivalCommandAuthorityLedger& operator=(const RivalCommandAuthorityLedger&)=delete;
 
     std::uint64_t session_epoch() const noexcept { return session_epoch_; }
 
+    // Reserve an observed wire request before native preflight.  If preflight
+    // fails, the ID remains in session history; seed() may attach the native
+    // authority entry to that reservation exactly once.
+    OperationResult reserve_request_id(const char* request_id) noexcept {
+        if (!valid_request_id(request_id))
+            return make_result(ErrorCode::request_id_invalid);
+        if (find_request(request_id))
+            return make_result(ErrorCode::duplicate_request);
+        auto* history=new (std::nothrow) RequestHistory{};
+        if (!history) return make_result(ErrorCode::capacity_full);
+        copy_request_id(history->request_id,request_id);
+        history->next=history_head_;
+        history_head_=history;
+        return make_result(ErrorCode::ok);
+    }
+
     void reset_session_epoch(std::uint64_t session_epoch) noexcept {
+        if (session_epoch==session_epoch_) return;
+        clear_history();
         session_epoch_=session_epoch;
         entries_={};
-        next_seed_serial_=0;
-        next_claim_serial_=0;
     }
 
     // Rival's phase is always initiate; there is no inbound action object.
@@ -304,7 +323,8 @@ public:
             output.result=make_result(ErrorCode::invalid_argument);
             return output;
         }
-        if (find_request(request_id)!=kInvalidSlot) {
+        RequestHistory* history=find_request(request_id);
+        if (history && history->seeded) {
             output.result=make_result(ErrorCode::duplicate_request);
             return output;
         }
@@ -313,14 +333,25 @@ public:
                 ? ErrorCode::generation_mismatch : ErrorCode::identity_in_use);
             return output;
         }
-        const std::uint16_t slot=find_empty_slot();
+        const std::uint16_t slot=find_available_slot();
         if (slot==kInvalidSlot) {
             output.result=make_result(ErrorCode::capacity_full);
             return output;
         }
+        if (!history) {
+            history=new (std::nothrow) RequestHistory{};
+            if (!history) {
+                output.result=make_result(ErrorCode::capacity_full);
+                return output;
+            }
+            copy_request_id(history->request_id,request_id);
+            history->next=history_head_;
+            history_head_=history;
+        }
         Entry& entry=entries_[slot];
         entry=Entry{};
-        copy_request_id(entry.request_id,request_id);
+        entry.history=history;
+        history->seeded=true;
         entry.state=State::seeded;
         entry.payload=payload;
         entry.source=source;
@@ -355,14 +386,19 @@ public:
         if (header.origin48==0xffffu && header.sequence4c==0u)
             return make_result(ErrorCode::invalid_argument,result.slot,
                 entry->seed_serial);
-        const std::uint16_t same=find_header(header);
-        if (same!=kInvalidSlot) {
-            return make_result(same==result.slot
+        const RequestHistory* same=find_header(header);
+        if (same) {
+            return make_result(same==entry->history
                 ? ErrorCode::duplicate_header : ErrorCode::ambiguous_header,
                 result.slot,entry->seed_serial);
         }
+        if (!entry->history)
+            return make_result(ErrorCode::capacity_full,result.slot,
+                entry->seed_serial);
         entry->source_header=header;
         entry->source_header_bound=true;
+        entry->history->source_header=header;
+        entry->history->source_header_bound=true;
         entry->loaded_header=header;
         entry->state=State::serialized;
         return make_result(ErrorCode::ok,result.slot,entry->seed_serial);
@@ -653,8 +689,19 @@ public:
     }
 
 private:
-    struct Entry {
+    // Historical identities are kept for the session independently of the
+    // fixed live-object slots below.  This keeps replay/header checks exact
+    // while allowing completed or invalidated authority entries to be reused.
+    struct RequestHistory {
+        RequestHistory* next=nullptr;
         char request_id[kMaxRequestId+1]{};
+        NativeHeader source_header{};
+        bool source_header_bound=false;
+        bool seeded=false;
+    };
+
+    struct Entry {
+        RequestHistory* history=nullptr;
         State state=State::empty;
         RivalPayload payload{};
         ObjectRef source{};
@@ -676,6 +723,7 @@ private:
     std::uint64_t session_epoch_=0;
     std::uint64_t next_seed_serial_=0;
     std::uint64_t next_claim_serial_=0;
+    RequestHistory* history_head_=nullptr;
 
     static constexpr bool valid_phase(Phase phase) noexcept {
         return phase==Phase::initiate;
@@ -814,27 +862,50 @@ private:
         return make_result(ErrorCode::identity_mismatch,slot,serial);
     }
 
-    std::uint16_t find_empty_slot() const noexcept {
+    std::uint16_t find_available_slot() noexcept {
         for (std::uint16_t index=0;index<kLedgerCapacity;++index)
             if (entries_[index].state==State::empty) return index;
+        for (std::uint16_t index=0;index<kLedgerCapacity;++index) {
+            Entry& entry=entries_[index];
+            if ((entry.state==State::consumed || entry.state==State::invalidated)
+                && !entry.source_alive && !entry.loaded_alive
+                && !entry.target_alive) {
+                entry=Entry{};
+                return index;
+            }
+        }
         return kInvalidSlot;
     }
 
-    std::uint16_t find_request(const char* request_id) const noexcept {
-        for (std::uint16_t index=0;index<kLedgerCapacity;++index)
-            if (entries_[index].state!=State::empty
-                && request_equal(entries_[index].request_id,request_id))
-                return index;
-        return kInvalidSlot;
+    RequestHistory* find_request(const char* request_id) noexcept {
+        for (const RequestHistory* history=history_head_;history;
+            history=history->next)
+            if (request_equal(history->request_id,request_id))
+                return const_cast<RequestHistory*>(history);
+        return nullptr;
     }
 
-    std::uint16_t find_header(NativeHeader header) const noexcept {
-        for (std::uint16_t index=0;index<kLedgerCapacity;++index)
-            if (entries_[index].state!=State::empty
-                && entries_[index].source_header_bound
-                && entries_[index].source_header==header)
-                return index;
-        return kInvalidSlot;
+    const RequestHistory* find_request(const char* request_id) const noexcept {
+        for (const RequestHistory* history=history_head_;history;
+            history=history->next)
+            if (request_equal(history->request_id,request_id)) return history;
+        return nullptr;
+    }
+
+    const RequestHistory* find_header(NativeHeader header) const noexcept {
+        for (const RequestHistory* history=history_head_;history;
+            history=history->next)
+            if (history->source_header_bound
+                && history->source_header==header) return history;
+        return nullptr;
+    }
+
+    void clear_history() noexcept {
+        while (history_head_) {
+            RequestHistory* next=history_head_->next;
+            delete history_head_;
+            history_head_=next;
+        }
     }
 
     static bool same_address_different_generation(ObjectRef left,
@@ -907,7 +978,8 @@ private:
     }
 
     static void fill_view(const Entry& entry,RecordView& view) noexcept {
-        std::memcpy(view.request_id,entry.request_id,kMaxRequestId+1);
+        if (entry.history)
+            std::memcpy(view.request_id,entry.history->request_id,kMaxRequestId+1);
         view.state=entry.state;
         view.family=entry.payload.family;
         view.command=entry.payload.command;

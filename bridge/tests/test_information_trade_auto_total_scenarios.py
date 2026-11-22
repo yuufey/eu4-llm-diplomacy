@@ -20,6 +20,7 @@ def _i32(value: int) -> int:
 
 def _baseline(*, total_power: int = 1000) -> dict:
     return {
+        "source": {"observer": "FRA"},
         "fields": {
             "country_power": {
                 "status": "known", "raw": 100, "value": 100,

@@ -14,8 +14,98 @@ struct PeaceExecutionEventBuffer {
     PeaceExecutionEventBuffer& operator=(const PeaceExecutionEventBuffer&)=delete;
 };
 static wchar_t execution_peace_path[MAX_PATH]{};
-static char execution_peace_seen[kBindingCapacity][65]{};
-static unsigned execution_peace_seen_count=0;
+static char (*execution_peace_seen)[65]=nullptr;
+static size_t execution_peace_seen_count=0;
+static size_t execution_peace_seen_capacity=0;
+
+// Late inbound results outlive their recyclable execution binding.  Keep only
+// value snapshots needed by the pending-list and war-state checks; native
+// wrapper/action references remain owned by the execution ledger.
+struct ExecutionPeaceDeferredResult {
+    bool used=false;
+    bool pending_removal_verified=false;
+    bool consumed=false;
+    bool transport_verified=false;
+    bool invalidated=false;
+    bool alliance_before=false;
+    bool alliance_before_verified=false;
+    bool peace_handler_returned=false;
+    bool peace_effects_supported=false;
+    uint64_t pending_proposal_id=0;
+    uint64_t pending_generation=0;
+    char peace_war_id[30]{};
+    ResponseRequest response_request{};
+    AlliancePayload payload{};
+    PeaceExecutionRequest peace_request{};
+    PeaceEffectState peace_effects_before{};
+};
+
+static ExecutionPeaceDeferredResult
+    execution_peace_deferred[bridge_alliance_inbound_detail::kQueueCapacity]{};
+
+static bool execution_peace_seen_request_id(const char* request_id) noexcept {
+    for (size_t i=0;i<execution_peace_seen_count;++i)
+        if (!strcmp(request_id,execution_peace_seen[i])) return true;
+    return false;
+}
+
+// Keep request IDs for the whole process lifetime, growing only when needed.
+// Allocation failure is reported before any native work, so an untracked ID
+// can never reach the dispatcher.
+static bool execution_peace_remember_request_id(const char* request_id) noexcept {
+    if (execution_peace_seen_count==execution_peace_seen_capacity) {
+        constexpr size_t initial_capacity=16;
+        const size_t max_capacity=static_cast<size_t>(-1)/sizeof(*execution_peace_seen);
+        const size_t next_capacity=execution_peace_seen_capacity
+            ?execution_peace_seen_capacity<=max_capacity/2
+                ?execution_peace_seen_capacity*2:0
+            :initial_capacity;
+        if (!next_capacity || next_capacity>max_capacity) return false;
+        const size_t bytes=next_capacity*sizeof(*execution_peace_seen);
+        void* grown=execution_peace_seen
+            ?HeapReAlloc(GetProcessHeap(),HEAP_ZERO_MEMORY,execution_peace_seen,bytes)
+            :HeapAlloc(GetProcessHeap(),HEAP_ZERO_MEMORY,bytes);
+        if (!grown) return false;
+        execution_peace_seen=static_cast<char (*)[65]>(grown);
+        execution_peace_seen_capacity=next_capacity;
+    }
+    memcpy(execution_peace_seen[execution_peace_seen_count],request_id,
+        sizeof(*execution_peace_seen));
+    ++execution_peace_seen_count;
+    return true;
+}
+
+static bool execution_peace_defer_result(const ExecutionBinding& binding) noexcept {
+    if (!binding.used || !binding.consumed || binding.invalidated
+        || binding.response_queued || !binding.inbound_response_request
+        || binding.payload.family!=ActionFamily::peace) return false;
+    for (auto& deferred:execution_peace_deferred) {
+        if (!deferred.used || deferred.pending_proposal_id!=binding.pending_proposal_id
+            || deferred.pending_generation!=binding.pending_generation) continue;
+        return !strcmp(deferred.response_request.session_id,binding.response_request.session_id)
+            && !strcmp(deferred.response_request.request_id,binding.response_request.request_id);
+    }
+    for (auto& deferred:execution_peace_deferred) {
+        if (deferred.used) continue;
+        deferred.used=true;
+        deferred.consumed=binding.consumed;
+        deferred.transport_verified=binding.transport_verified;
+        deferred.invalidated=binding.invalidated;
+        deferred.alliance_before=binding.alliance_before;
+        deferred.alliance_before_verified=binding.alliance_before_verified;
+        deferred.peace_handler_returned=binding.peace_handler_returned;
+        deferred.peace_effects_supported=binding.peace_effects_supported;
+        deferred.pending_proposal_id=binding.pending_proposal_id;
+        deferred.pending_generation=binding.pending_generation;
+        memcpy(deferred.peace_war_id,binding.peace_war_id,sizeof(deferred.peace_war_id));
+        deferred.response_request=binding.response_request;
+        deferred.payload=binding.payload;
+        deferred.peace_request=binding.peace_request;
+        deferred.peace_effects_before=binding.peace_effects_before;
+        return true;
+    }
+    return false;
+}
 
 static bool execution_peace_set_paths(const wchar_t* directory) noexcept {
     if (!directory || !directory[0]
@@ -347,22 +437,61 @@ static void execution_peace_response(const ExecutionBinding& binding,
         execution_result_line(message.text,message.capacity,execution_result_game_date(observed_begin));
 }
 
+static ExecutionBinding execution_peace_deferred_binding(
+    const ExecutionPeaceDeferredResult& deferred) noexcept {
+    ExecutionBinding binding{};
+    binding.used=true;
+    binding.consumed=deferred.consumed;
+    binding.transport_verified=deferred.transport_verified;
+    binding.invalidated=deferred.invalidated;
+    binding.inbound_response_request=true;
+    binding.peace_handler_returned=deferred.peace_handler_returned;
+    binding.alliance_before=deferred.alliance_before;
+    binding.alliance_before_verified=deferred.alliance_before_verified;
+    binding.peace_effects_supported=deferred.peace_effects_supported;
+    binding.response_request=deferred.response_request;
+    binding.payload=deferred.payload;
+    binding.peace_request=deferred.peace_request;
+    memcpy(binding.peace_war_id,deferred.peace_war_id,sizeof(binding.peace_war_id));
+    binding.peace_effects_before=deferred.peace_effects_before;
+    return binding;
+}
+
 static void execution_peace_pending_results() noexcept {
-    for (auto& binding:execution_bindings) {
-        if (!binding.used || !binding.consumed || binding.invalidated || binding.response_queued
-            || !binding.inbound_response_request || binding.payload.family!=ActionFamily::peace) continue;
-        bool active=true,war_after=true;
-        if (!inbound_pending_is_active(binding.pending_proposal_id,binding.pending_generation,active)
-            || active || !execution_peace_war_state(binding.payload,war_after)) continue;
-        binding.response_queued=true;
-        execution_peace_response(binding,static_cast<int32_t>(binding.payload.state34),war_after,true,true);
+    for (auto& deferred:execution_peace_deferred) {
+        if (!deferred.used) continue;
+        bool active=true,retained=true;
+        const bool found=inbound_pending_is_active(deferred.pending_proposal_id,
+            deferred.pending_generation,active,&retained);
+        if (!found) {
+            if (retained) continue;
+            const int32_t state=static_cast<int32_t>(deferred.payload.state34);
+            bool war_after=false;
+            const bool war_verified=execution_peace_war_state(deferred.payload,war_after);
+            if (deferred.pending_removal_verified && war_verified) {
+                const ExecutionBinding binding=execution_peace_deferred_binding(deferred);
+                execution_peace_response(binding,state,war_after,true,true);
+            } else {
+                execution_peace_inbound_unknown(deferred.response_request,state,
+                    war_verified?war_after:false,deferred.pending_removal_verified);
+            }
+            deferred=ExecutionPeaceDeferredResult{};
+            continue;
+        }
+        if (active) continue;
+        deferred.pending_removal_verified=true;
+        bool war_after=true;
+        if (!execution_peace_war_state(deferred.payload,war_after)) continue;
+        const ExecutionBinding binding=execution_peace_deferred_binding(deferred);
+        execution_peace_response(binding,static_cast<int32_t>(deferred.payload.state34),
+            war_after,true,true);
+        deferred=ExecutionPeaceDeferredResult{};
     }
 }
 
 static void execution_peace_tick() noexcept {
     if (!execution_peace_path[0] || thread_changed || !frame_thread
         || frame_thread!=GetCurrentThreadId()) return;
-    execution_peace_pending_results();
     char wire[bridge::peace_execution_wire::kMaxWireBytes+1]{};
     DWORD size=0;
     if (!execution_read_request_file(execution_peace_path,wire,sizeof(wire)-1,size)) return;
@@ -375,12 +504,12 @@ static void execution_peace_tick() noexcept {
         execution_peace_emit_submission(request,false,reason,NativeHeader{});
     };
     if (request.creation_epoch!=observation_creation) { fail("PEACE_EXECUTION_SESSION_MISMATCH"); return; }
-    for (unsigned i=0;i<execution_peace_seen_count;++i)
-        if (!strcmp(request.request_id,execution_peace_seen[i])) {
-            fail("PEACE_EXECUTION_DUPLICATE_REQUEST"); return;
-        }
-    if (execution_peace_seen_count>=kBindingCapacity) { fail("PEACE_EXECUTION_REQUEST_CAPACITY"); return; }
-    std::memcpy(execution_peace_seen[execution_peace_seen_count++],request.request_id,sizeof(request.request_id));
+    if (execution_peace_seen_request_id(request.request_id)) {
+        fail("PEACE_EXECUTION_DUPLICATE_REQUEST"); return;
+    }
+    if (!execution_peace_remember_request_id(request.request_id)) {
+        fail("PEACE_EXECUTION_REPLAY_TRACKING_UNAVAILABLE"); return;
+    }
     FILETIME filetime{}; GetSystemTimeAsFileTime(&filetime);
     const uint64_t ticks=(static_cast<uint64_t>(filetime.dwHighDateTime)<<32)|filetime.dwLowDateTime;
     constexpr uint64_t epoch=116444736000000000ull;

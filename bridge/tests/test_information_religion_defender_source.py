@@ -146,7 +146,7 @@ def test_known_defender_projects_exact_public_value_and_catalog_metadata(
     assert spec["basis"] == BASIS == "bounded_native_religion_defender_country_reference"
     assert spec["triggers"] == ["query", "periodic"]
     assert topic["context_scope"] == topic["visibility"] == "visible_scope"
-    assert topic["observer_scope"] == ["FRA"]
+    assert topic["observer_scope"] == []
     assert source.event_types == ()
 
     result = source.read(_defender_query(target), base.context())
@@ -295,8 +295,8 @@ def test_wrong_observer_and_stale_input_context_fail_before_capture(tmp_path, mo
     source, base, _, calls, _ = _make_source(tmp_path, monkeypatch)
     wrong_observer = base.context()
     wrong_observer["observer"] = "POR"
-    with pytest.raises(InformationError, match="FRA"):
-        source.read(_defender_query("ENG"), wrong_observer)
+    wrong = source.read(_defender_query("ENG"), wrong_observer)["fields"][FIELD]
+    assert wrong["reason"] == "RELIGION_DEFENDER_CONTEXT_STALE"
 
     stale = base.context()
     stale["game_date"] += 1

@@ -878,9 +878,9 @@ def capture(installation: Path, actor: str, recipient: str, families: Sequence[s
         report["probe_script_sha256"] = _sha256_file(Path(__file__).resolve())
     except OSError as exc:
         report["errors"].append({"stage": "probe_identity", "status": "unknown", "error": str(exc)})
-    if actor != EXPECTED_COUNTRY or not _valid_tag(recipient):
+    if not _valid_tag(actor) or not _valid_tag(recipient) or actor == recipient:
         report["status"] = "unsupported_request"
-        report["errors"].append({"stage": "request", "status": "unknown", "error": "actor must be FRA and recipient must be a three-character tag"})
+        report["errors"].append({"stage": "request", "status": "unknown", "error": "actor and recipient must be distinct three-character tags"})
         report["cleanup"]["handle_close"] = _close_process_handle(None, None)
         report["completed"] = True
         return report
@@ -1175,9 +1175,9 @@ def capture_network(installation: Path, actor: str, families: Sequence[str] | No
         report["probe_script_sha256"] = _sha256_file(Path(__file__).resolve())
     except OSError as exc:
         report["errors"].append({"stage": "probe_identity", "status": "unknown", "error": str(exc)})
-    if actor != EXPECTED_COUNTRY:
+    if not _valid_tag(actor):
         report["status"] = "unsupported_request"
-        report["errors"].append({"stage": "request", "status": "unknown", "error": "Only FRA is permitted as network actor"})
+        report["errors"].append({"stage": "request", "status": "unknown", "error": "actor must be a three-character country tag"})
         report["cleanup"]["handle_close"] = _close_process_handle(None, None)
         report["completed"] = True
         return report
@@ -1445,7 +1445,7 @@ def validate_network_capture(
             return False
         expected_actor = request.get("actor") if actor is None else actor
         selected = _normalize_families(request.get("families") if families is None else families)
-        if expected_actor != EXPECTED_COUNTRY or (actor is not None and actor != request.get("actor")):
+        if not _valid_tag(expected_actor) or (actor is not None and actor != request.get("actor")):
             return False
         if set(request.get("families", [])) != set(selected) or len(request.get("families", [])) != len(selected):
             return False
@@ -1637,7 +1637,7 @@ def validate_capture(report: Mapping[str, Any], context: Mapping[str, Any] | Non
         expected_actor = request.get("actor") if actor is None else actor
         expected_recipient = request.get("recipient") if recipient is None else recipient
         selected = _normalize_families(request.get("families") if families is None else families)
-        if expected_actor != EXPECTED_COUNTRY or not _valid_tag(expected_recipient):
+        if not _valid_tag(expected_actor) or not _valid_tag(expected_recipient) or expected_actor == expected_recipient:
             return False
         if actor is not None and request.get("actor") != actor:
             return False

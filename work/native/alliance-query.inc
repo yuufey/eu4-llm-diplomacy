@@ -574,8 +574,8 @@ static void alliance_query_tick() {
     bool query20=false;
     bool query21=false;
     bool query22=false;
-    bool query23=false;
-    char interest_provinces[193]{};
+    bool query24=false;
+    char interest_observer[4]{},interest_provinces[193]{};
     char war_call_csv[64]{},war_promise_csv[64]{},war_co_csv[64]{};
     DeclareWarParticipantSelection war_participants{};
     char peace_term_mask[19]{};
@@ -594,11 +594,11 @@ static void alliance_query_tick() {
     bool peace_subject_overlap_invalid=false;
     if (!parsed && bytes) {
         consumed=0;
-        parsed=sscanf(wire,"EU4DIP_QUERY23 %llx %64s %31s %3s %3s %d %llu %192s%n",
-            &creation,id,action_id,actor_tag,recipient_tag,&expected_date,&expiry,
-            interest_provinces,&consumed)==8
+        parsed=sscanf(wire,"EU4DIP_QUERY24 %llx %64s %31s %3s %3s %3s %d %llu %192s%n",
+            &creation,id,action_id,actor_tag,recipient_tag,interest_observer,&expected_date,&expiry,
+            interest_provinces,&consumed)==9
             && !strcmp(wire+consumed,"\n") && !strcmp(action_id,"territorial_interests");
-        query23=parsed;
+        query24=parsed;
     }
     char peace_release_nation_country[4]{},peace_release_nation_source[4]{};
     char peace_vassal_country[4]{},peace_union_country[4]{},peace_independence_country[4]{};
@@ -1148,8 +1148,8 @@ static void alliance_query_tick() {
     }
     if (free_slot==128) { alliance_query_failure(id,"QUERY_ID_CAPACITY_EXHAUSTED"); return; }
     strcpy(alliance_query_ids[free_slot],id); alliance_query_expiries[free_slot]=expiry;
-    if (query23) {
-        territorial_interest_query(id,actor_tag,recipient_tag,interest_provinces,expected_date);
+    if (query24) {
+        territorial_interest_query(id,actor_tag,recipient_tag,interest_observer,interest_provinces,expected_date);
         return;
     }
     bool marriage=strcmp(action_id,"offer_royal_marriage")==0 || strcmp(action_id,"break_royal_ties")==0;
@@ -1512,7 +1512,11 @@ static void alliance_query_tick() {
     bool diagnostic_truncated=selected.size>512;
     reinterpret_cast<void (*)(void*)>(base+0x95660)(&diagnostic);
     reinterpret_cast<void (*)(void*)>(base+0x95660)(&tooltip);
-    bool prediction_applies=offer && recipient!=player && (recipient&0xffffff)!=0x415246;
+#ifdef BRIDGE_NATIVE_COUNTRY_CONTROL
+    const bool prediction_applies=offer && observation_ai_recipient(recipient,date);
+#else
+    const bool prediction_applies=offer && recipient!=player && (recipient&0xffffff)!=0x415246;
+#endif
     bool score_available=false; int score=0; unsigned reason_count=0; bool reasons_readable=false;
 #if defined(BRIDGE_ALLIANCE_REASON_METADATA)
     Binding reason_metadata_bindings[32]{};

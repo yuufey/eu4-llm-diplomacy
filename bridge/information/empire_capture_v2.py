@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
+from functools import partial
 from copy import deepcopy
 import hashlib
 import json
@@ -131,7 +132,7 @@ def _load_profile() -> dict[str, Any]:
         path.relative_to(ROOT)
         if (type(item["bytes"]) is not int or item["bytes"] < 0
                 or not isinstance(item["sha256"], str)
-                or path.stat().st_size != item["bytes"] or _sha(path) != item["sha256"]):
+                or not _v1_capture._matches_reviewed_layout(item)):
             raise ValueError("EMPIRE_V2_PROFILE_DEPENDENCY")
     guards = profile.get("code_guards")
     if not isinstance(guards, list) or len(guards) < len(_REQUIRED_GUARDS):
@@ -170,14 +171,15 @@ def _field_reason(first: dict[str, Any], second: dict[str, Any]) -> str:
     return "EMPIRE_REFORMS_CHANGED_BETWEEN_PASSES"
 
 
-def _observe(reader, module_base: int, country: str, profile: dict[str, Any]) -> dict[str, Any]:
+def _observe(reader, module_base: int, country: str, profile: dict[str, Any],
+             *, observer: str = _OBSERVER) -> dict[str, Any]:
     if country != "HRE":
         raise ValueError("EMPIRE_V2_CAPTURE_OBJECT_SCOPE")
     bounded = _base_memory._BudgetReader(reader)
     guards_before = _owner._guards(bounded, module_base, profile)
     context_before = _owner._context(bounded, module_base)
-    first = _memory._read_pass(bounded, module_base, _OBSERVER, "pass1")
-    second = _memory._read_pass(bounded, module_base, _OBSERVER, "pass2")
+    first = _memory._read_pass(bounded, module_base, observer, "pass1")
+    second = _memory._read_pass(bounded, module_base, observer, "pass2")
     context_after = _owner._context(bounded, module_base)
     guards_after = _owner._guards(bounded, module_base, profile)
 
@@ -253,18 +255,22 @@ def _observe(reader, module_base: int, country: str, profile: dict[str, Any]) ->
 
 
 def capture(installation: Path, *, observer: str = _OBSERVER) -> dict[str, Any]:
-    if observer != _OBSERVER:
+    if not _v1_capture._valid_observer(observer):
         raise ValueError("EMPIRE_V2_OBSERVER_SCOPE")
     inner = _owner._capture_common(
         installation, "HRE", observer=observer, schema=INNER_SCHEMA,
-        profile_sha256=PROFILE_SHA256, load_profile=_load_profile, observe=_observe,
+        profile_sha256=PROFILE_SHA256, load_profile=_load_profile,
+        observe=partial(_observe, observer=observer), observer_scoped=True,
+        allow_observer_target=True,
     )
     return {"schema": SCHEMA, "observer": observer, "object": dict(_OBJECT), "capture": inner}
 
 
 def validate_capture(report: Any, context: Mapping[str, Any], creation: int) -> bool:
-    if (not isinstance(report, dict) or set(report) != {"schema", "observer", "object", "capture"}
-            or report.get("schema") != SCHEMA or report.get("observer") != _OBSERVER
+    observer = context.get("observer") if isinstance(context, Mapping) else None
+    if (not _v1_capture._valid_observer(observer) or not isinstance(report, dict)
+            or set(report) != {"schema", "observer", "object", "capture"}
+            or report.get("schema") != SCHEMA or report.get("observer") != observer
             or not _owner._same(report.get("object"), _OBJECT)
             or type(creation) is not int or creation <= 0):
         return False
@@ -285,7 +291,8 @@ def validate_capture(report: Any, context: Mapping[str, Any], creation: int) -> 
     return _owner._validate_capture_common(
         inner, context, creation, "HRE", schema=INNER_SCHEMA,
         profile_sha256=PROFILE_SHA256, load_profile=_load_profile,
-        observe=_observe, require_access=True,
+        observe=partial(_observe, observer=observer), observer_scoped=True,
+        allow_observer_target=True, require_access=True,
     )
 
 
@@ -304,14 +311,15 @@ def _v1_projection_report(report: dict[str, Any]) -> dict[str, Any]:
     # v2 profile hash is checked before construction and is never projected.
     inner["schema"] = _v1_capture.INNER_SCHEMA
     inner["profile_sha256"] = _v1_capture.PROFILE_SHA256
-    return {"schema": _v1_capture.SCHEMA, "observer": _OBSERVER,
+    return {"schema": _v1_capture.SCHEMA, "observer": report["observer"],
             "object": dict(_OBJECT), "capture": inner}
 
 
 def project_fields(report: Any) -> dict[str, Any]:
     """Project the two unchanged tags and reforms as a separate partial field."""
     if (not isinstance(report, dict) or set(report) != {"schema", "observer", "object", "capture"}
-            or report.get("schema") != SCHEMA or report.get("observer") != _OBSERVER
+            or report.get("schema") != SCHEMA
+            or not _v1_capture._valid_observer(report.get("observer"))
             or not _owner._same(report.get("object"), _OBJECT)):
         raise ValueError("EMPIRE_V2_PROJECTION_SCOPE")
     inner = report.get("capture")

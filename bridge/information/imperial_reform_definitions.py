@@ -37,11 +37,16 @@ MAX_REFORM_ID_LENGTH = 128
 REFORM_ID_RE = re.compile(r"[A-Za-z0-9_][A-Za-z0-9_.-]{0,127}\Z")
 AST_ASSIGNMENTS = {None, "=", "==", "!=", "<", ">", "<=", ">=", "?="}
 VENDOR_PATH = ROOT / "third_party/cwtools-eu4-config/VENDOR.json"
+SIDECAR_VENDOR_PATH = ROOT / "third_party/cwtools-eu4-config.vendor.json"
 CWT_PATH = ROOT / "third_party/cwtools-eu4-config/common/imperial_reforms.cwt"
 EXPECTED_VENDOR_COMMIT = "a85622d368bbb7afca938ed70fdd5eda44aec769"
 EXPECTED_CWT_BYTES = 3428
 EXPECTED_CWT_SHA256 = "1119acad950d86c6d2f1e7dc1799a0f5f52d4d4636128c5d5e64b369abc883dd"
 _INVALID_PATH_CHARS = ("\x00",)
+
+
+def _vendor_manifest_path() -> Path:
+    return VENDOR_PATH if VENDOR_PATH.is_file() else SIDECAR_VENDOR_PATH
 
 
 def _reason(code: str, message: str) -> dict[str, str]:
@@ -253,7 +258,8 @@ class ImperialReformDefinitionIndex:
 
     def _read_cwt_contract(self) -> None:
         try:
-            vendor_raw = _read_bounded(VENDOR_PATH, 256 * 1024)
+            vendor_path = _vendor_manifest_path()
+            vendor_raw = _read_bounded(vendor_path, 256 * 1024)
             vendor = json.loads(vendor_raw.decode("utf-8-sig"))
             if (not isinstance(vendor, dict) or vendor.get("schema") != "cwtools-eu4-config.vendored-scope-rules.v1"
                     or vendor.get("commit") != EXPECTED_VENDOR_COMMIT or vendor.get("license") != "MIT"):
@@ -263,7 +269,7 @@ class ImperialReformDefinitionIndex:
                 "repository_url": vendor.get("repository_url"),
                 "commit": vendor["commit"],
                 "license": vendor["license"],
-                "vendor_manifest": {"path": str(VENDOR_PATH.resolve()),
+                "vendor_manifest": {"path": str(vendor_path.resolve()),
                                     "bytes": len(vendor_raw), "sha256": _sha256(vendor_raw)},
                 "schema_file": cwt,
                 "schema_validation_complete": False,
@@ -578,13 +584,15 @@ class ImperialReformDefinitionIndex:
         except Exception as exc:
             errors.append(_reason("INPUT_CHANGED", f"CWTools parser changed: {exc}"))
         try:
-            vendor_raw = _read_bounded(VENDOR_PATH, 256 * 1024)
+            vendor_path = _vendor_manifest_path()
+            vendor_raw = _read_bounded(vendor_path, 256 * 1024)
             vendor = json.loads(vendor_raw.decode("utf-8-sig"))
             cwt = _pin(CWT_PATH, expected_bytes=EXPECTED_CWT_BYTES,
                        expected_sha256=EXPECTED_CWT_SHA256)
             if (not isinstance(vendor, dict) or vendor.get("commit") != EXPECTED_VENDOR_COMMIT
                     or vendor.get("license") != "MIT"
                     or self._cwt_contract is None
+                    or str(vendor_path.resolve()) != self._cwt_contract["vendor_manifest"]["path"]
                     or _sha256(vendor_raw) != self._cwt_contract["vendor_manifest"]["sha256"]
                     or cwt != self._cwt_contract["schema_file"]):
                 raise ValueError("CWT_CONTRACT_CHANGED")

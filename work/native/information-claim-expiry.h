@@ -14,6 +14,11 @@ struct Context final {
     Address module = 0;
     std::int32_t date = 0;
     bool bound_frame_thread = false;
+    bool (*observable)(std::uint64_t) noexcept = nullptr;
+
+    bool observes(std::uint64_t reference) const noexcept {
+        return observable ? observable(reference) : (reference & 0xffffff) == 0x415246;
+    }
 };
 
 struct Value final {
@@ -144,8 +149,9 @@ Decision begin(Reader& reader, const Context& context, Address instance,
     candidate.value.claimant = claimant;
     candidate.value.date = context.date;
     if (!copy.value(instance + 0x468, candidate.value.owner)) return Decision::unreadable;
-    candidate.value.observer = (claimant & 0xffffff) == 0x415246 ? claimant : candidate.value.owner;
-    if ((candidate.value.observer & 0xffffff) != 0x415246) return Decision::ignored;
+    candidate.value.observer = context.observes(claimant) ? claimant
+        : context.observes(candidate.value.owner) ? candidate.value.owner : 0;
+    if (!candidate.value.observer) return Decision::ignored;
     if (!detail::tag(claimant) || !detail::tag(candidate.value.owner, true)
         || !copy.value(instance + 0x20, candidate.value.province)
         || !copy.value(context.module + 0x233fe58, candidate.game)

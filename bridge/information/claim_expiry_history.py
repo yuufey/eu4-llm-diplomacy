@@ -24,13 +24,13 @@ class NativeClaimExpiryHistorySource:
     def catalog(self):
         topic = get_topic('H02')
         topic.update(source=type(self).__name__, context_scope='recorded',
-                     observer_roles=['actor', 'recipient'], observer_scope=['FRA'])
+                     observer_roles=['actor', 'recipient'], observer_scope=[])
         topic['fields'] = {FIELD: {
             'coverage': 'available', 'complete': True, 'source': type(self).__name__,
             'unit': 'claim_expiry_events', 'period': 'observed_history',
             'direction': 'claimant_to_current_owner',
             'native_source_available': observation.EVENT_TYPE in self.base_source.event_types,
-            'description': '已采集的宣称自然到期，FRA为宣称国或当前省份所有国，含省份与实际移除日期。',
+            'description': '已采集的宣称自然到期。观察国是宣称国或当前省份所有国。',
             'event_filter': {'types': [observation.EVENT_TYPE]},
         }}
         return [topic]
@@ -72,7 +72,8 @@ class NativeClaimExpiryHistorySource:
                 'event_date': {'status': 'known', 'value': fields['event_date']['value'], 'unit': 'game_date_raw'}}
 
     def _native(self, query, context, event=None):
-        if context.get('observer') != 'FRA':
+        if (event is None and context.get('observer') != 'FRA'
+                and observation.EVENT_TYPE not in self.base_source.event_types):
             return {'status': 'unavailable', 'reason': 'CLAIM_EXPIRY_OBSERVER_SCOPE_MISMATCH'}
         if query['parameters'].get('event_type', observation.EVENT_TYPE) != observation.EVENT_TYPE:
             return {'status': 'known', 'value': [], 'complete': True}

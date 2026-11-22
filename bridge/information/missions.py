@@ -783,8 +783,6 @@ queryable, while scheduling remains disabled for this archived state source.
 class NativeMissionReader:
     """Normalize a version-bound, double-pass RPM capture for one observer."""
 
-    supported_countries = ("FRA",)
-
     def __init__(self, base_source, capture=None, *, localization_capture=None,
                  custom_localization_capture=None, localization_reader=None):
         self.base_source = base_source
@@ -800,8 +798,9 @@ class NativeMissionReader:
 
     def __call__(self, country, *, trigger_selector=None):
         base_context = self.base_source.context()
-        if country not in self.supported_countries or base_context.get("observer") != country:
-            raise InformationError("observer_scope_mismatch", "Native mission reader supports the bound FRA observer")
+        if (not isinstance(country, str) or not re.fullmatch(r"[A-Z0-9]{3}", country)
+                or base_context.get("observer") != country):
+            raise InformationError("observer_scope_mismatch", "Native mission reader requires the configured observer")
         session = getattr(self.base_source, "session", None)
         if session is None or base_context.get("status") != "ready":
             raise InformationError("source_unavailable", "No ready native mission session")
@@ -819,8 +818,9 @@ class NativeMissionReader:
         return state
 
     def branch_inputs(self, country, context):
-        if country not in self.supported_countries or context.get("observer") != country:
-            raise InformationError("observer_scope_mismatch", "Branch input reader supports the bound FRA observer")
+        if (not isinstance(country, str) or not re.fullmatch(r"[A-Z0-9]{3}", country)
+                or context.get("observer") != country):
+            raise InformationError("observer_scope_mismatch", "Branch input reader requires the configured observer")
         session = getattr(self.base_source, "session", None)
         if session is None or context.get("status") != "ready":
             raise InformationError("source_unavailable", "No ready native branch input session")
@@ -834,8 +834,9 @@ class NativeMissionReader:
         Each bounded batch is independently identity/date guarded. The task
         membership and localization reads are not an atomic game snapshot.
         """
-        if country not in self.supported_countries or context.get("observer") != country:
-            raise InformationError("observer_scope_mismatch", "Localization reader supports the bound FRA observer")
+        if (not isinstance(country, str) or not re.fullmatch(r"[A-Z0-9]{3}", country)
+                or context.get("observer") != country):
+            raise InformationError("observer_scope_mismatch", "Localization reader requires the configured observer")
         session = getattr(self.base_source, "session", None)
         if session is None or context.get("status") != "ready" or context.get("mode") != "live":
             raise InformationError("source_unavailable", "No ready native localization session")
@@ -1028,6 +1029,8 @@ class NativeMissionReader:
                        ('identity', 'request', 'static_contract_guard', 'doublepass', 'before'))):
             raise InformationError('mission_snapshot_incomplete', 'Native mission audit sections are incomplete')
         identity = report.get("identity", {})
+        if report["request"].get("country") != context.get("observer"):
+            raise InformationError("observer_scope_mismatch", "Native mission capture belongs to another country")
         task_capture_requested = report.get("request", {}).get("include_tasks") is True
         # Earlier retained root-only fixtures omitted these audit sections.
         # The current task contract requires them; an explicit failed section

@@ -40,6 +40,7 @@ def observer(tmp_path):
         _installation_ack=lambda: {"native_game_speed_control": True,
                                    "native_game_speed_control_protocol": PROTOCOL},
         information_health=lambda: {"status": "ready"},
+        physical_player_health=lambda **_: {"status": "ready"},
     )
 
 
@@ -59,13 +60,13 @@ def test_requires_observer_installation_and_native_capability(observer):
 def test_unready_player_cannot_publish_and_pending_request_is_preserved(observer):
     clock = bind_game_time_control(observer)
     clock.log.touch()
-    observer.information_health = lambda: {"status": "unready"}
+    observer.physical_player_health = lambda **_: {"status": "unready"}
     with pytest.raises(InformationError) as error:
         clock(1)
     assert error.value.code == "source_unavailable"
     assert not clock.request.exists()
 
-    observer.information_health = lambda: {"status": "ready"}
+    observer.physical_player_health = lambda **_: {"status": "ready"}
     clock.request.write_text("pending", encoding="ascii")
     with pytest.raises(InformationError) as error:
         clock(1)

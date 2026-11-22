@@ -70,8 +70,8 @@ class _Pressure:
     def validate_query(self, query, context=None):
         normalized = validate_global_query(query, context)
         assert normalized["topic"] == "N04"
-        if normalized["object"].get("country") != "FRA":
-            raise InformationError("observer_scope_mismatch", "fake N04 reader only admits FRA")
+        if normalized["object"].get("country") != self._context['observer']:
+            raise InformationError("observer_scope_mismatch", "fake N04 reader only admits the observer")
         assert normalized["fields"] == ["war_exhaustion"]
         self.validate_calls.append(deepcopy(normalized))
         return normalized

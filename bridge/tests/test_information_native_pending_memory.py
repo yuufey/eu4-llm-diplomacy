@@ -17,6 +17,7 @@ _COUNTRY_POINTER = 0x100000
 _MODULE_BASE = 0x140000000
 _SESSION_ID = "synthetic-session-pending-001"
 _FRA = (1 << 32) | int.from_bytes(b"FRA", "little")
+_TUR = (5 << 32) | int.from_bytes(b"TUR", "little")
 _SAV = (2 << 32) | int.from_bytes(b"SAV", "little")
 _GEN = (3 << 32) | int.from_bytes(b"GEN", "little")
 _ENG_OLD = (4 << 32) | int.from_bytes(b"ENG", "little")
@@ -54,7 +55,7 @@ def _synthetic_memory(contract, specs=(), *, root_head=None, root_tail=None,
     nodes = [0x200000 + index * 0x100 for index in range(len(specs))]
     clones = [0x300000 + index * 0x100 for index in range(len(specs))]
     blocks = {}
-    country_tags = {_FRA: "FRA", _SAV: "SAV", _GEN: "GEN"}
+    country_tags = {_FRA: "FRA", _SAV: "SAV", _GEN: "GEN", _TUR: "TUR"}
     stale_refs = set(stale_refs)
 
     for index, spec in enumerate(specs):
@@ -106,6 +107,18 @@ def _capture(memory, contract):
         memory["read"], memory["country_pointer"], memory["recipient_ref"],
         memory["module_base"], memory["session_id"],
         memory["resolve_country"], contract)
+
+
+def test_queue_inventory_requires_the_same_canonical_recipient(contract):
+    memory = _synthetic_memory(contract, [{"recipient": _TUR}, {"recipient": _FRA}])
+    memory["recipient_ref"] = _TUR
+    result = _capture(memory, contract)["value"]
+    assert result["recognized_entry_count"] == 1
+    assert result["entries"][0]["recipient"] == "TUR"
+    assert result["entries"][1]["recognition"] == "unresolved"
+    assert validate_value(result, contract, observer="TUR") == result
+    with pytest.raises(ValueError, match="NATIVE_PENDING_PUBLIC_ACTION_INVALID"):
+        validate_value(result, contract, observer="FRA")
 
 
 def test_empty_queue_has_zero_counts(contract):

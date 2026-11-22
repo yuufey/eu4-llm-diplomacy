@@ -6,7 +6,7 @@ from ..peace_execution import normalize_peace_execution_parameters
 from .catalog import get_topic, validate_query
 from .model import InformationError
 from .sources import _result, _source_info
-from .trade_income import NativeTradeIncomeSource, _context_reason
+from .trade_income import NativeTradeIncomeSource, _observer_context_reason
 from .peace_truce import project_new_truce
 from .peace_followup_conditions import (
     SUBJECT_DEFAULTS, PeaceIntegrationConditions, future_subjects,
@@ -86,7 +86,7 @@ class PeaceFollowupSource(NativeTradeIncomeSource):
     def catalog(self):
         topic = get_topic('P04')
         topic.update(topic_id='P06', catalog_ids=['P06'], title='和约持续义务与后续条件',
-            status='available', source=type(self).__name__, observer_scope=['FRA'],
+            status='available', source=type(self).__name__, observer_scope=[],
             supported_versions=['1.37.4'], triggers=['query', 'periodic'])
         topic['fields'] = {'obligations': {
             'coverage': 'available', 'complete': True, 'source': type(self).__name__,
@@ -111,8 +111,10 @@ class PeaceFollowupSource(NativeTradeIncomeSource):
         normalized = validate_query(dict(query, topic='P04', fields=['consequences']), context)
         normalized.update(topic='P06', fields=query['fields'][:])
         obj, parameters = normalized['object'], normalized['parameters']
-        if obj.get('actor') != 'FRA' or not obj.get('recipient'):
-            raise InformationError('invalid_object', 'Peace follow-up requires actor FRA and a recipient')
+        if not obj.get('actor') or not obj.get('recipient'):
+            raise InformationError('invalid_object', 'Peace follow-up requires an actor and a recipient')
+        if context is not None and obj['actor'] != context.get('observer'):
+            raise InformationError('observer_scope_mismatch', 'Peace follow-up requires the observer as actor')
         if set(parameters) - {'action_id', 'phase', 'peace_context'}:
             raise InformationError('invalid_parameters', 'Provide an explicit peace_context selection')
         peace = parameters.get('peace_context')
@@ -185,7 +187,7 @@ class PeaceFollowupSource(NativeTradeIncomeSource):
         obj, parameters = query['object'], query['parameters']
         peace = parameters['peace_context']
         objects = [dict(obj, war_id=peace['war_id'])]
-        reason = _context_reason(current)
+        reason = _observer_context_reason(current)
         if reason:
             fields = {name: {'status': 'unavailable', 'reason': reason} for name in query['fields']}
         else:

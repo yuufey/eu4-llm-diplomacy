@@ -2,6 +2,8 @@
 from copy import deepcopy
 import json
 
+from .foreign_country_memory import _tag_ok
+
 
 MAX_PROVINCES = 64
 MAX_OUTPUT_BYTES = 512 * 1024
@@ -99,7 +101,7 @@ def project_current_limits(field, reader, context):
                     type(captured.get(key)) is type(context.get(key))
                     and captured.get(key) == context.get(key)
                     for key in ('observer', 'session_id', 'game_date'))
-                    and context.get('observer') == 'FRA' and context.get('session_id')
+                    and _tag_ok(context.get('observer')) and context.get('session_id')
                     and context.get('game_date') is not None
                     and isinstance(captured.get('provinces'), dict)):
                 inputs = captured['provinces']

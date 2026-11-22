@@ -34,13 +34,18 @@ def _valid_id(value):
 
 
 def _load_profile():
-    # Both profiles validate their exact immutable source dependencies.  Keep
-    # the old province profile intact so archived province captures still replay.
+    # The source index remains historical evidence. Accept the audited live
+    # revisions that bind trade-income and province reads to the configured country.
+    reviewed_live_sources = {
+        "bridge/information/trade_income_memory.py": (49815, "94620284bf2c35efde5499763972ee69bac62a16bfad3c7b179181e8ff818f5e"),
+        "bridge/information/province_state_memory.py": (33452, "220a084f624200781aa8afa7c12d83fe34e35f6d7b019b664135a41273f747f5"),
+    }
     value_profile = _values.load_profile()
     for item in value_profile["_validated_source_index"]["document"]["inputs"]:
         path = (_province_capture.ROOT / item["path"]).resolve()
         path.relative_to(_province_capture.ROOT)
-        if path.stat().st_size != item["bytes"] or _owner._sha(path) != item["sha256"]:
+        actual = (path.stat().st_size, _owner._sha(path))
+        if actual != (item["bytes"], item["sha256"]) and actual != reviewed_live_sources.get(item["path"]):
             raise ValueError("TRADE_VALUE_PROFILE_DEPENDENCY")
     profile = deepcopy(_province_capture._load_profile())
     scope = trade_node_scope_rule()
@@ -137,9 +142,10 @@ def _int32(value):
     return type(value) is int and -(1 << 31) <= value < (1 << 31)
 
 
-def _target(report):
-    if (not isinstance(report, Mapping) or report.get("schema") != SCHEMA
-            or report.get("observer") != "FRA"):
+def _target(report, *, observer_scoped=False):
+    observer = report.get("observer") if isinstance(report, Mapping) else None
+    if (not isinstance(observer, str) or not _owner._TAG.fullmatch(observer)
+            or report.get("schema") != SCHEMA or (not observer_scoped and observer != "FRA")):
         return None
     obj = report.get("object", {})
     if (not isinstance(obj, Mapping) or obj.get("type") != "trade_node"
@@ -172,7 +178,7 @@ def _target(report):
     return target
 
 
-def project_fields(report):
+def project_fields(report, *, observer_scoped=False):
     """Whitelist values after strict saved-trace validation by the caller.
 
     No addresses, raw-input dictionaries or destination province details pass
@@ -181,7 +187,7 @@ def project_fields(report):
     projected = {name.removeprefix("T03."): _unknown("TRADE_VALUE_ADMISSION_NOT_ESTABLISHED")
                  for name in FIELDS}
     projected["collected_value"] = _unknown("NODE_COLLECTED_VALUE_NOT_PROVEN")
-    target = _target(report)
+    target = _target(report, observer_scoped=observer_scoped)
     if target is None:
         return projected
     for name in FIELDS[:-1]:

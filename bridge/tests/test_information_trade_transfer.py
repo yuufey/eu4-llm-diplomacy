@@ -124,7 +124,7 @@ def test_catalog_query_scope_and_parameters_are_strict(tmp_path: Path):
     assert source.validate_query(_query({"type": "trade_node", "node_id": "alpha"}), base.context())
 
     with pytest.raises(InformationError) as wrong_country:
-        source.validate_query(_query({"type": "country", "country": "ENG"}))
+        source.validate_query(_query({"type": "country", "country": "ENG"}), base.context())
     assert wrong_country.value.code == "observer_scope_mismatch"
     with pytest.raises(InformationError) as invalid_parameters:
         source.validate_query(_query({"type": "country", "country": "FRA"}, parameters={"x": 1}))
@@ -132,6 +132,34 @@ def test_catalog_query_scope_and_parameters_are_strict(tmp_path: Path):
     with pytest.raises(InformationError) as invalid_node:
         source.validate_query(_query({"type": "trade_node", "node_id": "Null"}))
     assert invalid_node.value.code == "invalid_object"
+
+
+def test_tur_observer_reads_trade_details_and_transfer_from_bound_country(configured, tmp_path):
+    _, profile = configured
+    reader = details_fixture._reader_with_guards(profile)
+    country_pointer = details_fixture.COUNTRY_POINTER
+    raw = reader.data[(country_pointer + 0x20, 8)]
+    reader.data[(country_pointer + 0x20, 8)] = b"TUR\0" + raw[4:]
+    details_fixture._install_capital(reader)
+    _install_nonempty_transfer(reader)
+    trade, details, _ = details_fixture._records(reader, country="TUR")
+    assert details["capital_context"]["status"] == "observed"
+    assert details["country"] == details["observation"]["country"] == "TUR"
+    base = details_fixture._Base(tmp_path, "TUR")
+    report = details_fixture._report(trade, details, base)
+    source, _, detail_calls = details_fixture._source(tmp_path, report, observer="TUR")
+    result = source.read(details_fixture._query("alpha", fields=["shares"]))
+    assert result["fields"]["shares"]["status"] == "known"
+    assert list(result["fields"]["shares"]["value"]) == ["TUR"]
+    assert detail_calls[0][1] == "TUR"
+
+    transfer, calls = _source(base, report)
+    result = transfer.read(_query({"type": "country", "country": "TUR"}))
+    assert result["fields"]["transfer"]["status"] == "known"
+    assert calls[0][1] == "TUR"
+    with pytest.raises(InformationError, match="configured observer"):
+        transfer.read(_query({"type": "country", "country": "FRA"}))
+    assert len(calls) == 1
 
 
 def test_country_projection_preserves_native_order_sign_and_empty_containers(

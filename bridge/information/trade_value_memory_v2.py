@@ -14,7 +14,8 @@ from . import trade_value_memory as legacy
 
 ROOT = Path(__file__).resolve().parents[2]
 PROFILE_FILE = Path(__file__).with_name("profiles") / "trade-collected-memory-1374-v2.json"
-PROFILE_SHA256 = "4e376be3cd5a9bbaa412e6c0183bc0fbabc0fab019da88cc4d44309312bb35b4"
+PROFILE_SHA256 = "68a7f0a4f7822124f6ee3dd13d1b8982e3fc38de977bd58e7a1379c9adb78c93"
+LEGACY_PROFILE_SHA256 = "4e376be3cd5a9bbaa412e6c0183bc0fbabc0fab019da88cc4d44309312bb35b4"
 FIELDS = legacy.FIELDS
 _MAX_PROFILE_BYTES = 256 * 1024
 

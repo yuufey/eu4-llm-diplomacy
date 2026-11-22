@@ -135,7 +135,7 @@ def _read_elector_chain(reader, header: bytes, phase: str):
 
 
 def _read_state(reader, module_base: int, observer: str, phase: str) -> dict[str, Any]:
-    if observer != OBSERVER:
+    if not isinstance(observer, str) or _TAG.fullmatch(observer) is None:
         raise EmpireMemoryError("EMPIRE_OBSERVER_SCOPE_INVALID")
     if type(module_base) is not int or module_base < 0x10000 or module_base & 7:
         raise EmpireMemoryError("EMPIRE_MODULE_BASE_INVALID")

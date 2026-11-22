@@ -79,7 +79,7 @@ class NativeReligionInformationSource(NativeTradeIncomeSource):
             unit, basis, origin = _SPECS[name]
             fields[name].update(coverage='partial', complete=False, source=type(self).__name__,
                                 unit=unit, scale=1, period='current', basis=basis,
-                                value_origin=origin, supported_observers=['FRA'],
+                                value_origin=origin,
                                 triggers=['query', 'periodic'],
                                 runtime_validation='religion_identity_capture.validate_capture')
             fields[name]['gaps'] = ['MAIN_THREAD_ATOMICITY_AND_CACHE_FRESHNESS_NOT_PROVEN',
@@ -95,7 +95,7 @@ class NativeReligionInformationSource(NativeTradeIncomeSource):
                 fields[name]['raw_semantics'] = ('the existing native display-name projection with a separately '
                                                   'validated canonical religion/group identity component')
         topic.update(fields=fields, source=type(self).__name__)
-        topic['scope_note'] = ('FRA为逻辑非玩家观察方；名称、准确配置key和配置文件声明分别标记。'
+        topic['scope_note'] = ('准入基于当前观察国。显示名称、准确配置 key 和配置文件声明分别标记。'
                                '声明不等于当前已应用效果，显示名不参与key反查；多次采集不宣称原子。')
         return [topic]
 
@@ -132,7 +132,7 @@ class NativeReligionInformationSource(NativeTradeIncomeSource):
         try:
             module = import_module('.religion_identity_capture', __package__)
             capture = self.capture if self.capture is not None else module.capture
-            report = capture(installation, country=target, observer='FRA')
+            report = capture(installation, country=target, observer=context['observer'])
             if module.validate_capture(report, context, creation, target) is not True:
                 raise ValueError('CAPTURE_INVALID')
             item = report['observation']['backend']['targets'][0]
@@ -172,7 +172,7 @@ class NativeReligionInformationSource(NativeTradeIncomeSource):
                     or source.get('name') != type(child).__name__
                     or source.get('mode') != context.get('mode')
                     or source.get('status') != 'observed'
-                    or source.get('observer') != 'FRA'
+                    or source.get('observer') != context.get('observer')
                     or source.get('session_id') != context.get('session_id')
                     or source.get('complete') is not False
                     or set(sample['fields']) != {name}):
@@ -254,7 +254,7 @@ class NativeReligionInformationSource(NativeTradeIncomeSource):
         current = deepcopy(context) if isinstance(context, dict) else self.context()
         normalized = self.validate_query(query, current)
         provenance = {'read_only': True, 'native_function_invoked': False,
-                      'observer': 'FRA', 'target': normalized['object']['country'],
+                      'observer': current.get('observer'), 'target': normalized['object']['country'],
                       'actual_UI_observed': False, 'atomic_snapshot': False,
                       'configured_rules_are_applied_effects': False}
 

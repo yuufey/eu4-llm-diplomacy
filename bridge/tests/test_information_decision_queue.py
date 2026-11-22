@@ -6,7 +6,7 @@ import subprocess
 import sys
 
 from bridge.game_tools import GameTools
-from bridge.information.decision_desktop import enqueue_desktop_brief
+from bridge.information.decision_desktop import send_desktop_brief
 from bridge.information.decision_mcp import decision_mcp
 from bridge.information.decision_queue import DecisionQueue
 from bridge.information.service import InformationService
@@ -42,6 +42,14 @@ def test_only_latest_due_brief_starts_once_and_recovery_keeps_turn_identity(tmp_
         assert reopened.thread() == "thread-1"
         assert reopened.unresolved() == (second, "turn-1", "running")
         assert reopened.claim_latest(sid, source.context()) is None
+
+        source.game_day += 7
+        steered = service.tick()["results"][0]["result_id"]
+        assert reopened.claim_latest(sid, source.context(), active_turn_id="other-turn") is None
+        assert reopened.claim_latest(sid, source.context(), active_turn_id="turn-1")["result_id"] == steered
+        reopened.mark(steered, "steered", "turn-1")
+        assert reopened.unresolved() == (second, "turn-1", "running")
+        assert reopened.claim_latest(sid, source.context(), active_turn_id="turn-1") is None
         reopened.mark(second, "completed")
         assert reopened.claim_latest(sid, source.context()) is None
 
@@ -77,19 +85,20 @@ def test_stdio_relay_uses_resident_service_and_connection_close_keeps_it_alive(t
         assert service.tick()["state"] == "processed"
 
 
-def test_desktop_submission_uses_target_uuid_and_retains_queue_warning(monkeypatch):
+def test_desktop_submission_targets_the_current_turn_without_cli_queue(monkeypatch):
     target = "01a1fe88-e305-7fc2-8ac3-673bb643b74a"
     message = "01a1feb1-2393-7521-af47-b8d3081699be"
     brief = {"result_id": "brief-1", "items": [{"game_date": "1444.12.2"}]}
 
     def run(command, **kwargs):
-        assert command[:5] == ["codex.exe", "queue", "--thread", target, "--message"]
-        assert "\n" in command[5] and "brief-1" in command[5]
-        assert command[-1] == "--resume"
-        return subprocess.CompletedProcess(command, 0, f"Queued message {message} for thread {target}.",
-                                           "Warning: active writer")
+        assert command[0] == "pwsh.exe"
+        assert command[-3:] == ["-ThreadId", target, "-ActiveOnly"]
+        assert kwargs["input"] == "非用户指令\n【EU4 自动简报】\n\n" + json.dumps(brief, ensure_ascii=False, indent=2)
+        outcome = {"message_id": message, "thread_id": target, "method": "steer"}
+        return subprocess.CompletedProcess(command, 0, json.dumps(outcome), "")
 
+    monkeypatch.setattr("bridge.information.decision_desktop.shutil.which", lambda name: "pwsh.exe")
     monkeypatch.setattr(subprocess, "run", run)
-    assert enqueue_desktop_brief("codex.exe", target, brief, check_only=True) == {
-        "message_id": message, "thread_id": target, "warning": "Warning: active writer",
+    assert send_desktop_brief(target, brief, active_only=True) == {
+        "message_id": message, "thread_id": target, "method": "steer",
     }

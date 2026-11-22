@@ -12,7 +12,7 @@ from . import mission_memory as _strings
 from . import ai_personality_memory as _personality
 from .model import InformationError
 from .sources import _result, _source_info
-from .trade_income import NativeTradeIncomeSource, _context_reason, _session_binding
+from .trade_income import NativeTradeIncomeSource, _identity, _observer_context_reason, _session_binding
 
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -104,7 +104,7 @@ def _read_attitude(read, module_base, pointer, other, spec):
             'raw_name': name, 'unit': 'attitude', 'scale': 1}
 
 
-def _observe_for(actor, recipient, fields=('ai_attitude',)):
+def _observe_for(actor, recipient, fields=('ai_attitude',), observer='FRA'):
     def observe(reader, base, country, profile):
         bindings = {}
         country_rows = {}
@@ -139,7 +139,7 @@ def _observe_for(actor, recipient, fields=('ai_attitude',)):
             return result
 
         def backend(read, module_base, target):
-            return _countries.read_two_pass(read, module_base, 'FRA', [target],
+            return _countries.read_two_pass(read, module_base, observer, [target],
                 fields=['R06.' + field for field in fields],
                 admission_reader=admission, read_fields=read_fields)
 
@@ -147,11 +147,13 @@ def _observe_for(actor, recipient, fields=('ai_attitude',)):
     return observe
 
 
-def capture(installation, actor, recipient, fields=('ai_attitude',)):
-    country = recipient if actor == 'FRA' else actor
-    report = _owner._capture_common(installation, country, observer='FRA', schema=SCHEMA,
+def capture(installation, actor, recipient, fields=('ai_attitude',), observer='FRA'):
+    if observer not in (actor, recipient) or actor == recipient:
+        raise ValueError('AI_ATTITUDE_OBSERVER_SCOPE')
+    country = recipient if actor == observer else actor
+    report = _owner._capture_common(installation, country, observer=observer, schema=SCHEMA,
         profile_sha256=PROFILE_SHA256, load_profile=_load_profile,
-        observe=_observe_for(actor, recipient, fields))
+        observe=_observe_for(actor, recipient, fields, observer), observer_scoped=True)
     report['request'].update(actor=actor, recipient=recipient, fields=list(fields))
     return report
 
@@ -161,10 +163,13 @@ def validate_capture(report, context, creation, actor, recipient, fields=('ai_at
             or report.get('request', {}).get('recipient') != recipient
             or report.get('request', {}).get('fields', ['ai_attitude']) != list(fields)):
         return False
-    country = recipient if actor == 'FRA' else actor
+    observer = context.get('observer') if isinstance(context, dict) else None
+    if observer not in (actor, recipient) or actor == recipient:
+        return False
+    country = recipient if actor == observer else actor
     return _owner._validate_capture_common(report, context, creation, country, schema=SCHEMA,
         profile_sha256=PROFILE_SHA256, load_profile=_load_profile,
-        observe=_observe_for(actor, recipient, fields), require_access=True)
+        observe=_observe_for(actor, recipient, fields, observer), require_access=True, observer_scoped=True)
 
 
 class NativeAiAttitudeSource(NativeTradeIncomeSource):
@@ -190,7 +195,7 @@ class NativeAiAttitudeSource(NativeTradeIncomeSource):
                     'description': 'actor对recipient的当前关系倾向，沿用ai_attitude原生值',
                     'source': __name__ + '.capture', 'period': 'current',
                     'basis': 'native_directed_relation_attitude'}},
-            'object_types': ['country_pair'], 'observer_roles': [], 'observer_scope': ['FRA'],
+            'object_types': ['country_pair'], 'observer_roles': [], 'observer_scope': [],
             'parameters': {'type': 'object', 'properties': {}, 'additionalProperties': False},
             'supported_versions': ['1.37.4'], 'triggers': ['query', 'periodic'],
             'source': type(self).__name__, 'context_scope': 'visible_scope', 'visibility': 'visible_scope'}]
@@ -205,16 +210,17 @@ class NativeAiAttitudeSource(NativeTradeIncomeSource):
                 or any(not isinstance(obj.get(key), str) or not _TAG.fullmatch(obj[key])
                        for key in ('actor', 'recipient')) or obj['actor'] == obj['recipient']):
             raise InformationError('invalid_object', 'R06 requires two distinct country tags')
-        if 'FRA' not in (obj['actor'], obj['recipient']):
-            raise InformationError('observer_scope_mismatch', 'R06 pair must include FRA')
+        if context is None:
+            context = self.context()
+        observer = context.get('observer') if isinstance(context, dict) else None
+        if observer not in (obj['actor'], obj['recipient']):
+            raise InformationError('observer_scope_mismatch', 'The R06 country pair must include the configured observer')
         fields = query.get('fields')
         if (not isinstance(fields, list) or not fields or len(fields) > len(_FIELDS)
                 or any(field not in _FIELDS for field in fields) or len(set(fields)) != len(fields)):
             raise InformationError('invalid_fields', 'Unsupported R06 fields')
         if query.get('parameters', {}) != {}:
             raise InformationError('invalid_parameters', 'R06 has no extra parameters')
-        if context is not None and (not isinstance(context, dict) or context.get('observer') != 'FRA'):
-            raise InformationError('observer_scope_mismatch', 'The supported observer is FRA')
         return {'topic': 'R06', 'object': deepcopy(obj), 'fields': list(fields), 'parameters': {}}
 
     def read(self, query, context=None):
@@ -224,13 +230,18 @@ class NativeAiAttitudeSource(NativeTradeIncomeSource):
         fields = {name: {'status': 'unknown', 'reason': 'AI_ATTITUDE_CAPTURE_UNAVAILABLE'}
                   for name in query['fields']}
         installation, creation, session_reason = _session_binding(self.base_source)
-        reason = _context_reason(current) or session_reason
+        reason = _observer_context_reason(current) or session_reason
         if reason:
             fields = {name: {'status': 'unknown', 'reason': reason} for name in query['fields']}
         else:
             try:
-                report = (self.capture or capture)(installation, obj['actor'], obj['recipient'], query['fields'])
-                if validate_capture(report, current, creation, obj['actor'], obj['recipient'], query['fields']):
+                report = (self.capture or capture)(installation, obj['actor'], obj['recipient'],
+                                                   query['fields'], current['observer'])
+                after = self.context()
+                if _identity(current) != _identity(after):
+                    fields = {name: {'status': 'unknown', 'reason': 'AI_ATTITUDE_CONTEXT_CHANGED'}
+                              for name in query['fields']}
+                elif validate_capture(report, current, creation, obj['actor'], obj['recipient'], query['fields']):
                     captured = report['observation']['backend']['targets'][0]['fields']
                     fields = {name: deepcopy(captured['R06.' + name]) for name in query['fields']}
             except Exception:

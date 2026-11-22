@@ -1,16 +1,18 @@
 """W03 national summaries and selected-war participant summaries."""
 from copy import deepcopy
+import re
 
 from ..war_participants import project_war_participants
 from . import war_state_capture as _capture
 from .catalog import validate_query
 from .model import InformationError
 from .sources import _result, _source_info
-from .trade_income import NativeTradeIncomeSource, _context_reason, _session_binding
+from .trade_income import NativeTradeIncomeSource, _observer_context_reason, _session_binding
 from .war_force_change import project_force_change
 
 
 FIELDS = (*_capture.FIELDS, 'reinforcement_change')
+_TAG = re.compile(r'[A-Z0-9]{3}\Z')
 
 
 class NativeWarSituationSource(NativeTradeIncomeSource):
@@ -32,10 +34,10 @@ class NativeWarSituationSource(NativeTradeIncomeSource):
         topic['fields']['occupations']['description'] = '所选国家或战争双方成员的受占领省份及控制国汇总'
         topic['fields']['blockades']['description'] = '所选国家或战争双方成员的受封锁省份数量'
         topic['fields']['current_forces']['description'] = (
-            '国家视图沿用N02/F02规模，战争视图提供双方成员的可见士兵数及舰船数')
+            '按国家或战争双方成员提供当前可见军力，陆军数量带有团数或士兵数单位')
         topic['fields']['reinforcement_change'] = dict(topic['fields']['current_forces'],
             description='与上次同国或同一战争观测相比的军力净变化，包含损失、新建、解散和补充等影响')
-        topic['scope_note'] = 'war对象使用actor=FRA和recipient选择战争，可提供war_id；双方汇总成员的当前全国状态'
+        topic['scope_note'] = 'war 对象以当前观察国为 actor，以对手为 recipient，可用 war_id 选择战争。各成员返回当前全国状态。'
         return [topic]
 
     def validate_query(self, query, context=None):
@@ -45,13 +47,16 @@ class NativeWarSituationSource(NativeTradeIncomeSource):
         obj = normalized['object']
         if obj['type'] not in ('country', 'war'):
             raise InformationError('invalid_object', 'W03 situation requires a country or war')
-        if (obj['type'] == 'war' and (obj.get('actor') != 'FRA'
-                or not isinstance(obj.get('recipient'), str) or obj['recipient'] == 'FRA')):
-            raise InformationError('invalid_object', 'W03 war requires actor FRA and an opposing recipient')
+        observer = (context.get('observer') if isinstance(context, dict)
+                    else getattr(self.base_source, 'operator_observer', None))
+        if obj['type'] == 'war' and (not isinstance(obj.get('actor'), str)
+                or not isinstance(obj.get('recipient'), str) or obj['recipient'] == obj['actor']
+                or (observer is not None and obj['actor'] != observer)):
+            raise InformationError('invalid_object', 'W03 war requires the observer as actor and an opposing recipient')
         if normalized['parameters']:
             raise InformationError('invalid_parameters', 'W03 situation has no extra parameters')
-        if context is not None and (not isinstance(context, dict) or context.get('observer') != 'FRA'):
-            raise InformationError('observer_scope_mismatch', 'The supported observer is FRA')
+        if context is not None and (not isinstance(observer, str) or not _TAG.fullmatch(observer)):
+            raise InformationError('observer_scope_mismatch', 'W03 requires a bound observer country')
         return normalized
 
     def _country(self, query, context):
@@ -115,7 +120,7 @@ class NativeWarSituationSource(NativeTradeIncomeSource):
                           status == 'not_applicable')
 
         installation, creation, reason = _session_binding(self.base_source)
-        reason = reason or _context_reason(current)
+        reason = reason or _observer_context_reason(current)
         if reason:
             return failure(reason, 'unavailable')
         try:
@@ -141,7 +146,8 @@ class NativeWarSituationSource(NativeTradeIncomeSource):
         for start in range(0, len(countries), _capture._countries.MAX_TARGETS):
             batch = countries[start:start + _capture._countries.MAX_TARGETS]
             try:
-                report = (self.capture or _capture.capture)(installation, batch, fields=query['fields'])
+                report = (self.capture or _capture.capture)(installation, batch, fields=query['fields'],
+                                                            observer=current['observer'])
                 if not _capture.validate_capture(report, current, creation, batch, query['fields']):
                     raise ValueError('WAR_STATE_CAPTURE_INVALID')
                 for target in report['observation']['backend']['targets']:

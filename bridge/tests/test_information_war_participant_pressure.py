@@ -1,4 +1,5 @@
 """W04 reuses national readers for the selected war's actual participants."""
+from contextlib import closing
 from copy import deepcopy
 
 import pytest
@@ -30,7 +31,7 @@ class ForeignPressure:
 
     def validate_query(self, query, context=None):
         assert query['topic'] == 'F04' and query['fields'] == ['war_exhaustion']
-        assert query['object']['country'] != 'FRA'
+        assert query['object']['country'] != self.pressure.context()['observer']
         return deepcopy(query)
 
     def read(self, query, context):
@@ -57,11 +58,12 @@ class WarBase(_Primary):
         self.calls.append(deepcopy(query))
         if self.missing:
             return {'fields': {name: deepcopy(self.missing) for name in query['fields']}}
+        observer = self.pressure.context()['observer']
         roster = {'source': 'native_war_side_vectors', 'status': 'available', 'complete': True,
-                  'side_a': ['FRA', 'SAV'], 'side_b': ['ENG'],
+                  'side_a': [observer, 'SAV'], 'side_b': ['ENG'],
                   'actor_side': 'side_a', 'recipient_side': 'side_b', 'reason': None}
         if self.reverse:
-            roster.update(side_a=['ENG'], side_b=['FRA', 'SAV'],
+            roster.update(side_a=['ENG'], side_b=[observer, 'SAV'],
                           actor_side='side_b', recipient_side='side_a')
         return {'fields': {'war_id': {'status': 'known', 'value': WAR},
                            'participants': {'status': 'known', 'value': roster}}}
@@ -99,6 +101,28 @@ def test_selected_war_groups_actual_participants_and_echoes_war_id(reverse):
     assert len(base.calls) == 1 and base.calls[0]['object']['war_id'] == WAR
     assert len(pressure.read_calls) == 1
     assert [call['object']['country'] for call in foreign.calls] == ['SAV', 'ENG']
+
+
+def test_configured_non_fra_observer_gets_own_and_foreign_pressure(tmp_path):
+    source, pressure, foreign, base = build()
+    pressure._context['observer'] = 'TUR'
+    query = war_query()
+    query['object'].update(actor='TUR', war_id=WAR)
+    query['fields'].append('exit_risk')
+    with closing(InformationService(CompositeSource(base, [source]), tmp_path / 'tur-pressure.sqlite3')) as service:
+        response = InformationTools(service).call('information_query', {
+            'request_id': 'tur-pressure', 'queries': [query], 'view': 'full'})
+    result = response['items'][0]
+    assert result['fields']['war_exhaustion']['value']['our_side']['TUR']['value'] == 2500
+    assert result['fields']['war_exhaustion']['value']['opposing_side']['ENG']['value'] == 9000
+    assert result['fields']['exit_risk']['status'] == 'unsupported'
+    assert [call['object']['country'] for call in foreign.calls] == ['SAV', 'ENG']
+
+    query['object']['war_id'] = 'war_0123456789abcdef_00000102'
+    foreign.calls.clear()
+    fields = source.read(query, pressure.context())['fields']
+    assert fields['war_exhaustion']['reason'] == 'WAR_DISCOVERY_FAILED'
+    assert foreign.calls == []
 
 
 def test_invisible_member_preserves_other_members_and_never_becomes_zero():

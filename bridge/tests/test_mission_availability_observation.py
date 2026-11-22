@@ -157,7 +157,7 @@ def test_printable_ascii_identifier_is_preserved_from_owned_hex(name):
 
 @pytest.mark.parametrize('changes', [
     {'schema_version': True},
-    {'schema_version': 2},
+    {'schema_version': 3},
     {'sequence': True},
     {'sequence': 0},
     {'sequence': 2**63},

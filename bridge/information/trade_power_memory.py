@@ -614,8 +614,6 @@ def validate_record(record: Any, trade_income_record: Any) -> bool:
     for key in ("country_pointer", "country", "country_fullref_raw_hex", "country_slot"):
         if record.get(key) != trade_income_record.get(key):
             return False
-    if record.get("country") != EXPECTED_COUNTRY:
-        return False
     if (
         record.get("basis") != BASIS
         or record.get("unit") != UNIT
@@ -679,7 +677,7 @@ def validate_record(record: Any, trade_income_record: Any) -> bool:
         and observation.get("status") == "observed"
         and observation.get("module_base") == _hex(module_base)
         and observation.get("country_pointer") == trade_income_record.get("country_pointer")
-        and observation.get("country") == EXPECTED_COUNTRY
+        and observation.get("country") == trade_income_record.get("country")
         and observation.get("country_slot") == trade_income_record.get("country_slot")
         and observation.get("node_count") == len(source_nodes)
         and observation.get("runtime_total_power_offset") == _hex(layout["runtime_total_power_offset"])

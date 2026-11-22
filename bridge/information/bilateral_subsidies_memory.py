@@ -510,7 +510,7 @@ def _empty_result(reason: str, trace: _Trace, raw_inputs: Mapping[str, Any],
 
 
 def read_state(reader: Any, module_base: Any, observer_binding: Any,
-               target_binding: Any) -> dict[str, Any]:
+               target_binding: Any, *, logical_observer="FRA") -> dict[str, Any]:
     """Read the explicitly selected FRA/target subsidy pair once and fail closed.
 
     ``status=known`` describes a bounded, single-pass observation of this pair.
@@ -537,10 +537,10 @@ def read_state(reader: Any, module_base: Any, observer_binding: Any,
         base = _pointer(module_base, "MODULE_BASE", alignment=0x1000)
         observer = _parse_binding(observer_binding, "observer")
         target = _parse_binding(target_binding, "target")
-        if observer["tag"] != "FRA":
-            raise _Unknown("OBSERVER_MUST_BE_FRA")
-        if target["tag"] == "FRA":
-            raise _Unknown("TARGET_MUST_DIFFER_FROM_FRA")
+        if observer["tag"] != logical_observer:
+            raise _Unknown("OBSERVER_MUST_BE_FRA" if logical_observer == "FRA" else "OBSERVER_BINDING_MISMATCH")
+        if target["tag"] == logical_observer:
+            raise _Unknown("TARGET_MUST_DIFFER_FROM_FRA" if logical_observer == "FRA" else "FOREIGN_TARGET_REQUIRED")
         if (observer["country_pointer"] == target["country_pointer"]
                 or observer["slot"] == target["slot"]
                 or observer["fullref"] == target["fullref"]):

@@ -1,4 +1,4 @@
-"""Project the admitted native bilateral-opinion cache for an FRA pair."""
+"""Project the admitted native bilateral-opinion cache."""
 from __future__ import annotations
 
 from copy import deepcopy
@@ -61,7 +61,7 @@ def _unavailable(reason: str) -> dict[str, Any]:
 
 
 class NativeOpinionSource:
-    """Expose only validated FRA-involved cached opinion cells.
+    """Expose validated cached opinion cells for the observer’s country pair.
 
     The low-level capture owns its read-only handle and trace.  This adapter
     validates that report, rechecks the live session identity, and exports a
@@ -88,7 +88,7 @@ class NativeOpinionSource:
             visibility="visible_scope", context_scope="adapter_managed",
             parameters=_parameters(),
             scope_note=(
-                "仅投射逻辑FRA参与的选定国家对；非玩家角色和country-selection准入由采集端验证。"
+                "读取观察国参与的国家对，由采集端验证观察国角色和查询准入。"
                 "缓存新鲜度与实际绘制未证。"
             ),
             change_scope={
@@ -110,16 +110,17 @@ class NativeOpinionSource:
                 or not _is_country(obj.get("actor")) or not _is_country(obj.get("recipient"))
                 or obj["actor"] == obj["recipient"]):
             raise InformationError("invalid_object", "R04 requires two distinct country_pair endpoints")
-        if _OBSERVER not in (obj["actor"], obj["recipient"]):
-            raise InformationError("observer_scope_mismatch", "R04 pair must include the logical FRA observer")
+        observer = context.get("observer") if isinstance(context, dict) else None
+        if observer is not None and observer not in (obj["actor"], obj["recipient"]):
+            raise InformationError("observer_scope_mismatch", "R04 pair must include the observer")
         fields = query.get("fields")
         if (not isinstance(fields, list) or fields != [_FIELD]):
             raise InformationError("invalid_fields", "NativeOpinionSource supports only the opinion field")
         parameters = query.get("parameters")
         if not isinstance(parameters, dict) or parameters:
             raise InformationError("invalid_parameters", "R04 opinion parameters must be empty")
-        if context is not None and (not isinstance(context, dict) or context.get("observer") != _OBSERVER):
-            raise InformationError("observer_scope_mismatch", "R04 requires logical observer FRA")
+        if context is not None and not isinstance(context, dict):
+            raise InformationError("invalid_context", "R04 context must be an object")
         normalized = {
             "topic": _TOPIC, "object": deepcopy(obj), "fields": [_FIELD], "parameters": {},
         }
@@ -183,7 +184,7 @@ class NativeOpinionSource:
         }
 
     @classmethod
-    def _project_backend(cls, report: Any, other: str, actor: str, recipient: str) -> dict[str, Any]:
+    def _project_backend(cls, report: Any, other: str, actor: str, recipient: str, observer=_OBSERVER) -> dict[str, Any]:
         try:
             observation = report["observation"]
             backend = observation["backend"]
@@ -202,7 +203,7 @@ class NativeOpinionSource:
             expected = ((actor, recipient), (recipient, actor))
             rows = []
             for holder, target in expected:
-                if holder == _OBSERVER:
+                if holder == observer:
                     field = _FIELDS[0]
                 else:
                     field = _FIELDS[1]
@@ -236,7 +237,7 @@ class NativeOpinionSource:
         provenance = {
             "adapter": "NativeOpinionSource", "read_only": True,
             "native_function_invoked": False, "scope": "selected_country_pair",
-            "observer": _OBSERVER, "target": target,
+            "observer": context.get("observer"), "target": target,
             "capture_status": capture_status,
             "cache_freshness_proven": False, "actual_UI_display_verified": False,
         }
@@ -277,7 +278,10 @@ class NativeOpinionSource:
                                     reason=reason, unavailable=True)
 
         actor, recipient = normalized["object"]["actor"], normalized["object"]["recipient"]
-        other = recipient if actor == _OBSERVER else actor
+        observer = before["observer"]
+        if observer not in (actor, recipient):
+            raise InformationError("observer_scope_mismatch", "R04 pair must include the observer")
+        other = recipient if actor == observer else actor
         installation, creation, binding_error = _session_binding(self.base_source)
         if binding_error is not None or installation is None or creation is None:
             reason = binding_error or "OPINION_INSTALLATION_UNAVAILABLE"
@@ -291,7 +295,8 @@ class NativeOpinionSource:
             capture_fn, validator = self._capture_functions()
             if not callable(capture_fn) or not callable(validator):
                 raise TypeError
-            report = capture_fn(installation, other)
+            report = (capture_fn(installation, other) if self._capture is not None
+                      else capture_fn(installation, other, observer=observer))
             capture_status = "captured"
         except Exception:
             report = None
@@ -321,7 +326,7 @@ class NativeOpinionSource:
                                 reason=_CAPTURE_INVALID, target=other,
                                 capture_status="validation_failed")
 
-        field = self._project_backend(report, other, actor, recipient)
+        field = self._project_backend(report, other, actor, recipient, observer=observer)
         return self._result(normalized, after, {_FIELD: field}, target=other,
                             capture_status="validated")
 
@@ -342,19 +347,20 @@ class NativeOpinionSource:
             if sample.get("complete") is not False or set(sample.get("fields", {})) != {_FIELD}:
                 return None
 
+            observer = context["observer"]
             source = sample.get("source")
             if (not isinstance(source, Mapping) or source.get("name") != "NativeOpinionSource"
                     or source.get("status") != "observed" or source.get("mode") != "live"
-                    or source.get("observer") != _OBSERVER
+                    or source.get("observer") != observer
                     or source.get("session_id") != context.get("session_id")
                     or source.get("complete") is not False):
                 return None
             provenance = source.get("provenance")
-            other = recipient if actor == _OBSERVER else actor
+            other = recipient if actor == observer else actor
             if (not isinstance(provenance, Mapping)
                     or provenance.get("adapter") != "NativeOpinionSource"
                     or provenance.get("capture_status") != "validated"
-                    or provenance.get("observer") != _OBSERVER
+                    or provenance.get("observer") != observer
                     or provenance.get("target") != other):
                 return None
 

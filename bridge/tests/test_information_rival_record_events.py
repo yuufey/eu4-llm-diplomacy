@@ -35,7 +35,7 @@ def record_event(sequence=1, *, remove=False):
 
 
 @pytest.mark.parametrize('changes', [
-    {'schema_version': True}, {'schema_version': 2.0}, {'schema_version': 3},
+    {'schema_version': True}, {'schema_version': 2.0}, {'schema_version': 5},
     {'source': observation.SOURCE}, {'source': 'country_rival_remove_return'},
     {'observation_path': []}, {'observation_path': 'country_rival_remove'},
     {'count_basis': 'physical_nodes'}, {'count_basis': None}, {'operation': 'replace'},
@@ -45,6 +45,41 @@ def test_record_decoder_rejects_unverified_shape_and_source(changes):
     value = record_event()
     value.update(changes)
     assert observation.public_observation(value,SESSION_ID) is None
+
+
+def test_configured_observer_receives_record_and_replaced_rival_receipts(tmp_path):
+    from bridge.diplomacy import DiplomacyTools
+    from bridge.information.sources import DiplomacySource
+    from bridge.tests.test_information_war_declaration_events import reference
+
+    ack = record_ack(version=65, observer='TUR', native_country_control_configuration=True,
+        native_country_control_protocol='EU4CONTROL1', native_country_control_ack='native_controlled_countries_set',
+        native_country_control_request='controlled-countries.req', native_information_observer_configuration=True,
+        native_country_modifier_scoped_schema=2, native_rival_change_scoped_schema=4)
+    record = dict(record_event(1), schema_version=4, country='TUR', target='TUR',
+                  target_fullref=reference('TUR', 43))
+    replaced = rival(2, schema_version=3, country='TUR', target='FRA', old_rival='TUR',
+                     old_rival_fullref=reference('TUR', 43), operation='replace',
+                     before=state(1, old=True), after=state(1, target=True))
+    other = dict(replaced, country='FRA', sequence=3)
+    session, journal, _ = make_source(tmp_path, ack=ack, events=[record, replaced, other], observer='TUR')
+    try:
+        assert observation.SCOPED_CAPABILITY in session.installation_capabilities()
+        session.observed_countries = ('FRA', 'TUR')
+        source = DiplomacySource(DiplomacyTools(journal, session), observer='TUR')
+        current = source.context()
+        batch = source.poll_events(current, None)
+        assert batch['complete'] and batch['cursor']['rival_sequence'] == 3
+        assert [event['payload']['scope'] for event in batch['events']] == [
+            observation.CONFIGURED_RECORD_SCOPE, observation.CONFIGURED_COMMAND_SCOPE,
+        ]
+        assert not observation.public_observation(dict(replaced, country='SAV'), SESSION_ID)
+        for event in batch['events']:
+            assert event['observer'] == 'TUR'
+            assert source.replay_event(query(), current, event)['complete']
+            assert not source.replay_event(query(), dict(current, observer='FRA'), event)['complete']
+    finally:
+        journal.close()
 
 
 def test_collector_requires_record_permission_and_keeps_legacy_sequence_identity():

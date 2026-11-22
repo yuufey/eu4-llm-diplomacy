@@ -1,4 +1,4 @@
-"""Read the bounded selected military-modifier aggregates for FRA.
+"""Read selected military-modifier aggregates for the configured observer.
 
 The capture module owns native reads and their replay validation.  This source
 binds that report to the current live session and publishes only the three
@@ -21,7 +21,7 @@ from .sources import _result, _source_info
 from .trade_income import (
     _GAME_SHA256,
     _VERSION,
-    _context_reason as _base_context_reason,
+    _observer_context_reason,
     _identity,
     _session_binding,
 )
@@ -29,7 +29,6 @@ from .trade_income import (
 
 _TOPIC = "N03"
 _FIELD = "military_modifiers"
-_COUNTRY = "FRA"
 _UNIT = "military_modifier_map"
 _SCALE = 1
 _PERIOD = "current"
@@ -51,7 +50,7 @@ _CONTEXT_IDENTITY_KEYS = [
 
 
 class NativeOwnMilitaryModifiersSource:
-    """Own only N03.military_modifiers for the verified FRA live context."""
+    """Expose N03.military_modifiers in the current observer scope."""
 
     event_types: tuple[str, ...] = ()
 
@@ -68,7 +67,7 @@ class NativeOwnMilitaryModifiersSource:
             status="available",
             source=type(self).__name__,
             observer_roles=["country"],
-            observer_scope=[_COUNTRY],
+            observer_scope=[],
             visibility="country_scope",
             context_scope="country_scope",
             supported_versions=[_VERSION],
@@ -91,7 +90,6 @@ class NativeOwnMilitaryModifiersSource:
                 "period": _PERIOD,
                 "basis": _BASIS,
                 "value_origin": _VALUE_ORIGIN,
-                "supported_countries": [_COUNTRY],
                 "supported_object_types": ["country"],
                 "description": (
                     "固定观察范围中已验证的陆军围城能力、陆军防御和船只耐久聚合修正。"
@@ -128,10 +126,9 @@ class NativeOwnMilitaryModifiersSource:
         if (not isinstance(obj, dict) or set(obj) != {"type", "country"}
                 or obj.get("type") != "country"):
             raise InformationError("invalid_object", "N03 requires a country object")
-        if obj.get("country") != _COUNTRY:
-            raise InformationError(
-                "observer_scope_mismatch", "N03 modifiers support the verified FRA observer only",
-            )
+        country = obj.get("country")
+        if not isinstance(country, str) or not re.fullmatch(r"[A-Z0-9]{3}", country):
+            raise InformationError("invalid_object", "N03 modifiers require a country tag")
         fields = query.get("fields")
         if (not isinstance(fields, list) or fields != [_FIELD]):
             raise InformationError(
@@ -143,10 +140,8 @@ class NativeOwnMilitaryModifiersSource:
         if context is not None:
             if not isinstance(context, dict):
                 raise InformationError("invalid_context", "context must be an object")
-            if context.get("observer") is not None and context.get("observer") != _COUNTRY:
-                raise InformationError(
-                    "observer_scope_mismatch", "N03 is outside the verified FRA observer scope",
-                )
+            if context.get("observer") is not None and context.get("observer") != country:
+                raise InformationError("observer_scope_mismatch", "N03 modifiers are limited to the configured observer country")
         normalized = {
             "topic": _TOPIC,
             "object": deepcopy(obj),
@@ -159,7 +154,7 @@ class NativeOwnMilitaryModifiersSource:
     @staticmethod
     def _context_reason(context: Any) -> str | None:
         try:
-            reason = _base_context_reason(context, _COUNTRY)
+            reason = _observer_context_reason(context)
         except Exception:
             return "OWN_MILITARY_MODIFIERS_CONTEXT_INVALID"
         return reason.replace("TRADE_INCOME_", "OWN_MILITARY_MODIFIERS_", 1) if reason else None
@@ -281,12 +276,13 @@ class NativeOwnMilitaryModifiersSource:
         except Exception:
             current = {}
         normalized = self.validate_query(query, current)
+        country = normalized['object']['country']
         field = self._public_field(
             "unknown", reason="OWN_MILITARY_MODIFIERS_NOT_READ",
         )
         provenance: dict[str, Any] = {
-            "observer": _COUNTRY,
-            "country": _COUNTRY,
+            "observer": country,
+            "country": country,
             "read_only": True,
             "native_function_invoked": False,
             "context_guard": {
@@ -351,7 +347,7 @@ class NativeOwnMilitaryModifiersSource:
         try:
             module = import_module(".own_military_modifiers_capture", __package__)
             capture_reader = self.capture if self.capture is not None else module.capture
-            report = capture_reader(installation, observer=_COUNTRY)
+            report = capture_reader(installation, observer=country)
         except Exception:
             capture_failed = True
 

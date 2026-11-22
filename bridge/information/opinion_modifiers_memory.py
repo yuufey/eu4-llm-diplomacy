@@ -8,6 +8,7 @@ multiplier, or flag bytes as expiry/decay semantics.
 from __future__ import annotations
 
 from copy import deepcopy
+from functools import partial
 import hashlib
 import json
 from pathlib import Path
@@ -522,7 +523,7 @@ def _field(holder_tag: str, target_tag: str, result: Mapping[str, Any]) -> dict[
     }
 
 
-def _backend_read(reader: Any, base: int, country: str) -> dict[str, Any]:
+def _backend_read(reader: Any, base: int, country: str, *, observer=OBSERVER) -> dict[str, Any]:
     pair: dict[str, Any] = {}
 
     def admit(read_bytes: Any, module_base: int, scan: Mapping[str, Any],
@@ -544,22 +545,23 @@ def _backend_read(reader: Any, base: int, country: str) -> dict[str, Any]:
     def fields(read_bytes: Any, module_base: int, binding: Mapping[str, Any], selected: tuple[str, ...]):
         if selected != FIELDS or not _same(binding, pair.get(country)):
             raise ValueError("OPINION_MODIFIERS_PASS_BINDING_CHANGED")
-        observer = pair[OBSERVER]
+        observer_binding = pair[observer]
         target = pair[country]
-        outgoing = _direction(read_bytes, module_base, observer, target)
-        incoming = _direction(read_bytes, module_base, target, observer)
+        outgoing = _direction(read_bytes, module_base, observer_binding, target)
+        incoming = _direction(read_bytes, module_base, target, observer_binding)
         return {
-            FIELD_OUTGOING: _field(OBSERVER, country, outgoing),
-            FIELD_INCOMING: _field(country, OBSERVER, incoming),
+            FIELD_OUTGOING: _field(observer, country, outgoing),
+            FIELD_INCOMING: _field(country, observer, incoming),
         }
 
-    return backend.read_two_pass(reader, base, OBSERVER, [country], FIELDS,
+    return backend.read_two_pass(reader, base, observer, [country], FIELDS,
                                  read_fields=fields, admission_reader=admit)
 
 
-def _observe(reader: Any, base: int, country: str, profile: Mapping[str, Any]) -> dict[str, Any]:
+def _observe(reader: Any, base: int, country: str, profile: Mapping[str, Any],
+             *, observer=OBSERVER) -> dict[str, Any]:
     return opinion._owner._observe(reader, base, country, profile,
-                                   backend_reader=_backend_read)
+                                   backend_reader=partial(_backend_read, observer=observer))
 
 
 __all__ = [

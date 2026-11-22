@@ -83,7 +83,7 @@ def test_decoder_keeps_direction_and_expiry_at_equal_current_date(actor, recipie
 
 @pytest.mark.parametrize('changes', [
     {'event': 'native_truce_removed'}, {'source': 'direct_truce_removed'},
-    {'wire': True}, {'wire': 2}, {'complete': True}, {'schema_version': 1},
+    {'wire': True}, {'wire': 3}, {'complete': True}, {'schema_version': 1},
     {'sequence': True}, {'sequence': 0}, {'sequence': 2**63}, {'session_id': 'other-session'},
     {'date_raw': END_DATE - 1}, {'date_raw': -1}, {'date_raw': True},
     {'date_input_raw': 2**31}, {'date_input_raw': -1}, {'end_date_raw': END_DATE + 1},

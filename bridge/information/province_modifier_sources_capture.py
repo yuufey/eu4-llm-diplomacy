@@ -6,8 +6,9 @@ from pathlib import Path
 from . import foreign_technology_capture as _owner
 from . import province_state_memory as _province
 from . import province_modifier_sources_memory as _leaf
+from .province_goods_sources_capture import _valid_observer
+from .province_state_capture import _validate_reviewed_layout_dependencies
 
-ROOT = Path(__file__).resolve().parents[2]
 PROFILE_FILE = Path(__file__).with_name('profiles')/'province-modifier-sources-memory-1374-v2-r2-sampling-r1.json'
 PROFILE_SHA256 = '49f3e915d0cbbad2cf8f2bb6155be1e0916211ea17b69a93493d4988994831b2'
 SCHEMA = 'information.province_modifier_sources_capture.v2'
@@ -42,27 +43,26 @@ def _load_profile():
             or profile['semantics']['supported_fields'] != [_leaf.FIELD]
             or not _owner._same(profile['layout']['province_modifier_sources'], LAYOUT)):
         raise ValueError('PROVINCE_SOURCE_PROFILE_LAYOUT')
-    for item in profile['source_evidence'] + profile['layout_dependencies']:
-        path = (ROOT/item['path']).resolve(); path.relative_to(ROOT)
-        if path.stat().st_size != item['bytes'] or _owner._sha(path) != item['sha256']:
-            raise ValueError('PROVINCE_SOURCE_DEPENDENCY_PIN')
+    _validate_reviewed_layout_dependencies(profile, 'PROVINCE_SOURCE_DEPENDENCY_PIN')
     return profile
 
-def _observe_for(province_id):
+def _observe_for(province_id, observer='FRA'):
     def observe(reader, base, country, profile):
-        if country != 'FRA' or not _valid_id(province_id):
+        if country != observer or not _valid_id(province_id):
             raise ValueError('PROVINCE_SOURCE_SCOPE')
         table = profile['layout']['province_goods_sources']['callback_table']
         address = base + int(table['rva'], 0)
         expected = b''.join((base+int(rva,0)).to_bytes(8,'little') for rva in table['target_rvas'])
         if len(expected) != 288:
             raise ValueError('PROVINCE_SOURCE_CALLBACK_COUNT')
-        def backend(read, module_base, observer):
+        def backend(read, module_base, observer_country):
+            if observer_country != observer:
+                raise ValueError('PROVINCE_SOURCE_SCOPE')
             before = _owner._read(read,address,len(expected),'province_sources.callbacks.before')
             if before != expected:
                 raise ValueError('PROVINCE_SOURCE_CALLBACK_MISMATCH')
-            result = _province.read_two_pass(read,module_base,province_id,observer=observer,
-                fields=(_leaf.FIELD,),read_fields=_leaf.read_fields)
+            result = _province.read_two_pass(read, module_base, province_id, observer=observer,
+                observer_scoped=True, fields=(_leaf.FIELD,), read_fields=_leaf.read_fields)
             after = _owner._read(read,address,len(expected),'province_sources.callbacks.after')
             if after != before:
                 raise ValueError('PROVINCE_SOURCE_CALLBACK_CHANGED')
@@ -73,19 +73,21 @@ def _observe_for(province_id):
     return observe
 
 def capture(installation: Path, province_id: int, *, observer: str = 'FRA'):
-    if not _valid_id(province_id) or observer != 'FRA':
+    if not _valid_id(province_id) or not _valid_observer(observer):
         raise ValueError('PROVINCE_SOURCE_REQUEST_SCOPE')
-    inner = _owner._capture_common(installation,'FRA',observer='FRA',schema=INNER_SCHEMA,
-        profile_sha256=PROFILE_SHA256,load_profile=_load_profile,
-        observe=_observe_for(province_id),allow_observer_target=True)
-    return {'schema':SCHEMA,'observer':'FRA','object':{'type':'province','province_id':province_id},'capture':inner}
+    inner = _owner._capture_common(installation, observer, observer=observer, schema=INNER_SCHEMA,
+        profile_sha256=PROFILE_SHA256, load_profile=_load_profile,
+        observe=_observe_for(province_id, observer), allow_observer_target=True, observer_scoped=True)
+    return {'schema':SCHEMA,'observer':observer,'object':{'type':'province','province_id':province_id},'capture':inner}
 
 def validate_capture(report, context, creation, province_id):
-    if (not _valid_id(province_id) or not isinstance(report,dict)
+    observer = context.get('observer') if isinstance(context, dict) else None
+    if (not _valid_id(province_id) or not _valid_observer(observer) or not isinstance(report,dict)
             or set(report) != {'schema','observer','object','capture'}
-            or report['schema'] != SCHEMA or report['observer'] != 'FRA'
+            or report['schema'] != SCHEMA or report['observer'] != observer
             or not _owner._same(report['object'],{'type':'province','province_id':province_id})):
         return False
-    return _owner._validate_capture_common(report['capture'],context,creation,'FRA',
-        schema=INNER_SCHEMA,profile_sha256=PROFILE_SHA256,load_profile=_load_profile,
-        observe=_observe_for(province_id),allow_observer_target=True,require_access=True)
+    return _owner._validate_capture_common(report['capture'], context, creation, observer,
+        schema=INNER_SCHEMA, profile_sha256=PROFILE_SHA256, load_profile=_load_profile,
+        observe=_observe_for(province_id, observer), allow_observer_target=True,
+        observer_scoped=True, require_access=True)

@@ -21,18 +21,18 @@ def profile():
     return capture._load_profile()
 
 
-def _observe(profile, image=None, source=None):
+def _observe(profile, image=None, source=None, observer='FRA'):
     if image is None:
         image, _bindings = make_image()
     _write_profile_guards(image, profile)
     reader = RecordingReader(image if source is None else source)
-    observation = capture._observe(reader, BASE, 'FRA', profile)
+    observation = capture._observe(reader, BASE, observer, profile, observer=observer)
     identity = {'binding_verified': True, 'process_creation_filetime': CREATION,
         'process_path': 'synthetic-eu4.exe', 'process_path_sha256': capture._owner.EXE_SHA256}
     observed = observation['stable'] is True
     report = {'schema': capture.SCHEMA, 'status': 'observed' if observed else 'unknown',
         'completed': observed,
-        'request': {'country': 'FRA', 'observer': 'FRA', 'creation_filetime': CREATION,
+        'request': {'country': observer, 'observer': observer, 'creation_filetime': CREATION,
             'session_id': SESSION_ID},
         'profile_sha256': capture.PROFILE_SHA256,
         'identity': deepcopy(identity), 'identity_after': deepcopy(identity),
@@ -42,7 +42,7 @@ def _observe(profile, image=None, source=None):
             'UI_control': False, 'date_advance': False, 'save_or_reload': False,
             'limit_bytes': 524288, 'calls': reader.calls,
             'bytes_requested': reader.bytes_requested}}
-    context = {'observer': 'FRA', 'session_id': SESSION_ID, 'game_version': '1.37.4',
+    context = {'observer': observer, 'session_id': SESSION_ID, 'game_version': '1.37.4',
         'game_sha256': capture._owner.EXE_SHA256,
         'game_date': observation['context_before']['game_date']}
     return report, context, reader
@@ -154,10 +154,25 @@ def test_profile_rejects_changed_extra_guard_range_even_with_recomputed_hash(
         capture._load_profile()
 
 
-def test_wrong_observer_capture_is_rejected_before_opening_process(tmp_path):
-    report = capture.capture(tmp_path / 'missing-installation.json', observer='POR')
+def test_invalid_observer_capture_is_rejected_before_opening_process(tmp_path):
+    report = capture.capture(tmp_path / 'missing-installation.json', observer='PO')
     assert report['status'] == 'unknown' and report['cleanup']['status'] == 'not_opened'
     assert report['errors'][0]['reason'] == 'FOREIGN_TECH_REQUEST_SCOPE'
+
+
+def test_turkish_observer_samples_native_exists_and_knows_country(profile):
+    image, bindings = make_image()
+    own = bindings['FRA']
+    reference = int(own['fullref'], 16)
+    reference = (reference & ~0xffffff) | int.from_bytes(b'TUR', 'little')
+    pointer = int(own['country_pointer'], 16)
+    image.put_u64(pointer + 0x20, reference)
+    table = int.from_bytes(image.read(pointer + 0x1510, 8, 'fixture.relation_table'), 'little')
+    image.put_u64(table + own['slot'] * 0x48 + 0x10, reference)
+    report, context, _ = _observe(profile, image=image, observer='TUR')
+    assert capture.validate_capture(report, context, CREATION)
+    assert capture.project_fields(report)[capture.FIELD]['value'] == ['DEN', 'SWE', 'TUR']
+    assert not capture.validate_capture(report, dict(context, observer='FRA'), CREATION)
 
 
 def test_failed_nonplayer_role_stops_before_existence_or_knowledge_reads(profile):

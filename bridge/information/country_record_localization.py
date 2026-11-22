@@ -15,6 +15,7 @@ a fallback for a missing native cache entry.
 from __future__ import annotations
 
 from copy import deepcopy
+import re
 from typing import Any, Mapping
 
 from . import country_modifiers_memory
@@ -81,7 +82,7 @@ def _live_context_reason(
     country: str,
     base_context: Mapping[str, Any] | None = None,
 ) -> str | None:
-    if country != _COUNTRY:
+    if not isinstance(country, str) or re.fullmatch(r"[A-Z0-9]{3}", country) is None:
         return "OBSERVER_SCOPE_MISMATCH"
     if not isinstance(context, Mapping):
         return _LOCALISATION_NOT_READ

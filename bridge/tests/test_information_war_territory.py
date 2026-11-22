@@ -45,7 +45,8 @@ def test_normal_query_and_recall_share_one_capture(tmp_path):
     assert territory.validate_capture(report, context, creation, 'ENG', list(territory.FIELDS))
     base, calls = Base(tmp_path, context, creation), []
 
-    def capture(installation, country, *, fields):
+    def capture(installation, country, *, fields, observer):
+        assert observer == context['observer']
         calls.append((country, fields))
         return deepcopy(report)
 

@@ -38,55 +38,60 @@ def _load_profile():
             or profile.get('executable', {}).get('sha256') != _owner.EXE_SHA256):
         raise ValueError('PROVINCE_INTEREST_PROFILE_BUILD')
     for item in profile['source_evidence'] + profile['layout_dependencies']:
-        path = (ROOT / item['path']).resolve()
-        path.relative_to(ROOT)
-        if path.stat().st_size != item['bytes'] or _owner._sha(path) != item['sha256']:
+        if not _base._matches_reviewed_layout(item):
             raise ValueError('PROVINCE_INTEREST_PROFILE_DEPENDENCY')
     return profile
 
 
-def _observe_for(province_id):
+def _observe_for(province_id, observer='FRA'):
     def observe(reader, base, country, profile):
-        if country != 'FRA' or not _base._valid_id(province_id):
+        if country != observer or not _base._valid_id(province_id):
             raise ValueError('PROVINCE_INTEREST_OBSERVER_SCOPE')
 
-        def backend(read, module_base, observer):
-            if observer != 'FRA':
+        def backend(read, module_base, observer_country):
+            if observer_country != observer:
                 raise ValueError('PROVINCE_INTEREST_OBSERVER_SCOPE')
             return _fields.read_two_pass(read, module_base, province_id,
-                                         observer='FRA', fields=FIELDS)
+                                         observer=observer, fields=FIELDS, observer_scoped=True)
         return _owner._observe(reader, base, country, profile, backend_reader=backend)
     return observe
 
 
 def capture(installation: Path, province_id: int, *, observer='FRA'):
-    if not _base._valid_id(province_id) or observer != 'FRA':
+    if not _base._valid_id(province_id) or not isinstance(observer, str) or not TAG.fullmatch(observer):
         raise ValueError('PROVINCE_INTEREST_REQUEST_SCOPE')
     inner = _owner._capture_common(
-        installation, 'FRA', observer=observer, schema=INNER_SCHEMA,
+        installation, observer, observer=observer, schema=INNER_SCHEMA,
         profile_sha256=PROFILE_SHA256, load_profile=_load_profile,
-        observe=_observe_for(province_id), allow_observer_target=True)
-    return {'schema': SCHEMA, 'observer': 'FRA',
+        observe=_observe_for(province_id, observer), allow_observer_target=True, observer_scoped=True)
+    return {'schema': SCHEMA, 'observer': observer,
             'object': {'type': 'province', 'province_id': province_id}, 'capture': inner}
 
 
 def validate_capture(report, context, creation, province_id):
-    if (not _base._valid_id(province_id) or not isinstance(report, dict)
+    if not isinstance(context, Mapping):
+        return False
+    observer = context.get('observer')
+    if (not isinstance(observer, str) or not TAG.fullmatch(observer)
+            or not _base._valid_id(province_id) or not isinstance(report, dict)
             or set(report) != {'schema', 'observer', 'object', 'capture'}
-            or report.get('schema') != SCHEMA or report.get('observer') != 'FRA'
+            or report.get('schema') != SCHEMA or report.get('observer') != observer
             or not _owner._same(report.get('object'), {'type': 'province', 'province_id': province_id})):
         return False
     return _owner._validate_capture_common(
-        report['capture'], context, creation, 'FRA', schema=INNER_SCHEMA,
+        report['capture'], context, creation, observer, schema=INNER_SCHEMA,
         profile_sha256=PROFILE_SHA256, load_profile=_load_profile,
-        observe=_observe_for(province_id), allow_observer_target=True, require_access=True)
+        observe=_observe_for(province_id, observer), allow_observer_target=True,
+        require_access=True, observer_scoped=True)
 
 
 def project_fields(report):
     """Whitelist the already validated private result; never copy raw pointers."""
     backend = report['capture']['observation']['backend']
     targets = backend['targets']
-    if len(targets) != 1 or backend['observer']['tag'] != 'FRA':
+    observer = report.get('observer')
+    if (len(targets) != 1 or not isinstance(observer, str)
+            or not TAG.fullmatch(observer) or backend['observer']['tag'] != observer):
         raise ValueError('PROVINCE_INTEREST_PROJECTION_SCOPE')
     target = targets[0]
     for phase in ('pass1', 'pass2'):

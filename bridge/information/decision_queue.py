@@ -101,13 +101,15 @@ class DecisionQueue:
                 (self.scope,),
             ).fetchone()
 
-    def claim_latest(self, subscription_id: str, context: dict) -> dict | None:
+    def claim_latest(self, subscription_id: str, context: dict, *,
+                     active_turn_id: str | None = None) -> dict | None:
         with self.connect() as db, db:
             scope = self.scope
             db.execute("BEGIN IMMEDIATE")
             if db.execute(
                     "SELECT 1 FROM decision_turns WHERE scope=? "
-                    "AND state IN ('starting','running','uncertain')", (scope,)).fetchone():
+                    "AND (state IN ('starting','uncertain') OR (state='running' AND "
+                    "(? IS NULL OR turn_id IS NOT ?)))", (scope, active_turn_id, active_turn_id)).fetchone():
                 return None
             sub_row = db.execute(
                 "SELECT body FROM info_config WHERE owner=? AND kind='subscription' AND id=?",

@@ -74,9 +74,13 @@ def _rebind(limiter, base, scan, raw_ref, label):
 
 
 def _admit(limiter, base, scan, binding):
+    requested = scan['requested']
+    _require(isinstance(requested, Mapping) and len(requested) == 1,
+             'OBSERVER_REQUEST_BINDING_UNVERIFIED')
+    observer = next(iter(requested))
     selected = dict(scan)
-    selected['requested'] = {**scan['requested'], binding['tag']: binding}
-    gate = _owner._bound_admission(limiter.read, base, selected, 'FRA', binding['tag'])
+    selected['requested'] = {**requested, binding['tag']: binding}
+    gate = _owner._bound_admission(limiter.read, base, selected, observer, binding['tag'])
     if gate.get('observer_nonplayer_role', {}).get('verified') is not True:
         raise _ObserverFailure('OBSERVER_ROLE_NOT_VERIFIED')
     return gate
@@ -120,7 +124,7 @@ def _extension_round(limiter, base, province_id, anchor):
                      'CONTROLLER_REFERENCE_CHANGED')
             controller = _rebind(limiter, base, scan, controller_ref, 'trade_country.controller')
             controller_gate = (_admit(limiter, base, scan, controller)
-                               if controller['tag'] != 'FRA' else observer_gate)
+                               if controller['tag'] != observer['tag'] else observer_gate)
             evidence['bindings']['controller'] = controller
             evidence['admission_before']['controller'] = controller_gate
         except _ObserverFailure:
@@ -159,7 +163,7 @@ def _extension_round(limiter, base, province_id, anchor):
             try:
                 after = _rebind(limiter, base, scan, after_ref, 'trade_country.controller_after')
                 after_gate = (_admit(limiter, base, scan, after)
-                              if after['tag'] != 'FRA' else observer_after_gate)
+                              if after['tag'] != observer['tag'] else observer_after_gate)
                 evidence['admission_after']['controller'] = after_gate
                 _require(_shared._same_raw(controller, after)
                          and _shared._same_raw(evidence['admission_before']['controller'], after_gate),
@@ -188,7 +192,8 @@ def read_two_pass(reader, base, province_id, *, observer='FRA'):
                 **_province._read_fields(read, module_base, binding, (_CONTROLLER_IDENTITY,))}
 
     result = _province.read_two_pass(limiter, base, province_id, observer=observer,
-        fields=(*_inputs.SUPPORTED_FIELDS, _CONTROLLER_IDENTITY), read_fields=parent_fields)
+        fields=(*_inputs.SUPPORTED_FIELDS, _CONTROLLER_IDENTITY), read_fields=parent_fields,
+        observer_scoped=True)
     target = result['targets'][0]
     controller_identity_stable = target['field_consistency'].pop(_CONTROLLER_IDENTITY, {}).get('status') == 'stable'
     target['fields'].pop(_CONTROLLER_IDENTITY, None)

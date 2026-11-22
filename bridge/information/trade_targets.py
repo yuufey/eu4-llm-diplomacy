@@ -50,9 +50,9 @@ class TradeTargetsReader:
                 or type(value.get('scale')) is not int or value['scale'] != 1000
                 or value.get('unit') != 'trade_power'
                 or not isinstance(source, dict) or source.get('mode') != 'live'
-                or source.get('status') != 'observed' or source.get('observer') != 'FRA'
+                or source.get('status') != 'observed' or source.get('observer') != context.get('observer')
                 or source.get('session_id') != context.get('session_id')
-                or not isinstance(proof, dict) or proof.get('observer') != 'FRA'
+                or not isinstance(proof, dict) or proof.get('observer') != context.get('observer')
                 or type(proof.get('province_id')) is not int or proof['province_id'] != province_id
                 or proof.get('read_only') is not True or proof.get('native_function_invoked') is not False
                 or not isinstance(proof.get('capture_report_sha256'), str)
@@ -138,9 +138,9 @@ class TradeTargetsReader:
                 or result.get('basis') != 'native_province_modifiers_under_effective_disk_estuary_rule'
                 or result.get('game_date') != context.get('game_date')
                 or not isinstance(source, dict) or source.get('mode') != 'live'
-                or source.get('status') != 'observed' or source.get('observer') != 'FRA'
+                or source.get('status') != 'observed' or source.get('observer') != context.get('observer')
                 or source.get('session_id') != context.get('session_id')
-                or not isinstance(proof, dict) or proof.get('observer') != 'FRA'
+                or not isinstance(proof, dict) or proof.get('observer') != context.get('observer')
                 or type(proof.get('province_id')) is not int or proof['province_id'] != province_id
                 or proof.get('read_only') is not True or proof.get('native_function_invoked') is not False
                 or not isinstance(proof.get('capture_report_sha256'), str)
@@ -171,7 +171,7 @@ class TradeTargetsReader:
         value = field.get('value')
         proof = source.get('provenance') if isinstance(source, dict) else None
         if (not isinstance(source, dict) or source.get('mode') != 'live'
-                or source.get('status') != 'observed' or source.get('observer') != 'FRA'
+                or source.get('status') != 'observed' or source.get('observer') != context.get('observer')
                 or source.get('session_id') != context.get('session_id')
                 or result.get('game_date') != context.get('game_date')
                 or result.get('objects') != [query['object']]
@@ -195,12 +195,12 @@ class TradeTargetsReader:
         fields = result.get('fields') if isinstance(result, dict) else None
         proof = source.get('provenance') if isinstance(source, dict) else None
         if (not isinstance(source, dict) or source.get('mode') != 'live'
-                or source.get('status') != 'observed' or source.get('observer') != 'FRA'
+                or source.get('status') != 'observed' or source.get('observer') != context.get('observer')
                 or source.get('session_id') != context.get('session_id')
                 or result.get('game_date') != context.get('game_date')
                 or result.get('objects') != [query['object']]
                 or not isinstance(proof, dict) or proof.get('province_id') != province_id
-                or proof.get('observer') != 'FRA' or proof.get('read_only') is not True
+                or proof.get('observer') != context.get('observer') or proof.get('read_only') is not True
                 or not isinstance(fields, dict) or set(fields) != set(ANNOTATION_FIELDS)
                 or any(not isinstance(v, dict) for v in fields.values())):
             return _failure('TRADE_TARGET_PROVINCE_BINDING_INVALID')

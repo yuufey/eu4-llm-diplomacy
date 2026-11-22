@@ -11,7 +11,7 @@ from . import foreign_technology_capture as _owner
 from . import province_modifier_sources_capture as _province_sources
 from .model import InformationError
 from .sources import _result, _source_info
-from .trade_income import NativeTradeIncomeSource, _context_reason, _session_binding
+from .trade_income import NativeTradeIncomeSource, _observer_context_reason, _session_binding
 
 
 SCHEMA = 'information.war_territory_capture.v1'
@@ -36,18 +36,18 @@ def _load_profile():
     return profile
 
 
-def _observe_for(fields):
+def _observe_for(fields, observer='FRA'):
     def observe(reader, base, country, profile):
         bindings, rows = {}, {}
 
-        def admission(read, module_base, scan, observer, target):
+        def admission(read, module_base, scan, observer_tag, target):
             bindings.update(scan['requested'])
             rows.clear()
             rows.update({row['fullref']: row for row in scan['rows'] if row['fullref']})
-            return _owner._bound_admission(read, module_base, scan, observer, target)
+            return _owner._bound_admission(read, module_base, scan, observer_tag, target)
 
         def read_fields(read, module_base, binding, selected):
-            summary = _occupation.read_occupation(read, module_base, binding, bindings['FRA'],
+            summary = _occupation.read_occupation(read, module_base, binding, bindings[observer],
                 rows, profile['occupation'], include_occupation='occupations' in fields,
                 blockade_spec=profile['blockade'] if 'blockades' in fields else None)
             blockades = summary.pop('blockades', None)
@@ -55,7 +55,7 @@ def _observe_for(fields):
             return {'W03.' + name: values[name] for name in fields}
 
         def backend(read, module_base, target):
-            return _countries.read_two_pass(read, module_base, 'FRA', [target],
+            return _countries.read_two_pass(read, module_base, observer, [target],
                 fields=['W03.' + name for name in fields], admission_reader=admission,
                 read_fields=read_fields)
 
@@ -63,20 +63,22 @@ def _observe_for(fields):
     return observe
 
 
-def capture(installation, country, *, fields):
-    report = _owner._capture_common(installation, country, observer='FRA', schema=SCHEMA,
+def capture(installation, country, *, fields, observer='FRA'):
+    report = _owner._capture_common(installation, country, observer=observer, schema=SCHEMA,
         profile_sha256=PROFILE_SHA256, load_profile=_load_profile,
-        observe=_observe_for(fields), allow_observer_target=True)
+        observe=_observe_for(fields, observer), allow_observer_target=True, observer_scoped=True)
     report['request']['fields'] = list(fields)
     return report
 
 
 def validate_capture(report, context, creation, country, fields):
-    if not isinstance(report, dict) or report.get('request', {}).get('fields') != fields:
+    if (not isinstance(context, dict) or not isinstance(report, dict)
+            or report.get('request', {}).get('fields') != fields):
         return False
     return _owner._validate_capture_common(report, context, creation, country,
         schema=SCHEMA, profile_sha256=PROFILE_SHA256, load_profile=_load_profile,
-        observe=_observe_for(fields), allow_observer_target=True, require_access=True)
+        observe=_observe_for(fields, context.get('observer')), allow_observer_target=True,
+        require_access=True, observer_scoped=True)
 
 
 class NativeWarTerritorySource(NativeTradeIncomeSource):
@@ -88,7 +90,7 @@ class NativeWarTerritorySource(NativeTradeIncomeSource):
                 'description': description} for name, description in zip(FIELDS, (
                     '所选国家已发现领土的受占领数量及控制国汇总',
                     '所选国家已发现领土的受封锁省份数量'))},
-            'object_types': ['country'], 'observer_roles': [], 'observer_scope': ['FRA'],
+            'object_types': ['country'], 'observer_roles': [], 'observer_scope': [],
             'context_scope': 'visible_scope', 'visibility': 'visible_scope',
             'supported_versions': ['1.37.4'], 'triggers': ['query', 'periodic'],
             'parameters': {'type': 'object', 'properties': {}, 'additionalProperties': False},
@@ -109,8 +111,9 @@ class NativeWarTerritorySource(NativeTradeIncomeSource):
             raise InformationError('invalid_fields', 'Unsupported W03 territory fields')
         if query.get('parameters', {}) != {}:
             raise InformationError('invalid_parameters', 'W03 territory has no extra parameters')
-        if context is not None and (not isinstance(context, dict) or context.get('observer') != 'FRA'):
-            raise InformationError('observer_scope_mismatch', 'The supported observer is FRA')
+        if context is not None and (not isinstance(context, dict)
+                or not isinstance(context.get('observer'), str) or not _TAG.fullmatch(context['observer'])):
+            raise InformationError('observer_scope_mismatch', 'W03 requires a bound observer country')
         return deepcopy(query) | {'parameters': {}}
 
     def read(self, query, context=None):
@@ -120,12 +123,13 @@ class NativeWarTerritorySource(NativeTradeIncomeSource):
         fields = {name: {'status': 'unknown', 'reason': 'WAR_TERRITORY_UNAVAILABLE'}
                   for name in query['fields']}
         installation, creation, reason = _session_binding(self.base_source)
-        reason = reason or _context_reason(current)
+        reason = reason or _observer_context_reason(current)
         if reason:
             fields = {name: {'status': 'unavailable', 'reason': reason} for name in fields}
         else:
             try:
-                report = (self.capture or capture)(installation, country, fields=query['fields'])
+                report = (self.capture or capture)(installation, country, fields=query['fields'],
+                                                   observer=current['observer'])
                 if validate_capture(report, current, creation, country, query['fields']):
                     values = report['observation']['backend']['targets'][0]['fields']
                     fields = {name: deepcopy(values['W03.' + name]) for name in query['fields']}

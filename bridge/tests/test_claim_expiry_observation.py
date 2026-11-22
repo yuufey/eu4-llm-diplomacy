@@ -81,7 +81,7 @@ def test_decoder_keeps_claimant_current_owner_province_and_actual_date(claimant,
 
 @pytest.mark.parametrize('changes', [
     {'event': 'native_claim_removed'}, {'source': 'claim_record_remove_return'},
-    {'wire': True}, {'wire': 2}, {'complete': True}, {'schema_version': 1},
+    {'wire': True}, {'wire': 3}, {'complete': True}, {'schema_version': 1},
     {'sequence': True}, {'sequence': 0}, {'sequence': 2**63}, {'session_id': 'other-session'},
     {'date_raw': -1}, {'date_raw': True}, {'date_raw': 2**31},
     {'province_id': True}, {'province_id': 0}, {'province_id': 65536},

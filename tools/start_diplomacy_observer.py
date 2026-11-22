@@ -922,9 +922,33 @@ def _validate_native_country_control_manifest(manifest: dict, directory: Path) -
             or policy_text.count('"EU4CONTROL1"') == 0):
         raise SystemExit("BUILD_MANIFEST_MISMATCH")
 
+    information_scope_keys = ("native_information_observer_configuration",
+                              "native_information_observer_protocol", "native_country_modifier_scoped_schema")
+    if any(key in manifest for key in information_scope_keys):
+        if (manifest.get(information_scope_keys[0]) is not True
+                or manifest.get(information_scope_keys[1]) != "EU4INFO1"
+                or type(manifest.get(information_scope_keys[2])) is not int
+                or manifest[information_scope_keys[2]] != 2
+                or "native_information_observers_set" not in source_text
+                or not all(key in source_text for key in information_scope_keys[::2])):
+            raise SystemExit("BUILD_MANIFEST_MISMATCH")
+    scoped_event_schemas = {"native_relation_change_scoped_schema": 6,
+                            "native_war_declaration_scoped_schema": 2,
+                            "native_land_promise_scoped_schema": 2,
+                            "native_mission_completion_scoped_schema": 3,
+                            "native_mission_availability_scoped_schema": 2,
+                            "native_mission_condition_scoped_schema": 4,
+                            "native_expiry_scoped_wire": 2,
+                            "native_rival_change_scoped_schema": 4}
+    for key, schema in scoped_event_schemas.items():
+        if key in manifest and (manifest.get(information_scope_keys[0]) is not True
+                or type(manifest[key]) is not int or manifest[key] != schema or key not in source_text):
+            raise SystemExit("BUILD_MANIFEST_MISMATCH")
     has_recall = _validate_native_recall_delta(manifest, directory, source_text)
     source_text = _project_v65_country_control_selector(source_text)
     inherited = dict(manifest, version=64)
+    for key in (*information_scope_keys, *scoped_event_schemas):
+        inherited.pop(key, None)
     delta_sources = {NATIVE_COUNTRY_CONTROL_SOURCE}
     if has_recall:
         delta_sources.add(_RECALL_SOURCE)
@@ -1211,7 +1235,7 @@ def _validate_information_battle_manifest(manifest: dict, directory: Path) -> No
             or 'native_territorial_interest_query_wire' in manifest):
         if (len(interest_rows) != 1 or manifest.get('native_territorial_interest_query') is not True
                 or type(manifest.get('native_territorial_interest_query_wire')) is not int
-                or manifest['native_territorial_interest_query_wire'] != 23
+                or manifest['native_territorial_interest_query_wire'] not in (23, 24)
                 or not _is_sha256(interest_rows[0].get('sha256'))
                 or not (directory / interest_source).is_file()
                 or file_hash(directory / interest_source, refresh=True) != interest_rows[0]['sha256'].lower()):

@@ -432,8 +432,12 @@ static void peace_empty_offer_query_run(const char* id,const char* actor_tag,
         && (!country_requested || country_terms.parameters_matched())
         && (!annex_requested || (annex.selection_requested && annex.complete()))
         && special.available()
+#ifdef BRIDGE_NATIVE_COUNTRY_CONTROL
+        && observation_ai_recipient(recipient,date),evaluation);
+#else
         && (recipient&0xffffffu)!=0x415246u
         && (recipient&0xffffffu)!=0x524f50u,evaluation);
+#endif
     PeaceConsequenceQuery consequences;
     const bool consequences_output=peace_consequence_query(action+0x48,actor,recipient,
         demand,provinces_requested?provinces.requested_beneficiary:0,copied_fields.payload,consequences);

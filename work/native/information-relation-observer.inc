@@ -12,7 +12,7 @@ enum class Path { command_return, alliance_record_enable, alliance_record_disabl
                   subject_record_enable, subject_record_disable };
 struct Value final {
     owned::Kind kind{};
-    uint64_t actor = 0, recipient = 0;
+    uint64_t actor = 0, recipient = 0, observer = 0;
     int32_t date = 0;
     unsigned state = 0, mode = 0;
     owned::Snapshot before{}, after{};
@@ -143,10 +143,14 @@ static bool snapshot(const AlliancePayload& payload, owned::Kind kind, owned::Sn
 }
 
 static void enqueue(const Value& value) noexcept {
-    Event event{value, static_cast<uint64_t>(InterlockedIncrement64(&sequence))};
     if (!TryAcquireSRWLockExclusive(&queue_lock)) { note_drop(); return; }
-    if (size < kCapacity) { events[(head + size) % kCapacity] = event; ++size; }
-    else note_drop();
+    for (const uint64_t observer : {value.actor, value.recipient}) {
+        if (!observation_information_country_handle(observer)) continue;
+        Event event{value, static_cast<uint64_t>(InterlockedIncrement64(&sequence))};
+        event.value.observer=observer;
+        if (size < kCapacity) { events[(head + size) % kCapacity] = event; ++size; }
+        else note_drop();
+    }
     ReleaseSRWLockExclusive(&queue_lock);
 }
 
@@ -200,8 +204,8 @@ static Pending begin_payload(uintptr_t action, const AlliancePayload& payload) n
     // Read the existing canonical payload only for these six action classes.
     if (!family_matches(pending.value.kind, payload.family)
         || payload.actor10 == payload.recipient20 || payload.state34 > 2 || payload.variant38 > 1
-        || ((payload.actor10 & 0xffffffu) != 0x415246u
-            && (payload.recipient20 & 0xffffffu) != 0x415246u)) return pending;
+        || (!observation_information_country_handle(payload.actor10)
+            && !observation_information_country_handle(payload.recipient20))) return pending;
     for (unsigned index = 0; index < active_pair_count; ++index) {
         const auto& active = active_pairs[index];
         const bool symmetric = pending.value.kind == owned::Kind::alliance
@@ -331,7 +335,12 @@ static void flush() noexcept {
         case Path::subject_record_enable: path = "subject_record_enable"; break;
         case Path::subject_record_disable: path = "subject_record_disable"; break;
         }
-        constexpr unsigned wire = 5;
+        constexpr unsigned wire =
+#ifdef BRIDGE_NATIVE_COUNTRY_CONTROL
+            6;
+#else
+            5;
+#endif
         constexpr const char* source = "relation_command_or_six_family_record_return_actual_pair_state";
 #elif defined(BRIDGE_DIRECTED_RECORD_OBSERVATION)
         const char* path = nullptr;
@@ -372,12 +381,13 @@ static void flush() noexcept {
         }
         const int bytes = snprintf(message,sizeof(message),
             "{\"event\":\"native_relation_changed\",\"schema_version\":%u,\"session_id\":\"%lu-%llx\","
-            "\"sequence\":%llu,\"country\":\"FRA\",\"actor\":\"%s\",\"recipient\":\"%s\","
+            "\"sequence\":%llu,\"country\":\"%.3s\",\"actor\":\"%s\",\"recipient\":\"%s\","
             "\"actor_fullref\":\"0x%llx\",\"recipient_fullref\":\"0x%llx\",\"date_raw\":%d,"
             "\"relation_kind\":\"%s\",\"command_state\":%s,\"command_mode\":%s,\"before\":%s,\"after\":%s,"
             "\"observation_path\":\"%s\",\"source\":\"%s\",\"complete\":true}\n",
             wire,static_cast<unsigned long>(GetCurrentProcessId()),static_cast<unsigned long long>(observation_creation),
-            static_cast<unsigned long long>(event.sequence),actor,recipient,
+            static_cast<unsigned long long>(event.sequence),
+            value.observer==value.actor?actor:recipient,actor,recipient,
             static_cast<unsigned long long>(value.actor),static_cast<unsigned long long>(value.recipient),
             value.date,owned::name(value.kind),state,mode,before,after,path,source);
 #else

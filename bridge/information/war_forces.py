@@ -4,7 +4,7 @@ from copy import deepcopy
 from .catalog import validate_query
 from .model import InformationError
 from .sources import _result, _source_info
-from .trade_income import NativeTradeIncomeSource
+from .trade_income import NativeTradeIncomeSource, _observer_context_reason, _session_binding
 
 
 def project_sizes(fields, army_name, navy_name, army_label):
@@ -28,8 +28,8 @@ class NativeWarForcesSource(NativeTradeIncomeSource):
             'status': 'available', 'fields': {'current_forces': {
                 'coverage': 'available', 'complete': True, 'period': 'current',
                 'source': type(self).__name__,
-                'description': '本国现存陆军团数及舰船数，外国可见士兵数及舰船数'}},
-            'object_types': ['country'], 'observer_roles': [], 'observer_scope': ['FRA'],
+                'description': '当前陆军团数或士兵数及舰船数，可见条件取当前观察国'}},
+            'object_types': ['country'], 'observer_roles': [], 'observer_scope': [],
             'context_scope': 'visible_scope', 'visibility': 'visible_scope',
             'supported_versions': ['1.37.4'], 'triggers': ['query', 'periodic'],
             'parameters': {'type': 'object', 'properties': {}, 'additionalProperties': False},
@@ -48,7 +48,10 @@ class NativeWarForcesSource(NativeTradeIncomeSource):
     def read(self, query, context=None):
         current = deepcopy(context) if isinstance(context, dict) else self.context()
         query = self.validate_query(query, current)
-        own = query['object']['country'] == 'FRA'
+        country = query['object']['country']
+        own = country == current.get('observer')
+        if own and country != 'FRA':
+            return self._read_own_sizes(query, current)
         upstream = self.own_source if own else self.foreign_source
         topic = 'N02' if own else 'F02'
         names = ['army_size', 'navy_size'] if own else ['visible_army', 'visible_navy']
@@ -66,3 +69,28 @@ class NativeWarForcesSource(NativeTradeIncomeSource):
             _source_info(type(self).__name__, current, complete=complete, provenance={
                 'delegated_topic': topic, 'delegated_fields': names,
                 'basis': 'existing_country_force_size_projection', 'read_only': True}))
+
+    def _read_own_sizes(self, query, current):
+        from . import war_state_capture
+
+        countries = [query['object']['country']]
+        selected = ['current_forces']
+        installation, creation, reason = _session_binding(self.base_source)
+        reason = reason or _observer_context_reason(current)
+        if reason:
+            field = {'status': 'unavailable', 'reason': reason}
+        else:
+            field = {'status': 'unknown', 'reason': 'WAR_STATE_CAPTURE_FAILED'}
+            try:
+                report = war_state_capture.capture(installation, countries, fields=selected,
+                                                   observer=current['observer'])
+                if war_state_capture.validate_capture(report, current, creation, countries, selected):
+                    target = report['observation']['backend']['targets'][0]
+                    field = deepcopy(target['fields']['W03.current_forces'])
+            except Exception:
+                pass
+        complete = field.get('status') == 'known' and field.get('complete', True)
+        return _result(query, current, {'current_forces': field}, complete,
+            _source_info(type(self).__name__, current, complete=complete, provenance={
+                'basis': 'native_war_state_country_military_statistics', 'read_only': True,
+                'profile_sha256': war_state_capture.PROFILE_SHA256}))

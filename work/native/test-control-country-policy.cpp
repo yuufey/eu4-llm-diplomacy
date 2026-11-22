@@ -42,6 +42,12 @@ static void test_parse_and_replace() {
     policy::Request request{};
     const policy::ParseResult parsed=parse(wire,request);
     check(parsed.ok(),"dynamic_country_set_parses");
+    const std::string seen="EU4INFO1\t1234-1abc\t7\tTUR\n";
+    policy::Request observed{};
+    check(policy::parse_request(seen.data(),seen.size(),observed,"EU4INFO1").ok()
+        && observed.countries.contains("TUR"),"independent_observation_set_parses");
+    check(!parse(seen,observed).ok() && !policy::parse_request(
+        wire.data(),wire.size(),observed,"EU4INFO1").ok(),"control_and_observation_wires_do_not_overlap");
     check(std::strcmp(request.session_id,"1234-1abc")==0,"session_copied");
     check(request.revision==7,"revision_parsed");
     check(request.countries.count==3

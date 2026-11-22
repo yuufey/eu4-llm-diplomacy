@@ -12,7 +12,7 @@ class NativeOpinionEndDatesSource(NativeOpinionModifiersSource):
 
     def catalog(self):
         topic=super().catalog()[0]
-        topic['scope_note']='逻辑FRA参与的双向修正记录；投射现有记录准入，实际日期UI和缓存新鲜度未完全核对。'
+        topic['scope_note']='读取观察国参与的双向好感修正记录。'
         topic['fields']={self.field:{'source':type(self).__name__,'coverage':'partial','complete':False,
             'unit':'game_date','scale':1,'period':'current_stored_schedule',
             'basis':'native_opinion_modifier_stored_duration_schedule',
@@ -43,10 +43,10 @@ class NativeOpinionEndDatesSource(NativeOpinionModifiersSource):
                 'raw_unit':'eu4_hour_tick','tick_of_day':calendar['tick_of_day'],
                 'schedule_state':'stored_unverified','actual_removal_evaluated':False}
 
-    def _project_backend(self,report,other,actor,recipient):
+    def _project_backend(self,report,other,actor,recipient,observer='FRA'):
         # The parent's internal unit and schema checks still qualify the same
         # record capture. Only the public projection is a date schedule.
-        result=super()._project_backend(report,other,actor,recipient)
+        result=super()._project_backend(report,other,actor,recipient,observer=observer)
         if 'unit' in result:
             result.update(unit='game_date',scale=1,period='current_stored_schedule',
                 basis='native_opinion_modifier_stored_duration_schedule',
@@ -56,7 +56,7 @@ class NativeOpinionEndDatesSource(NativeOpinionModifiersSource):
     @staticmethod
     def _result(normalized,context,fields,*,reason=None,unavailable=False,target=None,capture_status='not_attempted'):
         provenance={'adapter':'NativeOpinionEndDatesSource','read_only':True,'native_function_invoked':False,
-                    'scope':'selected_country_pair','observer':'FRA','target':target,
+                    'scope':'selected_country_pair','observer':context.get('observer'),'target':target,
                     'capture_status':capture_status,'stored_schedule_only':True,'actual_removal_evaluated':False}
         if reason is not None:provenance['reason']=reason
         source=_source_info('NativeOpinionEndDatesSource',context,complete=False,provenance=provenance)

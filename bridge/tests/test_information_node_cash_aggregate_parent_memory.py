@@ -275,7 +275,7 @@ def test_unready_parent_or_allocation_skips_leaf_and_shared_snapshots(monkeypatc
 
 
 @pytest.mark.parametrize("observer,province_id", [
-    ("ENG", PROVINCE_ID), ("FRA", 0), ("FRA", 65536), ("FRA", True), ("FRA", "227"),
+    ("eng", PROVINCE_ID), ("FRA", 0), ("FRA", 65536), ("FRA", True), ("FRA", "227"),
 ])
 def test_invalid_observer_or_province_scope_is_rejected(monkeypatch, observer, province_id):
     _source, _events, _calls, _readers, _snapshots, _state, _reader, run = _setup(monkeypatch)

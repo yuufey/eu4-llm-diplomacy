@@ -127,7 +127,8 @@ def _install_dense(reader: FakeMemory, object_address: int, values_address: int,
 
 
 def _allocation(member_ids: tuple[int, ...], center_id: int, selected_id: int,
-                *, repeated_member: bool = False, node_id: str = NODE_ID) -> dict[str, object]:
+                *, repeated_member: bool = False, node_id: str = NODE_ID,
+                observer_tag: str = "FRA") -> dict[str, object]:
     retained_ids = member_ids
     if repeated_member:
         retained_ids = (member_ids[0], member_ids[1], member_ids[1])
@@ -152,6 +153,7 @@ def _allocation(member_ids: tuple[int, ...], center_id: int, selected_id: int,
         "value": {
             "node_id": node_id,
             "center_province_id": center_id,
+            "observer_country": observer_tag,
             "province_id": selected_id,
             "member_count": len(retained_ids),
         },
@@ -195,13 +197,14 @@ def make_fixture(monkeypatch: pytest.MonkeyPatch, *,
                  cache_value: int = 169,
                  unknown_owner_id: int | None = None,
                  denied_tags: tuple[str, ...] = (),
-                 repeated_member: bool = False, node_id: str = NODE_ID):
+                 repeated_member: bool = False, node_id: str = NODE_ID,
+                 observer_tag: str = "FRA"):
     reader = FakeMemory()
     owners = owners or {1: "ENG", 2: "POR", 3: "ENG"}
     discovered = discovered or {}
     owner_states = owner_states or {}
     processors = processors or {}
-    observer = _binding("FRA", FRA_SLOT, 0xB00000)
+    observer = _binding(observer_tag, FRA_SLOT, 0xB00000)
     country_bindings = [
         observer,
         _binding("ENG", 8, OWNER_ENG),
@@ -285,7 +288,8 @@ def make_fixture(monkeypatch: pytest.MonkeyPatch, *,
 
     country_scan = {"status": "observed", "rows": []}
     allocation = _allocation(member_ids, center_id, selected_id,
-                             repeated_member=repeated_member, node_id=node_id)
+                             repeated_member=repeated_member, node_id=node_id,
+                             observer_tag=observer_tag)
     return {
         "reader": reader,
         "province_scan": province_scan,
@@ -341,6 +345,13 @@ def test_multi_member_cash_uses_each_owner_and_ignores_controller_with_shared_re
     assert any("stability." in label for _address, _size, label in reads)
     assert field["raw_inputs"]["budget"]["bytes_requested"] <= memory.MAX_BYTES
     assert field["raw_inputs"]["budget"]["calls"] <= memory.MAX_CALLS
+
+
+def test_node_cash_follows_the_bound_observer_and_rejects_another_allocation(monkeypatch):
+    env = make_fixture(monkeypatch, observer_tag="TUR")
+    assert _read(env)["status"] == "known"
+    env["allocation"]["value"]["observer_country"] = "FRA"
+    assert _read(env)["reason"] == "NODE_CASH_OBSERVER_INVALID"
 
 
 def test_loaded_node_key_accepts_uppercase_dot_dash_and_colon(monkeypatch):

@@ -5,6 +5,11 @@
 namespace claim_expiry_observer {
 namespace owned = information::claim_expiry;
 namespace plan = owned::entry;
+#ifdef BRIDGE_NATIVE_COUNTRY_CONTROL
+constexpr unsigned kWire = 2;
+#else
+constexpr unsigned kWire = 1;
+#endif
 constexpr unsigned kCapacity = 64;
 struct Event final {
     owned::Value value{};
@@ -58,15 +63,31 @@ extern "C" uintptr_t claim_remove_observe(uintptr_t instance, uint64_t claimant,
         int32_t date = 0;
         if (!thread_changed && frame_thread == GetCurrentThreadId()
             && read(base + 0x233fe58, game) && read(game + 0x1dd0, date)) {
-            decision = owned::begin(reader, {base, date, true}, instance, claimant, caller, pending);
+            owned::Context context{base, date, true};
+#ifdef BRIDGE_NATIVE_COUNTRY_CONTROL
+            context.observable = observation_information_country_handle;
+#endif
+            decision = owned::begin(reader, context, instance, claimant, caller, pending);
         } else decision = owned::Decision::unreadable;
     }
     // Preserve the original invocation and return value even when capture fails.
     const uintptr_t result = original(instance, claimant, record_history);
     owned::Value value{};
     if (decision == owned::Decision::ready) {
-        if (owned::finish(reader, pending, value)) queue(value);
-        else note_drop();
+        if (owned::finish(reader, pending, value)) {
+#ifndef BRIDGE_NATIVE_COUNTRY_CONTROL
+            queue(value);
+#else
+            if (observation_information_country_handle(value.claimant)) {
+                value.observer = value.claimant;
+                queue(value);
+            }
+            if (value.owner != value.claimant && observation_information_country_handle(value.owner)) {
+                value.observer = value.owner;
+                queue(value);
+            }
+#endif
+        } else note_drop();
     } else if (decision == owned::Decision::unreadable) note_drop();
     return result;
 }
@@ -150,12 +171,12 @@ static void flush() noexcept {
             "\"sequence\":%llu,\"date_raw\":%d,\"claimant_ref\":\"0x%llx\","
             "\"owner_ref\":\"0x%llx\",\"observer_ref\":\"0x%llx\","
             "\"province_id\":%d,"
-            "\"source\":\"claim_record_natural_expiry_remove_return\",\"wire\":1}\n",
+            "\"source\":\"claim_record_natural_expiry_remove_return\",\"wire\":%u}\n",
             static_cast<unsigned long>(GetCurrentProcessId()),
             static_cast<unsigned long long>(observation_creation),
             static_cast<unsigned long long>(event.sequence), value.date,
             static_cast<unsigned long long>(value.claimant), static_cast<unsigned long long>(value.owner),
-            static_cast<unsigned long long>(value.observer), value.province);
+            static_cast<unsigned long long>(value.observer), value.province, kWire);
         if (bytes < 0 || static_cast<size_t>(bytes) >= sizeof(message)) { transport_fault = true; return; }
         if (!append(message, static_cast<size_t>(bytes))) return;
         AcquireSRWLockExclusive(&queue_lock);
