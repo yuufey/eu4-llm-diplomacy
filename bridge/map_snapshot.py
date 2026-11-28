@@ -1,9 +1,9 @@
 """Read a bounded, read-only political map snapshot from an EU4 save.
 
-The save supplies the calendar date, country tags, and per-province owner and
-discovery records.  It does not normally contain the colours used by the map
-mode.  Callers can therefore pass a separately loaded ``country_colors`` map
-when rendering.  Missing ``discovered_by`` is retained as ``None`` and is not
+The save supplies the calendar date, country tags, and per-province owner,
+controller and discovery records.  It does not normally contain map colours.
+Callers can therefore pass a separately loaded ``country_colors`` map when
+rendering.  Missing ``discovered_by`` is retained as ``None`` and is not
 interpreted as an empty discovery list.
 
 This module deliberately works on the serialized save.  It never starts the
@@ -142,7 +142,7 @@ def parse_map_snapshot(
     *,
     country_colors: Mapping[str, Iterable[int]] | None = None,
 ) -> dict[str, Any]:
-    """Parse one save and return a dated province ownership snapshot.
+    """Parse one save and return a dated province ownership and control snapshot.
 
     ``observer`` controls only the convenience ``visible_provinces`` list.
     Every row still retains its full serialized ``discovered_by`` value, so a
@@ -296,7 +296,7 @@ def parse_map_snapshot(
         "visible_provinces": visible,
         "source": source,
         "limitations": [
-            "owner and discovered_by are serialized save fields",
+            "owner, controller and discovered_by are serialized save fields",
             "discovered_by does not prove current UI visibility",
             "country_colors are supplied static data and are absent unless the caller provides them",
         ],

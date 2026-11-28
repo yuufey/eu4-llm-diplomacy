@@ -90,6 +90,29 @@ def test_inspect_view_hides_unobserved_province_identity(political_fixture):
     assert "owner" not in result
 
 
+@pytest.mark.parametrize("scale", ["overview", "region", "local"])
+def test_occupation_draws_diagonal_controller_color_over_owner_color(scale):
+    provinces = np.ones((360, 540), dtype=np.uint16)
+    provinces[:, 235:290] = 2
+    provinces[:, 290:320] = 3
+    provinces[:, 320:] = 4
+    owners = {1: "AAA", 2: "AAA", 3: "AAA", 4: "AAA"}
+    colors = {"AAA": (45, 78, 155), "BBB": (182, 76, 43)}
+    image, view = render_view(provinces, owners, {1, 2, 4}, {4}, colors, (270, 180), scale,
+                              controllers={2: "BBB", 3: "BBB", 4: "BBB"})
+    center_x, center_y = _pixel_for_source(view, 260, 180)
+    pixels = np.asarray(image)[center_y-145:center_y-120, center_x-8:center_x+8]
+    assert np.any(np.all(pixels == colors["AAA"], axis=2))
+    assert np.any(np.all(pixels == colors["BBB"], axis=2))
+    # Adjacent rows shift the hatch by one pixel, producing a diagonal.
+    stripe = np.all(pixels == colors["BBB"], axis=2)
+    assert np.array_equal(stripe[1:, :-1], stripe[:-1, 1:])
+    assert inspect_view(view, center_x, center_y)["controller"] == "BBB"
+    assert "controller" not in inspect_view(view, *_pixel_for_source(view, 215, 180))
+    assert inspect_view(view, *_pixel_for_source(view, 305, 180)) == {"status": "hidden"}
+    assert "controller" not in inspect_view(view, *_pixel_for_source(view, 340, 180))
+
+
 def test_inspect_view_reports_a_scaled_pixel_covering_two_provinces(political_fixture):
     # A real EU4 map is larger than the compact output.  Use a bounded synthetic
     # map in the same direction so one output pixel can cover a source boundary.

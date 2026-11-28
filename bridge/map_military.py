@@ -29,7 +29,10 @@ def capture_layers(service, snapshot, views, layers, *, same_date, war_id=None):
     from bridge.map_live_capture import MapLiveCaptureError
 
     scopes = {layer: set() for layer in layers}
+    land = set()
     for view in views:
+        if "armies" in scopes:
+            land.update(_view_provinces(view, "forts"))
         for layer in visible_layers(layers, view["scale"]):
             scopes[layer].update(_view_provinces(view, layer))
 
@@ -55,25 +58,39 @@ def capture_layers(service, snapshot, views, layers, *, same_date, war_id=None):
                     raise MapLiveCaptureError("MAP_MILITARY_SNAPSHOT_CHANGED")
                 raw_dates.add(raw_date)
 
+    war = None
+    scope_info = {}
+    participants = []
+    army_scope = {}
+    if any(scopes.values()):
+        from bridge.map_military_wars import capture_war_scope
+
+        war = capture_war_scope(service.installation, service.observer, war_id=war_id)
+        validate(war)
+        scope_info["war"] = {key: war[key] for key in
+                             ("war_id", "status", "reason", "participants", "choices", "sides")
+                             if key in war}
+        if war["status"] == "known":
+            participants = war.get("participants") or []
+            sides = war.get("sides") or {}
+            if participants:
+                allies, enemies = sides.get("side_a", []), sides.get("side_b", [])
+                if service.observer in enemies:
+                    allies, enemies = enemies, allies
+                if service.observer in allies:
+                    army_scope = {"allies": allies, "enemies": enemies, "land_province_ids": land}
+
     for layer, ids in scopes.items():
         if not ids:
             result[layer] = {"status": "not_applicable", "date": None, "records": []}
             continue
-        scope_info = {}
         if layer == "armies":
             from bridge.map_military_armies import capture_armies
 
-            capture = capture_armies(service.installation, service.observer, sorted(ids))
+            capture = capture_armies(service.installation, service.observer, sorted(ids), **army_scope)
         else:
             from bridge.map_military_forts import capture_forts
-            from bridge.map_military_wars import capture_war_scope
 
-            war = capture_war_scope(service.installation, service.observer, war_id=war_id)
-            validate(war)
-            scope_info["war"] = {key: war[key] for key in
-                                 ("war_id", "participants", "choices", "sides")
-                                 if key in war}
-            participants = war.get("participants")
             if war["status"] != "known" or not participants:
                 result[layer] = {"status": "unavailable" if war["status"] != "known" else "not_applicable",
                                  "date": war.get("date"), "records": [],
@@ -84,6 +101,30 @@ def capture_layers(service, snapshot, views, layers, *, same_date, war_id=None):
                                     game_root=service.game_root, user_data=service.user_data,
                                     participants=participants)
         validate(capture)
+        if layer == "forts":
+            forts = [row["province_id"] for row in capture.get("records", [])
+                     if row.get("level", 0) > 0 and row["province_id"] in ids]
+            if forts:
+                from bridge.map_military_siege import capture_sieges
+
+                siege = capture_sieges(service.installation, service.observer, forts,
+                                       participants=participants)
+                validate(siege)
+                # Only attach siege observations to the same province and date.
+                siege_by_province = {row["province_id"]: row for row in siege.get("records", [])}
+                rows = []
+                for row in capture["records"]:
+                    observed = siege_by_province.get(row["province_id"], {})
+                    if observed.get("owner", row.get("owner")) != row.get("owner"):
+                        raise MapLiveCaptureError("MAP_MILITARY_SNAPSHOT_CHANGED")
+                    timing = {}
+                    if "elapsed_days" in observed:
+                        timing["siege_elapsed_days"] = observed["elapsed_days"]
+                    rows.append({**row, **timing})
+                siege_meta = {key: siege[key] for key in ("status", "date", "reason", "fields")
+                              if key in siege}
+                capture = {**capture, "records": rows,
+                           "field_metadata": {**capture.get("field_metadata", {}), "siege_progress": siege_meta}}
         result[layer] = {
             "status": capture["status"],
             "date": capture.get("date"),

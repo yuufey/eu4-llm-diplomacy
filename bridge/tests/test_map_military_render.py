@@ -52,10 +52,12 @@ def test_region_preserves_country_strength_and_unknown_values(monkeypatch):
                 {"province_id": 1, "owner": "FRA", "relation": "own", "men": None},
                 {"province_id": 2, "owner": "HAB", "relation": "enemy", "men": 4123}],
         forts=[{"province_id": 1, "level": 2, "terrain": "hills",
-                "terrain_bonus": 1, "siege_percent": -14},
+                "terrain_bonus": 1, "siege_percent": -14,
+                "siege_elapsed_days": 42},
                {"province_id": 2, "level": 3}],
     )
-    assert {"O", "E", "FRA 3,000+?", "HAB 4,123", "F2 hills +1 S-14%"} <= set(texts)
+    assert {"O", "E", "FRA 3,000+?", "HAB 4,123", "F2 +1 S42d S-14%"} <= set(texts)
+    assert all("hills" not in text for text in texts)
     assert "F3" in texts and "F3 ?" not in texts
     assert rendered.tobytes() != original
     assert image.tobytes() == original
@@ -74,6 +76,20 @@ def test_overview_clusters_only_nearby_units_with_same_relation(monkeypatch):
     assert texts.count("O") == 2
     assert texts.count("E") == 1
     assert {"~7k", "~5k", "~6k"} <= set(texts)
+
+
+def test_local_sums_armies_in_each_war_side_without_merging_opponents(monkeypatch):
+    image, geometry, view = _fixture(scale="local")
+    texts = _capture_text(monkeypatch)
+    draw_military(image, geometry, view, armies=[
+        {"province_id": 1, "owner": "AAA", "relation": "own", "men": 58239},
+        {"province_id": 1, "owner": "BBB", "relation": "ally", "men": 3000},
+        {"province_id": 1, "owner": "CCC", "relation": "enemy", "men": 7078},
+        {"province_id": 1, "owner": "DDD", "relation": "enemy", "men": 5846},
+        {"province_id": 2, "owner": "EEE", "relation": "ally", "men": 11000},
+    ], forts=[])
+    assert {"A", "E", "61,239", "12,924", "EEE 11,000"} <= set(texts)
+    assert "AAA 58,239" not in texts
 
 
 def test_nearby_badges_are_kept_in_bounds_and_separated():

@@ -17,7 +17,7 @@ def province_center(grid, province_id):
 
 
 def draw_snapshot(geometry, date, owners, observer, colors_for, *, center_country=None,
-                  province=None, xy=None, scale="region", size="compact"):
+                  province=None, xy=None, scale="region", size="compact", controllers=None):
     if sum(value is not None for value in (center_country, province, xy)) > 1:
         raise ValueError("Choose only one map center")
     visible = owners.keys()
@@ -44,12 +44,15 @@ def draw_snapshot(geometry, date, owners, observer, colors_for, *, center_countr
         else:
             raise ValueError("Country has no visible territory on the map")
     x, y, w, h = viewport(grid.shape, center, scale)
-    tags = {owners.get(int(pid)) for pid in np.unique(grid[y:y+h, x:x+w])}
+    cropped_ids = set(map(int, np.unique(grid[y:y+h, x:x+w])))
+    tags = {owners.get(pid) for pid in cropped_ids}
+    if controllers:
+        tags.update(controllers[pid] for pid in cropped_ids.intersection(controllers, visible))
     colors = colors_for(tags - {None})
     ready = perf_counter()
     water = geometry.sea_province_ids | geometry.lake_province_ids
     image, view = render_view(grid, owners, visible, water, colors,
-                              center, scale, size)
+                              center, scale, size, controllers=controllers)
     if province is not None:
         x0, y0, w, h = view["source_rect"]
         px = round((center[0] + 0.5 - x0) * image.width / w - 0.5)
@@ -58,6 +61,9 @@ def draw_snapshot(geometry, date, owners, observer, colors_for, *, center_countr
         draw.polygon(((px, py+6), (px-4, py+13), (px+4, py+13)), fill="white", outline="black")
         view["focus"] = {"province_id": province, "owner": owners.get(province),
                          "pixel": [px, py]}
+        controller = view["records"].get(str(province), {}).get("controller")
+        if controller is not None:
+            view["focus"]["controller"] = controller
     for record in view["records"].values():
         pid = record.get("province_id")
         if pid is not None:

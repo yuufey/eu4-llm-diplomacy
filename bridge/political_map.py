@@ -59,7 +59,20 @@ def _labels(image, country_grid, tags):
                 break
 
 
-def render_view(provinces, owners, visible, water, colors, center, scale="region", size="compact"):
+def _occupation_stripes(image, controller_grid, palette, border):
+    resolved = np.asarray(Image.fromarray(controller_grid).resize(image.size, Image.Resampling.NEAREST))
+    occupied = resolved != 0
+    rows, cols = np.ogrid[:image.height, :image.width]
+    stripe = (rows + cols) % 14 < 6
+    edges = np.asarray(Image.fromarray(border).resize(image.size, Image.Resampling.NEAREST))
+    mask = occupied & stripe & ~edges
+    pixels = np.array(image)
+    pixels[mask] = np.asarray(palette, dtype=np.uint8)[resolved[mask]]
+    return Image.fromarray(pixels)
+
+
+def render_view(provinces, owners, visible, water, colors, center, scale="region", size="compact",
+                *, controllers=None):
     x, y, w, h = viewport(provinces.shape, center, scale)
     crop = provinces[y:y+h, x:x+w]
     limit = int(crop.max()) + 1
@@ -68,6 +81,10 @@ def render_view(provinces, owners, visible, water, colors, center, scale="region
     records = {"0": {"status": "hidden"}}
     palette = [HIDDEN_COLOR, WATER_COLOR, LAND_COLOR]
     countries = {}
+    controllers = controllers or {}
+    controller_codes = np.zeros(limit, dtype=np.uint16)
+    occupation_palette = [LAND_COLOR]
+    occupiers = {}
     for raw in np.unique(crop):
         pid = int(raw)
         if not pid or pid not in visible:
@@ -79,6 +96,13 @@ def render_view(provinces, owners, visible, water, colors, center, scale="region
             continue
         tag = owners.get(pid)
         records[str(pid)] = {"status": "known", "province_id": pid, "owner": tag}
+        controller = controllers.get(pid)
+        if tag and controller and controller != tag:
+            records[str(pid)]["controller"] = controller
+            if controller not in occupiers:
+                occupiers[controller] = len(occupation_palette)
+                occupation_palette.append(colors.get(controller) or _country_color(controller))
+            controller_codes[pid] = occupiers[controller]
         if tag and tag not in countries:
             countries[tag] = len(palette)
             palette.append(colors.get(tag) or _country_color(tag))
@@ -104,6 +128,9 @@ def render_view(provinces, owners, visible, water, colors, center, scale="region
     border[1:, :] |= grid[1:, :] != grid[:-1, :]
     rgb[border] = (74, 77, 78)
     image = Image.fromarray(rgb).resize(SIZES[size], Image.Resampling.LANCZOS)
+    if occupiers:
+        edges = border | provincial if scale == "local" else border
+        image = _occupation_stripes(image, controller_codes[crop], occupation_palette, edges)
     _labels(image, grid, {code: tag for tag, code in countries.items()})
     view = {"version": 1, "source_rect": [x, y, w, h], "size": list(image.size),
             "records": records, "cells": base64.b64encode(zlib.compress(cells[crop].tobytes())).decode("ascii")}

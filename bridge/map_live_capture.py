@@ -1,9 +1,9 @@
 """Read a bounded political map snapshot from a running EU4 process.
 
-The static province raster stays in :mod:`bridge.map_geometry`.  This module
-only supplies the dynamic owner and discovery values for a requested set of
-province IDs.  It reuses the reviewed province-state read path and the common
-identity guards.  No game function is called and no process memory is written.
+The static province raster stays in :mod:`bridge.map_geometry`. This module
+only supplies dynamic owner, controller and discovery values for requested
+province IDs. It reuses the reviewed province-state read path and the common
+identity guards. No game function is called and no process memory is written.
 """
 from __future__ import annotations
 
@@ -100,6 +100,20 @@ def _tag_from_fullref(fullref: int, known_refs: Mapping[str, int]) -> str | None
     return tag
 
 
+def _verified_tag(reader: Any, module_base: int, fullref: int,
+                  known_refs: Mapping[str, int], cache: dict[int, str | None]) -> str | None:
+    """Resolve each observed fullref against the canonical country table once per pass."""
+    if fullref not in cache:
+        tag = _tag_from_fullref(fullref, known_refs)
+        if tag is not None:
+            proof = _state._resolve_country_reference(
+                reader, module_base, fullref.to_bytes(8, "little"), "map_live_country")
+            if proof.get("status") != "known" or proof.get("value") != tag:
+                tag = None
+        cache[fullref] = tag
+    return cache[fullref]
+
+
 def _world_token(context: Mapping[str, Any]) -> str | None:
     world = context.get("world_pointer")
     return sha256(world.encode("ascii")).hexdigest() if isinstance(world, str) else None
@@ -123,6 +137,8 @@ def _read_pass(reader: Any, module_base: int, observer: str,
     if type(slot) is not int or not 0 <= slot < _country.MAX_COUNTRY_SLOTS:
         raise MapLiveCaptureError("MAP_LIVE_OBSERVER_SLOT_INVALID")
     result: dict[int, dict[str, Any]] = {}
+    raw_references: dict[int, tuple[int | None, int | None]] = {}
+    verified_refs: dict[int, str | None] = {}
     for province_id, record in records.items():
         discovery_pointer = _u64(reader, record + _state.DISCOVERY_BITSET_POINTER_OFFSET,
                                  f"map_live.discovery_pointer[{province_id}]")
@@ -131,14 +147,22 @@ def _read_pass(reader: Any, module_base: int, observer: str,
                                                 f"map_live.discovery_word[{province_id}]"),
                                           "little") >> (slot & 0x1F)) & 1)
         owner = None
+        controller = None
+        owner_ref = None
+        controller_ref = None
         if discovered:
             owner_ref = _u64(reader, record + _state.OWNER_FULLREF_OFFSET, "map_live.owner")
-            owner = _tag_from_fullref(owner_ref, known_refs)
+            controller_ref = _u64(reader, record + _state.CONTROLLER_FULLREF_OFFSET,
+                                  "map_live.controller")
+            owner = _verified_tag(reader, module_base, owner_ref, known_refs, verified_refs)
+            controller = _verified_tag(reader, module_base, controller_ref, known_refs, verified_refs)
         result[province_id] = {
             "discovered": discovered,
             "owner": owner,
+            "controller": controller,
         }
-    return {"status": "observed", "values": result}
+        raw_references[province_id] = (owner_ref, controller_ref)
+    return {"status": "observed", "values": result, "raw_references": raw_references}
 
 
 def _observe_many(reader: Any, module_base: int, observer: str,
@@ -150,7 +174,8 @@ def _observe_many(reader: Any, module_base: int, observer: str,
     after_context = _owner._context(reader, module_base)
     after_guard = _owner._guards(reader, module_base, profile)
     stable_context = before_context == after_context and before_guard == after_guard
-    stable_targets = first["values"] == second["values"]
+    stable_targets = (first["values"] == second["values"]
+                      and first["raw_references"] == second["raw_references"])
     return {
         "status": "observed" if stable_context and stable_targets else "unknown",
         "observer": observer,
@@ -166,13 +191,15 @@ def _observe_many(reader: Any, module_base: int, observer: str,
 
 def capture_live(installation: str | Path, observer: str,
                  province_ids: Iterable[int]) -> dict[str, Any]:
-    """Capture owners for requested provinces from the running game.
+    """Capture owners and occupations for requested provinces from the running game.
 
     ``installation`` is the existing observer ``installation.json``.  The
     process ID and creation time are read from that file and revalidated by the
     shared capture implementation before and after the read.  A returned owner
     is present only when the observer's discovery bit and the two-pass owner
-    read are both known.  ``timings`` are local monotonic measurements.
+    read are both known. ``controllers`` contains only positively discovered
+    provinces with known, different owners and controllers. ``timings`` are
+    local monotonic measurements.
     """
     path, observer, ids = _validate_request(installation, observer, province_ids)
     started = perf_counter()
@@ -209,6 +236,14 @@ def capture_live(installation: str | Path, observer: str,
         for province_id, value in values.items()
         if isinstance(value, Mapping) and value.get("discovered") is True
     }
+    controllers = {
+        int(province_id): value["controller"]
+        for province_id, value in values.items()
+        if isinstance(value, Mapping) and value.get("discovered") is True
+        and isinstance(value.get("owner"), str)
+        and isinstance(value.get("controller"), str)
+        and value["controller"] != value["owner"]
+    }
     raw_date = observation["context_after"]["game_date"]
     year, month, day, _ = decode_date(raw_date)
     return {
@@ -219,6 +254,7 @@ def capture_live(installation: str | Path, observer: str,
         "date_raw": raw_date,
         "world_token": _world_token(observation["context_after"]),
         "owners": owners,
+        "controllers": controllers,
         "discovered_province_ids": discovered_province_ids,
         "requested_province_ids": list(ids),
         "identity": {

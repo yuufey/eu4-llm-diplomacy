@@ -27,7 +27,7 @@ class FakeMapService:
         return {
             "images": images,
             "views": views,
-            "snapshot": {"date": "1495.2.3", "owners": {1: "TUR"},
+            "snapshot": {"date": "1495.2.3", "owners": {1: "TUR"}, "controllers": {1: "GRE"},
                           "identity": {"pid": 1}},
             "observer": "TUR",
             "snapshot_id": snapshot_id,
@@ -45,6 +45,9 @@ def test_publish_writes_three_images_data_and_atomic_pointer(tmp_path):
     bundle = tmp_path / "bundles" / result["bundle_id"]
     assert (bundle / "manifest.json").is_file()
     assert (bundle / "snapshot.json").is_file()
+    snapshot = json.loads((bundle / "snapshot.json").read_text(encoding="utf-8"))
+    assert snapshot["owners"] == {"1": "TUR"}
+    assert snapshot["controllers"] == {"1": "GRE"}
     assert {path.name for path in bundle.glob("*.png")} == {"overview.png", "region.png", "local.png"}
     assert json.loads((tmp_path / "latest.json").read_text(encoding="utf-8"))["bundle_id"] == result["bundle_id"]
 

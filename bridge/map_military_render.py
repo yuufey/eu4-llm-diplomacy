@@ -8,8 +8,8 @@ result is a new image, and neither the input image nor view is modified.
 Army keys: O = own, A = ally, E = enemy, X = other.  Overview badges combine
 nearby armies of the same relation and use approximate strength; the other
 scales show one exact, comma-separated total per province, owner and relation.
-Fort badges use a castle icon, followed by the level, terrain, terrain bonus
-and, when supplied, siege percentage.  An unavailable value is never made zero.
+Fort badges use a castle icon, followed by the level, terrain bonus
+and, when supplied, siege timing or percentage.
 """
 from __future__ import annotations
 
@@ -138,7 +138,7 @@ def _centers(geometry: Any, view: Mapping[str, Any], pids: set[int],
 
 def _army_badges(armies: Sequence[Mapping[str, Any]], centers: Mapping[int, tuple[int, int]],
                   scale: str) -> list[_Badge]:
-    by_province: dict[tuple[int, str, str], list[Any]] = {}
+    groups: dict[tuple[int, str, str], list[tuple[str, str, Any]]] = {}
     for army in armies:
         pid = _province_id(army.get("province_id"))
         if pid not in centers:
@@ -147,10 +147,19 @@ def _army_badges(armies: Sequence[Mapping[str, Any]], centers: Mapping[int, tupl
         if relation not in ARMY_KEYS:
             relation = "other"
         owner = str(army.get("owner") or "?").strip()[:12] or "?"
-        by_province.setdefault((pid, relation, owner), []).append(army.get("men"))
+        side = "ally" if relation == "own" else relation
+        groups.setdefault((pid, side, owner if side == "other" else ""), []).append(
+            (owner, relation, army.get("men")))
+
+    by_province = {}
+    for (pid, side, _), members in groups.items():
+        owners = {owner for owner, _, _ in members}
+        owner = min(owners) if len(owners) == 1 else ""
+        relation = "own" if side == "ally" and all(rel == "own" for _, rel, _ in members) else side
+        by_province[pid, relation, owner] = [value for _, _, value in members]
 
     if scale != "overview":
-        return [_Badge(*centers[pid], f"{owner} {_sum_strengths(values, approximate=False)}",
+        return [_Badge(*centers[pid], f"{owner} {_sum_strengths(values, approximate=False)}".strip(),
                        "army", relation)
                 for (pid, relation, owner), values in sorted(by_province.items())]
 
@@ -191,14 +200,14 @@ def _fort_badges(forts: Sequence[Mapping[str, Any]], centers: Mapping[int, tuple
         if pid not in centers:
             continue
         level = _number(fort.get("level")) or "?"
-        terrain = str(fort.get("terrain") or "").replace("_", " ").strip()[:16]
         bonus = _number(fort.get("terrain_bonus"), signed=True)
+        elapsed = _number(fort.get("siege_elapsed_days"))
         siege = _number(fort.get("siege_percent"))
         fields = ["F" + level]
-        if terrain:
-            fields.append(terrain)
         if bonus is not None:
             fields.append(bonus)
+        if elapsed is not None:
+            fields.append("S" + elapsed + "d")
         if siege is not None:
             fields.append("S" + siege + "%")
         badges.append(_Badge(*centers[pid], " ".join(fields), "fort"))

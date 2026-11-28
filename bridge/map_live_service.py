@@ -80,7 +80,7 @@ class LivePoliticalMap:
                 image, view, _, base_render_started = draw_snapshot(
                     self.geometry, self.snapshot["date"], self.snapshot["owners"], self.observer,
                     self._colors_for, center_country=center_country, province=province,
-                    xy=xy, scale=scale, size=size)
+                    xy=xy, scale=scale, size=size, controllers=self.snapshot.get("controllers"))
                 base_render_finished = perf_counter()
                 if captured <= base_render_started <= base_render_finished:
                     viewport_seconds = base_render_started - captured
@@ -206,7 +206,7 @@ class LivePoliticalMap:
         image, view, _, ready = draw_snapshot(
             self.geometry, snapshot["date"], snapshot["owners"],
             self.observer, self._colors_for, center_country=center_country,
-            province=province, xy=xy, scale=scale, size=size)
+            province=province, xy=xy, scale=scale, size=size, controllers=snapshot.get("controllers"))
         view_id = str(uuid4())
         view.update(source="live", scale=scale, identity=snapshot.get("identity"),
                     snapshot_id=snapshot_id, view_id=view_id)

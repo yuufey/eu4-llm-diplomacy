@@ -86,7 +86,7 @@ def render(args):
     start = perf_counter()
     geometry = load_map_geometry(args.game_root, args.user_data)
     loaded = perf_counter()
-    date, owners, digest, cache_hit = load_visible_snapshot(
+    date, owners, controllers, digest, cache_hit = load_visible_snapshot(
         args.save, args.observer, ROOT / "work" / "runtime" / "political-map-cache")
     parsed = perf_counter()
     def colors_for(tags):
@@ -94,7 +94,8 @@ def render(args):
 
     image, view, center, ready = draw_snapshot(
         geometry, date, owners, args.observer, colors_for, center_country=args.country,
-        province=args.province, xy=args.xy, scale=args.scale, size=args.size)
+        province=args.province, xy=args.xy, scale=args.scale, size=args.size,
+        controllers=controllers)
     view["save_sha256"] = digest
     write_image(args.out, image, view)
     return {"path": str(args.out), "date": view["date"], "observer": view["observer"],

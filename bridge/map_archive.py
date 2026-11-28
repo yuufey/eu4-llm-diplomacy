@@ -172,6 +172,7 @@ def _publish_map_bundle_locked(map_service, directory: str | Path, *,
         _atomic_json(snapshot_path, {
             "date": date, "observer": bundle_data.get("observer"),
             "snapshot_id": bundle_data.get("snapshot_id"), "owners": snapshot["owners"],
+            **({"controllers": snapshot["controllers"]} if "controllers" in snapshot else {}),
             **({"military": snapshot["military"]} if "military" in snapshot else {}),
         })
         manifest = {

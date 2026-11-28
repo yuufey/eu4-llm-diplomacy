@@ -18,6 +18,15 @@ def test_fort_capture_scope_skips_overview_hidden_land_and_wrong_session(monkeyp
                 "records": [{"province_id": pid, "level": 2} for pid in province_ids]}
 
     monkeypatch.setitem(sys.modules, "bridge.map_military_forts", SimpleNamespace(capture_forts=capture_forts))
+    siege_calls = []
+
+    def capture_sieges(installation, observer, province_ids, *, participants):
+        siege_calls.append((province_ids, participants))
+        return {"identity": identity, "date": "1495.2.3", "status": "partial",
+                "records": [{"province_id": 1, "elapsed_days": 42}]}
+
+    monkeypatch.setitem(sys.modules, "bridge.map_military_siege",
+                        SimpleNamespace(capture_sieges=capture_sieges))
     war_requests = []
     scope = {"identity": identity, "date": "1495.2.3", "status": "known",
              "participants": ["FRA", "ENG"]}
@@ -39,10 +48,11 @@ def test_fort_capture_scope_skips_overview_hidden_land_and_wrong_session(monkeyp
     ]
     assert capture_layers(service, base, views[:1], ("forts",), same_date=True)["forts"]["status"] == "not_applicable"
     assert war_requests == []
-    assert capture_layers(service, base, views, ("forts",), same_date=True, war_id="sample")["forts"]["records"] == [
-        {"province_id": 1, "level": 2},
-    ]
+    captured = capture_layers(service, base, views, ("forts",), same_date=True, war_id="sample")
+    assert captured["forts"]["records"] == [{"province_id": 1, "level": 2, "siege_elapsed_days": 42}]
+    assert captured["forts"]["fields"]["siege_progress"]["status"] == "partial"
     assert calls == [([1], ["FRA", "ENG"])]
+    assert siege_calls == calls
     assert war_requests == ["sample"]
     # Transported armies can be anchored in known sea provinces. Forts cannot.
     both = {key: {"status": "known", "records": [{"province_id": 2}]}
@@ -58,6 +68,32 @@ def test_fort_capture_scope_skips_overview_hidden_land_and_wrong_session(monkeyp
     result = capture_layers(service, base, views, ("forts",), same_date=True)["forts"]
     assert result["status"] == "unavailable" and result["records"] == []
     assert len(calls) == 1
+
+
+def test_armies_only_resolves_war_sides_and_restricts_enemy_scope_to_land(monkeypatch):
+    identity = {"pid": 42, "creation_filetime": 43, "session_id": "fixture"}
+    base = {"identity": identity, "date": "1495.2.3"}
+    calls = []
+    war = {**base, "status": "known", "participants": ["FRA", "ENG", "SCO"],
+           "sides": {"side_a": ["ENG"], "side_b": ["FRA", "SCO"]}}
+
+    def capture_armies(installation, observer, ids, **scope):
+        calls.append((ids, scope))
+        return {**base, "status": "partial", "records": []}
+
+    monkeypatch.setitem(sys.modules, "bridge.map_military_wars", SimpleNamespace(
+        capture_war_scope=lambda *args, **kwargs: war))
+    monkeypatch.setitem(sys.modules, "bridge.map_military_armies",
+                        SimpleNamespace(capture_armies=capture_armies))
+    service = SimpleNamespace(installation="fixture", observer="FRA")
+    view = {"scale": "overview", "records": {
+        "1": {"status": "known", "province_id": 1},
+        "2": {"status": "water", "province_id": 2},
+        "0": {"status": "hidden"},
+    }}
+    capture_layers(service, base, [view], ("armies",), same_date=True)
+    assert calls == [([1, 2], {"allies": ["FRA", "SCO"], "enemies": ["ENG"],
+                              "land_province_ids": {1}})]
 
 
 def test_military_scope_keeps_baseline_and_skips_duplicate_png(monkeypatch):
