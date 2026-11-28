@@ -271,9 +271,7 @@ def test_hook_body_drift_between_permission_passes_returns_unknown():
 
 
 @pytest.mark.parametrize(("observer_tag", "target_tag", "reason"), [
-    ("ENG", "CAN", "OBSERVER_TAG_NOT_FRA"),
-    ("FRA", "POR", "TARGET_TAG_EXCLUDED"),
-    ("FRA", "FRA", "TARGET_TAG_EXCLUDED"),
+    ("FRA", "FRA", "OBSERVER_TARGET_SAME_TAG"),
 ])
 def test_known_tag_exclusions_are_denied_without_memory_or_leaf_reads(
         monkeypatch: pytest.MonkeyPatch, observer_tag: str, target_tag: str, reason: str):
@@ -292,9 +290,8 @@ def test_known_tag_exclusions_are_denied_without_memory_or_leaf_reads(
 
 
 @pytest.mark.parametrize(("config", "reason"), [
-    ({"human_count": 2}, "WORLD_HUMAN_COUNT_NOT_ONE"),
-    ({"observer_controller": 1}, "OBSERVER_CONTROLLER_NOT_ZERO"),
     ({"target_controller": -1}, "TARGET_CONTROLLER_NOT_ZERO"),
+    ({"target_controller": 1}, "TARGET_CONTROLLER_NOT_ZERO"),
 ])
 def test_known_human_or_controller_mismatch_denies_after_stable_rechecks(
         monkeypatch: pytest.MonkeyPatch, config: dict, reason: str):
@@ -317,6 +314,17 @@ def test_known_human_or_controller_mismatch_denies_after_stable_rechecks(
     assert field["status"] == "unknown" and "value" not in field
     assert calls == [] and len(image.reads) == before
     _assert_permission_budget(permission)
+
+
+@pytest.mark.parametrize(("observer_tag", "target_tag", "observer_controller"), [
+    ("ENG", "CAN", 0), ("POR", "FRA", 1), ("FRA", "POR", 1),
+])
+def test_distinct_bound_tags_and_player_observer_are_admitted(observer_tag, target_tag, observer_controller):
+    image, observer, target = _environment(observer_tag=observer_tag, target_tag=target_tag,
+                                            human_count=2, observer_controller=observer_controller)
+    permission = _permission(image, observer, target)
+    assert permission["status"] == "known" and permission["admitted"] is True
+    assert memory.validate_permission(permission) is True
 
 
 def _drift_bytes(image: MemoryImage, case: str) -> None:

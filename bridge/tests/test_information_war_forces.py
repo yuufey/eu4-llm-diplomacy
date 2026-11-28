@@ -10,13 +10,15 @@ from bridge.tests.test_information_foreign_technology import Base
 from bridge.tests.test_information_foreign_technology_capture import make_valid_capture
 
 
-@pytest.mark.parametrize('country, topic, army_field, navy_field, army_label', [
-    ('FRA', 'N02', 'army_size', 'navy_size', 'army_regiments'),
-    ('ENG', 'F02', 'visible_army', 'visible_navy', 'army_soldiers'),
+@pytest.mark.parametrize('observer, country, topic, army_field, navy_field, army_label', [
+    ('FRA', 'FRA', 'N02', 'army_size', 'navy_size', 'army_regiments'),
+    ('TUR', 'TUR', 'N02', 'army_size', 'navy_size', 'army_regiments'),
+    ('FRA', 'ENG', 'F02', 'visible_army', 'visible_navy', 'army_soldiers'),
 ])
 def test_current_forces_reuses_one_size_query_and_keeps_units_explicit(
-        tmp_path, country, topic, army_field, navy_field, army_label):
+        tmp_path, observer, country, topic, army_field, navy_field, army_label):
     _, context, creation, _ = make_valid_capture()
+    context['observer'] = observer
     base = Base(tmp_path, context, creation)
     calls = []
 

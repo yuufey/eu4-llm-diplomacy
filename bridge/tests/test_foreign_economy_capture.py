@@ -367,7 +367,7 @@ def test_turkish_observer_reads_income_own_loan_and_bilateral_contracts(fixture_
     assert projected["income"]["status"] == "known"
     value = projected["debt"]["value"]
     assert value["loans_to_observer"]["records"][0]["lender"] == "TUR"
-    assert value["total_debt"]["reason"] == "DEBT_PRIVATE_TOTAL_OBSERVER_EVIDENCE_UNAVAILABLE"
+    assert value["total_debt"]["reason"] == "DEBT_DISCLOSURE_SCOPE_MISSING"
     for field in ("reparations", "subsidies"):
         contracts = projected[field]["value"]["observer_involved_contracts"]
         assert contracts["status"] == "known", contracts
@@ -593,17 +593,17 @@ def test_inactive_country_target_is_denied_without_income_or_loan_amount_reads(f
                    for label in labels)
 
 
-def test_human_fra_role_rejects_finance_reads(fixture_profile):
-    report, _context, _creation, _fixture = _make_capture(fixture_profile, human_fra=True)
+def test_human_observer_preserves_view_and_reads_finance(fixture_profile):
+    report, context, creation, _fixture = _make_capture(fixture_profile, human_fra=True)
     target = _target(report)
-    assert report["observation"]["stable"] is False
+    assert report["observation"]["stable"] is True
+    assert capture.validate_capture(report, context, creation, "ENG")
     assert all(target["admission_by_pass"][phase]["observer_nonplayer_role"]["verified"] is False
                for phase in ("pass1", "pass2"))
-    assert not any(label.startswith(("economy.", "income.", "foreign_loans."))
-                   for label in _labels(report))
+    assert any(label.startswith("income.") for label in _labels(report))
 
 
-def test_role_change_between_passes_withdraws_fields_and_does_not_read_second_pass_finance(
+def test_role_change_between_passes_withdraws_fields_after_second_pass_finance(
         fixture_profile):
     image, bindings, refs, data = _make_image(fixture_profile)
     controller_address = (refs["controller_types_pointer"]
@@ -623,8 +623,8 @@ def test_role_change_between_passes_withdraws_fields_and_does_not_read_second_pa
     assert target["admission_by_pass"]["pass2"]["observer_nonplayer_role"]["verified"] is False
     assert all(target["fields"][field]["status"] == "unknown" for field in capture.FIELDS)
     labels = _labels(report)
-    assert labels.count("income.previous_month_i32_categories_0_18") == 1
-    assert labels.count("foreign_loans.financials[0]") == 1
+    assert labels.count("income.previous_month_i32_categories_0_18") == 2
+    assert labels.count("foreign_loans.financials[0]") == 2
 
 
 def test_income_cache_change_withdraws_income_family_but_preserves_loan_field(fixture_profile):

@@ -1,7 +1,7 @@
 """Private native UI-selector evidence for foreign-debt disclosure.
 
 This helper only records whether the native action-list selector is visible for
-a FRA-to-target trade-favors-for-gold query, under the host's controlled-country
+an observer-to-target trade-favors-for-gold query, under the host's controlled-country
 policy.  It does not prove that the AI-accept tooltip's amount is visible, read
 or derive any debt amount, or observe a rendered game UI.
 """
@@ -19,7 +19,6 @@ SCOPE = "native_ai_accept_principal_amount"
 
 _GAME_SHA256 = "b23fa0e1f698d31b01cdd1c3817a675805d8c6286cb66f9c231e6e2a42544d77"
 _GAME_VERSION = "1.37.4"
-_OBSERVER = "FRA"
 _ACTION_ID = "trade_favors_for_gold"
 _PHASE = "initiate"
 _INT32_MIN = -(1 << 31)
@@ -58,7 +57,7 @@ def _result(
     return {
         "schema": SCHEMA,
         "scope": SCOPE,
-        "observer": _OBSERVER,
+        "observer": _proof_value(identity, "context", "observer")[1],
         "target": target,
         "game_date": game_date,
         "session_id": session_id,
@@ -115,6 +114,7 @@ def _top_identity_from_proof(identity: Any) -> dict[str, Any]:
                          and type(creation_field.get("value")) is int
                          and creation_field.get("value") >= 0 else None)
     return {
+        "observer": _proof_value(identity, "context", "observer")[1],
         "game_date": game_date,
         "session_id": session_id,
         "creation_filetime": creation_filetime,
@@ -154,7 +154,8 @@ def _capture_identity_proof(base_source: Any, context: Any) -> dict[str, Any]:
         if isinstance(context, Mapping):
             context_proof["available"] = True
         controls_present = is_record and "controlled_countries" in record
-        controls_raw = record.get("controlled_countries") if controls_present else ["FRA"]
+        fallback_country = getattr(session, "controlled_country", None) if session is not None else None
+        controls_raw = record.get("controlled_countries") if controls_present else [fallback_country]
         if controls_present and type(controls_raw) is not list:
             controls_value = {"non_list_type": type(controls_raw).__name__,
                               "value": _json_value(controls_raw)}
@@ -166,6 +167,7 @@ def _capture_identity_proof(base_source: Any, context: Any) -> dict[str, Any]:
             "controlled_countries": {
                 "source": "session.record",
                 "present": controls_present,
+                "fallback_country": _json_value(fallback_country),
                 "value": _json_value(controls_value),
             },
         }
@@ -241,7 +243,8 @@ def _proof_preflight_error(proof: Any) -> str | None:
     if (not context["session_id"].get("present")
             or context_values["session_id"] != session_id
             or not context["observer"].get("present")
-            or context_values["observer"] != _OBSERVER
+            or not isinstance(context_values["observer"], str)
+            or _TAG_RE.fullmatch(context_values["observer"]) is None
             or not context["game_sha256"].get("present")
             or context_values["game_sha256"] != _GAME_SHA256
             or not context["game_version"].get("present")
@@ -273,7 +276,11 @@ def _proof_preflight_error(proof: Any) -> str | None:
             or type(controls.get("present")) is not bool):
         return "CONTROLLED_COUNTRY_POLICY_INVALID"
     raw_tags = controls.get("value")
-    if not controls["present"] and raw_tags != ["FRA"]:
+    if (not controls["present"] and
+            (not isinstance(controls.get("fallback_country"), str)
+             or _TAG_RE.fullmatch(controls["fallback_country"]) is None)):
+        return "CONTROLLED_COUNTRY_AUTHORITY_UNAVAILABLE"
+    if not controls["present"] and raw_tags != [controls.get("fallback_country")]:
         return "CONTROLLED_COUNTRY_POLICY_INVALID"
     if not isinstance(raw_tags, list):
         return "CONTROLLED_COUNTRIES_NOT_LIST"
@@ -281,25 +288,27 @@ def _proof_preflight_error(proof: Any) -> str | None:
         return "CONTROLLED_COUNTRY_TAG_INVALID"
     if len(raw_tags) != len(set(raw_tags)):
         return "CONTROLLED_COUNTRIES_NOT_UNIQUE"
-    if "FRA" not in raw_tags:
-        return "FRA_NOT_IN_CONTROLLED_COUNTRIES"
+    if context_values["observer"] not in raw_tags:
+        return "OBSERVER_NOT_IN_CONTROLLED_COUNTRIES"
     return None
 
 
-def _controlled_tags(record: Mapping[str, Any]) -> tuple[bool, tuple[str, ...] | None, str | None]:
+def _controlled_tags(record: Mapping[str, Any], observer: str, fallback_country: Any) -> tuple[bool, tuple[str, ...] | None, str | None]:
     """Read only the host session record's controlled-country policy."""
-    if "controlled_countries" not in record:
-        return False, ("FRA",), None
-    raw = record.get("controlled_countries")
+    present = "controlled_countries" in record
+    if (not present and (not isinstance(fallback_country, str)
+                         or _TAG_RE.fullmatch(fallback_country) is None)):
+        return False, None, "CONTROLLED_COUNTRY_AUTHORITY_UNAVAILABLE"
+    raw = record.get("controlled_countries") if present else [fallback_country]
     if not isinstance(raw, list):
         return True, None, "CONTROLLED_COUNTRIES_NOT_LIST"
     if any(not isinstance(tag, str) or _TAG_RE.fullmatch(tag) is None for tag in raw):
         return True, None, "CONTROLLED_COUNTRY_TAG_INVALID"
     if len(raw) != len(set(raw)):
         return True, None, "CONTROLLED_COUNTRIES_NOT_UNIQUE"
-    if "FRA" not in raw:
-        return True, None, "FRA_NOT_IN_CONTROLLED_COUNTRIES"
-    return True, tuple(raw), None
+    if observer not in raw:
+        return present, None, "OBSERVER_NOT_IN_CONTROLLED_COUNTRIES"
+    return present, tuple(raw), None
 
 
 def _read_identity(base_source: Any, context: Any) -> tuple[dict[str, Any] | None, str | None]:
@@ -335,7 +344,8 @@ def _read_identity(base_source: Any, context: Any) -> tuple[dict[str, Any] | Non
             return None, "CONTEXT_UNAVAILABLE"
         game_date = context.get("game_date")
         if (context.get("session_id") != session_id
-                or context.get("observer") != _OBSERVER
+                or not isinstance(context.get("observer"), str)
+                or _TAG_RE.fullmatch(context["observer"]) is None
                 or context.get("game_sha256") != _GAME_SHA256
                 or context.get("game_version") != _GAME_VERSION
                 or not _signed_i32(game_date)):
@@ -354,7 +364,8 @@ def _read_identity(base_source: Any, context: Any) -> tuple[dict[str, Any] | Non
                 if not _signed_i32(record_date) or record_date != game_date:
                     return None, "RECORD_DATE_MISMATCH"
 
-        controlled_present, controlled, policy_error = _controlled_tags(record)
+        controlled_present, controlled, policy_error = _controlled_tags(
+            record, context["observer"], getattr(session, "controlled_country", None))
         if policy_error is not None or controlled is None:
             return None, policy_error or "CONTROLLED_COUNTRY_POLICY_INVALID"
 
@@ -436,7 +447,9 @@ def _identity_still_stable(base_source: Any, snapshot: Mapping[str, Any]) -> boo
         for key, value in snapshot.get("record_dates", {}).items():
             if (key in record) != value[0] or (value[0] and record.get(key) != value[1]):
                 return False
-        present, controlled, error = _controlled_tags(record)
+        present, controlled, error = _controlled_tags(
+            record, snapshot["context_snapshot"]["observer"],
+            getattr(session, "controlled_country", None))
         if (error is not None or present != snapshot.get("controlled_present")
                 or controlled != snapshot.get("controlled")):
             return False
@@ -461,7 +474,7 @@ def _inspection_reason(inspection: Any, snapshot: Mapping[str, Any]) -> tuple[st
             or inspection.get("contract_version") != 1):
         return "INSPECTION_CONTRACT_VERSION_INVALID", None
     if (inspection.get("action_id") != _ACTION_ID
-            or inspection.get("actor") != _OBSERVER
+            or inspection.get("actor") != snapshot.get("observer")
             or inspection.get("recipient") != snapshot.get("target")
             or inspection.get("phase") != _PHASE):
         return "INSPECTION_ACTION_BINDING_MISMATCH", None
@@ -514,7 +527,7 @@ def _raw_envelope(
         "debt_amount_source": "not_evaluated_by_helper",
         "request": {
             "action_id": _ACTION_ID,
-            "observer": _OBSERVER,
+            "observer": _proof_value(identity_before, "context", "observer")[1],
             "target": _json_value(target),
             "phase": _PHASE,
             "parameters": {},
@@ -567,7 +580,8 @@ def _expected_from_raw(record: Mapping[str, Any]) -> tuple[str, bool | None, str
     if (not isinstance(request, Mapping)
             or set(request) != {"action_id", "observer", "target", "phase", "parameters"}
             or request.get("action_id") != _ACTION_ID
-            or request.get("observer") != _OBSERVER
+            or not _typed_equal(request.get("observer"),
+                                _proof_value(raw.get("identity_before"), "context", "observer")[1])
             or request.get("phase") != _PHASE
             or type(request.get("parameters")) is not dict
             or request.get("parameters") != {}):
@@ -594,9 +608,8 @@ def _expected_from_raw(record: Mapping[str, Any]) -> tuple[str, bool | None, str
     controls = before.get("controlled_countries")
     if not isinstance(controls, Mapping) or not isinstance(controls.get("value"), list):
         return None
-    if target == "POR" or target in controls["value"]:
-        expected = ("known", False,
-                    "TARGET_PHYSICAL_PLAYER_TAG" if target == "POR" else "TARGET_CONTROLLED_BY_HOST")
+    if target in controls["value"]:
+        expected = ("known", False, "TARGET_CONTROLLED_BY_HOST")
         if call_count != 0:
             return None
         return expected if _typed_equal(before, after) else ("unknown", None, "SOURCE_BINDING_DRIFTED")
@@ -648,7 +661,8 @@ def _expected_from_raw(record: Mapping[str, Any]) -> tuple[str, bool | None, str
     if not isinstance(date_field, Mapping) or date_field.get("present") is not True:
         return None
     inspect_error, admitted = _inspection_reason(
-        inspection_copy, {"target": target, "game_date": date_field.get("value")}
+        inspection_copy, {"observer": request.get("observer"), "target": target,
+                          "game_date": date_field.get("value")}
     )
     if inspect_error is not None:
         return ("unknown", None, inspect_error)
@@ -657,7 +671,7 @@ def _expected_from_raw(record: Mapping[str, Any]) -> tuple[str, bool | None, str
 
 
 def read_scope(base_source: Any, context: Any, target: Any) -> dict[str, Any]:
-    """Read the current native AI-acceptance selector state for FRA -> target.
+    """Read the current native AI-acceptance selector state for observer -> target.
 
     The single inspection is read-only.  It does not issue a diplomatic action,
     and the returned admitted bit describes only the selector visibility used
@@ -685,9 +699,8 @@ def read_scope(base_source: Any, context: Any, target: Any) -> dict[str, Any]:
     if not isinstance(target, str) or _TAG_RE.fullmatch(target) is None:
         return no_call("unknown", None, "TARGET_TAG_INVALID")
     snapshot["target"] = target
-    if target == "POR" or target in snapshot["controlled"]:
-        reason = "TARGET_PHYSICAL_PLAYER_TAG" if target == "POR" else "TARGET_CONTROLLED_BY_HOST"
-        return no_call("known", False, reason)
+    if target in snapshot["controlled"]:
+        return no_call("known", False, "TARGET_CONTROLLED_BY_HOST")
 
     try:
         tools = getattr(base_source, "diplomacy_tools", None)
@@ -719,7 +732,7 @@ def read_scope(base_source: Any, context: Any, target: Any) -> dict[str, Any]:
     call_error = None
     inspection = None
     try:
-        inspection = inspector(_ACTION_ID, _OBSERVER, target, _PHASE, {})
+        inspection = inspector(_ACTION_ID, context["observer"], target, _PHASE, {})
     except Exception as exc:
         call_error = type(exc).__name__
 
@@ -766,7 +779,8 @@ def read_scope(base_source: Any, context: Any, target: Any) -> dict[str, Any]:
         inspection_json_safe=True,
     )
     validation_error, native_visibility = _inspection_reason(
-        inspection_copy, {"target": target, "game_date": snapshot["game_date"]}
+        inspection_copy, {"observer": context["observer"], "target": target,
+                          "game_date": snapshot["game_date"]}
     )
     if validation_error is not None:
         return _result("unknown", None, validation_error,
@@ -785,7 +799,6 @@ def validate_scope(record: Any) -> bool:
                 "native_inspection_calls", "actual_UI_render_observed", "raw_inputs"}:
             return False
         if (record.get("schema") != SCHEMA or record.get("scope") != SCOPE
-                or record.get("observer") != _OBSERVER
                 or record.get("actual_UI_render_observed") is not False
                 ):
             return False
@@ -807,7 +820,8 @@ def validate_scope(record: Any) -> bool:
         if not _typed_equal(record.get("target"), _record_target(record)):
             return False
         top_identity = _top_identity_from_proof(raw.get("identity_before"))
-        if (not _typed_equal(record.get("game_date"), top_identity["game_date"])
+        if (not _typed_equal(record.get("observer"), top_identity["observer"])
+                or not _typed_equal(record.get("game_date"), top_identity["game_date"])
                 or not _typed_equal(record.get("session_id"), top_identity["session_id"])
                 or not _typed_equal(record.get("creation_filetime"), top_identity["creation_filetime"])):
             return False

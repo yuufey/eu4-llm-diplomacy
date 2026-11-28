@@ -154,11 +154,10 @@ def test_extension_reuses_parent_scan_real_bindings_and_one_shared_budget(monkey
                for phase in ("pass1", "pass2"))
 
 
-@pytest.mark.parametrize("denial", ["discovery", "role", "controller"])
-def test_parent_discovery_role_or_controller_denial_never_calls_child(
+@pytest.mark.parametrize("denial", ["discovery", "controller"])
+def test_parent_discovery_or_controller_denial_never_calls_child(
         monkeypatch, denial):
-    image = fixture.make_image(
-        discovered=denial != "discovery", role_verified=denial != "role")
+    image = fixture.make_image(discovered=denial != "discovery")
     if denial != "controller":
         _admit_swe(image)
     calls = []
@@ -176,6 +175,19 @@ def test_parent_discovery_role_or_controller_denial_never_calls_child(
             == expected_parent_status)
     assert _target(result)["fields"][FIELD]["status"] == "unknown"
     assert "province_extension_evidence" not in result
+
+
+def test_human_observer_with_positive_discovery_can_use_extension(monkeypatch):
+    image = fixture.make_image(role_verified=False)
+    _admit_swe(image)
+    calls = []
+    def read_allocation(*args):
+        calls.append(args)
+        return {FIELD: _allocation_field()}
+    result = _run(monkeypatch, image, read_allocation)
+    assert calls
+    assert result['status'] == 'observed'
+    assert _target(result)['fields'][FIELD]['status'] == 'known'
 
 
 @pytest.mark.parametrize("drift", ["controller_ref", "province", "observer_role"])

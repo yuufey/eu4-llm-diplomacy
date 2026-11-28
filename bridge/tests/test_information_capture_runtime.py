@@ -247,12 +247,13 @@ def wiring(monkeypatch):
                         lambda source, database, owner="llm", **kwargs:
                         _Service(harness, source, database, owner, **kwargs))
 
+    # Keep the real NativeTradeIncomeSource class: adapters imported lazily
+    # during this fixture inherit it and must not retain a temporary stub.
     for module, name in (
         (country_state, "NativeCountryStateSource"),
         (domestic_pressure, "NativeDomesticPressureSource"),
         (subject_relations, "NativeSubjectRelationSource"),
         (relation_state, "NativeRelationSource"),
-        (trade_income, "NativeTradeIncomeSource"),
         (trade_home, "NativeTradeHomeSource"),
         (trade_power, "NativeTradePowerSource"),
         (trade_details, "NativeTradeDetailsSource"),

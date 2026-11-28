@@ -4,7 +4,7 @@ from pathlib import Path
 import tempfile
 import unittest
 
-from bridge.diplomacy import DiplomacyTools, ObserverSession
+from bridge.tests.legacy_france_adapter import FixedFranceDiplomacyTools as DiplomacyTools, FixedFranceObserverSession as ObserverSession
 from bridge.diplomacy_journal import DurableJournal
 from bridge.tests.test_favor_trade_query import QuerySession
 

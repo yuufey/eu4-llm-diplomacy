@@ -36,7 +36,7 @@ from .diplomacy_journal import (AmbiguousRequestError, ContextMismatchError, Dur
                                 EvidenceConflictError, InvalidTransitionError,
                                 RequestConflictError, RequestPermissionError,
                                 RequestRecord, ResponseLogCursor, UnknownRequestError)
-from .diplomacy_control import DiplomacyPermissionError
+from .diplomacy_control import DiplomacyControl, DiplomacyPermissionError
 from . import diplomat_recall
 from .diplomacy_session import probe_identity
 from .country_control_ack import has_v65_country_control_capability
@@ -60,6 +60,7 @@ from . import relation_observation
 from . import mission_observation
 from . import mission_availability_observation
 from . import mission_condition_observation
+from .information.cooldown_expiry import parse_enroute_cooldown
 from . import support_roles
 from .favor_trade import (ACTION_ID as _FAVOR_GOLD_ACTION,
     QUERY_CAPABILITY as _NATIVE_FAVOR_GOLD_QUERY_CAPABILITY,
@@ -143,6 +144,45 @@ from .war_score import (
 
 def reason(code: str, text: str, source: str, complete: bool = False) -> dict:
     return {"code": code, "text": text, "source": source, "complete": complete}
+
+
+def _relation_cooldown_from_text(text: object) -> dict | None:
+    """Extract the same bounded ENROUTE deadline exposed by A01 preview."""
+    return parse_enroute_cooldown(text)
+
+
+def _attach_relation_cooldown(reason_value: object, text: object) -> object:
+    """Add a preview-compatible cooldown only when the diagnostic proves it."""
+    if not isinstance(reason_value, dict) or "cooldown" in reason_value:
+        return reason_value
+    cooldown = _relation_cooldown_from_text(text)
+    if cooldown is None:
+        return reason_value
+    result = dict(reason_value)
+    result["cooldown"] = cooldown
+    return result
+
+
+def _inspection_diagnostic_text(value: object) -> str | None:
+    """Read a public inspection diagnostic without exposing native payloads."""
+    if not isinstance(value, dict):
+        return None
+    for key in ("native_diagnostic_text", "native_diagnostic", "diagnostic"):
+        candidate = value.get(key)
+        if isinstance(candidate, str) and candidate:
+            return candidate[:4096]
+        if isinstance(candidate, dict):
+            text = candidate.get("text")
+            if isinstance(text, str) and text:
+                return text[:4096]
+    diagnostics = value.get("diagnostics")
+    if isinstance(diagnostics, dict):
+        for candidate in diagnostics.values():
+            if isinstance(candidate, dict):
+                text = candidate.get("text")
+                if isinstance(text, str) and text:
+                    return text[:4096]
+    return None
 
 
 _INSTALL_ACK_HEADER_BYTES = 64 * 1024
@@ -419,12 +459,16 @@ def _project_favor_query_for_action(action_id: str, value: object,
 class ObserverSession:
     """Trusted operator binding; no process or filesystem identifiers go out."""
 
-    def __init__(self, installation: Path, game_exe: Path):
+    def __init__(self, installation: Path, game_exe: Path, *, controlled_country: str | None = None):
         self.directory = installation.resolve().parent
         self.record = json.loads(installation.read_text(encoding="utf-8"))
         self.game_exe = game_exe
         self.experiment_id = self.record["experiment_id"]
         self.session_id = self.record["session_id"]
+        # A physical player recorded by the installer is not an authorization
+        # to control that country. The operator must select a decision country.
+        DiplomacyControl("direct", controlled_country)
+        self.controlled_country = controlled_country
         self.native_text_codec = validate_native_text_codec(
             self.record.get("native_text_codec", DEFAULT_NATIVE_TEXT_CODEC))
         self._response_log_offsets: dict[str, int] = {}
@@ -460,8 +504,9 @@ class ObserverSession:
         self._mission_condition_observations = mission_condition_observation.Collector(self.session_id)
 
     def _controlled_country(self) -> str | None:
-        """Return this session's configured country, with legacy direct-call behavior."""
-        return getattr(self, "controlled_country", "FRA")
+        """Return the operator-selected decision country, if one is configured."""
+        country = getattr(self, "controlled_country", None)
+        return country if isinstance(country, str) and re.fullmatch(r"[A-Z0-9]{3}", country) else None
 
     def configure_controlled_countries(self, countries, *, timeout: float = 10) -> dict:
         """Apply the host-owned country set to the native observer session."""
@@ -1020,7 +1065,9 @@ class ObserverSession:
                 or proposal_id <= 0 or proposal_id > 0xFFFFFFFFFFFFFFFF):
             return False
         actor = event.get("actor")
-        if (not isinstance(actor, str) or not re.fullmatch(r"[A-Z0-9]{3}", actor)
+        if (not isinstance(controlled_country, str)
+                or re.fullmatch(r"[A-Z0-9]{3}", controlled_country) is None
+                or not isinstance(actor, str) or not re.fullmatch(r"[A-Z0-9]{3}", actor)
                 or actor == controlled_country or event.get("mirror") != actor):
             return False
         if event.get("recipient") != controlled_country or event.get("decision_country") != controlled_country:
@@ -1051,7 +1098,9 @@ ew_entry`` or
         ``call_redirected`` proof.
         """
 
-        if not isinstance(event, dict) or event.get("session_id") != session_id:
+        if (not isinstance(controlled_country, str)
+                or re.fullmatch(r"[A-Z0-9]{3}", controlled_country) is None
+                or not isinstance(event, dict) or event.get("session_id") != session_id):
             return False
         if event.get("event") != "native_diplomacy_inbound_pending_restored":
             return False
@@ -1197,6 +1246,11 @@ ew_entry`` or
             change_collectors.append((self._mission_availability_observations, 'MISSION_AVAILABILITY'))
         if mission_condition_enabled:
             change_collectors.append((self._mission_condition_observations, 'MISSION_CONDITION'))
+        def startup_modifier(event, session_id):
+            return country_modifier_observation.public_observation(
+                event, session_id,
+                allow_scoped=_NATIVE_INFORMATION_OBSERVER_CAPABILITY in capabilities)
+
         startup_events = {
             subsidy_expiry_observation.NATIVE_EVENT: (
                 self._subsidy_expiries, subsidy_expiry_observation.public_observation),
@@ -1207,11 +1261,11 @@ ew_entry`` or
             land_promise_observation.NATIVE_EVENT: (
                 self._land_promises, land_promise_observation.public_observation),
             country_modifier_observation.NATIVE_EVENT: (
-                self._country_modifier_observations, country_modifier_observation.public_observation),
+                self._country_modifier_observations, startup_modifier),
             country_modifier_observation.REMOVE_NATIVE_EVENT: (
-                self._country_modifier_observations, country_modifier_observation.public_observation),
+                self._country_modifier_observations, startup_modifier),
             country_modifier_observation.EXPIRY_NATIVE_EVENT: (
-                self._country_modifier_observations, country_modifier_observation.public_observation),
+                self._country_modifier_observations, startup_modifier),
             rival_observation.NATIVE_EVENT: (self._rival_observations,
                 lambda row, session: rival_observation.public_observation(row,session)
                 if row.get('schema_version') != 2 or rival_record_enabled else None),
@@ -1389,7 +1443,8 @@ ew_entry`` or
                                     and event.get("session_id") == self.session_id
                                     and type(event.get("dropped")) is int and 0 < event["dropped"] <= 2**31 - 1):
                                 self._inbound_capture_dropped += event["dropped"]
-                            call = public_observation(event, self.session_id)
+                            call = public_observation(
+                                event, self.session_id, controlled_country=self._controlled_country())
                             if call is not None:
                                 identity = ("call_to_arms", event["observation_id"])
                                 if identity not in self._inbound_seen_native_proposals:
@@ -1670,7 +1725,8 @@ ew_entry`` or
         native_proposal_id = payload.get("proposal_id")
         action_id = payload.get("action_id", "offer_alliance")
         family = _inbound_family(action_id)
-        if (not isinstance(actor, str) or not re.fullmatch(r"[A-Z0-9]{3}", actor)
+        if (self._controlled_country() is None
+                or not isinstance(actor, str) or not re.fullmatch(r"[A-Z0-9]{3}", actor)
                 or actor == self._controlled_country() or isinstance(native_proposal_id, bool)
                 or not isinstance(native_proposal_id, int)
                 or native_proposal_id <= 0 or native_proposal_id > 0xFFFFFFFFFFFFFFFF
@@ -5509,6 +5565,7 @@ ative_flags`` as private header
                 or not re.fullmatch(r"[A-Za-z0-9_-]{1,64}", query_id)
                 or not isinstance(actor, str)
                 or not re.fullmatch(r"[A-Z0-9]{3}", actor)
+                or self._controlled_country() is None
                 or actor == self._controlled_country() or phase not in ("accept", "reject")
                 or "|" in self.session_id or "\n" in self.session_id
                 or "\r" in self.session_id):
@@ -8904,6 +8961,7 @@ ative_peace_execution_result`` before exposing a business outcome.
         if (not isinstance(request_id, str)
                 or not re.fullmatch(r"[A-Za-z0-9_-]{1,64}", request_id)
                 or not isinstance(actor, str) or not re.fullmatch(r"[A-Z0-9]{3}", actor)
+                or self._controlled_country() is None
                 or actor == self._controlled_country() or recipient != self._controlled_country()
                 or phase not in ("accept", "reject")
                 or "|" in self.session_id or "\n" in self.session_id
@@ -18199,8 +18257,13 @@ ative_vassalization_submission`` ACK is issued.
         """Check that the frame still reports the installation's verified seat."""
         from work.observer_runtime_ready import expected_physical_player
 
+        expected_player = expected_physical_player(self.record)
+        if expected_player is None:
+            return {"status": "unready", "state_id": None, "date_raw": None,
+                    "reasons": [reason("SESSION_UNREADY", "安装记录没有已验证的玩家席位。", "runtime_error")],
+                    "complete": False}
         return self.health(allow_date_progress=allow_date_progress,
-                           expected_player=expected_physical_player(self.record))
+                           expected_player=expected_player)
 
     def health(self, *, allow_date_progress: bool = False,
                expected_player: str | None = None) -> dict:
@@ -18277,7 +18340,7 @@ class DiplomacyTools:
         return self.get_diplomatic_result(request_id) if result is None else result
 
     def _controlled_country(self) -> str | None:
-        """Return this connection's country, keeping legacy direct callers FRA-bound."""
+        """Return only a country explicitly assigned to this connection or session."""
         control = getattr(self, "control", None)
         if control is not None:
             return control.controlled_country
@@ -18285,17 +18348,17 @@ class DiplomacyTools:
             return self.controlled_country
         if self.session is not None and hasattr(self.session, "controlled_country"):
             return self.session.controlled_country
-        return "FRA"
+        return None
 
     def _authorize(self, action_id: str, actor: str, recipient: str,
                    phase: str = "initiate") -> str | None:
         control = getattr(self, "control", None)
         if control is not None:
             return control.authorize(action_id, actor, recipient, phase)
-        # Direct Python callers predating per-connection controls remain
-        # policy-free. The service path always installs a DiplomacyControl,
-        # including its explicit read-only state when no country is selected.
-        return self._controlled_country()
+        country = self._controlled_country()
+        if country is None:
+            raise DiplomacyPermissionError("DIPLOMACY_CONTROL_CONTEXT_MISSING")
+        return DiplomacyControl("direct", country).authorize(action_id, actor, recipient, phase)
 
     def _authorize_record(self, record: object) -> None:
         control = getattr(self, "control", None)
@@ -18306,6 +18369,15 @@ class DiplomacyTools:
         if isinstance(payload, dict):
             self._authorize(payload.get("action_id"), payload.get("actor"),
                             payload.get("recipient"), payload.get("phase", "initiate"))
+        else:
+            raise DiplomacyPermissionError("DIPLOMACY_REQUEST_CONTEXT_MISSING")
+        # A direct caller has no named principal and cannot inherit another
+        # caller's private journal entry merely by selecting the same country.
+        if getattr(record, "principal", None) is not None:
+            raise DiplomacyPermissionError("DIPLOMACY_REQUEST_NOT_OWNED")
+        country = getattr(record, "decision_country", None)
+        if country is not None and country != self._controlled_country():
+            raise DiplomacyPermissionError("DIPLOMACY_REQUEST_COUNTRY_MISMATCH")
 
     def _health(self) -> dict:
         if self.session is None:
@@ -20234,13 +20306,24 @@ class DiplomacyTools:
                 and native_reason.get("code") == code
                 and native_reason.get("source") in ("native_rule", "runtime_error", "bridge_policy")
                 and isinstance(native_reason.get("text"), str)):
+            # The DLL reports a generic code when the relation gate changes
+            # between preview and submission. A same-date preview may explain it.
+            if (action_id == "improve_relations" and native.get("binding_complete") is True
+                    and code == "EXECUTION_NATIVE_PREFLIGHT_FAILED"):
+                try:
+                    recheck = self.inspect_diplomatic_action(action_id, actor, recipient, phase, {})
+                    state = recheck.get("session", {})
+                    if state.get("status") == "ready" and state.get("date_raw") == date_raw:
+                        native_reason = _attach_relation_cooldown(native_reason, _inspection_diagnostic_text(recheck))
+                except Exception:
+                    pass
             if isinstance(native.get("legality"), dict):
                 inspection["legality"] = {**native["legality"], "reasons": [native_reason]}
             return self._persist_unsubmitted(request_id, {
                 "submitted": False, "game_outcome": "unknown", "inspection": inspection,
                 "reason": native_reason,
-                "native_rejection": {key: native[key] for key in (
-                    "reason", "reason_code", "legality", "binding_complete") if key in native},
+                "native_rejection": {"reason": native_reason, **{key: native[key] for key in (
+                    "reason_code", "legality", "binding_complete") if key in native}},
             })
         if native_status == "timeout":
             unknown = self._execution_result(inspection, code,
@@ -25198,10 +25281,10 @@ class DiplomacyTools:
                     if _NATIVE_COUNTRY_CONTROL_CONFIGURATION_CAPABILITY in self._installation_capabilities():
                         ai_recipient = native.get("score_applicable") is True
                     else:
+                        from work.observer_runtime_ready import expected_physical_player
                         session_record = getattr(self.session, "record", {})
-                        physical_player = (session_record.get("preflight_player_tag")
-                                           if isinstance(session_record, dict) else None)
-                        ai_recipient = recipient != (physical_player or "POR")
+                        physical_player = expected_physical_player(session_record)
+                        ai_recipient = physical_player is not None and recipient != physical_player
                     if (native.get("diplomat_context_readable") is True
                             and isinstance(native.get("diplomat_required"), bool)
                             and ObserverSession._safe_int(native.get("available_diplomat_count"), 0, 256) is not None):
@@ -26094,6 +26177,9 @@ class DiplomacyTools:
                     result["reason"]["text"] = "游戏规则禁止本次操作：" + native_text
                 if diplomat_reason is not None:
                     result["reason"] = dict(diplomat_reason)
+                result["reason"] = _attach_relation_cooldown(result["reason"], native_text)
+                result["reason"] = _attach_relation_cooldown(
+                    result["reason"], _inspection_diagnostic_text(inspection))
                 self.journal.mark_invalidated(request_id, result,
                                               event_id="bridge-execution-legality-unavailable")
                 return self.get_diplomatic_result(request_id)

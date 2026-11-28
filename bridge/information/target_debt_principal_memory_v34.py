@@ -1,6 +1,6 @@
 """Private adapter for one native AI-recipient target-principal candidate.
 
-The permission binds FRA and a non-FRA/non-POR target to the live country
+The permission binds an observer and a distinct AI target to the live country
 database and to a stable world date, human count, and controller vector. A
 positive candidate permission is not the final publication gate: host-session
 controlled-country policy and other parent checks remain outside this module.
@@ -44,8 +44,6 @@ EXPECTED_ACTION_EXCLUSION_TABLE_HEX = (
     "28300000292a0000cc3b0000e02d0000da2d00003c29000007330000b9330000"
     "75330000cb3b0000cd3b000066380000"
 )
-LOGICAL_OBSERVER_TAG = "FRA"
-EXCLUDED_TARGET_TAGS = ("FRA", "POR")
 
 MAX_READ_CALLS = _common.MAX_READ_CALLS
 MAX_TOTAL_READ_BYTES = _common.MAX_TOTAL_READ_BYTES
@@ -60,8 +58,7 @@ _SCOPE_EVIDENCE = {
     "principal_leaf_schema": _leaf.SCHEMA,
     "principal_leaf_basis": _leaf.BASIS,
     "candidate_scope": SCOPE,
-    "logical_observer_tag": LOGICAL_OBSERVER_TAG,
-    "excluded_target_tags": list(EXCLUDED_TARGET_TAGS),
+    "country_scope": "distinct_observer_and_ai_target",
     "current_action_map": {
         "module_cell_rva": hex(CURRENT_ACTION_MAP_CELL_RVA),
         "expected_getter_rva": hex(CURRENT_ACTION_MAP_GETTER_RVA),
@@ -275,12 +272,9 @@ def read_permission(reader: Any, module_base: Any, observer_binding: Any,
         result["target"] = _binding_label(target)
         raw["request"]["module_base"] = base
 
-        # These are known tag exclusions, so no memory or principal bytes are
-        # needed to deny the candidate.
-        if observer["tag"] != LOGICAL_OBSERVER_TAG:
-            return deny("OBSERVER_TAG_NOT_FRA")
-        if target["tag"] in EXCLUDED_TARGET_TAGS:
-            return deny("TARGET_TAG_EXCLUDED")
+        # Debt is an AI target operation; self-targets are never candidates.
+        if observer["tag"] == target["tag"]:
+            return deny("OBSERVER_TARGET_SAME_TAG")
         if (observer["country_pointer"] == target["country_pointer"]
                 or observer["slot"] == target["slot"]
                 or observer["fullref"] == target["fullref"]):
@@ -407,10 +401,7 @@ def read_permission(reader: Any, module_base: Any, observer_binding: Any,
             return deny("CURRENT_ACTION_TOKEN_EXCLUDED")
 
         gates = {
-            "observer_is_fra": observer["tag"] == LOGICAL_OBSERVER_TAG,
-            "target_tag_not_fra_or_por": target["tag"] not in EXCLUDED_TARGET_TAGS,
-            "human_count_is_one": human_count == 1,
-            "observer_controller_is_zero": observer_controller == 0,
+            "distinct_country_tags": observer["tag"] != target["tag"],
             "target_controller_is_zero": target_controller == 0,
         }
         raw["candidate_gates"] = {
@@ -420,10 +411,6 @@ def read_permission(reader: Any, module_base: Any, observer_binding: Any,
             "observer_controller_i32": observer_controller,
             "target_controller_i32": target_controller,
         }
-        if not gates["human_count_is_one"]:
-            return deny("WORLD_HUMAN_COUNT_NOT_ONE")
-        if not gates["observer_controller_is_zero"]:
-            return deny("OBSERVER_CONTROLLER_NOT_ZERO")
         if not gates["target_controller_is_zero"]:
             return deny("TARGET_CONTROLLER_NOT_ZERO")
 

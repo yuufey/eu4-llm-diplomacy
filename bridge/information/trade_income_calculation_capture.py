@@ -19,8 +19,12 @@ SCHEMA = 'information.trade_income_calculation_capture.v1'
 PREFIX = 'trade_income_calculation.'
 _REVIEWED_DEPENDENCIES = {
     **_shared._REVIEWED_DEPENDENCIES,
+    'bridge/information/trade_income_calculation_memory.py': (
+        8872, '8ce23511e538abd59bc00b2a43bbfe3585a86717ed1398ec4385b774fef05fdc'),
+    'bridge/information/foreign_quality_memory.py': (
+        37284, '1aebcaae4a6ec612123263db62a8493760910a19fb6aba9c8c1a13fc3c61a14c'),
     'bridge/information/trade_power_sum_capture.py': (
-        9427, 'b0ccba3d05072dfab0e4952d93703a6e98f6a4f5ced7a72b1a90d20dd8d880e0'),
+        9427, 'e0e3133d53f33838cfb4481e5116b44dca266a31e58dbecb573bda66b8d16683'),
 }
 
 

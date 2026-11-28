@@ -297,15 +297,14 @@ def test_country_view_denial_skips_quality_permission_and_all_quality_resources(
                    for row in fixture["source"].read_log)
 
 
-def test_fra_human_role_failure_prevents_both_quality_gates_and_values(fixture_profile):
-    report, _context, _creation, fixture = _make_capture(fixture_profile, human_fra=True)
-    assert report["observation"]["stable"] is False
+def test_human_observer_keeps_quality_visibility_gates(fixture_profile):
+    report, context, creation, fixture = _make_capture(fixture_profile, human_fra=True)
+    assert report["observation"]["stable"] is True
+    assert capture.validate_capture(report, context, creation, "ENG")
     target = _target(report)
     assert all(target["admission_by_pass"][phase]["observer_nonplayer_role"]["verified"] is False
                for phase in ("pass1", "pass2"))
-    assert not any(row["label"].startswith("quality.")
-                   or row["label"].startswith("settings.")
-                   for row in fixture["source"].read_log)
+    assert any(row["label"].startswith("quality.") for row in fixture["source"].read_log)
 
 
 def test_one_quality_component_change_withdraws_only_quality_field(fixture_profile):

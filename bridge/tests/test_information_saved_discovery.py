@@ -127,7 +127,7 @@ def test_explicitly_empty_observer_membership_is_known_empty_only_if_all_rows_ex
     assert field["complete"] is False
 
 
-def test_view_is_limited_to_the_non_player_observer_and_session_selector(tmp_path):
+def test_view_is_limited_to_the_observer_and_session_selector(tmp_path):
     _save, _snapshot, source, _calls = _source(tmp_path)
     session_result = _read(source, _query({"type": "session"}))
     own = _read(source, _query({"type": "country", "country": "FRA"}))
@@ -139,8 +139,9 @@ def test_view_is_limited_to_the_non_player_observer_and_session_selector(tmp_pat
 
     _save2, _snapshot2, player_source, _calls2 = _source(tmp_path / "player", observer="POR")
     player = _read(player_source, _query({"type": "session"}))
-    assert player["fields"]["discovered_provinces"] == {
-        "status": "not_applicable", "reason": "NON_PLAYER_OBSERVER_REQUIRED"}
+    assert player["fields"]["discovered_provinces"]["value"] == [186, 188]
+    assert _read(player_source, _query({"type": "country", "country": "FRA"}))["fields"]["discovered_provinces"] == {
+        "status": "not_applicable", "reason": "OBSERVER_DISCOVERY_VIEW_ONLY"}
 
 
 @pytest.mark.parametrize("query", [

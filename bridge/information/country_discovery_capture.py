@@ -37,7 +37,7 @@ _REVIEWED_LAYOUT_REVISIONS = {
     'bridge/information/country_knowledge_memory.py': (
         13601, 'fe8a8b8663f01ebf90d59133132f7359717e32e019dc52cde6a2f65d3e779ab2'),
     'bridge/information/country_discovery_memory.py': (
-        10646, '90031db1aa457e3b63d968b33983ce3507de86325425e1fe19aa3e7a4d536b3c'),
+        10610, 'd23ead4b495058e236b97101ab0d31797e990fa2a077cf94dc63d2bd26d50855'),
     'bridge/information/country_discovery_memory_v2.py': (
         798, '5672f0178f876736730b0f61a91449667220583ab6cee26848e52a7266dce98c'),
 }

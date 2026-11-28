@@ -4,7 +4,7 @@ from pathlib import Path
 import tempfile
 import unittest
 
-from bridge.diplomacy import ObserverSession, DiplomacyTools
+from bridge.tests.legacy_france_adapter import FixedFranceObserverSession as ObserverSession, FixedFranceDiplomacyTools as DiplomacyTools
 from bridge.peace_execution import normalize_peace_execution_parameters
 
 
@@ -213,6 +213,7 @@ class PeaceTradePowerSourceTests(unittest.TestCase):
 
     def test_source_ack_selects_query10_and_exec4_wire(self):
         session = object.__new__(ObserverSession)
+        session.controlled_country = "FRA"
         session.installation_capabilities = lambda: frozenset({
             "native_peace_trade_power_query",
             "native_peace_trade_power_execution",
@@ -229,6 +230,7 @@ class PeaceTradePowerSourceTests(unittest.TestCase):
 
         with tempfile.TemporaryDirectory() as directory:
             session = object.__new__(ObserverSession)
+            session.controlled_country = "FRA"
             session.directory = Path(directory)
             (session.directory / "control-probe.jsonl").write_text("", encoding="ascii")
             session.record = {"creation_filetime": 123}

@@ -70,6 +70,28 @@ def test_loaded_world_install_keeps_existing_delivery(tmp_path):
     session=startup_session(tmp_path,[event],reason='loaded_world')
     assert len(session.read_native_relation_events()['events'])==1
 
+def test_configured_modifier_startup_sequence_is_not_reported_as_a_gap(tmp_path):
+    from bridge.tests.test_information_rival_record_events import record_ack as scoped_ack
+
+    ack = scoped_ack(version=65, session_id=SESSION_ID, observer='SWE',
+        native_country_control_configuration=True,
+        native_country_control_protocol='EU4CONTROL1', native_country_control_ack='native_controlled_countries_set',
+        native_country_control_request='controlled-countries.req', native_information_observer_configuration=True,
+        native_country_modifier_scoped_schema=2)
+    reference = (42 << 32) | int.from_bytes(b'SWE', 'little')
+    first = native_event(schema_version=2, country='SWE', country_fullref=hex(reference))
+    original = make_session(tmp_path, [first], ack=ack, observer='SWE')
+    installation = original.directory / 'installation.json'
+    record = json.loads(installation.read_text())
+    record['ready_reason'] = 'verified_load_confirmation'
+    installation.write_text(json.dumps(record))
+    session = ObserverSession(installation, original.game_exe)
+    assert session.read_native_country_modifier_events()['events'] == []
+    append(session, MARKER, dict(first, sequence=2))
+    result = session.read_native_country_modifier_events()
+    assert result['complete']
+    assert [event['native_sequence'] for event in result['events']] == [2]
+
 def test_log_reset_requires_a_new_current_session_marker(tmp_path):
     event=relation_record(1,'alliance_record_enable')
     session=startup_session(tmp_path,[MARKER,event])

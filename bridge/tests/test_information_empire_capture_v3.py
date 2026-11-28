@@ -17,6 +17,27 @@ def _profile() -> dict:
     return capture._load_profile()
 
 
+def test_reused_mission_pe_guard_reads_only_the_selected_raw_section(tmp_path):
+    # V3 reaches mission_memory through the shared process reader.
+    image = bytearray(0x300)
+    image[:2] = b'MZ'
+    image[0x3c:0x40] = (0x80).to_bytes(4, 'little')
+    image[0x80:0x84] = b'PE\0\0'
+    image[0x86:0x88] = (1).to_bytes(2, 'little')
+    section = 0x98
+    image[section + 8:section + 12] = (0x20).to_bytes(4, 'little')
+    image[section + 12:section + 16] = (0x1000).to_bytes(4, 'little')
+    image[section + 16:section + 20] = (0x20).to_bytes(4, 'little')
+    image[section + 20:section + 24] = (0x200).to_bytes(4, 'little')
+    image[0x204:0x209] = b'guard'
+    path = tmp_path / 'bounded.exe'
+    path.write_bytes(image)
+    assert capture._owner._mm.PROCESS_ACCESS == 0x410
+    assert capture._owner._mm._read_pe_rva_bytes(path, 0x1004, 4) == b'guar'
+    with pytest.raises(RuntimeError, match='pe_rva_not_in_raw_section'):
+        capture._owner._mm._read_pe_rva_bytes(path, 0x101f, 2)
+
+
 def _stub_runtime(monkeypatch, profile: dict, *, ui_snapshots=None):
     guard = [{"name": "fixture", "rva": "0x10", "actual_hex": "00", "matches": True}]
     context = {

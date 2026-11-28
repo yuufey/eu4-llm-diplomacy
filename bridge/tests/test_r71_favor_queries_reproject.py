@@ -4,8 +4,9 @@ from __future__ import annotations
 import json
 from pathlib import Path
 import unittest
+from unittest.mock import patch
 
-from bridge.diplomacy import DiplomacyTools
+from bridge.tests.legacy_france_adapter import FixedFranceDiplomacyTools as DiplomacyTools
 from bridge.diplomacy_journal import DurableJournal
 from bridge.favor_trade import SUBMISSION_CAPABILITY
 from work.reproject_r71_favor_queries import (
@@ -35,9 +36,10 @@ class R71FavorQueriesReprojectTests(unittest.TestCase):
         capabilities = frozenset(self.fixture["capabilities"])
         for case in self.fixture["cases"]:
             raw = case["raw"]
-            projected = reproject_case(
-                raw, case["actor"], case["recipient"], self.fixture["health"],
-                capabilities, self.fixture["session_id"])
+            with patch("work.reproject_r71_favor_queries.DiplomacyTools", DiplomacyTools):
+                projected = reproject_case(
+                    raw, case["actor"], case["recipient"], self.fixture["health"],
+                    capabilities, self.fixture["session_id"])
             checks = _case_checks(
                 raw, projected["public"], projected["semantic"],
                 self.fixture["health"], projected["session"],

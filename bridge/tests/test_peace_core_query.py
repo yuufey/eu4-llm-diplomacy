@@ -3,7 +3,8 @@ from __future__ import annotations
 import copy
 import unittest
 
-from bridge.diplomacy import DiplomacyTools, ObserverSession, _PEACE_EXECUTION_ACTIONS
+from bridge.diplomacy import _PEACE_EXECUTION_ACTIONS
+from bridge.tests.legacy_france_adapter import FixedFranceDiplomacyTools as DiplomacyTools, FixedFranceObserverSession as ObserverSession
 from bridge.diplomacy_catalog import ACTIONS
 from bridge.peace_core import (
     CoreQueryError, build_query14_wire, normalize_core_query_parameters,

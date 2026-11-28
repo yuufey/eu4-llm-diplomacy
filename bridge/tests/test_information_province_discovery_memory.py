@@ -77,18 +77,14 @@ def test_stable_candidates_return_only_positive_ids_and_known_empty(values, expe
                    for _address, _size, label in image.reads)
 
 
-def test_role_failure_stops_before_any_province_header_or_candidate_read():
+def test_human_count_does_not_deny_bound_observer_province_discovery():
     image = make_membership_image((True, False))
     image.put_i32(WORLD + 0xA60, 2)
     result = memory.read_two_pass(image, BASES[0])
 
-    assert result["status"] == "unknown"
-    assert "value" not in result
-    assert result["reason"] == "FRA_SELF_ADMISSION_OR_ROLE_NOT_VERIFIED"
-    assert not any(label.startswith("province_discovery.header.")
-                   or label.startswith("province_discovery.id[")
-                   or label.startswith("province_state.discovery.")
-                   for _address, _size, label in image.reads)
+    assert result["status"] == "known"
+    assert result["value"] == [1]
+    assert all(not row["admission"]["observer_nonplayer_role"]["verified"] for row in result["passes"])
 
 
 def test_id_echo_mismatch_fails_closed_without_reading_other_province_fields():

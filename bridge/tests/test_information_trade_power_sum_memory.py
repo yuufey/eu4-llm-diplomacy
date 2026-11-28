@@ -234,18 +234,32 @@ def test_duplicate_parent_match_is_rejected_before_native_reads():
 
 
 @pytest.mark.parametrize("human_count,controller_type", [(0, 0), (1, 1), (2, 0)])
-def test_stable_non_npc_role_is_unknown_with_private_reads(human_count, controller_type):
+def test_membership_does_not_require_a_nonplayer_observer(human_count, controller_type):
     reader, trade_income, country_scan = _environment(
         role_human_count=human_count, role_controller_type=controller_type
     )
 
     result = _read(reader, trade_income, country_scan)
 
-    assert result["status"] == "unknown"
-    assert result["reason"] == "observer_role_mismatch"
+    assert result["status"] == "observed"
+    assert result["observer_nonplayer_verified"] is False
     assert result["raw_inputs"]["stable"] is True
     assert result["raw_inputs"]["role"]["human_count"] == human_count
     assert result["raw_inputs"]["role"]["controller_type"] == controller_type
+
+
+def test_player_observer_membership_replays_against_the_captured_trace(monkeypatch):
+    from bridge.information import trade_power_sum_capture as capture
+
+    monkeypatch.setattr(capture, '_load_profile', lambda: {'code_guards': []})
+    reader, trade_income, country_scan = _environment(observer='TUR', role_controller_type=1)
+    record = capture.read_fields(reader, MODULE_BASE, trade_income, country_scan)
+    assert record['status'] == 'observed'
+    assert record['observation']['observer_nonplayer_verified'] is False
+    assert capture.validate_record(record, trade_income, country_scan)
+    altered = deepcopy(record)
+    altered['observation']['observer_nonplayer_verified'] = True
+    assert not capture.validate_record(altered, trade_income, country_scan)
 
 
 @pytest.mark.parametrize(

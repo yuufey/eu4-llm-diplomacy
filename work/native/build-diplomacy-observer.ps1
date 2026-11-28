@@ -681,6 +681,9 @@ if ($NativeCountryControl) {
     $manifest.native_country_control_protocol = 'EU4CONTROL1'
     $manifest.native_country_control_ack = 'native_controlled_countries_set'
     $manifest.native_country_control_request = 'controlled-countries.req'
+    $manifest.native_game_speed_control = $true
+    $manifest.native_game_speed_control_protocol = 'EU4SPEED1'
+    $manifest.native_game_speed_player_scope = 'canonical_player'
     $manifest.native_diplomat_recall_by_id = $true
     $manifest.native_diplomat_recall_protocol = 'EU4RECALL1'
 }

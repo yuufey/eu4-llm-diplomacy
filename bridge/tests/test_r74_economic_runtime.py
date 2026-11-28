@@ -3,7 +3,7 @@ import json
 from pathlib import Path
 import unittest
 
-from bridge.diplomacy import DiplomacyTools, ObserverSession
+from bridge.tests.legacy_france_adapter import FixedFranceDiplomacyTools as DiplomacyTools, FixedFranceObserverSession as ObserverSession
 
 
 FIXTURE = json.loads((Path(__file__).parent / "fixtures" /

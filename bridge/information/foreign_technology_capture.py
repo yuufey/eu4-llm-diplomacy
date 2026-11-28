@@ -170,14 +170,16 @@ def _observe(reader,module_base,country,profile,*,backend_reader=None,guard_veri
         backend=backend_reader(reader,module_base,country)
     after_context=_context(reader,module_base)
     after_guard=_guards(reader,module_base,profile,guard_verifier)
-    role_verified=all(
-        (item.get('admission_by_pass',{}).get(phase) or {}).get('observer_nonplayer_role',{}).get('verified') is True
-        for item in backend.get('targets',[]) for phase in ('pass1','pass2'))
+    admission_observed=all(
+        isinstance(gate, Mapping) and gate.get('status') == 'known'
+        and type(gate.get('admitted')) is bool
+        for item in backend.get('targets', []) for phase in ('pass1', 'pass2')
+        for gate in [item.get('admission_by_pass', {}).get(phase)])
     stable=(_same(_time.without_clock(before_context), _time.without_clock(after_context))
             and _time.dates_match(before_context['game_date'], after_context['game_date'])
             and backend.get('status')=='observed'
             and backend.get('consistency',{}).get('status')=='stable'
-            and bool(backend.get('targets')) and role_verified)
+            and bool(backend.get('targets')) and admission_observed)
     result={'runtime_code_before':before_guard,'context_before':before_context,'backend':backend,
             'context_after':after_context,'runtime_code_after':after_guard,'stable':stable}
     failures=getattr(reader,'read_failures',None)
@@ -187,7 +189,7 @@ def _observe(reader,module_base,country,profile,*,backend_reader=None,guard_veri
 
 
 def _bound_admission(read,module_base,bindings,observer,target):
-    """Keep the logical observer non-player, independently of UI current-ref."""
+    """Bind the logical observer and record its actual controller type."""
     def raw(address,size,label):
         _pointer(address);_pointer(address+size-1)
         data=read(address,size,label)

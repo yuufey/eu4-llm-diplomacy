@@ -8,7 +8,7 @@ import time
 import unittest
 from unittest.mock import patch
 
-from bridge.diplomacy import DiplomacyTools, ObserverSession
+from bridge.tests.legacy_france_adapter import FixedFranceDiplomacyTools as DiplomacyTools, FixedFranceObserverSession as ObserverSession
 from bridge.diplomacy_journal import DurableJournal
 
 
@@ -205,7 +205,7 @@ class SpyNetworkToolsTests(unittest.TestCase):
             with self.assertRaisesRegex(ValueError, "SPY_NETWORK_PARAMETERS_UNSUPPORTED"):
                 api.inspect_diplomatic_action(action_id, "FRA", "SAV", parameters={"diplomat_id": 1})
             with self.assertRaisesRegex(ValueError, "SPY_NETWORK_INITIATE_ONLY"):
-                api.inspect_diplomatic_action(action_id, "FRA", "SAV", "accept")
+                api._inspect_diplomatic_action(action_id, "FRA", "SAV", "accept")
 
     def test_spy_ack_is_dedicated_and_not_inferred(self):
         with tempfile.TemporaryDirectory() as temporary:

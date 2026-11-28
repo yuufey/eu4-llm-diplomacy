@@ -2,6 +2,9 @@
 from __future__ import annotations
 
 from copy import deepcopy
+import base64
+from io import BytesIO
+import json
 from typing import Any
 
 from .diplomacy_control import DiplomacyPermissionError
@@ -87,6 +90,69 @@ DIPLOMACY_TOOL_DEFINITIONS = (
 )
 
 
+_MAP_TOOL_DEFINITIONS = (
+    {
+        "name": "render_political_map",
+        "description": (
+            "读取当前受控国家视角的政治地图。首次调用、收到新战略简报后首次看图或 refresh=true 时采集新快照，"
+            "用 layers 选择军队或堡垒，用 refresh_scope=military 只刷新军事图层并复用底图，"
+            "或用 refresh_scope=full 同时刷新底图。堡垒只显示指定战争的参战双方，多战时传 war_id。"
+            "可传上一张图的 previous_view_id 省去相同图片。"
+        ),
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "center_country": TAG_SCHEMA,
+                "province": {"type": "integer", "minimum": 1, "maximum": 65535},
+                "xy": {"type": "array", "items": {"type": "integer", "minimum": 0},
+                       "minItems": 2, "maxItems": 2},
+                "scale": {"type": "string", "enum": ["overview", "region", "local"]},
+                "size": {"type": "string", "enum": ["compact", "detailed"]},
+                "refresh": {"type": "boolean"},
+                "refresh_scope": {"type": "string", "enum": ["full", "military"]},
+                "layers": {"type": "array", "maxItems": 2, "uniqueItems": True,
+                           "items": {"type": "string", "enum": ["armies", "forts"]}},
+                "previous_view_id": {"type": "string", "minLength": 1, "maxLength": 128},
+                "war_id": {"type": "string", "pattern": "^war_[0-9a-f]{16}_[0-9a-f]{8}$"},
+            },
+            "additionalProperties": False,
+        },
+        "annotations": {"readOnlyHint": True, "openWorldHint": False},
+    },
+    {
+        "name": "inspect_political_map",
+        "description": "按 view_id 查询指定政治地图中一个像素对应的省份和所有国。服务保留最近八张图，边界像素会返回候选项。",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "view_id": {"type": "string", "minLength": 1, "maxLength": 128},
+                "x": {"type": "integer", "minimum": 0},
+                "y": {"type": "integer", "minimum": 0},
+            },
+            "required": ["view_id", "x", "y"],
+            "additionalProperties": False,
+        },
+        "annotations": {"readOnlyHint": True, "openWorldHint": False},
+    },
+)
+
+_MAP_EXPORT_TOOL = {
+    "name": "manage_political_map_export",
+    "description": "配置、查询、立即刷新或停用当前观察国的定期地图导出。首次配置即写入可见省份数据和三张政治地图，默认每六个游戏月更新。",
+    "inputSchema": {
+        "type": "object", "required": ["operation"], "additionalProperties": False,
+        "properties": {
+            "operation": {"type": "string", "enum": ["configure", "status", "refresh", "disable"]},
+            "directory": {"type": "string", "minLength": 1},
+            "interval_months": {"type": "integer", "minimum": 1, "maximum": 120},
+            **{key: _MAP_TOOL_DEFINITIONS[0]["inputSchema"]["properties"][key]
+               for key in ("center_country", "province", "xy", "size", "layers", "war_id")},
+        },
+    },
+    "annotations": {"readOnlyHint": False, "openWorldHint": False},
+}
+
+
 class GameTools:
     """Reuse one service's readers, diplomacy executor and collection lock.
 
@@ -128,6 +194,14 @@ class GameTools:
         if self.clock is not None:
             self._definitions.append(deepcopy(GAME_TIME_DEFINITION))
             self.instructions += " set_game_speed controls the game clock in this observer test."
+        self.map = getattr(service, "map_live", getattr(service, "political_map", None))
+        self.map_schedule = getattr(service, "map_schedule", None)
+        if self.map_schedule is not None:
+            self._definitions.append(deepcopy(_MAP_EXPORT_TOOL))
+        if self.map is not None:
+            self._definitions.extend(deepcopy(_MAP_TOOL_DEFINITIONS))
+            self.instructions += " Political-map tools return a PNG for the bound controlled country. " \
+                "A refresh captures one new live snapshot; other map calls reuse that snapshot."
         self._schemas = {item["name"]: item["inputSchema"] for item in self._definitions}
 
     def definitions(self) -> list[dict[str, Any]]:
@@ -149,6 +223,19 @@ class GameTools:
             raise InformationError("invalid_parameters", str(error)) from error
         validate_schema(arguments, self._schemas[name])
         arguments = deepcopy(arguments)
+        if name == _MAP_EXPORT_TOOL["name"]:
+            with self.service.collection_lock.acquire():
+                if self.service._closed:
+                    raise InformationError("service_closed", "Game service is closed")
+                try:
+                    return self.map_schedule.manage(**arguments)
+                except ValueError as error:
+                    code = "source_unavailable" if type(error).__name__ == "MapLiveCaptureError" else "invalid_parameters"
+                    raise InformationError(code, str(error)) from error
+                except (OSError, RuntimeError) as error:
+                    raise InformationError("source_unavailable", str(error)) from error
+        if name in {item["name"] for item in _MAP_TOOL_DEFINITIONS}:
+            return self._call_map(name, arguments)
         if name != GAME_TIME_TOOL and self.diplomacy is None:
             raise InformationError("source_unavailable", "Diplomacy requires a live --operator-session with diplomacy enabled")
         # The background scheduler and all live information collection already
@@ -178,6 +265,55 @@ class GameTools:
             except ValueError as error:
                 raise InformationError("invalid_parameters", str(error)) from error
 
+    def _call_map(self, name: str, arguments: dict[str, Any]) -> dict[str, Any]:
+        if self.map is None:
+            raise InformationError("source_unavailable", "Political map requires a live operator session")
+        with self.service.collection_lock.acquire():
+            if self.service._closed:
+                raise InformationError("service_closed", "Game service is closed")
+            try:
+                if name == "render_political_map":
+                    centers = [arguments.get(key) for key in ("center_country", "province", "xy")
+                               if arguments.get(key) is not None]
+                    if len(centers) > 1:
+                        raise ValueError("Choose only one map center")
+                    image, view, metrics = self.map.render(
+                        center_country=arguments.get("center_country"),
+                        province=arguments.get("province"),
+                        xy=tuple(arguments["xy"]) if "xy" in arguments else None,
+                        scale=arguments.get("scale", "region"),
+                        size=arguments.get("size", "compact"),
+                        refresh=arguments.get("refresh", False),
+                        **{key: arguments[key] for key in ("refresh_scope", "layers", "previous_view_id", "war_id")
+                           if key in arguments},
+                    )
+                    if not isinstance(view, dict) or (
+                            not hasattr(image, "save")
+                            and not (image is None and view.get("unchanged_from"))):
+                        raise ValueError("LIVE_MAP_RESULT_INVALID")
+                    summary = {key: view[key] for key in
+                               ("date", "observer", "size", "source_rect", "snapshot_id", "focus",
+                                "military", "unchanged_from")
+                               if key in view}
+                    payload = {"view_id": view.get("view_id"), "view": summary, "metrics": metrics}
+                    content = []
+                    if image is not None:
+                        stream = BytesIO()
+                        image.save(stream, format="PNG")
+                        image_b64 = base64.b64encode(stream.getvalue()).decode("ascii")
+                        content.append({"type": "image", "data": image_b64, "mimeType": "image/png"})
+                    content.append({"type": "text", "text": json.dumps(
+                        payload, ensure_ascii=False, separators=(",", ":"))})
+                    return {"_mcp_content": content, **payload}
+                return self.map.inspect(arguments["view_id"], arguments["x"], arguments["y"])
+            except InformationError:
+                raise
+            except (OSError, RuntimeError) as error:
+                raise InformationError("source_unavailable", str(error)) from error
+            except ValueError as error:
+                if error.__class__.__name__ == "MapLiveCaptureError":
+                    raise InformationError("source_unavailable", str(error)) from error
+                raise InformationError("invalid_parameters", str(error)) from error
     def _mark_diplomacy_execution_unavailable(self, name: str, result: dict) -> None:
         code, message = self.diplomacy_execution_error
         if name == "inspect_diplomatic_action":

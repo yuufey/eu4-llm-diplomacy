@@ -774,7 +774,7 @@ def test_unknown_income_page_permission_does_not_poison_independent_debt_page(tm
         page_permission={"status": "unknown", "reason": "GATE_UNREADABLE"})
 
 
-def test_country_view_denial_or_unverified_nonplayer_role_never_exports_economy_values(tmp_path, monkeypatch):
+def test_country_view_denial_hides_values_and_human_observer_keeps_view(tmp_path, monkeypatch):
     source, base, _module, _calls = setup(tmp_path, monkeypatch, view_admitted=False)
     result = _public_read(source, base, ["income", "debt"])
     assert all(result["fields"][name]["status"] == "invisible" for name in ("income", "debt"))
@@ -787,16 +787,10 @@ def test_country_view_denial_or_unverified_nonplayer_role_never_exports_economy_
         "country_view": {"status": "known", "admitted": False}}
     source2, base2, _module2, _calls2 = setup(tmp_path, monkeypatch, role_verified=False)
     fields = _public_read(source2, base2, ["income", "debt"])["fields"]
-    assert all(fields[name]["status"] == "unknown" for name in ("income", "debt"))
-    assert all("value" not in fields[name] for name in ("income", "debt"))
-    unknown_view = {"status": "unknown", "reason": "COUNTRY_VIEW_ADMISSION_UNKNOWN"}
+    assert all(fields[name]["status"] == "known" for name in ("income", "debt"))
+    visible_view = {"status": "known", "admitted": True}
     _assert_visibility(fields["income"], page=permission_memory.INCOME_PAGE,
-        country_view=unknown_view,
-        page_permission={"status": "unknown",
-                         "reason": "NOT_EVALUATED_COUNTRY_VIEW_NOT_ADMITTED"})
-    _assert_debt_visibility(fields["debt"], country_view=unknown_view,
-        total_permission={"status": "unknown", "reason": "COUNTRY_VIEW_ADMISSION_UNKNOWN"},
-        page_permission={"status": "unknown", "reason": "COUNTRY_VIEW_ADMISSION_UNKNOWN"})
+        country_view=visible_view, page_permission={"status": "known", "admitted": True})
 
 
 def test_all_implemented_fields_have_only_sanitized_visibility_metadata(tmp_path, monkeypatch):
@@ -1042,16 +1036,16 @@ def test_reparations_pair_direction_and_public_calendar_are_sanitized(tmp_path, 
         assert private not in rendered
 
 
-def test_country_view_and_fra_ai_gate_suppress_both_reparations_components(tmp_path, monkeypatch):
+def test_country_view_gates_reparations_for_human_and_ai_observers(tmp_path, monkeypatch):
     source, base, _module, _calls = setup(tmp_path, monkeypatch, view_admitted=False)
     denied = _public_read(source, base, ["reparations"])["fields"]["reparations"]
     assert denied["status"] == "invisible" and "value" not in denied
     assert "observer_involved_contracts" not in repr(denied)
 
     source2, base2, _module2, _calls2 = setup(tmp_path, monkeypatch, role_verified=False)
-    unknown = _public_read(source2, base2, ["reparations"])["fields"]["reparations"]
-    assert unknown["status"] == "unknown" and "value" not in unknown
-    assert "observer_involved_contracts" not in repr(unknown)
+    visible = _public_read(source2, base2, ["reparations"])["fields"]["reparations"]
+    assert visible["status"] == "known"
+    assert "observer_involved_contracts" in visible["value"]
 
 
 def test_no_available_reparations_component_has_safe_unknown_without_value(tmp_path, monkeypatch):

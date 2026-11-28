@@ -20,6 +20,7 @@ from . import foreign_manpower_memory as _manpower
 from . import foreign_military_visibility_memory as _visibility
 from . import foreign_technology_capture as _owner
 from . import mission_memory as _mm
+from . import province_state_capture as _province_state
 
 ROOT = Path(__file__).resolve().parents[2]
 PROFILE_FILE = Path(__file__).with_name("profiles") / "foreign-manpower-memory-1374-sampling-r1.json"
@@ -56,6 +57,10 @@ def _load_profile() -> dict[str, Any]:
             or profile.get("executable", {}).get("sha256") != EXE_SHA256):
         raise ValueError("FOREIGN_MANPOWER_PROFILE_BUILD")
     for item in profile.get("source_evidence", []) + profile.get("layout_dependencies", []):
+        if (item["path"] in {"bridge/information/province_state_memory.py",
+                            "bridge/information/foreign_technology_capture.py"}
+                and _province_state._matches_reviewed_layout(item)):
+            continue
         path = (ROOT / item["path"]).resolve()
         path.relative_to(ROOT)
         if path.stat().st_size != item["bytes"] or _sha(path) != item["sha256"]:
@@ -135,12 +140,6 @@ def _read_backend(reader: Any, module_base: int, country: str, observer: str) ->
         # never synthesize or rescan a country binding here.
         scan_for_target[target] = full_scan
         gate = _owner._bound_admission(read, base, full_scan, observer, target)
-        role = gate.get("observer_nonplayer_role") if isinstance(gate, Mapping) else None
-        if not isinstance(role, Mapping) or role.get("verified") is not True:
-            rejected = deepcopy(dict(gate)) if isinstance(gate, Mapping) else {}
-            rejected.update({"status": "unknown", "admitted": None,
-                             "reason": "OBSERVER_NONPLAYER_ROLE_UNVERIFIED"})
-            return rejected
         return gate
 
     def read_fields(limiter, base, target_binding, fields):

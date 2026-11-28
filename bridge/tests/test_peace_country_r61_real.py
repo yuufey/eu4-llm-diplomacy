@@ -5,11 +5,8 @@ import json
 from pathlib import Path
 import unittest
 
-from bridge.diplomacy import (
-    COUNTRY_SELECTION_KEYS,
-    DiplomacyTools,
-    ObserverSession,
-)
+from bridge.diplomacy import COUNTRY_SELECTION_KEYS
+from bridge.tests.legacy_france_adapter import FixedFranceDiplomacyTools as DiplomacyTools, FixedFranceObserverSession as ObserverSession
 from bridge.native_text import EU4_ESCAPE_CODEC
 
 

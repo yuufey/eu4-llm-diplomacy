@@ -1367,12 +1367,8 @@ def project(item: Any, target: str, requested: list[str] | tuple[str, ...], *,
             result[name] = _project_subsidies(item, target, view, observer)
             continue
         if name == "debt":
-            if observer == "FRA":
-                result[name] = _debt_projection_module(item).project(
-                    item, target, view, scope_record=debt_scope)
-            else:
-                from . import foreign_debt_projection_v34
-                result[name] = foreign_debt_projection_v34.project(item, target, view, observer=observer)
+            result[name] = _debt_projection_module(item).project(
+                item, target, view, scope_record=debt_scope, observer=observer)
             continue
         permission = _page_permission(item, page)
         page_public = _page_permission_public(permission)

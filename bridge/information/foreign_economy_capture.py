@@ -72,6 +72,9 @@ def _load_profile() -> dict[str, Any]:
         "bridge/information/observer_reparations_memory.py": (22469, "47d0350ab3aa3970512312ed8b2c647600e4441913e60de3ff941f5b699f6aa3"),
         "bridge/information/bilateral_subsidies_memory.py": (28799, "6ab7a540b93c05f9d05c15181ab237966e1d7f146a6d7349065b3151b69bc758"),
         "bridge/information/observer_subsidies_memory.py": (21864, "a93e35daa32ba437dea525e9e5473c37a10b964721a5800fd618d9cfd0ee282b"),
+        "bridge/information/target_debt_principal_memory.py": (26892, "b526ebd1e018f2c704993e1b38923e38c4b10b4714bc401d0f27f76864da71f5"),
+        "bridge/information/foreign_debt_disclosure.py": (40294, "4edfbbbd1ab8ddb755bac91ed11d5a5a01ca330481b9c15be2f1658a51b6b2cb"),
+        "bridge/information/foreign_debt_projection.py": (20332, "dd26b78c07e1e24918a441aade334842c9777e137a7a0ff35197e387abbe7c43"),
     }
     for item in profile.get("source_evidence", []) + profile.get("layout_dependencies", []):
         path = (ROOT / item["path"]).resolve()
@@ -103,10 +106,6 @@ def _read_backend(reader: Any, base: int, country: str, profile: Mapping[str, An
     def admission(read, module_base, scan, observer, target):
         scans[target] = scan
         gate = _owner._bound_admission(read, module_base, scan, observer, target)
-        role = gate.get("observer_nonplayer_role") if isinstance(gate, Mapping) else None
-        if not isinstance(role, Mapping) or role.get("verified") is not True:
-            gate = deepcopy(dict(gate)) if isinstance(gate, Mapping) else {}
-            gate.update(status="unknown", admitted=None, reason="OBSERVER_NONPLAYER_ROLE_UNVERIFIED")
         return gate
 
     def fields(read, module_base, target_binding, requested):

@@ -20,7 +20,7 @@ static bool control_ready() {
         || !read(server,vtable) || !read(vtable+0x100,get_pause)
         || get_pause<base+0x1000 || get_pause>=base+0x1c00000) return false;
     // This is the same accessor used by gamespeed before IsPaused.
-    // During load it can return null even after POR's world has appeared.
+    // During load it can return null even after the world has appeared.
     uintptr_t pause=reinterpret_cast<uintptr_t (*)(void*)>(get_pause)(reinterpret_cast<void*>(server));
     unsigned char paused=0;
     return read(pause+0x48,paused) && pause>=0x10000;
@@ -160,7 +160,7 @@ static bool native_control_is_canonical_player(ULONGLONG player_ref) {
         && read(country+0x20,actual) && actual==player_ref;
 }
 
-static const char* native_game_speed_read_world(NativeGameSpeedWorld& state, bool observer_only=true) {
+static const char* native_game_speed_read_world(NativeGameSpeedWorld& state) {
     if (frame_count<120 || thread_changed || !frame_thread || frame_thread!=GetCurrentThreadId())
         return "frame_not_ready";
     uintptr_t vtable=0,get_pause=0,manager_server=0;
@@ -190,9 +190,7 @@ static const char* native_game_speed_read_world(NativeGameSpeedWorld& state, boo
     // prove offline or strict single-player origin. With server+19f1 == 0, the
     // verified pause read uses the manual flag and bounded pause-token vector.
     state.paused=manual_pause!=0 || pauses_begin!=pauses_end;
-    if (observer_only && (state.player_ref&0xffffffu)!=0x30304fu) return "player_not_o00";
-    if (!native_control_is_canonical_player(state.player_ref))
-        return observer_only?"player_not_o00":"player_unavailable";
+    if (!native_control_is_canonical_player(state.player_ref)) return "player_unavailable";
     if (frontend_mode!=0 || server_mode!=1 || server_network!=0)
         return "test_context_not_observed";
     return "ok";
@@ -208,7 +206,7 @@ static bool native_game_speed_same_world(const NativeGameSpeedWorld& before,
 static void native_control_finish_campaign_load() {
     // Finish the one-shot startup pause for any canonical local player.
     NativeGameSpeedWorld state{};
-    if (strcmp(native_game_speed_read_world(state,false),"ok")!=0) return;
+    if (strcmp(native_game_speed_read_world(state),"ok")!=0) return;
     if (control_load_wait_frames) {
         --control_load_wait_frames;
         return;
@@ -427,7 +425,7 @@ static void automated_control_tick() {
     if (autosave) {
 #ifdef BRIDGE_NATIVE_COUNTRY_CONTROL
         NativeGameSpeedWorld state{};
-        if (control_target || strcmp(native_game_speed_read_world(state,false),"ok")!=0 || !state.paused) {
+        if (control_target || strcmp(native_game_speed_read_world(state),"ok")!=0 || !state.paused) {
             line("{\"event\":\"control_console_result\",\"command\":\"autosave\",\"success\":false}\n");
             return;
         }

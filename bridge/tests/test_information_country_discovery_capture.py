@@ -175,12 +175,12 @@ def test_turkish_observer_samples_native_exists_and_knows_country(profile):
     assert not capture.validate_capture(report, dict(context, observer='FRA'), CREATION)
 
 
-def test_failed_nonplayer_role_stops_before_existence_or_knowledge_reads(profile):
+def test_human_count_allows_bound_country_discovery(profile):
     image, _bindings = make_image()
     image.put_i32(WORLD + 0xA60, 2)
-    report, _context, reader = _observe(profile, image=image)
+    report, context, reader = _observe(profile, image=image)
 
-    assert report['observation']['stable'] is False
-    assert _raw_discovery(report)['status'] == 'unknown'
-    assert not any(row['label'].startswith(('country_existence.', 'country_knowledge.'))
-                   for row in reader.read_log)
+    assert report['observation']['stable'] is True
+    assert capture.validate_capture(report, context, CREATION)
+    assert _raw_discovery(report)['status'] == 'known'
+    assert any(row['label'].startswith('country_knowledge.') for row in reader.read_log)

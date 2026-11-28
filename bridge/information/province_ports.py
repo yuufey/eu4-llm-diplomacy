@@ -68,7 +68,6 @@ def _positive_admission(value: Any, observer: str) -> bool:
         and value["admitted"] is True
         and isinstance(role, Mapping)
         and role.get("observer") == observer
-        and role.get("verified") is True
     )
 
 

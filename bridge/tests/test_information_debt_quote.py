@@ -4,7 +4,7 @@ import json
 from unittest.mock import Mock
 
 from bridge.debt_quote_query import BASIS, QUERY_CAPABILITY
-from bridge.diplomacy import DiplomacyTools
+from bridge.tests.legacy_france_adapter import FixedFranceDiplomacyTools as DiplomacyTools
 from bridge.information import InformationService
 from bridge.information.sources import DiplomacySource
 

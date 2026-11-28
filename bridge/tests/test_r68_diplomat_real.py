@@ -9,7 +9,7 @@ import threading
 import time
 import unittest
 
-from bridge.diplomacy import DiplomacyTools, ObserverSession
+from bridge.tests.legacy_france_adapter import FixedFranceDiplomacyTools as DiplomacyTools, FixedFranceObserverSession as ObserverSession
 from bridge.diplomacy_journal import DurableJournal
 from bridge.diplomat_availability import (
     apply_diplomat_legality,

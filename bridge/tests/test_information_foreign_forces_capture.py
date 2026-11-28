@@ -320,15 +320,14 @@ def test_unknown_stats_permission_skips_force_resource_reads(monkeypatch, pinned
                    for row in fixture["source"].read_log)
 
 
-def test_fra_role_failure_skips_permission_and_force_reads(pinned_profile):
-    report, _context, _creation, fixture = _make_report(pinned_profile, human_fra=True)
+def test_human_observer_still_uses_force_visibility_permission(pinned_profile):
+    report, context, creation, fixture = _make_report(pinned_profile, human_fra=True)
     target = _target(report)
-    assert report["observation"]["stable"] is False
+    assert report["observation"]["stable"] is True
+    assert capture.validate_capture(report, context, creation, "ENG")
     assert all(target["admission_by_pass"][phase]["observer_nonplayer_role"]["verified"] is False
                for phase in ("pass1", "pass2"))
-    assert not any(row["label"].startswith("force_statistics.")
-                   or row["label"].startswith("settings.")
-                   for row in fixture["source"].read_log)
+    assert any(row["label"].startswith("force_statistics.") for row in fixture["source"].read_log)
 
 
 def test_army_strength_change_does_not_revoke_stable_navy_or_visibility(pinned_profile):

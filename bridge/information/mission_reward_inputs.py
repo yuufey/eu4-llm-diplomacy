@@ -69,7 +69,6 @@ def _snapshot(reader, base, province_id, observer):
         gate = target.get('admission_by_pass', {}).get(phase, {})
         discovery = target.get('discovery_by_pass', {}).get(phase, {})
         if (gate.get('admitted') is not True or gate.get('status') != 'known'
-                or gate.get('observer_nonplayer_role', {}).get('verified') is not True
                 or discovery.get('status') != 'known' or discovery.get('value') is not True):
             return {'core': core, 'state': state, 'checks': checks, 'subject_reads': []}
     bindings = target.get('bindings_by_pass', {})

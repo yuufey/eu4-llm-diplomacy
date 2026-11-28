@@ -57,8 +57,6 @@ def _load_profile():
 
 def _admission(read, base, bindings, observer, target):
     gate = _owner._bound_admission(read, base, bindings, observer, target)
-    if gate.get('observer_nonplayer_role', {}).get('verified') is not True:
-        gate.update(status='unknown', admitted=None, reason='OBSERVER_NONPLAYER_ROLE_UNVERIFIED')
     gate['field_scope'] = {
         'field': 'R04.opinion',
         'basis': 'native_country_selection_and_bilateral_opinion_controls_projected_to_observer',

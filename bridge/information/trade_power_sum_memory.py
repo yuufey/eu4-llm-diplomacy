@@ -438,9 +438,6 @@ def read_fields(reader: Any, module_base: int, trade_income_record: Any,
         })
         if not stable:
             raise _Unknown("anchors_changed")
-        if human_count != 1 or controller_type != 0:
-            raise _Unknown("observer_role_mismatch")
-
         private["budget"] = {
             "calls": trace.calls, "bytes_requested": trace.bytes_requested,
             "max_calls": MAX_READ_CALLS, "max_bytes": MAX_TOTAL_READ,
@@ -451,7 +448,7 @@ def read_fields(reader: Any, module_base: int, trade_income_record: Any,
             "stable": True,
             "country_slot": country_slot,
             "canonical_observer_verified": True,
-            "observer_nonplayer_verified": True,
+            "observer_nonplayer_verified": human_count == 1 and controller_type == 0,
             "membership": membership,
             "raw_inputs": {"reads": trace.reads, **private},
         }

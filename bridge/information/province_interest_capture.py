@@ -98,7 +98,6 @@ def project_fields(report):
         gate = target['admission_by_pass'][phase]
         discovery = target['discovery_by_pass'][phase]
         if (gate.get('status') != 'known' or gate.get('admitted') is not True
-                or gate.get('observer_nonplayer_role', {}).get('verified') is not True
                 or discovery.get('status') != 'known' or discovery.get('value') is not True):
             raise ValueError('PROVINCE_INTEREST_PUBLICATION_GATE')
     output = {}

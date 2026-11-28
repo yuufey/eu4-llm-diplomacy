@@ -241,14 +241,14 @@ def test_shared_binding_change_does_not_restore_a_leaf_invisibility(pinned_profi
     assert not capture.validate_capture(report, context, creation, "ENG")
 
 
-def test_role_failure_skips_both_private_field_readers(pinned_profile):
-    report, _context, _creation, fixture = _make_report(pinned_profile, human_fra=True)
-    assert report["observation"]["stable"] is False
+def test_human_observer_still_uses_manpower_visibility_permission(pinned_profile):
+    report, context, creation, fixture = _make_report(pinned_profile, human_fra=True)
+    assert report["observation"]["stable"] is True
+    assert capture.validate_capture(report, context, creation, "ENG")
     target = report["observation"]["backend"]["targets"][0]
     assert all(target["admission_by_pass"][phase]["observer_nonplayer_role"]["verified"] is False
                for phase in ("pass1", "pass2"))
-    assert not any("settings.public_options_primary" == row["label"]
-                   or "foreign_manpower." in row["label"] for row in fixture["source"].read_log)
+    assert any("foreign_manpower." in row["label"] for row in fixture["source"].read_log)
 
 
 def test_manpower_leaf_failure_is_field_local_and_replays(pinned_profile):

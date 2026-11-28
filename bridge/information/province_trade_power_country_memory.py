@@ -81,8 +81,6 @@ def _admit(limiter, base, scan, binding):
     selected = dict(scan)
     selected['requested'] = {**requested, binding['tag']: binding}
     gate = _owner._bound_admission(limiter.read, base, selected, observer, binding['tag'])
-    if gate.get('observer_nonplayer_role', {}).get('verified') is not True:
-        raise _ObserverFailure('OBSERVER_ROLE_NOT_VERIFIED')
     return gate
 
 
@@ -207,7 +205,6 @@ def read_two_pass(reader, base, province_id, *, observer='FRA'):
     # never perform the extension in that case.
     anchors = result['pass_evidence']
     admitted = all(_allowed(anchors[p]['admission'])
-                   and anchors[p]['admission'].get('observer_nonplayer_role', {}).get('verified') is True
                    and anchors[p]['discovery'].get('status') == 'known'
                    and anchors[p]['discovery'].get('value') is True for p in ('pass1', 'pass2'))
     if not admitted:

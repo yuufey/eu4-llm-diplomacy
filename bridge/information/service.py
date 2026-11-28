@@ -103,6 +103,9 @@ class InformationService:
 
     def close(self):
         # Wait for source reads without holding the configuration/SQLite lock.
+        worker = getattr(self, "map_export_worker", None)
+        if worker is not None:
+            worker.close()
         with self.collection_lock.acquire():
             with self.lock:
                 if self._closed:
@@ -285,7 +288,8 @@ class InformationService:
             if topic is None:
                 raise InformationError("unknown_topic", str(raw["topic"]))
             if topic.get("status") != "available":
-                raise InformationError("unsupported_topic", raw["topic"])
+                guidance = topic.get("query_guidance", {}).get("message")
+                raise InformationError("unsupported_topic", guidance or raw["topic"])
             obj = raw["object"]
             if not isinstance(obj, dict) or obj.get("type") not in topic["object_types"]:
                 raise InformationError("invalid_object", "Object type not declared by topic")

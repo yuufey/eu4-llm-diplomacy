@@ -107,7 +107,7 @@ def test_reads_only_bound_emperor_elector_references_and_terminates_chain():
     assert result["emperor"]["tag"] == "HAB"
     assert [row["tag"] for row in result["electors"]] == ["BOH", "BRA"]
     assert result["elector_container"]["count"] == 2
-    assert result["observer_nonplayer"]["verified"] is True
+    assert result["observer_binding"]["verified"] is True
     assert result["physical_client"]["tag"] == "POR"
     assert result["atomic_snapshot"] is False
     assert result["publication_admitted"] is False
@@ -141,16 +141,22 @@ def test_date_and_physical_player_are_bound_dynamically():
     [
         (WORLD, _u64(BASE + memory.WORLD_VTABLE_RVA + 8), "WORLD_VTABLE_MISMATCH"),
         (WORLD + memory.HRE_OFFSET, _u64(BASE + memory.HRE_VTABLE_RVA + 8), "HRE_VTABLE_MISMATCH"),
-        (WORLD + 0xA60, _u32(2, signed=True), "OBSERVER_NOT_NONPLAYER"),
-        (CONTROLLERS + 4, _u32(3, signed=True), "OBSERVER_NOT_NONPLAYER"),
-        (WORLD + 0x1E60, _u64(_ref(1, "FRA")), "OBSERVER_IS_PHYSICAL_PLAYER"),
     ],
 )
-def test_rejects_wrong_vtables_or_nonplayer_role(address, raw, reason):
+def test_rejects_wrong_vtables(address, raw, reason):
     image = make_image()
     image.put(address, raw)
     with pytest.raises(ValueError, match=reason):
         _read(image)
+
+
+def test_physical_player_observer_uses_the_same_canonical_binding():
+    image = make_image()
+    image.put(WORLD + 0x1E60, _u64(_ref(1, "FRA")))
+    image.put(CONTROLLERS + 4, _u32(1, signed=True))
+    result = _read(image)
+    assert result['physical_client']['tag'] == result['observer'] == 'FRA'
+    assert result['observer_binding']['verified'] is True
 
 
 def test_rejects_invalid_fullref_and_country_table_mismatch():

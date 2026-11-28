@@ -27,7 +27,7 @@ _REVIEWED_DEPENDENCIES = {
     'bridge/information/country_resources_memory.py': (
         69202, '4d600f758b682e82a4f7e26c0230dfc17e3b90ac71076a0191da4f97f9bdb3e3'),
     'bridge/information/trade_power_sum_memory.py': (
-        23044, 'dd897541d8c8dbb52ca2a2558a3ceb73f820a66f329e5f99c07ece77c0f237ad'),
+        22974, '9863c034986734bd0db1d8690c7214e95ffc2dd7e9486b291a71bd17eed3e0b0'),
     'bridge/information/trade_income_memory.py': (
         49815, '94620284bf2c35efde5499763972ee69bac62a16bfad3c7b179181e8ff818f5e'),
     'bridge/information/trade_power_memory.py': (

@@ -736,6 +736,20 @@ LAND_PROMISE_FEATURE = {
 }
 
 
+def _has_unique_append_ack(text: str, legacy: str) -> bool:
+    """Accept the same capability text with the checked buffer append."""
+    opening = (
+        "\n    {\n        char* end=strrchr(message,'}');\n"
+        "        if (end) snprintf(end,sizeof(message)-static_cast<size_t>(end-message),\n"
+    )
+    closing = ');\n    }\n#endif'
+    if opening not in legacy or not legacy.endswith(closing):
+        return text.count(legacy) == 1
+    checked = legacy.replace(opening, "\n    if (!append_ack_fields(\n", 1)
+    checked = checked[:-len(closing)] + ')) return 32;\n#endif'
+    return text.count(legacy) + text.count(checked) == 1
+
+
 def _has_rival_record_features(manifest: dict) -> bool:
     records = manifest.get("sources", [])
     return (RIVAL_RECORD_CAPABILITY in manifest
@@ -1056,7 +1070,7 @@ def _validate_expiry_manifest(manifest: dict, directory: Path) -> None:
                 or type(manifest.get(feature["wire"])) is not int or manifest[feature["wire"]] != 1
                 or manifest.get(feature["scope_key"]) != feature["scope"]
                 or _compiler_define_values(arguments, feature["define"]) != ["1"]
-                or text.count(feature["ack"]) != 1
+                or not _has_unique_append_ack(text, feature["ack"])
                 or text.count('\\"' + feature["capability"] + '\\":true') != 1):
             raise SystemExit("BUILD_MANIFEST_MISMATCH")
         suffixes = feature.get("suffixes", (".h", "-entry-plan.h", "-native-guards.h", "-observer.inc"))

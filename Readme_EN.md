@@ -2,117 +2,109 @@
 
 # EU4 LLM Diplomacy
 
-This is an experimental project connecting **Europa Universalis IV** with large language models (LLMs).
+This project brings Model Context Protocol (MCP) support to **Europa Universalis IV**. Human players keep control of their own countries while sharing a campaign with several large language models (LLMs) and interacting with them through diplomacy.
 
-The long-term goal of this project is to let an LLM take over the diplomatic decision-making of selected AI-controlled countries, while continuing to leave military, economic, and other game systems under the control of Europa Universalis IV's native AI.
+The long-term goal is for LLMs to handle diplomacy and other strategic decisions for selected AI-controlled countries where the choices matter and the micromanagement is light. Europa Universalis IV's native AI continues to run the remaining game systems.
 
-Players will be able to negotiate directly with LLM-controlled countries through text: promise benefits, issue threats, discuss alliances, negotiate peace, deceive opponents, and betray previous commitments. In short, the goal is to create a richer and more realistic diplomatic experience.
+The idea is to negotiate directly with LLM-controlled countries in writing. Promise concessions, issue threats, discuss alliances, negotiate peace, deceive your rivals, or break your word. We want diplomacy to feel richer and more like the real thing. We also hope LLM-controlled countries will be better at planning ahead. Even as a spectator, it should be fun to pit different models against one another in the same campaign.
 
-We have confirmed that the diplomatic interfaces exposed by the game itself are very limited. In order to expose these operations to an external LLM, we have chosen a development path based on reverse engineering, DLL injection, and runtime hooking. This project is exploring how to achieve that goal, and our current experiments have given us considerable confidence in the feasibility of this approach.
+The game exposes very few diplomatic actions to external tools, so we use reverse engineering, DLL injection, and runtime hooking to make those actions available to LLMs.
 
-## Current Status
+Most of the technical work is complete, and the project has moved into playtesting and refinement. Clone this development repository to use the separate [playtesting repository](https://github.com/yuufey/eu4-llm-diplomacy-tests).
 
-The EU4 1.37.4 backend now exposes information queries, reports, subscriptions and diplomatic actions through one MCP/JSONL service. Operators assign each LLM a caller identity and a country; the service and v65 native observer enforce diplomatic decision permissions. See the [Chinese feature guide and API examples](docs/共用开发/信息导出与统一操控接口更新说明.md) and [setup guide](docs/共用开发/统一游戏服务使用说明.md). Information visibility, event coverage and a persistent LLM decision loop retain the limitations described there; dated entries below describe their historical versions.
+## Feature Overview
 
-This project is currently in **early experimental development**.
+### Game Information
 
-2026-10-16: [EU4 1.37.5 research checkpoint](docs/历史归档/research-20261016-en.md) is now available with 120 TAG action bindings, direct runtime observers and a 60-record war/peace evidence index. The original batch contains 41 dispatches, 77 refusals and 2 unknowns; historical selected effects cover 48 actions, with 44 persistence records. Full effect validation, a callable 1.37.5 war/peace executor and LLM integration remain incomplete. Research is paused; this is a source snapshot. See the [tool catalog](docs/外交操作/数据/runtime-capability-map-1375-v8.json) and [Chinese evidence report](docs/历史归档/research-20261016.md).
+A model can ask how much manpower its country has left, when a truce with a neighbor expires, or which mission requirements still need to be met. It can combine recurring queries into scheduled reports or subscribe to supported events such as battle results and truce expirations. Information about other countries depends on what the observing country can see and what the interface can read.
 
-2026-10-17: Upstream 1.37.4 development is integrated alongside the frozen 1.37.5 research snapshot. Both the JSON-lines tools and the existing research CLI commands are retained. See the [merge notes and offline validation limits](docs/历史归档/research-20261016/merge-20261017.md) and [upstream diplomacy guide](docs/外交操作/接口/外交系统说明.md).
+- [Countries and Domestic Affairs](docs/信息导出/接口/国家与国内/) — Treasury, monthly income and expenses, armies and navies, manpower, and governing capacity.
+- [Relations and Diplomacy](docs/信息导出/接口/关系与外交/) — Opinion in both directions, truce dates, coalitions, diplomats, and incoming diplomatic offers.
+- [Wars and Battle Reports](docs/信息导出/接口/战争与战报/) — War participants, war score, war participation, and losses from past battles.
+- [Missions](docs/信息导出/接口/任务/) — Mission tree branches, prerequisites, target provinces, and rewards.
+- [Trade and Provinces](docs/信息导出/接口/贸易与省份/) — Province ownership, cores and claims, trade node value, and each country's trade power.
+- [Game Mechanics and Religion](docs/信息导出/接口/机制与宗教/) — Rulers and succession, Holy Roman Empire electors and reforms, the Papacy, and religious schools.
 
-The following are capabilities validated on EU4 1.37.4:
+### Diplomatic Actions
 
-- Exporting part of the game state through a custom Mod;
-- Intercepting the native AI's authority to declare war and negotiate peace, while establishing an authorization path for externally initiated peace actions;
-- Executing some diplomatic actions externally: allowing an LLM-controlled country to declare war on the player or another country, and later negotiate peace while demanding monetary reparations;
+A model can check whether the game currently allows an action on behalf of a country it is authorized to control. Where applicable, it can see whether the other country is likely to accept and which factors affect that decision. It can then submit the action and check the actual outcome.
 
-The following areas are not yet complete:
+- [Relations and Diplomacy](docs/外交操作/接口/关系与外交/) — Propose alliances, improve relations, arrange royal marriages, build spy networks, send gifts, and spend favors.
+- [War and Peace](docs/外交操作/接口/战争与战报/) — Choose a casus belli and war participants, check war score, preview the consequences of peace terms, and propose peace.
 
-- Full reverse engineering of diplomatic actions, including vassalization, royal marriages, improving relations, guarantees, spy networks, and many others, and exposing all of them through external interfaces;
-- Improving LLM access to game information and defining proper information boundaries;
-- Removing all native AI diplomatic authority;
-- A production-ready LLM interface;
-- Improving the prompts used for LLM-controlled countries, and designing diplomatic decision-making Agents, context management, long-term memory, negotiation, and strategic planning;
-- After all major technical issues are solved, substantial work will still be needed to improve actual gameplay;
-- Finally, the project still needs to become stable and compatible across game versions.
+### Maps
 
-For the current research status, experiment records, and technical validation, see `HANDOFF.md`, `PLAN.md`, and `VALIDATION.md`.
+A model can view overview, regional, and local maps from the perspective of the country it controls. The military layer can show army sizes and positions, as well as the locations, levels, and siege progress of forts belonging to countries at war. The maps simplify visual detail to make them easier for LLMs to interpret. While the game is running, the service can also export images at all three scales and province ownership data at regular in-game monthly intervals. [Map Export Guide](docs/地图功能/地图导出接口使用说明.md)
 
-## Getting and Using the Project
+### Scheduled Decisions and Game Speed
 
-1. Clone the repository, or simply give the repository URL to your Agent together with your local EU4 installation directory (the folder containing `eu4.exe`) and user-data directory (usually `C:\Users\<your username>\Documents\Paradox Interactive\Europa Universalis IV`). The Agent can then assist with environment configuration, building, and reproducing experiments.
+The test environment can generate strategic briefings for the controlled country at intervals measured in game days and deliver them to the same Codex session for further decisions. With permission to control game speed, the model can also pause the game or change its speed. [Strategic Briefing Test Record](logs/2026-11-21战略简报触发Codex回合.md) · [Unified Game Service Guide](docs/共用开发/统一游戏服务使用说明.md)
 
-2. If you prefer to do it yourself, clone the repository, complete your local setup according to the [Path Configuration](docs/共用开发/路径配置.md) guide, and then follow the [Reproduction Procedure](docs/共用开发/人工实验与日志读取流程.md).
+**The Codex desktop app cannot currently add briefings to an active session in real time. We are considering Codex CLI or another approach.**
+
+## Features Still to Build or Test
+
+- An in-game interface for chatting with an LLM. A prototype exists and has yet to be committed.
+- Multiple LLMs playing together and communicating with one another.
+- LLM input into warfare, such as choosing where to focus an offensive, adjusting aggressiveness, and influencing how readily armies group together.
+- LLM control over military spending, selection of idea groups, and technology advancement.
+- And more.
+
+## Getting Started
+
+1. Clone this repository or give its URL to your agent. Also provide the EU4 installation directory containing `eu4.exe` and the user data directory, usually `C:\Users\<your username>\Documents\Paradox Interactive\Europa Universalis IV`. The agent can help configure your environment, build the project, and reproduce experiments.
+2. To set it up yourself, clone the repository, follow the [Path Configuration Guide](docs/共用开发/路径配置.md), then work through the [Reproduction Guide](docs/共用开发/人工实验与日志读取流程.md).
 
 > [!WARNING]
-> **Early Development / Experimental Project**
->
-> This project is still under active research and development. It is not a finished or stable mod, and there is currently no officially supported public release.
->
-> The main purpose of making this repository public is open development, technical discussion, collaboration, and reproducible experimental research—in other words, recruiting contributors and collaborating, if we manage to find any. This is still far from being a playable release.
->
-> The historical release targets Europa Universalis IV 1.37.4; the newer research source targets a separately pinned 1.37.5 executable. They use different profiles and must not share DLL addresses or validation claims. The project relies on reverse engineering, DLL injection, and hooking. Compatibility with other versions is not guaranteed. Running experimental builds may cause game crashes, save corruption, or other unexpected behavior. Please use disposable test saves only, or make sure reliable backups are available.
+> The project relies on reverse-engineered runtime interfaces, DLL injection, and hooking. Compatibility with other game versions is not guaranteed. Experimental builds can crash the game, corrupt saves, or cause other unexpected behavior. Use disposable test saves or make sure you have reliable backups.
 
-## Contributing
+## Contributing and Playtesting
 
-This project is still in an early research and development stage, and developers interested in EU4 modding, reverse engineering, programming, or LLM Agents are very welcome to participate. Contributors are not expected to understand the entire project. Even if your programming experience is limited, as long as you are interested, have some spare time, and have some AI credits available (😂), you can probably still make a useful contribution.
+You can help by testing how your model plays and sharing feedback, implementing or improving a feature, or suggesting changes to the architecture, implementation, or features we have overlooked. The [playtesting repository](https://github.com/yuufey/eu4-llm-diplomacy-tests) is the recommended starting point for testing a model.
 
-Possible areas of contribution include, but are not limited to:
+If you are interested, you can do any of the following.
 
-- **Project coordination and management**: if you have experience collaborating with others on software projects, you are welcome to help coordinate the project as a whole;
-- **EU4 reverse engineering**: analyze diplomacy-related internal objects, functions, Action types, call chains, and version differences;
-- **Diplomatic interface expansion**: continue implementing alliances, royal marriages, guarantees, military access, peace terms, and other diplomatic actions;
-- **LLM Agent development**: design diplomatic decision-making Agents, context management, long-term memory, negotiation, and strategic planning;
-- **Information-boundary design**: study how to provide the LLM only with information that it could reasonably know under the game's rules, avoiding an "omniscient AI" created by reading the entire save file;
-- **Version compatibility**: study internal structural changes between different EU4 versions and develop compatibility approaches;
-- **Testing and reproduction**: reproduce experiments in different environments, validate results, and improve automated testing;
-- **Documentation**: organize reverse-engineering findings, architecture documentation, reproduction procedures, and developer documentation.
-
-Contributors are not expected to implement complete features in a single contribution. Experimental results, reverse-engineering notes for a single function, testing on different EU4 versions, or participation in technical discussions are all very welcome.
-
-If you are interested in contributing, you can:
-
-1. Leave me your contact information!
-2. Create a GitHub Issue to discuss ideas or experimental results;
-3. Participate in existing Issue discussions;
-4. Fork the repository and submit a Pull Request;
-5. Submit a small reproduction experiment or documentation improvement;
-6. ...
+1. Leave me your contact details!
+2. Open a GitHub issue to discuss an idea or an experiment result.
+3. Join a discussion in an existing issue.
+4. Fork the repository and open a pull request.
+5. Submit a small reproduction case or documentation improvement.
+6. And more.
 
 ## Disclaimer
 
-This project is an unofficial modification and research project for Europa Universalis IV.
+This is an unofficial modding and research project for Europa Universalis IV.
 
-Europa Universalis IV, Paradox Interactive, and all related trademarks, game assets, executable code, and other intellectual property are the property of Paradox Interactive AB and/or their respective rights holders.
+Europa Universalis IV, Paradox Interactive, and all related trademarks, game assets, executable code, and other intellectual property belong to Paradox Interactive AB and/or their respective rights holders.
 
-This project is not affiliated with, endorsed by, sponsored by, or otherwise associated with Paradox Interactive AB.
+This project has no affiliation with Paradox Interactive AB and has received no authorization, sponsorship, or endorsement from the company.
 
-The license used by this repository applies only to original code and documentation created by this project's contributors. It does not grant any rights to Europa Universalis IV, its executable files, game data, assets, or any other third-party intellectual property.
+The repository license applies only to original code and documentation created by the project's contributors. It grants no rights to Europa Universalis IV, its executable files, game data, game assets, or any other third-party intellectual property.
 
 ## Technical and Security Notice
 
-This project uses DLL injection, runtime hooking, and reverse-engineered internal game interfaces in order to extend Europa Universalis IV for single-player modding and research purposes.
+This project uses DLL injection, runtime hooking, and internal game interfaces identified through reverse engineering to extend Europa Universalis IV for single-player modding and research.
 
-These techniques are also used by debuggers, modding frameworks, security tools, and malicious software. As a result, antivirus or endpoint-security products may classify project binaries or the injector as suspicious.
+Debuggers, modding frameworks, security tools, and malware can all use these techniques. Antivirus or endpoint security software may therefore flag the project's binaries or injector as suspicious.
 
-Users are encouraged to build the project themselves from the source code published in this repository. Precompiled binaries should only be obtained from official Releases of this repository.
+We recommend building the project from the source code in this repository. Obtain precompiled binaries only from this repository's official releases.
 
-The native bridge is explicitly version-dependent. After an Europa Universalis IV update, internal addresses, data structures, or hook locations may become invalid and may cause game crashes, save corruption, or other unexpected behavior.
+The native bridge depends on the game version. A Europa Universalis IV update can invalidate internal addresses, data structures, or hook locations and cause game crashes, save corruption, or other unexpected behavior.
 
 ## Intended Use
 
 This project is intended only for local, single-player Europa Universalis IV modding and research.
 
-This project is not intended to:
+The project excludes the following uses.
 
-- bypass DRM or game ownership checks;
-- unlock, circumvent, or bypass paid DLC restrictions;
-- interfere with Paradox or third-party online services;
-- obtain another user's credentials or private information;
-- provide unfair advantages in multiplayer games.
+- Bypassing DRM or game ownership checks.
+- Unlocking, circumventing, or bypassing paid DLC restrictions.
+- Interfering with Paradox or third-party online services.
+- Obtaining other users' credentials or private information.
+- Gaining an unfair advantage in multiplayer games.
 
 ## License
 
-Unless otherwise stated, original source code in this repository is licensed under the MIT License.
+Unless otherwise stated, the original source code in this repository is licensed under the MIT License.
 
-Third-party components and related intellectual property remain subject to their respective licenses and terms.
+Third-party components and related intellectual property remain subject to their respective licenses and terms of use.

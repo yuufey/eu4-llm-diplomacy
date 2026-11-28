@@ -159,7 +159,9 @@ def _parse_power_sum_membership(baseline: Any) -> bool:
     for key in ("observer_occurrences", "fullref_occurrences", "slot_occurrences"):
         if type(value.get(key)) is not int or value.get(key) != 1:
             return False
-    for key in ("observer_nonplayer_verified", "canonical_observer_verified", "stable"):
+    if type(value.get("observer_nonplayer_verified")) is not bool:
+        return False
+    for key in ("canonical_observer_verified", "stable"):
         if type(value.get(key)) is not bool or value.get(key) is not True:
             return False
     return True

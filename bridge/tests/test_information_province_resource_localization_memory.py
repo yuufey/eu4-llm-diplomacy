@@ -50,6 +50,17 @@ def test_literal_value_uses_real_snapshot_lookup_and_preserves_language():
     assert reader.calls > 0
 
 
+def test_localization_uses_requested_observer_when_fra_is_absent():
+    inner, base, _offsets = localization_fixture({"paper": b"Paper"})
+    inner.qword_put(0x500000 + localization.COUNTRY_HANDLE_OFFSET,
+                    (122 << 32) | int.from_bytes(b"TUR", "little"))
+    reader = ReaderProxy(inner)
+    result = resource_localization.read_cached_name(reader, base, "paper", observer="TUR")
+    assert result["status"] == "known"
+    assert result["raw_inputs"]["snapshot"]["country_scan"]["requested_country"] == "TUR"
+    assert resource_localization.read_cached_name(reader, base, "paper", observer="FRA")["status"] == "unknown"
+
+
 def test_dynamic_template_and_empty_bytes_are_preserved_without_decoding():
     template = b"$NAME$ [Root.GetName]"
     dynamic, _reader, _base = _read({"paper": template})

@@ -11,7 +11,7 @@ from pathlib import Path
 import pytest
 
 from bridge import diplomacy as diplomacy_module
-from bridge.diplomacy import ObserverSession
+from bridge.tests.legacy_france_adapter import FixedFranceObserverSession as ObserverSession
 from bridge.tests.test_information_proposal_expiry import (
     NOW,
     SESSION,

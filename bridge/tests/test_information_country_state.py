@@ -8,7 +8,7 @@ from pathlib import Path
 
 import pytest
 
-from bridge.diplomacy import DiplomacyTools, ObserverSession
+from bridge.tests.legacy_france_adapter import FixedFranceDiplomacyTools as DiplomacyTools, FixedFranceObserverSession as ObserverSession
 from bridge.information.country_state import NativeCountryStateSource
 from bridge.information.model import InformationError
 from bridge.information.sources import DiplomacySource

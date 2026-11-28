@@ -51,11 +51,11 @@ def test_native_shortcut_can_use_index_zero_without_claiming_map_zero_semantics(
     assert result['domain_complete'] is False
 
 
-def test_native_role_failure_stops_before_any_capital_leaf():
+def test_human_count_does_not_deny_bound_observer_discovery():
     image,_=make_image();image.put_i32(WORLD+0xa60,2)
     result=memory.read_two_pass(image,BASE)
-    assert result['status']=='unknown' and result['reason']=='FRA_SELF_ADMISSION_OR_ROLE_NOT_VERIFIED'
-    assert not any(label.startswith('country_knowledge.') for _,_,label in image.reads)
+    assert result['status']=='known' and result['value']==['DEN','FRA','SWE']
+    assert all(not row['admission']['observer_nonplayer_role']['verified'] for row in result['passes'])
 
 
 def test_wrong_fullref_slot_in_an_unrequested_country_withdraws_the_whole_list():

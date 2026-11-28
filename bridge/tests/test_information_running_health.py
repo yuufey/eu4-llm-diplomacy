@@ -48,7 +48,7 @@ def test_information_source_uses_the_read_only_health_entry_point():
 
 
 @pytest.mark.parametrize('second_date', [100, 124])
-@pytest.mark.parametrize(('installed_player', 'player'), [(None, 'POR'), ('O00', 'O00'), ('O00', 'O01'), ('O00', 'SWE')])
+@pytest.mark.parametrize(('installed_player', 'player'), [(None, 'POR'), ('SWE', 'SWE'), ('O00', 'O00'), ('O00', 'O01'), ('O00', 'SWE')])
 def test_running_health_finds_the_pair_behind_a_busy_log_tail(
         tmp_path, monkeypatch, second_date, installed_player, player):
     import bridge.diplomacy as diplomacy
@@ -70,7 +70,7 @@ def test_running_health_finds_the_pair_behind_a_busy_log_tail(
     assert session.health()['status'] == ('ready' if second_date == 100 else 'unready')
     assert session.information_health()['status'] == 'ready'
     assert session.physical_player_health(allow_date_progress=True)['status'] == (
-        'ready' if player == (installed_player or 'POR') else 'unready')
+        'ready' if installed_player is not None and player == installed_player else 'unready')
     lines[2] = json.dumps({**second, 'player': 'TUR'})
     (tmp_path / 'control-probe.jsonl').write_text('\n'.join(lines) + '\n', encoding='utf-8')
     assert session.information_health()['status'] == 'unready'

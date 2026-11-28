@@ -1,4 +1,4 @@
-"""Live non-player identity for a battle-only information server."""
+"""Live observer identity for a battle-only information server."""
 from copy import deepcopy
 from pathlib import Path
 import re
@@ -21,9 +21,10 @@ def read_binding(reader, base, observer, expected_date):
         before = native._context(reader, base)
         physical_ref = int.from_bytes(bytes.fromhex(before['physical_client_reference_raw_hex']), 'little')
         physical = references._tag_from_fullref(physical_ref)
-        if physical is None or physical == observer:
-            raise ValueError('BATTLE_OBSERVER_MUST_BE_NONPLAYER')
-        bindings = references.resolve_countries(reader.read, base, [observer, physical],
+        if physical is None:
+            raise ValueError('BATTLE_PHYSICAL_REFERENCE_INVALID')
+        requested = [observer] if observer == physical else [observer, physical]
+        bindings = references.resolve_countries(reader.read, base, requested,
                                                expected_refs={physical: physical_ref})
         # The controller-array layout is shared with native._bound_admission.
         # A battle reader only needs the observer's role and canonical identity.
@@ -36,9 +37,7 @@ def read_binding(reader, base, observer, expected_date):
         kind = int.from_bytes(native._read(reader, controllers + slot * 4, 4,
                                           'battle_observer.controller_type'), 'little', signed=True)
         role = {'observer': observer, 'slot': slot, 'human_count': count,
-                'controller_type': kind, 'verified': count == 1 and kind == 0}
-        if role['verified'] is not True:
-            raise ValueError('BATTLE_OBSERVER_CONTROLLER_UNVERIFIED')
+                'controller_type': kind, 'verified': True}
         after = native._context(reader, base)
         if (without_clock(before) != without_clock(after)
                 or (active() and not dates_match(last_date, before['game_date'], after['game_date']))
@@ -138,7 +137,7 @@ class BattleObserverContextSource:
                       'reasons': [{'code': 'SESSION_HEALTH_FAILED'}]}
         context = _context_from_health(self.session, dict(health, observer=self.observer),
                                        mode='live', observer=self.observer)
-        context['observer_binding'] = 'native_nonplayer_information_scope'
+        context['observer_binding'] = 'native_information_scope'
         context['information_scope'] = 'battle_records'
         self.last_role_capture = None
         if context['status'] != 'ready':
@@ -183,7 +182,7 @@ class BattleObserverContextSource:
         fields, complete = _field_result(normalized['fields'], context, get_topic(normalized['topic']),
                                          unsupported=normalized['topic'] != 'C01')
         return _result(normalized, context, fields, complete,
-                       _source_info('ObserverSession.health_and_native_nonplayer_binding', context))
+                       _source_info('ObserverSession.health_and_native_observer_binding', context))
 
     def poll_events(self, context, cursor):
         return {'events': [], 'cursor': cursor, 'complete': True, 'gaps': []}

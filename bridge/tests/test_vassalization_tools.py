@@ -8,7 +8,7 @@ import time
 import unittest
 from unittest.mock import patch
 
-from bridge.diplomacy import DiplomacyTools, ObserverSession
+from bridge.tests.legacy_france_adapter import FixedFranceDiplomacyTools as DiplomacyTools, FixedFranceObserverSession as ObserverSession
 from bridge.diplomacy_journal import DurableJournal
 
 
@@ -38,6 +38,7 @@ class VassalizationToolsTests(unittest.TestCase):
             "creation_filetime": 2,
             "dll_sha256": "dll",
             "controlled_countries": ["FRA"],
+            "preflight_player_tag": "POR",
             "installation_returncode": 0,
         }), encoding="utf-8")
         event = {

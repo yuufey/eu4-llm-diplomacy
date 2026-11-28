@@ -15,7 +15,7 @@ FIELDS = _state.FIELDS + ('G02.culture', 'G02.religion', 'G02.autonomy',
 _RESOURCE_FIELD = 'G02.resource'
 
 
-def _resource_with_cached_name(reader, base, binding, fields):
+def _resource_with_cached_name(reader, base, binding, fields, *, observer='FRA'):
     result = _resource.read_fields(reader, base, binding, fields)
     item = result.get(_RESOURCE_FIELD)
     if not isinstance(item, Mapping) or item.get('status') != 'known':
@@ -30,7 +30,7 @@ def _resource_with_cached_name(reader, base, binding, fields):
 
     try:
         name_capture = _resource_name.read_cached_name(
-            reader, base, value['localization_key'])
+            reader, base, value['localization_key'], observer=observer)
     except Exception as exc:
         name_capture = {
             'status': 'unknown',
@@ -79,14 +79,15 @@ def _resource_with_cached_name(reader, base, binding, fields):
     return result
 
 
-def read_fields(reader, base, binding, fields):
+def read_fields(reader, base, binding, fields, *, observer='FRA'):
     result = {}
     groups = ((_state.FIELDS, _state._default_read_fields),
               (('G02.culture', 'G02.religion'), _identity.read_fields),
               (('G02.autonomy',), lambda reader,base,binding,selected:
                   _scalar.read_fields(reader.read,base,binding,selected)),
               (('G02.development',), _development.read_fields),
-              ((_RESOURCE_FIELD,), _resource_with_cached_name),
+              ((_RESOURCE_FIELD,), lambda reader,base,binding,selected:
+                  _resource_with_cached_name(reader,base,binding,selected,observer=observer)),
               (('G02.center_of_trade',), _cot.read_fields))
     for supported, read in groups:
         selected = tuple(field for field in fields if field in supported)

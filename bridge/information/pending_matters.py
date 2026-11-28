@@ -196,8 +196,7 @@ class JournalPendingMattersSource:
                     or identity.get('installation_session_id') != context.get('session_id')
                     or not self._native_dates_match(report, context)
                     or not isinstance(report.get('player_country'), str)
-                    or re.fullmatch(r'[A-Z0-9]{3}', report['player_country']) is None
-                    or report['player_country'] == observer):
+                    or re.fullmatch(r'[A-Z0-9]{3}', report['player_country']) is None):
                 return dict(unknown, reason='NATIVE_PENDING_REPORT_BINDING_UNVERIFIED'), proof
             value = native.validate_value(report.get('value'), observer=observer)
             proof.update(binding_verified=True, observed_game_date=report['game_date'],

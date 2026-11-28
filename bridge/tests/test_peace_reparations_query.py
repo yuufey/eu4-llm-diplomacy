@@ -8,7 +8,7 @@ import tempfile
 import unittest
 from unittest.mock import patch
 
-from bridge.diplomacy import ObserverSession
+from bridge.tests.legacy_france_adapter import FixedFranceObserverSession as ObserverSession
 from bridge.peace_execution import normalize_peace_execution_parameters
 
 

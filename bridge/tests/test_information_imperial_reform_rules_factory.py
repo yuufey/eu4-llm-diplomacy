@@ -100,7 +100,7 @@ def test_flag_constructs_only_static_reform_owner_and_preserves_full_catalog(tmp
         assert rules.index is index
 
         topics = service.source.catalog()
-        assert len(topics) == 74
+        assert len(topics) == 75
         assert {topic['topic_id']: set(topic['fields']) for topic in topics} == expected_fields
         s01 = next(topic for topic in topics if topic["topic_id"] == "S01")
         assert {name: s01["fields"][name]["coverage"]

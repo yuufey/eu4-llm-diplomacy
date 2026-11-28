@@ -1,6 +1,7 @@
 """Own treasury, manpower, and maximum manpower/sailor caches."""
 from pathlib import Path
 from copy import deepcopy
+from collections.abc import Mapping
 import hashlib
 import json
 import re
@@ -133,6 +134,12 @@ def read(source, query, context):
                 or not _time.dates_match(context.get('game_date'), after.get('game_date'))):
             return unavailable('MAX_MANPOWER_CACHE_CONTEXT_CHANGED')
         target = report['observation']['backend']['targets'][0]
+        admissions = target.get('admission_by_pass', {})
+        nonplayer_verified = all(
+            isinstance(admissions.get(phase), Mapping)
+            and admissions[phase].get('observer_nonplayer_role', {}).get('verified') is True
+            for phase in ('pass1', 'pass2')
+        )
         selected = {field: deepcopy(target['fields'][query['topic'] + '.' + field]) for field in query['fields']}
         complete = all(value.get('status') == 'known' for value in selected.values())
         if not complete and not max_requested:
@@ -149,6 +156,7 @@ def read(source, query, context):
             'OwnResourceCaches', context, complete=complete,
             provenance={'basis': basis if max_requested else 'existing_native_country_resource_caches',
                         'profile_sha256': PROFILE_SHA256,
-                        'native_function_invoked': False, 'observer_nonplayer_role_verified': True}))
+                        'native_function_invoked': False,
+                        'observer_nonplayer_role_verified': nonplayer_verified}))
     except Exception:
         return unavailable('MAX_MANPOWER_CACHE_CAPTURE_FAILED')

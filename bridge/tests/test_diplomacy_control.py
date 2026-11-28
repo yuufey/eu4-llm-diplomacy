@@ -1,6 +1,8 @@
 """Country assignments govern decision roles before an execution is reached."""
 from dataclasses import FrozenInstanceError
+import json
 from types import SimpleNamespace
+from unittest.mock import Mock
 
 import pytest
 
@@ -52,6 +54,70 @@ def test_results_require_the_assigned_country_and_recorded_principal():
     record.payload["actor"] = "SAV"
     with pytest.raises(DiplomacyPermissionError):
         control.authorize_record(record)
+
+
+def test_direct_use_requires_explicit_control_not_physical_player():
+    from bridge.diplomacy import DiplomacyTools
+
+    session = SimpleNamespace(record={"preflight_player_tag": "FRA"})
+    journal = Mock()
+    api = DiplomacyTools(journal, session)
+    assert api._controlled_country() is None
+    with pytest.raises(DiplomacyPermissionError, match="DIPLOMACY_CONTROL_CONTEXT_MISSING"):
+        api.inspect_diplomatic_action("offer_alliance", "FRA", "SAV")
+    with pytest.raises(DiplomacyPermissionError, match="DIPLOMACY_CONTROL_CONTEXT_MISSING"):
+        api.execute_diplomatic_action("direct-1", "offer_alliance", "FRA", "SAV")
+    journal.register.assert_not_called()
+    session.controlled_country = "ENG"
+    assert api._authorize("offer_alliance", "ENG", "FRA") == "ENG"
+    assert api._authorize("offer_alliance", "FRA", "ENG", "accept") == "ENG"
+    api._inspect_diplomatic_action = Mock(return_value={"phase": "initiate"})
+    assert api.inspect_diplomatic_action("offer_alliance", "ENG", "FRA")["phase"] == "initiate"
+    api._inspect_diplomatic_action.assert_called_once()
+    with pytest.raises(DiplomacyPermissionError, match="DIPLOMACY_COUNTRY_NOT_AUTHORIZED"):
+        api.execute_diplomatic_action("direct-2", "offer_alliance", "FRA", "ENG")
+    journal.register.assert_not_called()
+
+    record = SimpleNamespace(payload={"action_id": "offer_alliance", "actor": "ENG",
+                                      "recipient": "FRA", "phase": "initiate"},
+                             principal=None, decision_country="ENG")
+    api._authorize_record(record)
+    record.principal = "another-agent"
+    with pytest.raises(DiplomacyPermissionError, match="DIPLOMACY_REQUEST_NOT_OWNED"):
+        api._authorize_record(record)
+    record.principal = None
+    record.decision_country = "FRA"
+    with pytest.raises(DiplomacyPermissionError, match="DIPLOMACY_REQUEST_COUNTRY_MISMATCH"):
+        api._authorize_record(record)
+
+    api.control = DiplomacyControl("reader", None)
+    assert api._controlled_country() is None
+    with pytest.raises(DiplomacyPermissionError):
+        api.execute_diplomatic_action("direct-3", "offer_alliance", "ENG", "FRA")
+    journal.register.assert_not_called()
+
+
+def test_unbound_direct_caller_can_still_read_the_action_catalog():
+    from bridge.diplomacy import DiplomacyTools
+
+    api = DiplomacyTools(None)
+    assert api._controlled_country() is None
+    assert api.list_diplomatic_actions()["actions"]
+
+
+def test_observer_session_accepts_only_explicit_decision_country(tmp_path):
+    from bridge.diplomacy import ObserverSession
+
+    installation = tmp_path / "installation.json"
+    installation.write_text(json.dumps({"experiment_id": "direct", "session_id": "1-1",
+                                         "preflight_player_tag": "FRA"}), encoding="utf-8")
+    assert ObserverSession(installation, tmp_path / "game.exe")._controlled_country() is None
+    assert ObserverSession(installation, tmp_path / "game.exe", controlled_country="ENG")._controlled_country() == "ENG"
+    with pytest.raises(ValueError, match="INVALID_CONTROLLED_COUNTRY"):
+        ObserverSession(installation, tmp_path / "game.exe", controlled_country="eng")
+    unbound = ObserverSession(installation, tmp_path / "game.exe")
+    unbound.controlled_country = "ENG|BAD"
+    assert unbound._controlled_country() is None
 
 
 def test_unified_entry_rejects_wrong_country_before_calling_the_backend():

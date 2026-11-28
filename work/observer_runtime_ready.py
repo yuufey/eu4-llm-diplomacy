@@ -29,14 +29,14 @@ _GAME_WINDOW_TITLE = "Europa Universalis IV"
 _SW_SHOWNOACTIVATE = 4
 
 
-def expected_physical_player(record: object) -> str:
-    """Use the loaded player verified by the installer, or the legacy POR default."""
+def expected_physical_player(record: object) -> str | None:
+    """Return the seat recorded by the installer or verified after loading."""
     if isinstance(record, dict):
         for key in ("preflight_player_tag", "verified_loaded_player_tag"):
             tag = record.get(key)
             if isinstance(tag, str) and re.fullmatch(r"[A-Z0-9]{3}", tag):
                 return tag
-    return "POR"
+    return None
 
 
 def _heartbeat_thread_token(event: dict) -> tuple[str, int | str] | tuple[str]:
@@ -271,6 +271,8 @@ def _fresh_matching_heartbeat(session: Any, log_path: Path) -> bool:
             continue
         events.append(event)
     player = expected_physical_player(getattr(session, "record", None))
+    if player is None:
+        return False
     return _stable_matching_heartbeat(events, expected_session, player=player) is not None
 
 

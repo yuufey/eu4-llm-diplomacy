@@ -254,7 +254,7 @@ def test_invalid_sum_gate_blocks_auto_only(mutation):
     elif mutation == "duplicate":
         membership["value"]["observer_occurrences"] = 2
     else:
-        membership["value"]["observer_nonplayer_verified"] = False
+        membership["value"]["canonical_observer_verified"] = False
     baseline = RichAutoBaseline(membership=membership)
     source = TradeScenarioSource(baseline)
     rows = [_manual("manual", delta=10), _native("explicit", delta=20, total_delta=3), _automatic("auto", delta=30)]

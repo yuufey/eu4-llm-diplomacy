@@ -132,7 +132,7 @@ def test_discovery_replays_only_for_the_bound_turkish_observer(profile):
     assert capture.project_fields(report)["discovered_provinces"]["value"] == [1, 3]
 
 
-def test_failed_native_nonplayer_role_withdraws_observation_before_province_words(profile):
+def test_human_count_allows_bound_province_discovery(profile):
     from bridge.tests.test_information_province_state_memory import WORLD
     image = make_image((True,))
     image.put_i32(WORLD + 0xa60, 2)
@@ -140,6 +140,6 @@ def test_failed_native_nonplayer_role_withdraws_observation_before_province_word
         image.put(BASE + int(guard['rva'], 16), bytes.fromhex(guard['bytes']))
     reader = RecordingReader(image)
     observed = capture._observe(reader, BASE, 'FRA', profile)
-    assert observed['stable'] is False
-    assert observed['backend']['targets'][0]['discovery']['status'] == 'unknown'
-    assert not any(row['label'].startswith('province_bitmap.') for row in reader.read_log)
+    assert observed['stable'] is True
+    assert observed['backend']['targets'][0]['discovery']['status'] == 'known'
+    assert any(row['label'].startswith('province_bitmap.') for row in reader.read_log)

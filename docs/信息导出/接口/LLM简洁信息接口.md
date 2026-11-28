@@ -2,6 +2,8 @@
 
 信息查询、结果回读、结果列表和订阅交付默认返回简洁业务数据。数值已按来源定义的缩放比例换算，金币统一使用ducats。`previous_month_recurring`表示上一月经常收入、经常支出和结余。无可用值返回`null`，零和false保留其值。
 
+`F02`、`G03`、`G06`、`W01`–`W03`、`T03`–`T05` 和 `R05` 的简洁结果在有缺值时附带 `missing_fields`，按字段给出状态和原因。例如 `invisible` 表示可见性条件未满足，`unsupported` 表示当前来源未实现该查询，`unavailable` 表示当前无法采集。已确认的空列表仍用 `[]` 表示。
+
 `information_query`接受现有查询集合或报告编号。
 
 N01的国库、月度账目及贷款查询可省略`parameters`，例如以下调用。`reference_recipient`为可选兼容参数，显式提供时可在国库缓存不可用后使用原国家对预览回退。
@@ -9,6 +11,18 @@ N01的国库、月度账目及贷款查询可省略`parameters`，例如以下�
 ```json
 {"request_id": "finance-read-001", "queries": [{"topic": "N01", "object": {"type": "country", "country": "FRA"}, "fields": ["treasury", "loan_summary"]}]}
 ```
+
+逐笔查询 `loans` 时，简洁结果增加可读的 `due_date` 和从本次观测日到到期日的 `days_until_due`。当天到期为零，已过期为负数。同时选择 `loans` 和 `loan_summary` 时分别返回明细与汇总。单独选择 `loan_summary` 时，汇总仍放在 `loans` 下。
+
+`T03.outgoing_value` 的 `total_ducats` 是节点流出总额，`routes` 中每项的 `ducats` 是流向指定 `node_id` 的分项金额。`T04.shares` 返回观察国的原生份额缓存。`T04.power_share_percent` 使用同次采集的观察国贸易力除以节点总贸易力，输出百分比。总贸易力为零或缺少有效输入时，该百分比返回空值。
+
+`G06.provinces` 从指定国家的当前领土中查找观察国已发现的省份。可按货物 `resource`（资源键或已取得的本地名称）、贸易节点 `trade_node`、是否有贸易中心 `center_of_trade` 或是否为河口 `river_estuary` 筛选。贸易节点和河口筛选需要开启 `--static-game-data`。
+
+```json
+{"request_id": "serbian-gold", "queries": [{"topic": "G06", "object": {"type": "country", "country": "SER"}, "fields": ["provinces"], "parameters": {"resource": "gold", "limit": 12}}]}
+```
+
+每次最多核对 24 个候选。河口筛选还需要逐省读取修正，每页最多核对 8 个候选。即使当前页没有匹配，仍可将 `next_offset` 作为下次请求的 `offset` 继续查询。各页按查询时的当前领土读取，分页期间领土变化会影响结果。`unknown_candidates` 是本页因可见性、所有权或所选筛选字段未能核实而跳过的候选数。
 
 财政输出示例采用历史实采值。
 
@@ -227,6 +241,8 @@ reinforcement_change默认以force_change输出，提供from_date、to_date和ne
 
 P06提供所选和约的长期影响。obligations查询持续义务，new_truce查询预计的新停战期限，integration_conditions查询新属国的整合要求，restart_conditions查询停战及双方地位变化造成的再战约束。先用W01取得war_id，再通过peace_context指定索取或让步方向及具体条款。服务复用一次原生和约预览确认实际选中项，并读取当前生效规则。这里描述拟议和约的后果，实际履行情况由执行后的状态查询确认。
 
+解约时，`current_relationships` 按条约伙伴报告本次能核对的同盟与联姻。`present=false` 表示两类关系均已读到且未生效，`present=null` 表示无法确认。两个外国之间的关系目前会给出范围原因。`future_restriction` 另外报告重建条约限制及配置给出的年数。
+
 ```json
 {
   "topic": "P06",
@@ -365,6 +381,8 @@ in_progress表示宗主与属国之间存在当前整合任务，diplomatic_powe
 
 战略战报选择B01的end_date、location、sides、winner及B02的losses，提供日期、地点、参战双方与观察国所在侧、胜负和双方损失。end_date在简洁输出中使用1470.1.14形式。B01胜方只保留countries和observer_outcome。
 
+`B01` 按 `event_id` 读取已采集的单场战斗。按战争找战报时，先查 `W03.battle_losses` 或 `H01.battle_sequence`，再从 `event_refs` 取 `event_id`。
+
 B04的details选择现有战报组合中的可读文本。其它战报字段按需选择，B02的initial_forces和remaining_forces分别提供初始兵力和剩余兵力。
 
 B04.details默认包含双方国家、观察国所在侧以及同场已取得的结果文字，沿用完整视图中result_text的组合。部分文字缺失时，默认输出继续保留已知内容。完整视图的details.value.result_text.complete与selected_text_complete表示所选文字和已声明的双方身份是否全部取得，并包含输出长度限制的影响。原生窗口副本及显示状态沿各自来源字段记录。
@@ -379,6 +397,10 @@ B01.war_id采用采集进程共享注册表中的战争编号，可用于同一�
 ## 外交等待期限
 
 A01的diplomat_required表示所选行动是否需要外交官，复用行动预览中的原生需求。cooldown表示该行动当前是否因最近派遣过外交官而受到等待期限阻挡。blocked=true时，available_on返回游戏界面给出的可再次派遣日期，保留其可读日期格式。blocked=false表示当前通用动作条件已通过。其它条件仍会影响行动是否合法。
+
+执行回执在确认是同一项外交官冷却时，也在 `result.reason.cooldown` 返回 `blocked` 和 `available_on`。改善关系动作收到原生通用复检拒绝时，服务可在同一游戏日只读复查一次。
+
+`R05` 查询信任与人情余额可省略 `kind`。`trust` 表示 `recipient` 对 `actor` 的信任。`favors_available` 表示 `actor` 可向 `recipient` 使用的人情。需要同时查看积累任务时，可用独立的 `R05.favor_tasks` 查询。
 
 ```json
 {

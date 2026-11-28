@@ -4,7 +4,8 @@ import copy
 import unittest
 from pathlib import Path
 
-from bridge.diplomacy import DiplomacyTools, DurableJournal, ObserverSession
+from bridge.diplomacy import DurableJournal
+from bridge.tests.legacy_france_adapter import FixedFranceDiplomacyTools as DiplomacyTools, FixedFranceObserverSession as ObserverSession
 
 
 FIXTURE = (Path(__file__).parent / "fixtures" /

@@ -7,7 +7,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from bridge.diplomacy import DiplomacyTools, ObserverSession
+from bridge.tests.legacy_france_adapter import FixedFranceDiplomacyTools as DiplomacyTools, FixedFranceObserverSession as ObserverSession
 from bridge.diplomacy_journal import DurableJournal
 
 

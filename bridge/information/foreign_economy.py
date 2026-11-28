@@ -340,7 +340,8 @@ class NativeForeignEconomySource(NativeTradeIncomeSource):
                         and scope["creation_filetime"] == creation
                         and type(scope.get("game_date")) is int
                         and scope["game_date"] == before.get("game_date")
-                        and scope.get("target") == target):
+                        and scope.get("target") == target
+                        and scope.get("observer") == before.get("observer")):
                     debt_scope = scope
                     provenance["debt_disclosure"] = {
                         "status": scope["status"], "admitted": scope["admitted"],

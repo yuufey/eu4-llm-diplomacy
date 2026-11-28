@@ -85,11 +85,6 @@ def _read_backend(reader: Any, base: int, country: str,
     def admission(read, module_base, scan, observer, target):
         scans[target] = scan
         gate = _owner._bound_admission(read, module_base, scan, observer, target)
-        role = gate.get("observer_nonplayer_role") if isinstance(gate, Mapping) else None
-        if not isinstance(role, Mapping) or role.get("verified") is not True:
-            gate = deepcopy(dict(gate)) if isinstance(gate, Mapping) else {}
-            gate.update(status="unknown", admitted=None,
-                        reason="OBSERVER_NONPLAYER_ROLE_UNVERIFIED")
         return gate
 
     def fields(read, module_base, target_binding, requested):

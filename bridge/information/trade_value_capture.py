@@ -1,7 +1,7 @@
 """Own a readonly node-value observation for a positively discovered center.
 
 CWTools supplies script scope metadata.  Runtime admission comes from the
-existing non-player FRA and positive province-discovery checks.  This partial
+the bound observer and positive province-discovery checks.  This partial
 path does not establish every native trade visibility predicate or cache age.
 """
 from __future__ import annotations
@@ -38,7 +38,7 @@ def _load_profile():
     # revisions that bind trade-income and province reads to the configured country.
     reviewed_live_sources = {
         "bridge/information/trade_income_memory.py": (49815, "94620284bf2c35efde5499763972ee69bac62a16bfad3c7b179181e8ff818f5e"),
-        "bridge/information/province_state_memory.py": (33452, "220a084f624200781aa8afa7c12d83fe34e35f6d7b019b664135a41273f747f5"),
+        "bridge/information/province_state_memory.py": (33250, "9b917749d07d210ba3554b643a4eafd526d78a0bbcdbc00c54290d5e5a3292b7"),
     }
     value_profile = _values.load_profile()
     for item in value_profile["_validated_source_index"]["document"]["inputs"]:
@@ -172,7 +172,6 @@ def _target(report, *, observer_scoped=False):
         admission = target.get("admission_by_pass", {}).get(phase) or {}
         discovery = target.get("discovery_by_pass", {}).get(phase) or {}
         if (admission.get("status") != "known" or admission.get("admitted") is not True
-                or admission.get("observer_nonplayer_role", {}).get("verified") is not True
                 or discovery.get("status") != "known" or discovery.get("value") is not True):
             return None
     return target

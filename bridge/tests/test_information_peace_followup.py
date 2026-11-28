@@ -109,13 +109,73 @@ def test_unapplied_selection_cannot_be_presented_as_empty_obligations(tmp_path):
 def test_annulment_and_trade_power_project_their_distinct_duration_rules():
     result = project_obligations({'claimant': 'FRA', 'terms': [
         {'action_id': 'annul_treaties', 'country': 'ENG', 'treaty_partners': ['CAS']},
-        {'action_id': 'transfer_trade_power', 'source': 'ENG', 'beneficiary': 'FRA'}]}, RULES)
+        {'action_id': 'transfer_trade_power', 'source': 'ENG', 'beneficiary': 'FRA'}]}, RULES,
+        annul_relations={('ENG', 'CAS'): {'present': True, 'will_be_broken': True}})
     assert result['complete'] is True
     assert result['value'][0] == {'type': 'annul_treaties', 'country': 'ENG',
-                                 'partners': ['CAS'], 'duration_years': 10}
+                                 'partners': ['CAS'], 'duration_years': 10,
+                                 'current_relationships': [{'partner': 'CAS', 'present': True, 'will_be_broken': True}],
+                                 'future_restriction': {'duration_years': 10,
+                                                        'rule': 'ANNUL_TREATIES_YEARS',
+                                                        'effect': 'prevents_reestablishing_annulled_treaties'}}
     assert result['value'][1]['trade_power_percent'] == 50
     assert result['value'][1]['duration_years'] is None
     assert result['value'][1]['end_condition'] == 'truce_ends'
+
+
+def test_annulment_distinguishes_known_absent_and_unknown_current_relationships():
+    result = project_obligations({'claimant': 'FRA', 'terms': [
+        {'action_id': 'annul_treaties', 'country': 'ENG',
+         'treaty_partners': ['CAS', 'GEN', 'SWE']}]}, RULES,
+        annul_relations={
+            ('ENG', 'CAS'): {'present': True, 'will_be_broken': True},
+            ('ENG', 'GEN'): {'present': False, 'will_be_broken': False},
+            ('ENG', 'SWE'): {'present': None, 'will_be_broken': None,
+                             'unavailable_reason': 'RELATION_STATE_UNREAD'},
+        })
+    assert result['complete'] is False
+    assert result['gaps'] == ['CURRENT_ANNUL_TREATY_RELATIONSHIPS_UNREAD']
+    assert result['value'][0]['current_relationships'] == [
+        {'partner': 'CAS', 'present': True, 'will_be_broken': True},
+        {'partner': 'GEN', 'present': False, 'will_be_broken': False},
+        {'partner': 'SWE', 'present': None, 'will_be_broken': None,
+         'unavailable_reason': 'RELATION_STATE_UNREAD'},
+    ]
+    assert result['value'][0]['future_restriction'] == {
+        'duration_years': 10, 'rule': 'ANNUL_TREATIES_YEARS',
+        'effect': 'prevents_reestablishing_annulled_treaties',
+    }
+
+
+def test_annulment_snapshot_uses_observer_scoped_r01_pair_reader():
+    class RelationReader:
+        def __init__(self):
+            self.queries = []
+
+        def read(self, query, context):
+            self.queries.append((deepcopy(query), deepcopy(context)))
+            return {'fields': {'status': {'status': 'known', 'value': [
+                {'relation_type': 'alliance',
+                 'status': 'known', 'value': 'active'},
+                {'relation_type': 'royal_marriage',
+                 'status': 'known', 'value': 'inactive'},
+            ]}}}
+
+    reader = RelationReader()
+    adapter = PeaceFollowupSource(SimpleNamespace(),
+                                  relation_source=reader)
+    evidence = adapter._annul_relation_snapshot({
+        'terms': [{'action_id': 'annul_treaties', 'country': 'FRA',
+                   'treaty_partners': ['CAS']}],
+    }, {'observer': 'FRA'})
+    assert evidence[('FRA', 'CAS')] == {
+        'present': True, 'will_be_broken': True,
+        'relationship_types': ['alliance'],
+        'checked_relationship_types': ['alliance', 'royal_marriage'],
+        'basis': 'R01.current_selected_country_pair',
+    }
+    assert reader.queries[0][0]['object'] == {
+        'type': 'country_pair', 'actor': 'FRA', 'recipient': 'CAS'}
 
 
 def test_missing_rule_preserves_selected_obligation_and_other_known_component():

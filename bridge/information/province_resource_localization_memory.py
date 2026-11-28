@@ -130,7 +130,7 @@ def _language_valid(language: Any) -> bool:
     return payload[:-1].decode("ascii") == language["text"]
 
 
-def read_cached_name(reader: Any, base: Any, key: Any) -> dict[str, Any]:
+def read_cached_name(reader: Any, base: Any, key: Any, *, observer: str = "FRA") -> dict[str, Any]:
     """Read one key from the current native localization cache.
 
     `reader` must be an existing bounded RPM adapter. The result preserves the
@@ -143,6 +143,8 @@ def read_cached_name(reader: Any, base: Any, key: Any) -> dict[str, Any]:
     }
     if (not isinstance(key, str) or _RESOURCE_KEY.fullmatch(key) is None):
         return _unknown("RESOURCE_LOCALIZATION_KEY_INVALID", {"request": request_raw})
+    if not isinstance(observer, str) or re.fullmatch(r"[A-Z0-9]{3}", observer) is None:
+        return _unknown("LOCALIZATION_OBSERVER_INVALID", {"request": request_raw})
     if (type(base) is not int or not 0x10000 <= base < _MAX_USER_ADDRESS
             or base % 8):
         return _unknown("LOCALIZATION_MODULE_BASE_INVALID", {"request": request_raw})
@@ -157,7 +159,7 @@ def read_cached_name(reader: Any, base: Any, key: Any) -> dict[str, Any]:
 
     bounded = _SnapshotReader(reader, base)
     try:
-        snapshot = _localization._snapshot(bounded, base, "FRA", [key])
+        snapshot = _localization._snapshot(bounded, base, observer, [key])
     except Exception as exc:
         return _unknown("LOCALIZATION_SNAPSHOT_FAILED", {
             "request": request_raw,
@@ -170,7 +172,7 @@ def read_cached_name(reader: Any, base: Any, key: Any) -> dict[str, Any]:
     country = snapshot.get("country_scan")
     matches = country.get("matches") if isinstance(country, dict) else None
     if (not isinstance(country, dict) or country.get("status") != "observed"
-            or country.get("requested_country") != "FRA"
+            or country.get("requested_country") != observer
             or not isinstance(matches, list) or len(matches) != 1):
         return _unknown("LOCALIZATION_COUNTRY_SCAN_INVALID", raw_inputs)
 

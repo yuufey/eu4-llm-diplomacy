@@ -153,10 +153,8 @@ def test_turkish_observer_reuses_its_admitted_country_in_both_passes(monkeypatch
     assert [item[0] for item in leaf_reads] == ["TUR", "TUR"]
 
 
-@pytest.mark.parametrize("denial", ["discovery", "role"])
-def test_parent_discovery_or_role_denial_performs_no_country_extension(monkeypatch, denial):
-    image = parent_fixture.make_image(
-        discovered=denial != "discovery", role_verified=denial != "role")
+def test_parent_discovery_denial_performs_no_country_extension(monkeypatch):
+    image = parent_fixture.make_image(discovered=False)
     result, leaf_reads, _ = _run(monkeypatch, image)
 
     assert leaf_reads == []
@@ -165,6 +163,14 @@ def test_parent_discovery_or_role_denial_performs_no_country_extension(monkeypat
     assert result["status"] == "observed"
     assert _target(result)["fields"][memory.OBSERVER_FIELD]["status"] == "unknown"
     assert _target(result)["fields"][memory.CONTROLLER_FIELD]["status"] == "unknown"
+
+
+def test_human_observer_with_discovery_can_read_country_extension(monkeypatch):
+    image = parent_fixture.make_image(role_verified=False)
+    result, leaf_reads, _ = _run(monkeypatch, image)
+    assert result['status'] == 'observed'
+    assert leaf_reads
+    assert _target(result)['fields'][memory.OBSERVER_FIELD]['status'] == 'known'
 
 
 def test_controller_admission_denial_is_local_to_controller_child(monkeypatch):

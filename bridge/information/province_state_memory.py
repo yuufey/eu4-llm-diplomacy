@@ -452,23 +452,17 @@ def _read_pass(number: int, limiter: _shared._BoundedReader, module_base: int,
         result["errors"].append({"code": "admission_reader_failed",
                                  "detail": f"{type(exc).__name__}:{exc}"})
         return result
-    if not isinstance(admission.get("observer_nonplayer_role"), Mapping):
-        admission["observer_nonplayer_role"] = {
-            "observer": observer, "verified": False,
-            "reason": "ROLE_EVIDENCE_MISSING",
-            "basis": "copied_native_controller_array_not_UI_current_country"}
     result["admission"] = admission
 
-    role = admission.get("observer_nonplayer_role")
-    role_verified = isinstance(role, Mapping) and role.get("verified") is True
+    gate_observer = admission.get("observer")
+    gate_binding = gate_observer.get("binding") if isinstance(gate_observer, Mapping) else None
     admitted = (admission.get("status") == "known"
                 and type(admission.get("admitted")) is bool
-                and admission.get("admitted") is True)
-    if not role_verified:
-        result["discovery"] = {"status": "not_read", "reason": "OBSERVER_ROLE_NOT_VERIFIED"}
-        result["fields_raw"] = {field: _unknown("OBSERVER_ROLE_NOT_VERIFIED") for field in fields}
-        result["status"] = "observed"
-        return result
+                and admission.get("admitted") is True
+                and isinstance(gate_observer, Mapping) and gate_observer.get("tag") == observer
+                and isinstance(gate_binding, Mapping) and gate_binding.get("tag") == observer
+                and gate_binding.get("slot") == observer_binding.get("slot")
+                and gate_binding.get("fullref_raw_hex") == observer_binding.get("fullref_raw_hex"))
     if not admitted:
         result["discovery"] = {"status": "not_read", "reason": "PROVINCE_SELF_ADMISSION_NOT_ESTABLISHED"}
         result["fields_raw"] = {field: _unknown("PROVINCE_SELF_ADMISSION_NOT_ESTABLISHED")

@@ -390,6 +390,35 @@ def test_recorded_direct_participant_exposes_chinese_b01_and_b04_as_partial(tmp_
     assert contains_key(details, "side_result_raw_i32")
 
 
+def test_b01_without_event_id_points_to_bounded_history_discovery(tmp_path):
+    source, _primary, _fixture, _db, _payload = make_source(tmp_path)
+    result = source.read(battle_query(["event_id"]), source.context())
+    assert result["fields"]["event_id"] == {
+        "status": "unavailable",
+        "reason": "BATTLE_EVENT_ID_REQUIRED",
+        "guidance": {
+            "requires": "parameters.event_id",
+            "single_record": True,
+            "message": "B01 按 event_id 读取单场战斗。先从 H01.battle_sequence 或 W03.battle_losses 的 event_refs 取得 event_id。",
+            "discovery_queries": [
+                {"topic": "H01", "field": "battle_sequence",
+                 "purpose": "按观察国或会话发现已保留的战斗 event_id"},
+                {"topic": "W03", "field": "battle_losses",
+                 "purpose": "按战争分页发现已保留的战斗 event_id"},
+            ],
+        },
+    }
+    b01 = next(item for item in source.catalog() if item["topic_id"] == "B01")
+    assert b01["query_guidance"]["single_record"] is True
+    assert b01["fields"]["event_id"]["discovery_topics"] == [
+        "H01.battle_sequence", "W03.battle_losses",
+    ]
+    from bridge.information.presentation import present_concise, present_discovery
+    message = b01["query_guidance"]["message"]
+    assert present_concise({"items": [result]})["items"][0]["query_guidance"] == message
+    assert present_discovery({"topics": [b01]})["topics"][0]["query_guidance"] == message
+
+
 def _history_query(topic: str, fields: list[str], obj: dict, **parameters) -> dict:
     return {"topic": topic, "object": obj, "fields": fields, "parameters": parameters}
 

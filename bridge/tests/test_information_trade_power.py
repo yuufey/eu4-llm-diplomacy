@@ -186,7 +186,7 @@ def test_catalog_and_strict_scope(configured, tmp_path: Path):
     source, base, _ = _source(tmp_path)
     item = source.catalog()[0]
     assert item["topic_id"] == "T04"
-    assert list(item["fields"]) == ["country_power", "total_power"]
+    assert list(item["fields"]) == ["country_power", "total_power", "power_share_percent"]
     assert all(item["fields"][field]["coverage"] == "partial" for field in item["fields"])
     assert item["object_types"] == ["trade_node"]
     assert item["triggers"] == ["query", "periodic"]
@@ -211,7 +211,7 @@ def test_known_values_use_one_capture_and_compact_real_child_provenance(configur
     trade_record, power_record = _records(reader)
     base = _Base(tmp_path)
     source, base, calls = _source(tmp_path, _report(trade_record, power_record, base))
-    result = source.read(_query("alpha"), base.context())
+    result = source.read(_query("alpha", ["country_power", "total_power", "power_share_percent"]), base.context())
     assert result["complete"] is False
     assert calls == [(tmp_path / "installation.json", "FRA", True, True)]
     alpha = next(node for node in power_record["nodes"] if node["node_id"] == "alpha")
@@ -230,6 +230,12 @@ def test_known_values_use_one_capture_and_compact_real_child_provenance(configur
     assert result["fields"]["total_power"]["value"] == alpha["total_power_raw"]
     assert result["fields"]["total_power"]["raw_hex"] == alpha["total_power_raw_hex"]
     assert result["fields"]["total_power"]["value_origin"] == "copied_native_cache"
+    share = result["fields"]["power_share_percent"]
+    assert share["value"] == pytest.approx(100 * alpha["country_power_raw"] / alpha["total_power_raw"])
+    assert share["basis"] == "country_power_divided_by_total_power"
+
+    no_total = dict(alpha, total_power_raw=0, total_power_raw_hex="00000000")
+    assert source._field_from_node(no_total, "power_share_percent")["reason"] == "TRADE_POWER_SHARE_TOTAL_NOT_POSITIVE"
     audit = result["source"]["provenance"]["trade_power"]
     assert audit["profile_sha256"] == POWER_PROFILE_SHA256
     assert audit["requested_node_id"] == "alpha"

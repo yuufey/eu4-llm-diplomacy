@@ -9,7 +9,7 @@ import time
 import unittest
 from unittest.mock import patch
 
-from bridge.diplomacy import DiplomacyTools, ObserverSession
+from bridge.tests.legacy_france_adapter import FixedFranceDiplomacyTools as DiplomacyTools, FixedFranceObserverSession as ObserverSession
 from bridge.diplomacy_journal import DurableJournal
 
 
@@ -24,7 +24,7 @@ class RoyalQuerySession:
 
     def __init__(self, capabilities=(), **overrides):
         self.capabilities = capabilities
-        self.record = {"controlled_countries": ["FRA"]}
+        self.record = {"controlled_countries": ["FRA"], "preflight_player_tag": "POR"}
         self.inspect_calls = []
         self.submit_calls = []
         self.native = {

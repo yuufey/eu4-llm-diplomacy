@@ -7,7 +7,7 @@ import threading
 import time
 import unittest
 
-from bridge.diplomacy import DiplomacyTools, ObserverSession
+from bridge.tests.legacy_france_adapter import FixedFranceDiplomacyTools as DiplomacyTools, FixedFranceObserverSession as ObserverSession
 from bridge.diplomacy_journal import DurableJournal
 
 
@@ -231,6 +231,32 @@ class DiplomatAvailabilityIntegrationTests(unittest.TestCase):
             self.assertTrue(result["binding_complete"])
             self.assertEqual("native_rule", result["reason"]["source"])
             self.assertEqual("unavailable", result["legality"]["status"])
+
+    def test_relation_cooldown_rechecks_bound_preflight_failure_without_resubmission(self):
+        diagnostic = "§R- 最近已经派遣过外交官，所以直到1490年5月7日我们才能再次派遣。§!"
+        session = SemanticDiplomacySession(required=True, count=2, capabilities={
+            "native_improve_relations_query", "native_improve_relations_submission"})
+
+        def reject(request_id, actor, recipient, phase, date_raw):
+            session.submit_calls.append(("improve_relations", request_id, actor, recipient, phase))
+            session.native.update(common_action_gate=False, diagnostic_readable=True,
+                                  native_diagnostic_text=diagnostic)
+            code = "EXECUTION_NATIVE_PREFLIGHT_FAILED"
+            return {"status": "failed", "submitted": False, "binding_complete": True,
+                    "reason_code": code, "reason": {"code": code, "source": "runtime_error", "text": "preflight"}}
+
+        session.submit_improve_relations = reject
+        with DurableJournal(":memory:", "diplomat-test", "semantic-session") as journal:
+            api = DiplomacyTools(journal, session)
+            result = api.execute_diplomatic_action("cooldown-reject", "improve_relations", "FRA", "SAV")
+            self.assertFalse(result["submitted"])
+            self.assertEqual(1, len(session.submit_calls))
+            self.assertEqual(2, len(session.inspect_calls))
+            self.assertEqual(
+                {"blocked": True, "available_on": "1490年5月7日"},
+                result["result"]["reason"]["cooldown"],
+            )
+            self.assertEqual(result["result"], api.get_diplomatic_result("cooldown-reject")["result"])
 
     def test_declare_war_submit_consumes_bound_rejection_without_timeout(self):
         parameters = {

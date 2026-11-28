@@ -2,8 +2,8 @@
 
 The parent country capture owns the guarded trade-income graph.  This adapter
 requests the field-specific power child once, validates the parent and all
-three snapshots, and projects only the requested node's two bounded values.
-It does not infer shares or sources and never turns a missing node into zero.
+three snapshots, and projects the requested node's bounded values and ratio.
+The ratio uses this sample's power values and leaves the native share cache independent.
 """
 from __future__ import annotations
 
@@ -29,9 +29,12 @@ from .trade_income import (
 
 
 _TOPIC = "T04"
-_FIELDS = ("country_power", "total_power")
 _COUNTRY_POWER = "country_power"
 _TOTAL_POWER = "total_power"
+_POWER_SHARE_PERCENT = "power_share_percent"
+_NATIVE_FIELDS = (_COUNTRY_POWER, _TOTAL_POWER)
+_FIELDS = (*_NATIVE_FIELDS, _POWER_SHARE_PERCENT)
+_POWER_SHARE_BASIS = "country_power_divided_by_total_power"
 _BASIS = "native_trade_node_power_caches"
 _UNIT = "trade_power"
 _SCALE = 1000
@@ -86,6 +89,17 @@ _CATALOG_ITEM = {
                 "NATIVE_CACHE_FRESHNESS_NOT_PROVEN",
                 "LIVE_GUI_SELECTOR_ALIGNMENT_NOT_PROVEN",
             ],
+        },
+        _POWER_SHARE_PERCENT: {
+            "coverage": "partial",
+            "source": "bridge.information.country_resources_memory.capture",
+            "unit": "percent",
+            "scale": 1,
+            "period": _PERIOD,
+            "basis": _POWER_SHARE_BASIS,
+            "complete": False,
+            "description": "同次采集的观察国贸易力除以节点总贸易力，以百分比表示。",
+            "gaps": ["NATIVE_CACHE_FRESHNESS_NOT_PROVEN"],
         },
     },
     "object_types": ["trade_node"],
@@ -190,7 +204,7 @@ def _power_shape_reason(power: Any, country: str) -> str | None:
         if not isinstance(node_id, str) or _NODE_ID.fullmatch(node_id) is None or node_id in seen:
             return "TRADE_POWER_NODE_ID_INVALID"
         seen.add(node_id)
-        for name in _FIELDS:
+        for name in _NATIVE_FIELDS:
             raw = node.get(name + "_raw")
             raw_hex = node.get(name + "_raw_hex")
             if not _valid_raw(raw, raw_hex):
@@ -404,6 +418,17 @@ class NativeTradePowerSource(NativeTradeIncomeSource):
 
     @staticmethod
     def _field_from_node(node: Mapping[str, Any], field: str) -> dict[str, Any]:
+        if field == _POWER_SHARE_PERCENT:
+            country = node.get("country_power_raw")
+            total = node.get("total_power_raw")
+            if not (_valid_raw(country, node.get("country_power_raw_hex"))
+                    and _valid_raw(total, node.get("total_power_raw_hex"))):
+                return _unknown("TRADE_POWER_SHARE_INPUT_INVALID")
+            if total <= 0:
+                return _unknown("TRADE_POWER_SHARE_TOTAL_NOT_POSITIVE")
+            return {"status": "known", "value": 100 * country / total,
+                    "unit": "percent", "scale": 1, "period": _PERIOD,
+                    "basis": _POWER_SHARE_BASIS, "complete": False}
         raw = node.get(field + "_raw")
         raw_hex = node.get(field + "_raw_hex")
         if not _valid_raw(raw, raw_hex):

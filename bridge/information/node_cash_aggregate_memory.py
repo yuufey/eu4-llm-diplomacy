@@ -201,8 +201,7 @@ def read_fields(reader, base, province_scan, observer_binding, country_scan, all
         observer = _country._rebind(limiter, base, country_scan,
             bytes.fromhex(observer_binding['fullref_raw_hex']), 'node_cash.observer')
         gate = _country._admit(limiter, base, country_scan, observer)
-        _require(_shared._same_raw(observer, observer_binding) and _country._allowed(gate)
-                 and gate.get('observer_nonplayer_role', {}).get('verified') is True,
+        _require(_shared._same_raw(observer, observer_binding) and _country._allowed(gate),
                  'NODE_CASH_OBSERVER_UNVERIFIED')
         private['observer_admission'] = gate
         anchor, world, members = _node_inputs(trace, base, province_scan, observer, allocation, private)

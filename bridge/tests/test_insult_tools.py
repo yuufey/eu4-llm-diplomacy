@@ -8,7 +8,7 @@ import time
 import unittest
 from unittest.mock import patch
 
-from bridge.diplomacy import DiplomacyTools, ObserverSession
+from bridge.tests.legacy_france_adapter import FixedFranceDiplomacyTools as DiplomacyTools, FixedFranceObserverSession as ObserverSession
 from bridge.diplomacy_journal import DurableJournal
 from bridge.native_text import EU4_ESCAPE_CODEC
 
@@ -210,7 +210,7 @@ class InsultToolsTests(unittest.TestCase):
                 api.inspect_diplomatic_action("scornful_insult", "FRA", "SAV",
                                               parameters={"insult_id": True})
             with self.assertRaisesRegex(ValueError, "INSULT_INITIATE_ONLY"):
-                api.inspect_diplomatic_action("send_insult", "FRA", "SAV", "accept")
+                api._inspect_diplomatic_action("send_insult", "FRA", "SAV", "accept")
         finally:
             api.journal.close()
 

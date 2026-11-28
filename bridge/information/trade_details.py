@@ -74,6 +74,7 @@ _CATALOG_ITEM = {
             "scale": _SHARE_SCALE,
             "raw": False,
             "raw_semantics": "selected entry+0x2c signed share cache for the configured observer",
+            "description": "观察国的原生份额缓存。按同一采集的贸易力计算百分比时查询 power_share_percent。",
             "paths": ["trade_details.nodes[].share_raw"],
             "supported_countries": [],
             "period": _PERIOD,

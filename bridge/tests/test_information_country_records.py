@@ -74,6 +74,20 @@ def test_empty_current_loans_are_known_and_share_the_n01_parameter_schema(tmp_pa
     assert composite.validate_query(mixed) == mixed
 
 
+def test_player_observer_reads_its_own_loans_without_foreign_ai_gate(tmp_path, monkeypatch):
+    child = loans.read_fields(lf._reader([{"principal": 123}]), lf.MODULE_BASE, lf.COUNTRY_POINTER)
+    adapter, base, report, calls = source(tmp_path, "country_loans", child)
+    context = dict(base.context(), observer="POR")
+    monkeypatch.setattr(base, "context", lambda: deepcopy(context))
+    report["country"] = "POR"
+    request = query("N01", ["loans", "loan_summary"])
+    request["object"]["country"] = "POR"
+    result = adapter.read(request, context)
+    assert calls == [("POR", {"include_country_loans": True})]
+    assert result["fields"]["loans"]["status"] == "known"
+    assert result["fields"]["loan_summary"]["value"]["total_principal"]["value"] == 123
+
+
 @pytest.mark.parametrize("principals", [[], [123, 131]])
 def test_loan_summary_shares_validated_capture_and_preserves_records(tmp_path, principals):
     reader = lf._reader([{"principal": value} for value in principals])

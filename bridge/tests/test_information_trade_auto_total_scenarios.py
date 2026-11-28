@@ -156,13 +156,20 @@ def test_missing_membership_blocks_auto_only():
 
 
 @pytest.mark.parametrize(
-    "key", ["observer_nonplayer_verified", "canonical_observer_verified"]
+    "key", ["canonical_observer_verified"]
 )
 def test_observer_verification_false_blocks_auto(key):
     baseline = _baseline()
     baseline["native_power_sum_membership"]["value"][key] = False
     result = scenarios.derive_power_scenarios(baseline, [_auto("auto", 1)])
     assert result["transitions"]["auto"]["reason"] == "BASELINE_POWER_SUM_MEMBERSHIP_UNKNOWN"
+
+
+def test_player_observer_can_use_verified_membership():
+    baseline = _baseline()
+    baseline["native_power_sum_membership"]["value"]["observer_nonplayer_verified"] = False
+    result = scenarios.derive_power_scenarios(baseline, [_auto("auto", 1)])
+    assert result["transitions"]["auto"]["status"] == "known"
 
 
 @pytest.mark.parametrize(

@@ -546,7 +546,7 @@ def test_same_t04_composite_routes_power_and_details_with_identical_empty_schema
     power_source = NativeTradePowerSource(base, capture=power_capture)
     composite = CompositeSource(_Primary(base), [power_source, details_source])
     catalog = composite.catalog()[0]
-    assert set(catalog["fields"]) == {"country_power", "total_power", "shares", "sources"}
+    assert set(catalog["fields"]) == {"country_power", "total_power", "power_share_percent", "shares", "sources"}
     assert catalog["parameters"]["additionalProperties"] is False
     query = _query("alpha", ["country_power", "shares", "sources"])
     context = base.context()

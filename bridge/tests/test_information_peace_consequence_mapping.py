@@ -14,7 +14,7 @@ from pathlib import Path
 
 import pytest
 
-from bridge.diplomacy import DiplomacyTools, ObserverSession
+from bridge.tests.legacy_france_adapter import FixedFranceDiplomacyTools as DiplomacyTools, FixedFranceObserverSession as ObserverSession
 from bridge.information import InformationService
 from bridge.information import catalog as information_catalog
 from bridge.information.beneficiary_projection import declaration_beneficiaries, peace_fields

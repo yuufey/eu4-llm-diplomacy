@@ -69,6 +69,7 @@ def base_reader(*, slots: int = 0, completed: str = "empty") -> tuple[FakeReader
     reader.qword_put(module + mm.DATABASE_RVA, database)
     reader.dword_put(game + mm.GAME_DATE_OFFSET, 56553384, signed=True)
     reader.qword_put(database + mm.COUNTRY_TABLE_OFFSET, table)
+    reader.dword_put(database + 0x124, 123)
     reader.qword_put(table + 122 * 8, country)
     reader.qword_put(country + mm.COUNTRY_HANDLE_OFFSET,
                      (122 << 32) | int.from_bytes(b"FRA", "little"))

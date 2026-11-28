@@ -38,23 +38,41 @@ def observer(tmp_path):
         session_id="observer-test",
         record={"preflight_player_tag": "---", "verified_loaded_player_tag": "O00"},
         _installation_ack=lambda: {"native_game_speed_control": True,
-                                   "native_game_speed_control_protocol": PROTOCOL},
+                                   "native_game_speed_control_protocol": PROTOCOL,
+                                   "native_game_speed_player_scope": "canonical_player"},
         information_health=lambda: {"status": "ready"},
         physical_player_health=lambda **_: {"status": "ready"},
     )
 
 
-def test_requires_observer_installation_and_native_capability(observer):
-    observer.record["preflight_player_tag"] = "TUR"
+def test_requires_verified_seat_and_native_capability(observer):
+    observer.record = {"preflight_player_tag": "---"}
     with pytest.raises(InformationError) as error:
         bind_game_time_control(observer)
-    assert error.value.code == "permission_denied"
+    assert error.value.code == "source_unavailable"
 
-    observer.record["preflight_player_tag"] = "O00"
+    observer.record["preflight_player_tag"] = "SWE"
     observer._installation_ack = lambda: {"native_game_speed_control": True}
     with pytest.raises(InformationError) as error:
         bind_game_time_control(observer)
     assert error.value.code == "source_unavailable"
+
+
+@pytest.mark.parametrize("player", ["SWE", "TUR", "FRA", "O00"])
+def test_canonical_player_scope_accepts_verified_seat(observer, player):
+    observer.record = {"preflight_player_tag": player}
+    assert bind_game_time_control(observer).session is observer
+
+
+def test_legacy_native_clock_scope_is_not_invented(observer):
+    observer._installation_ack = lambda: {"native_game_speed_control": True,
+                                         "native_game_speed_control_protocol": PROTOCOL}
+    observer.record = {"preflight_player_tag": "SWE"}
+    with pytest.raises(InformationError) as error:
+        bind_game_time_control(observer)
+    assert error.value.code == "source_unavailable"
+    observer.record["preflight_player_tag"] = "O00"
+    assert bind_game_time_control(observer).session is observer
 
 
 def test_unready_player_cannot_publish_and_pending_request_is_preserved(observer):
