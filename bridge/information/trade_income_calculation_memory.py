@@ -1,7 +1,7 @@
 """Passive reconstruction of one selected country's current income cache.
 
 The parent owns the handle, role admission, snapshot and session guards. The
-already replayed sum child supplies the canonical NPC binding. This leaf does
+already replayed sum child supplies the canonical country binding. This leaf does
 not forecast new shares, run processors, or call the native cache writer.
 """
 from __future__ import annotations
@@ -56,8 +56,7 @@ def read_fields(reader, module_base, trade_income_record, country_scan,
         if not _sum.validate_record(trade_power_sum_record, trade_income_record, country_scan):
             raise _Unknown('INCOME_CALCULATION_SUM_UNVERIFIED')
         own = trade_power_sum_record['observation']
-        if (own.get('stable') is not True or own.get('canonical_observer_verified') is not True
-                or own.get('observer_nonplayer_verified') is not True):
+        if own.get('stable') is not True or own.get('canonical_observer_verified') is not True:
             raise _Unknown('INCOME_CALCULATION_OBSERVER_UNVERIFIED')
         identity = _identity._source_identity(trade_income_record, country_scan)
         base = _quality._valid_pointer(module_base, 'MODULE')

@@ -1,9 +1,14 @@
 """Present brief reports while preserving their complete stored results."""
 from copy import deepcopy
 from decimal import Decimal
+import re
 
 from .mission_concise import project_mission_fields
 from .diplomat_tasks import concise_diplomat_tasks
+
+
+_PUBLIC_REASON = re.compile(r"[A-Za-z0-9_:-]{1,128}\Z")
+_UNAVAILABLE_STATUSES = frozenset({"unknown", "invisible", "unavailable", "unsupported", "not_applicable", "stale"})
 
 
 # These describe collection and implementation, rather than game state.
@@ -63,7 +68,7 @@ def _concise_value(value):
             return {key: child / scale if type(child) in (int, float) else _concise_value(child)
                     for key, child in number.items()}
         return _concise_value(number)
-    if isinstance(value.get("status"), str) and value["status"] in {"unknown", "unavailable", "not_applicable", "unsupported", "stale", "invisible"}:
+    if isinstance(value.get("status"), str) and value["status"] in _UNAVAILABLE_STATUSES:
         return None
     if type(value.get("raw")) in (int, float) and "unit" in value and "scale" in value:
         return value["raw"] / value["scale"]
@@ -117,6 +122,53 @@ def _readable_game_date(value):
         return f"{year}.{month}.{day}"
     except (TypeError, ValueError):
         return None
+
+
+def _trade_outgoing(field):
+    if field.get("status") != "known" or not isinstance(field.get("value"), dict):
+        return None
+    value = field["value"]
+    scale = field.get("scale")
+    routes = value.get("routes")
+    if type(scale) is not int or scale <= 0 or not isinstance(routes, list):
+        return None
+
+    def ducats(raw):
+        return raw / scale if type(raw) is int else None
+
+    return {"total_ducats": ducats(value.get("total_raw")), "routes": [
+        {"node_id": route["node_id"], "ducats": ducats(route.get("raw"))}
+        for route in routes if isinstance(route, dict) and isinstance(route.get("node_id"), str)
+    ]}
+
+
+def _loan_dates(loans, game_date):
+    from .engine_dates import TICKS_PER_DAY
+
+    current_date = _readable_game_date(game_date)
+    for loan in loans:
+        if not isinstance(loan, dict):
+            continue
+        due_raw = loan.get("due_raw", loan.get("due"))
+        due_date = _readable_game_date(due_raw) if type(due_raw) is int else None
+        loan["due_date"] = due_date
+        loan["days_until_due"] = (
+            due_raw // TICKS_PER_DAY - game_date // TICKS_PER_DAY
+            if due_date is not None and current_date is not None and type(game_date) is int else None
+        )
+
+
+def _missing_fields(fields):
+    missing = {}
+    for name, field in fields.items():
+        if not isinstance(field, dict) or field.get("status") not in _UNAVAILABLE_STATUSES:
+            continue
+        reason = field.get("reason")
+        item = {"status": field["status"]}
+        if isinstance(reason, str) and _PUBLIC_REASON.fullmatch(reason) and "0x" not in reason.lower():
+            item["reason"] = reason
+        missing[name] = item
+    return missing
 
 
 def _modifier_event_payload(payload):
@@ -381,6 +433,8 @@ def present_concise(result):
             pressure = fields["subject_loyalty"]
             if "liberty_desire" in pressure:
                 pressure["liberty_desire"] = _with_range(pressure["liberty_desire"], 100, 0)
+        if topic == "T03" and "outgoing_value" in fields:
+            fields["outgoing_value"] = _trade_outgoing(item["fields"]["outgoing_value"])
         if topic == "B01" and isinstance(fields.get("winner"), dict):
             winner = fields["winner"]
             fields["winner"] = {"countries": winner.get("participants"),
@@ -402,7 +456,9 @@ def present_concise(result):
             fields["event_payload"] = _rival_event_payload(fields["event_payload"])
         if topic == "C03" and "pending_matters" in fields:
             fields["pending_matters"] = _pending_matters(item["fields"]["pending_matters"])
-        if query.get("topic", item.get("topic")) == "N01":
+        if topic == "N01":
+            if isinstance(fields.get("loans"), list):
+                _loan_dates(fields["loans"], item.get("game_date", result.get("context", {}).get("game_date")))
             recurring = {name: fields.pop("monthly_" + name)
                          for name in ("income", "expenses", "balance")
                          if "monthly_" + name in fields}
@@ -410,10 +466,20 @@ def present_concise(result):
                 fields["previous_month_recurring"] = recurring
             if "loan_summary" in fields:
                 loans = fields.pop("loan_summary")
-                fields["loans"] = ({"count": loans.get("loan_count"),
-                                     "principal": loans.get("total_principal")}
-                                    if isinstance(loans, dict) else loans)
+                summary = ({"count": loans.get("loan_count"), "principal": loans.get("total_principal")}
+                           if isinstance(loans, dict) else loans)
+                fields["loan_summary" if "loans" in fields else "loans"] = summary
         data.update(fields)
+        if topic in {"F02", "G03", "G06", "W01", "W02", "W03", "T03", "T04", "T05", "R05"}:
+            missing = _missing_fields(item.get("fields", {}))
+            if missing:
+                data["missing_fields"] = missing
+        if topic == "B01":
+            guidance = next((field["guidance"]["message"] for field in item.get("fields", {}).values()
+                             if isinstance(field, dict) and isinstance(field.get("guidance"), dict)
+                             and isinstance(field["guidance"].get("message"), str)), None)
+            if guidance is not None:
+                data["query_guidance"] = guidance
         if topic == 'H02':
             cursors = {name: field['next_cursor'] for name, field in item.get('fields', {}).items()
                        if isinstance(field, dict) and field.get('next_cursor')}
@@ -444,7 +510,8 @@ def present_discovery(result, topics=None):
     selected = set(topics) if topics is not None else None
     return {"topics": [
         {"topic_id": topic["topic_id"], "title": topic.get("title"),
-         "status": topic.get("status"), "fields": list(topic.get("fields", {}))}
+         "status": topic.get("status"), "fields": list(topic.get("fields", {})),
+         **({"query_guidance": topic["query_guidance"]["message"]} if "query_guidance" in topic else {})}
         for topic in result.get("topics", [])
         if selected is None or topic["topic_id"] in selected
     ]}

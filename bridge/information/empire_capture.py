@@ -116,7 +116,7 @@ def _observe(reader, module_base: int, country: str, profile: dict[str, Any],
     context_after = _owner._context(bounded, module_base)
     guards_after = _owner._guards(bounded, module_base, profile)
     role_ok = all(
-        item.get("observer_nonplayer", {}).get("verified") is True
+        item.get("observer_binding", {}).get("verified") is True
         for item in (first, second)
     )
     stable = (
@@ -235,14 +235,13 @@ def project_fields(report: Any) -> dict[str, Any]:
             or not _owner._same(passes[0], passes[1])):
         raise ValueError("EMPIRE_CAPTURE_NOT_STABLE")
     for state in passes:
-        role = state.get("observer_nonplayer") if isinstance(state, dict) else None
+        role = state.get("observer_binding") if isinstance(state, dict) else None
         if (not isinstance(state, dict) or state.get("status") != "known" or state.get("observer") != observer
                 or not isinstance(role, dict) or role.get("tag") != observer
                 or role.get("verified") is not True):
             raise ValueError("EMPIRE_ROLE_NOT_VERIFIED")
         physical = state.get("physical_client")
-        if (not isinstance(physical, dict) or physical.get("tag") == observer
-                or not isinstance(physical.get("tag"), str)
+        if (not isinstance(physical, dict) or not isinstance(physical.get("tag"), str)
                 or _TAG.fullmatch(physical["tag"]) is None
                 or not isinstance(physical.get("fullref_raw_hex"), str)
                 or len(physical["fullref_raw_hex"]) != 16):

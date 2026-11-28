@@ -232,7 +232,6 @@ def _one_pass(reader: _BudgetReader, base: int, pass_number: int,
     role = admission["observer_nonplayer_role"]
     if (admission.get("status") != "known" or admission.get("admitted") is not True
             or type(admission.get("admitted")) is not bool
-            or role.get("verified") is not True or type(role.get("verified")) is not bool
             or role.get("observer") != observer or role.get("slot") != observer_slot):
         return {
             "pass": pass_number, "status": "unknown",

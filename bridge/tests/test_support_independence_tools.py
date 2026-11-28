@@ -9,7 +9,7 @@ import time
 import unittest
 from unittest.mock import patch
 
-from bridge.diplomacy import DiplomacyTools, ObserverSession
+from bridge.tests.legacy_france_adapter import FixedFranceDiplomacyTools as DiplomacyTools, FixedFranceObserverSession as ObserverSession
 from bridge.diplomacy_journal import DurableJournal
 
 
@@ -18,7 +18,7 @@ class SupportSession:
                  response_event: dict | None = None,
                  revoke_event: dict | None = None):
         self.session_id = "support-session"
-        self.record = {"controlled_countries": ["FRA"]}
+        self.record = {"controlled_countries": ["FRA"], "preflight_player_tag": "POR"}
         self.capabilities = frozenset(capabilities or {
             "native_support_independence_query",
             "native_support_independence_submission",
@@ -354,7 +354,7 @@ class SupportIndependenceToolsTests(unittest.TestCase):
         self.assertEqual("not_applicable", api.inspect_diplomatic_action(
             "revoke_support_independence", "FRA", "SAV")["acceptance"]["applicability"])
         with self.assertRaisesRegex(ValueError, "INBOUND_RESPONSE_PARAMETERS_UNSUPPORTED"):
-            api.inspect_diplomatic_action("support_independence", "FRA", "SAV", "accept")
+            api._inspect_diplomatic_action("support_independence", "FRA", "SAV", "accept")
         with self.assertRaisesRegex(ValueError, "SUPPORT_INDEPENDENCE_PARAMETERS_UNSUPPORTED"):
             api.inspect_diplomatic_action("support_independence", "FRA", "SAV",
                                           parameters={"diplomat_id": 1})

@@ -120,7 +120,7 @@ def failure_field(reason: Any, country_view: Any = None) -> dict[str, Any]:
 
 
 def _scope_gate(base: Any, scope_record: Any, target: str,
-                expected_date: Any) -> tuple[dict[str, Any], dict[str, Any]]:
+                expected_date: Any, observer: str) -> tuple[dict[str, Any], dict[str, Any]]:
     fallback = "DEBT_DISCLOSURE_SCOPE_UNKNOWN"
     if not isinstance(scope_record, Mapping):
         reason = "DEBT_DISCLOSURE_SCOPE_MISSING"
@@ -136,7 +136,7 @@ def _scope_gate(base: Any, scope_record: Any, target: str,
     admitted = scope_record.get("admitted")
     if (scope_record.get("schema") != _disclosure.SCHEMA
             or scope_record.get("scope") != _disclosure.SCOPE
-            or scope_record.get("observer") != _OBSERVER
+            or scope_record.get("observer") != observer
             or scope_record.get("target") != target
             or type(scope_record.get("game_date")) is not int
             or type(expected_date) is not int
@@ -190,14 +190,14 @@ def _binding_matches(permission: Mapping[str, Any], state: Mapping[str, Any],
 
 
 def _replay_total_state(permission: Mapping[str, Any], state: Any,
-                        target: str, base: Any) -> tuple[dict[str, Any] | None, str | None]:
+                        target: str, base: Any, observer: str) -> tuple[dict[str, Any] | None, str | None]:
     if (not _principal_adapter.validate_permission(permission)
             or permission.get("status") != "known"
             or permission.get("admitted") is not True
             or permission.get("basis") != _principal_adapter.BASIS
             or permission.get("scope") != _principal_adapter.SCOPE
             or not isinstance(permission.get("observer"), Mapping)
-            or permission["observer"].get("tag") != _OBSERVER
+            or permission["observer"].get("tag") != observer
             or not isinstance(permission.get("target"), Mapping)
             or permission["target"].get("tag") != target):
         return None, "DEBT_PRINCIPAL_PERMISSION_INVALID"
@@ -248,7 +248,7 @@ def _replay_total_state(permission: Mapping[str, Any], state: Any,
 
 
 def _total_component(base: Any, item: Any, target: str,
-                     scope_record: Any) -> tuple[dict[str, Any], dict[str, Any]]:
+                     scope_record: Any, observer: str) -> tuple[dict[str, Any], dict[str, Any]]:
     unknown = base._unknown("DEBT_PRINCIPAL_FIELD_UNKNOWN")
     unknown_permission = {"status": "unknown", "reason": "DEBT_SCOPE_NOT_EVALUATED"}
     if not isinstance(item, Mapping):
@@ -292,7 +292,7 @@ def _total_component(base: Any, item: Any, target: str,
             or permission.get("basis") != _principal_adapter.BASIS
             or permission.get("scope") != _principal_adapter.SCOPE
             or not isinstance(permission.get("observer"), Mapping)
-            or permission["observer"].get("tag") != _OBSERVER
+            or permission["observer"].get("tag") != observer
             or not isinstance(permission.get("target"), Mapping)
             or permission["target"].get("tag") != target):
         reason = "DEBT_PRINCIPAL_PERMISSION_INVALID"
@@ -304,10 +304,10 @@ def _total_component(base: Any, item: Any, target: str,
         reason = "DEBT_PRINCIPAL_PERMISSION_DATE_INVALID"
         return base._unknown(reason), {"status": "unknown", "reason": reason}
     scope_component, public_scope_permission = _scope_gate(
-        base, scope_record, target, expected_date)
+        base, scope_record, target, expected_date, observer)
     if scope_component.get("status") != "known":
         return scope_component, public_scope_permission
-    private_value, replay_error = _replay_total_state(permission, state, target, base)
+    private_value, replay_error = _replay_total_state(permission, state, target, base, observer)
     if replay_error is not None or not isinstance(private_value, Mapping):
         reason = replay_error or "DEBT_PRINCIPAL_STATE_INVALID"
         return base._unknown(reason), {"status": "unknown", "reason": reason}
@@ -366,12 +366,13 @@ def _subset_component(base: Any, item: Any, target: str
 
 
 def project(item: Any, target: str, country_view: Any,
-            *, scope_record: Any = None) -> dict[str, Any]:
+            *, scope_record: Any = None, observer: str = _OBSERVER) -> dict[str, Any]:
     """Project visible total principal and observer-lent subset independently."""
     base = _base_module()
     try:
         view = base._country_view_public(country_view)
-        if not isinstance(target, str) or not _TAG.fullmatch(target):
+        if (not isinstance(target, str) or not _TAG.fullmatch(target)
+                or not isinstance(observer, str) or not _TAG.fullmatch(observer) or target == observer):
             return failure_field("DEBT_PROJECTION_TARGET_INVALID", view)
         if view.get("status") != "known":
             reason = _safe_reason(base, view.get("reason"),
@@ -383,8 +384,13 @@ def project(item: Any, target: str, country_view: Any,
             hidden = base._invisible("COUNTRY_VIEW_PREDICATE_REJECTED_FOR_OBSERVER")
             permission = {"status": "unknown", "reason": "COUNTRY_VIEW_NOT_ADMITTED"}
             return _assemble(base, hidden, hidden, view, permission, permission)
-        total, scope_permission = _total_component(base, item, target, scope_record)
-        subset, page_permission = _subset_component(base, item, target)
+        total, scope_permission = _total_component(base, item, target, scope_record, observer)
+        if observer == _OBSERVER:
+            subset, page_permission = _subset_component(base, item, target)
+        else:
+            from . import foreign_debt_projection_v34 as scoped
+            from . import foreign_economy_projection_v7 as scoped_base
+            subset, page_permission = scoped._subset_component(scoped_base, item, target, observer)
         return _assemble(base, total, subset, view, scope_permission, page_permission)
     except Exception:
         return failure_field("FOREIGN_DEBT_PROJECTION_FAILED", country_view)

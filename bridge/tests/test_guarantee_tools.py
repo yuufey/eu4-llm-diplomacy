@@ -8,7 +8,7 @@ import time
 import unittest
 from unittest.mock import patch
 
-from bridge.diplomacy import DiplomacyTools, ObserverSession
+from bridge.tests.legacy_france_adapter import FixedFranceDiplomacyTools as DiplomacyTools, FixedFranceObserverSession as ObserverSession
 from bridge.diplomacy_journal import DurableJournal
 
 
@@ -208,7 +208,7 @@ class GuaranteeToolsTests(unittest.TestCase):
             with self.assertRaisesRegex(ValueError, "GUARANTEE_PARAMETERS_UNSUPPORTED"):
                 api.inspect_diplomatic_action(action_id, "FRA", "SAV", parameters={"diplomat_id": 1})
             with self.assertRaisesRegex(ValueError, "GUARANTEE_INITIATE_ONLY"):
-                api.inspect_diplomatic_action(action_id, "FRA", "SAV", "accept")
+                api._inspect_diplomatic_action(action_id, "FRA", "SAV", "accept")
 
     def test_guarantee_ack_is_dedicated_and_not_inferred(self):
         with tempfile.TemporaryDirectory() as temporary:
@@ -329,9 +329,9 @@ class GuaranteeToolsTests(unittest.TestCase):
     def test_guarantee_execution_is_fra_only_and_does_not_open_support(self):
         session = GuaranteeExecutionSession()
         api = DiplomacyTools(self.journal, session)
-        result = api.execute_diplomatic_action(
-            "guarantee-outside-scope", "proclaim_guarantee", "POR", "SAV")
-        self.assertEqual("invalidated", result["status"])
+        with self.assertRaisesRegex(ValueError, "DIPLOMACY_COUNTRY_NOT_AUTHORIZED"):
+            api.execute_diplomatic_action(
+                "guarantee-outside-scope", "proclaim_guarantee", "POR", "SAV")
         self.assertEqual([], session.submit_calls)
         support = api.inspect_diplomatic_action(
             "support_independence", "FRA", "SAV")

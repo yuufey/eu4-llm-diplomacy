@@ -152,6 +152,7 @@ _SPECS = [
 ("G03","地理与通行条件","bordering distance straits island land_connection access fort supply","province country_pair","planned","not_implemented","visible_scope","query"),
 ("G04","领土与贸易节点关系","trade_node ports transfer_relations","province trade_node","planned","not_implemented","visible_scope","query"),
 ("G05","公开领土兴趣","country interests conflicts visibility","country_pair province","planned","not_implemented","visible_scope","query"),
+("G06","国家可见省份","provinces","country","planned","not_implemented","visible_scope","query"),
 ("T01","贸易节点网络","node_id name provinces upstream downstream routes","trade_node","planned","not_implemented","visible_scope","query"),
 ("T02","本埠与贸易收集路线","home_node collect_node upstream leak_direction routes","country trade_node","planned","not_implemented","visible_scope","query"),
 ("T03","节点贸易价值","local_value incoming_value total_value outgoing_value collected_value","trade_node","planned","not_implemented","visible_scope","query"),
@@ -476,6 +477,11 @@ def _build_catalog() -> list[dict]:
                        "parameters": parameters_for(topic_id, status),
                        "supported_versions": ["1.37.4"] if status == "available" else [],
                        "triggers": triggers, "source": source, "visibility": visibility}
+        if topic_id == "B01":
+            topic_result["query_guidance"] = {"message": (
+                "战报查询需要服务配置战报来源。配置后，可先用 H01.battle_sequence 或 "
+                "W03.battle_losses 找到 event_id，再用 B01 读取单场战斗。"
+            )}
         if topic_id == "W01":
             fields["leaders"].update(
                 paths=["war_contexts[].participants.side_a[0]", "war_contexts[].participants.side_b[0]"],
@@ -744,6 +750,6 @@ def validate_query(query: dict, context: dict | None = None) -> dict:
     return normalized
 
 
-if len(_CATALOG) != 74:
-    raise RuntimeError(f"Information catalog must contain 74 topics, found {len(_CATALOG)}")
+if len(_CATALOG) != 75:
+    raise RuntimeError(f"Information catalog must contain 75 topics, found {len(_CATALOG)}")
 

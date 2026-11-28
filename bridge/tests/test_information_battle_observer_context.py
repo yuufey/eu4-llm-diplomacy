@@ -30,18 +30,21 @@ def test_native_role_binding_accepts_a_non_french_nonplayer(tag):
     assert passes[0]['role']['verified'] is True
 
 
-@pytest.mark.parametrize('mutation', ['player', 'controller', 'date', 'second_controller'])
-def test_native_role_binding_rejects_player_or_unstable_reads(mutation):
+def test_native_role_binding_accepts_the_physical_player():
+    _, _, _, fixture = _make_fixture(country='UTR')
+    fixture['image'].put(CONTROLLER_TYPES + 189 * 4, (1).to_bytes(4, 'little'))
+    passes = observer_context.read_binding(fixture['reader'], MODULE_BASE, 'POR', GAME_DATE)
+    assert passes[0]['observer'] == passes[0]['physical']
+    assert passes[0]['role']['verified'] is True
+
+
+@pytest.mark.parametrize('mutation', ['date', 'second_controller'])
+def test_native_role_binding_rejects_unstable_reads(mutation):
     _, _, _, fixture = _make_fixture(country='UTR')
     image = fixture['image']
     image.put(CONTROLLER_TYPES + 300 * 4, b'\0' * 4)
-    if mutation == 'player':
-        observer = 'POR'
-    else:
-        observer = 'UTR'
-    if mutation == 'controller':
-        image.put(CONTROLLER_TYPES + 300 * 4, (1).to_bytes(4, 'little'))
-    elif mutation == 'date':
+    observer = 'UTR'
+    if mutation == 'date':
         image.put_i32(WORLD + 0x1dd0, GAME_DATE + 1)
     elif mutation == 'second_controller':
         existing_reads = image.label_counts.get('battle_observer.controller_type', 0)
@@ -58,7 +61,9 @@ def test_native_capture_closes_its_handle_on_success_and_partial_failure(monkeyp
     _, _, _, fixture = _make_fixture(country='UTR')
     image = fixture['image']
     fixture['reader'].read_log.clear()
-    image.put(CONTROLLER_TYPES + 300 * 4, (1 if failure == 'role' else 0).to_bytes(4, 'little'))
+    image.put(CONTROLLER_TYPES + 300 * 4, b'\0' * 4)
+    if failure == 'role':
+        image.put(WORLD + 0x1e60, b'\0' * 8)
     native = observer_context.native
     profile = native._load_profile()
     expected = {int(row['rva'], 0): bytes.fromhex(row['bytes']) for row in profile['code_guards']}

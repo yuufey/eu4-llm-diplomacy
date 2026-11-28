@@ -14,7 +14,7 @@ def _integer(value, low, high):
     return type(value) is int and low <= value <= high
 
 
-def public_observation(event, session_id):
+def public_observation(event, session_id, *, controlled_country):
     if not isinstance(event, dict):
         return None
     actor, recipient = event.get("actor"), event.get("recipient")
@@ -23,7 +23,8 @@ def public_observation(event, session_id):
             or event.get("session_id") != session_id
             or event.get("action_id") != "call_to_arms"
             or not isinstance(actor, str) or not _TAG.fullmatch(actor)
-            or recipient != "FRA" or actor == recipient
+            or not isinstance(controlled_country, str) or not _TAG.fullmatch(controlled_country)
+            or recipient != controlled_country or actor == recipient
             or event.get("capture_stage") != "before_native_executor"
             or event.get("recipient_verified") is not True
             or event.get("ai_response_held") is not False

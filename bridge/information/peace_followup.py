@@ -1,6 +1,7 @@
 """Strategic obligations, integration rules and truce constraints of selected peace."""
 from copy import deepcopy
 from decimal import Decimal
+from collections.abc import Mapping
 
 from ..peace_execution import normalize_peace_execution_parameters
 from .catalog import get_topic, validate_query
@@ -17,7 +18,14 @@ from .peace_followup_conditions import (
 FIELDS = ('obligations', 'new_truce', 'integration_conditions', 'restart_conditions')
 
 
-def project_obligations(peace, rules, subjects=None, relations=None):
+_ANNUL_RELATION_TYPES = ('alliance', 'royal_marriage')
+
+
+def _unknown_annul_relationship(reason):
+    return {'present': None, 'will_be_broken': None, 'unavailable_reason': reason}
+
+
+def project_obligations(peace, rules, subjects=None, relations=None, annul_relations=None):
     obligations, gaps = [], []
     future_types = {(row['subject'], row['overlord']): row['subject_type']
                     for row in relations or []}
@@ -44,9 +52,21 @@ def project_obligations(peace, rules, subjects=None, relations=None):
                 'trade_power_percent': rule('PO_TRADE_POWER_AMOUNT', percent=True),
                 'duration_years': None, 'end_condition': 'truce_ends'})
         elif action == 'annul_treaties':
+            duration = rule('ANNUL_TREATIES_YEARS')
+            current_relationships = [dict(deepcopy((annul_relations or {}).get(
+                (term['country'], partner), _unknown_annul_relationship('CURRENT_RELATIONSHIP_NOT_READ'))),
+                partner=partner) for partner in term['treaty_partners']]
             obligations.append({'type': action, 'country': term['country'],
                 'partners': deepcopy(term['treaty_partners']),
-                'duration_years': rule('ANNUL_TREATIES_YEARS')})
+                'duration_years': duration,
+                'current_relationships': current_relationships,
+                'future_restriction': {
+                    'duration_years': duration,
+                    'rule': 'ANNUL_TREATIES_YEARS',
+                    'effect': 'prevents_reestablishing_annulled_treaties',
+                }})
+            if any(row['present'] is None for row in current_relationships):
+                gaps.append('CURRENT_ANNUL_TREATY_RELATIONSHIPS_UNREAD')
         elif action in ('force_vassalization', 'form_personal_union', 'transfer_subject'):
             countries = term.get('countries', [term.get('country')])
             subject_type = {'force_vassalization': 'vassal',
@@ -75,13 +95,15 @@ def project_obligations(peace, rules, subjects=None, relations=None):
 
 class PeaceFollowupSource(NativeTradeIncomeSource):
     def __init__(self, base_source, *, rules=None, inspector=None,
-                 subject_rules=None, action_conditions=None, subject_source=None):
+                 subject_rules=None, action_conditions=None, subject_source=None,
+                 relation_source=None):
         super().__init__(base_source)
         self.rules = rules
         self.inspector = inspector
         self.subject_rules = subject_rules
         self.action_conditions = action_conditions
         self.subject_source = subject_source
+        self.relation_source = relation_source
 
     def catalog(self):
         topic = get_topic('P04')
@@ -90,7 +112,7 @@ class PeaceFollowupSource(NativeTradeIncomeSource):
             supported_versions=['1.37.4'], triggers=['query', 'periodic'])
         topic['fields'] = {'obligations': {
             'coverage': 'available', 'complete': True, 'source': type(self).__name__,
-            'description': '实际选中和约的持续赔款、贸易转移、废约限制及属国义务；比例与期限按配置规则预测'}}
+            'description': '实际选中和约的持续赔款、贸易转移、废约限制及属国义务；废约同时列出当前关系（已知存在、已知不存在或未知）与仅作用于未来关系的配置期限'}}
         topic['fields']['new_truce'] = {
             'coverage': 'available', 'complete': True, 'source': type(self).__name__,
             'description': '按当前日期签订所选和约时，谈判双方直接停战的预计截止日期'}
@@ -133,6 +155,62 @@ class PeaceFollowupSource(NativeTradeIncomeSource):
             raise InformationError('object_parameter_conflict', 'Conflicting war_id')
         normalized['parameters'] = dict(selected, action_id=action, phase=phase)
         return normalized
+
+    @staticmethod
+    def _annul_pair_evidence(result):
+        """Reduce a real R01 selected-pair status read to one partner row."""
+        field = result.get('fields', {}).get('status') if isinstance(result, Mapping) else None
+        values = field.get('value') if isinstance(field, Mapping) and field.get('status') == 'known' else None
+        checked = {item['relation_type']: item['value'] for item in values or []
+                   if isinstance(item, Mapping) and item.get('relation_type') in _ANNUL_RELATION_TYPES
+                   and item.get('status') == 'known' and item.get('value') in ('active', 'inactive')}
+        if set(checked) != set(_ANNUL_RELATION_TYPES):
+            return _unknown_annul_relationship('CURRENT_RELATIONSHIP_NOT_READ')
+        active = [kind for kind, state in checked.items() if state == 'active']
+        return {'present': bool(active), 'will_be_broken': bool(active),
+                'relationship_types': active, 'checked_relationship_types': list(checked),
+                'basis': 'R01.current_selected_country_pair'}
+
+    def _annul_relation_snapshot(self, peace, context):
+        """Read treaty partners only where R01 can prove the selected pair.
+
+        R01 is observer-scoped; it cannot claim the relationship between two
+        foreign countries.  Such partners are intentionally returned as
+        unknown rather than inferred from the annulment candidate list.
+        """
+        terms = [term for term in peace.get('terms', [])
+                 if isinstance(term, Mapping) and term.get('action_id') == 'annul_treaties']
+        if not terms:
+            return None
+        observer = context.get('observer') if isinstance(context, Mapping) else None
+        if self.relation_source is None:
+            from .relation_state import NativeRelationSource
+            self.relation_source = NativeRelationSource(self.base_source)
+        evidence = {}
+        for term in terms:
+            country = term.get('country')
+            for partner in term.get('treaty_partners', []):
+                key = (country, partner)
+                if key in evidence:
+                    continue
+                if observer not in (country, partner):
+                    item = _unknown_annul_relationship('CURRENT_RELATIONSHIP_OUTSIDE_OBSERVER_SCOPE')
+                else:
+                    target = partner if country == observer else country
+                    relation_query = {
+                        'topic': 'R01',
+                        'object': {'type': 'country_pair', 'actor': observer,
+                                   'recipient': target},
+                        'fields': ['status'],
+                        'parameters': {'relation_types': list(_ANNUL_RELATION_TYPES)},
+                    }
+                    try:
+                        item = self._annul_pair_evidence(
+                            self.relation_source.read(relation_query, context))
+                    except Exception:
+                        item = _unknown_annul_relationship('CURRENT_RELATIONSHIP_READ_FAILED')
+                evidence[key] = item
+        return evidence
 
     def _subject_context(self, subjects, need_actions, context):
         names = {row['subject_type'] for row in subjects if row['subject_type'] is not None}
@@ -228,8 +306,10 @@ class PeaceFollowupSource(NativeTradeIncomeSource):
                     provenance['subject_rules'] = types.get('source', {})
                     provenance['integration_conditions'] = actions.get('source', {})
                     if 'obligations' in query['fields']:
+                        annul_relations = self._annul_relation_snapshot(actual['peace_context'], current)
                         fields['obligations'] = project_obligations(
-                            dict(actual['peace_context'], claimant=claimant), configured, types, subjects)
+                            dict(actual['peace_context'], claimant=claimant), configured, types, subjects,
+                            annul_relations=annul_relations)
                     truce = {'status': 'unknown'}
                     if any(name in query['fields'] for name in ('new_truce', 'restart_conditions')):
                         truce = project_new_truce(inspected, configured, current)

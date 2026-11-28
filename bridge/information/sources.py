@@ -54,15 +54,20 @@ _JOURNAL_TOPICS = frozenset({"A05", "C04", "H01", "H02"})
 _LIVE_INBOUND_TOPICS = frozenset({"A04"})
 _TERMINAL_RESULTS = frozenset({"accepted", "rejected", "executed"})
 _CURRY_ACTIONS = frozenset({"curry_favors", "stop_curry_favors"})
+_R05_FAVOR_ACTION_KINDS = {
+    "trade_favors_for_trust": "trust",
+    "trade_favors_for_men": "men",
+    "trade_favors_for_gold": "gold",
+}
+_R05_KIND_ACTIONS = {
+    kind: action for action, kind in _R05_FAVOR_ACTION_KINDS.items()
+}
+_R05_BALANCE_FIELDS = frozenset({
+    "trust", "favors_available", "favors_direction",
+})
 _INSPECTION_CONTEXT_KEYS = (
     "status", "mode", "complete", "observer", "game_version", "game_sha256",
     "dll_sha256", "session_id", "game_date", "game_date_raw",
-)
-# ENROUTE is the game's relation-message waiting tooltip. Match its complete
-# sentence so dates from other rules never become diplomacy cooldowns.
-_ENROUTE_PATTERNS = (
-    re.compile(r"^(?:- )?最近已经派遣过外交官，所以直到(?P<date>\d+年\d+月\d+日)我们才能再次派遣。$", re.MULTILINE),
-    re.compile(r"^(?:- )?We have recently sent a diplomat, so we cannot send another until (?P<date>[^\n]{1,80})\.$", re.MULTILINE),
 )
 
 
@@ -405,18 +410,67 @@ def _action_cooldown_field(inspected: dict) -> dict:
         common = diagnostics.get('common_action_gate') if isinstance(diagnostics, dict) else None
         text = common.get('text') if isinstance(common, dict) else None
     if isinstance(text, str):
-        text = re.sub(r"§.", "", text).replace("\r\n", "\n")
-        for pattern in _ENROUTE_PATTERNS:
-            match = pattern.search(text)
-            if match:
-                return {"status": "known", "value": {
-                    "blocked": True, "available_on": match["date"],
-                }, "basis": "native_enroute_tooltip"}
+        cooldown = cooldown_expiry.parse_enroute_cooldown(text)
+        if cooldown is not None:
+            return {"status": "known", "value": cooldown,
+                    "basis": "native_enroute_tooltip"}
     components = inspected.get("native_rule_components")
     if isinstance(components, dict) and components.get("common_action_gate") is True:
         return {"status": "known", "value": {"blocked": False, "available_on": None},
                 "basis": "native_common_action_gate_passed"}
     return {"status": "unknown", "reason": "ACTION_COOLDOWN_NOT_IDENTIFIED"}
+
+
+def _favor_direction_field(
+        inspected: dict[str, Any], action_id: str | None,
+        actor: str | None, recipient: str | None) -> dict[str, Any]:
+    """Project the bilateral favor direction only from a verified exchange.
+
+    The native favor payload reports the balance from the action initiator's
+    side, but older adapters do not repeat the two country roles in that
+    nested object.  The action family and the selected-pair envelope together
+    establish the direction; a malformed or conflicting explicit direction is
+    kept unknown instead of being silently corrected.
+    """
+    expected = "actor_holds_for_recipient"
+    kind = _R05_FAVOR_ACTION_KINDS.get(action_id)
+    if kind is None or not isinstance(actor, str) or not isinstance(recipient, str):
+        return {"status": "unknown", "reason": "FAVOR_DIRECTION_NOT_IDENTIFIED"}
+
+    # Do not infer through an inspection whose identity was changed by an
+    # adapter.  Missing identity fields remain acceptable for recorded/native
+    # payloads that are already bound by the selected query.
+    for key, expected_value in (
+            ("action_id", action_id), ("actor", actor),
+            ("recipient", recipient), ("phase", "initiate")):
+        if key in inspected and inspected.get(key) != expected_value:
+            return {"status": "unknown", "reason": "FAVOR_DIRECTION_IDENTITY_UNVERIFIED"}
+
+    explicit = _first(inspected, (
+        "favors_direction", "favor_trade.favors.direction",
+        "native_favor_trade.favors_direction", "favor_trade.favors_direction",
+    ))
+    if explicit is not _MISSING:
+        if explicit == expected:
+            return {"status": "known", "value": expected}
+        return {"status": "unknown", "reason": "FAVOR_DIRECTION_VALUE_INVALID"}
+
+    public_trade = inspected.get("favor_trade")
+    public_favors = public_trade.get("favors") if isinstance(public_trade, dict) else None
+    if (isinstance(public_favors, dict)
+            and public_favors.get("held_by") == actor
+            and public_favors.get("owed_by") == recipient):
+        return {"status": "known", "value": expected}
+
+    # Recorded and lightweight live adapters may expose only the native
+    # exchange envelope.  Require the selected resource kind and a typed
+    # balance before deriving the fixed bilateral direction.
+    native_trade = inspected.get("native_favor_trade")
+    if (isinstance(native_trade, dict)
+            and native_trade.get("kind") == kind
+            and type(native_trade.get("favors_available_raw")) is int):
+        return {"status": "known", "value": expected}
+    return {"status": "unknown", "reason": "FAVOR_DIRECTION_NOT_IDENTIFIED"}
 
 
 def _favor_tasks_field(
@@ -1038,15 +1092,25 @@ class DiplomacySource:
         if topic_id.startswith("P") or topic_id.startswith("W"):
             return "white_peace"
         if topic_id == "R05":
-            if "favor_tasks" in (fields or ()) and not parameters.get("kind"):
+            selected_fields = fields or ()
+            if ("favor_tasks" in selected_fields
+                    and not parameters.get("kind")
+                    and not any(field in _R05_BALANCE_FIELDS
+                                for field in selected_fields)):
                 # An R05 query that includes favor_tasks without an exchange
                 # kind has no other read action to select. Use the read-only
                 # stop predicate, whose task_active result is meaningful for
                 # both active and inactive pairs.
                 return "stop_curry_favors"
             kind = parameters.get("kind")
-            return {"trust": "trade_favors_for_trust", "men": "trade_favors_for_men",
-                    "gold": "trade_favors_for_gold"}.get(kind)
+            if kind:
+                return _R05_KIND_ACTIONS.get(kind)
+            if any(field in _R05_BALANCE_FIELDS for field in (fields or ())):
+                # Trust is a read-only favor exchange preview and exposes the
+                # bilateral trust and favor balance.  It is therefore the
+                # stable default for an R05 balance query with no selector.
+                return "trade_favors_for_trust"
+            return None
         return None
 
     def _read_war_discovery(self, normalized: dict, context: dict) -> dict:
@@ -1372,6 +1436,14 @@ class DiplomacySource:
             return _result(normalized, context, fields, False,
                            _source_info(topic["source"], context, complete=False))
         fields, complete = _field_result(normalized["fields"], inspected, topic)
+        if (normalized["topic"] == "R05"
+                and "favors_direction" in fields
+                and fields["favors_direction"]["status"] == "unknown"):
+            fields["favors_direction"] = _favor_direction_field(
+                inspected, action_id, actor, recipient)
+            complete = all(value["status"] == "known"
+                           and value.get("complete") is not False
+                           for value in fields.values())
         projected = {}
         if normalized["topic"] == "D06":
             if "allowed_terms" in fields and fields["allowed_terms"]["status"] == "unknown":
@@ -2816,6 +2888,18 @@ class RecordedSource(DiplomacySource):
         payload = self._payload_for_case(case)
         topic = get_topic(normalized["topic"])
         fields, complete = _field_result(normalized["fields"], payload, topic)
+        if (normalized["topic"] == "R05"
+                and "favors_direction" in fields
+                and fields["favors_direction"]["status"] == "unknown"):
+            obj, parameters = normalized["object"], normalized["parameters"]
+            action_id = parameters.get("action_id") or obj.get("action_id")
+            action_id = self._default_action(
+                "R05", action_id, parameters, normalized["fields"])
+            fields["favors_direction"] = _favor_direction_field(
+                payload, action_id, obj.get("actor"), obj.get("recipient"))
+            complete = all(value["status"] == "known"
+                           and value.get("complete") is not False
+                           for value in fields.values())
         return _result(normalized, current, fields, complete,
                        _source_info("RecordedSource", current, mode="recorded",
                                     complete=complete,

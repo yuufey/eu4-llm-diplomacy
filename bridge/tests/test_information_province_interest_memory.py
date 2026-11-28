@@ -305,14 +305,22 @@ def test_unresolved_claim_and_permanent_fields_do_not_read_or_withdraw_cores():
 
 
 def test_hidden_or_admission_denied_short_circuits_all_interest_reads():
-    for image in (make_image(discovered=False), make_image(admitted=False),
-                  make_image(role_verified=False)):
+    for image in (make_image(discovered=False), make_image(admitted=False)):
         _put_core_vector(image, [_fullref("FRA", FRA_SLOT)])
         _put_claim_chain(image, [_fullref("ENG", ENG_SLOT)])
         result = memory.read_two_pass(image, BASE, PROVINCE_ID)
         assert all(_field(result, field)["status"] == "unknown"
                    for field in memory.FIELDS)
         assert not _labels(image, "province_interest.")
+
+
+def test_human_observer_with_positive_discovery_can_read_interests():
+    image = make_image(role_verified=False)
+    _put_core_vector(image, [_fullref("FRA", FRA_SLOT)])
+    _put_claim_chain(image, [_fullref("ENG", ENG_SLOT)])
+    result = memory.read_two_pass(image, BASE, PROVINCE_ID)
+    assert _field(result, 'G01.cores')['status'] == 'known'
+    assert _labels(image, 'province_interest.')
 
 
 @pytest.mark.parametrize("begin,end,reason", [

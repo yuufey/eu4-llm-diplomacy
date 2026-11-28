@@ -1,4 +1,4 @@
-"""Expose the non-player observer's discovery list from a dated EU4 save.
+"""Expose the observer's discovery list from a dated EU4 save.
 
 The existing province snapshot owns parsing, validation and file freshness.
 This adapter shares that snapshot with the G01 owner; no parser is launched
@@ -33,7 +33,7 @@ class SavedProvinceDiscoverySource:
         topic.update(source=type(self).__name__, status='available',
                      visibility='observer_snapshot_discovery', context_scope='saved_snapshot',
                      supported_versions=['1.37.4'], triggers=['query'], observer_roles=[],
-                     object_semantics='session_or_bound_non_player_observer_country',
+                     object_semantics='session_or_bound_observer_country',
                      parameters={'type': 'object', 'properties': {},
                                  'additionalProperties': False})
         topic['fields'] = {FIELD: {
@@ -112,8 +112,6 @@ class SavedProvinceDiscoverySource:
                 item = {'status': 'unavailable', 'reason': 'SAVED_DISCOVERY_CONTEXT_MISMATCH'}
             elif before.get('status') != 'ready' or before.get('mode') != 'recorded':
                 item = {'status': 'unavailable', 'reason': 'SAVED_DISCOVERY_SOURCE_UNREADY'}
-            elif before.get('observer') == before.get('archive', {}).get('player'):
-                item = {'status': 'not_applicable', 'reason': 'NON_PLAYER_OBSERVER_REQUIRED'}
             elif obj['type'] == 'country' and obj['country'] != before.get('observer'):
                 item = {'status': 'not_applicable', 'reason': 'OBSERVER_DISCOVERY_VIEW_ONLY'}
             else:

@@ -145,9 +145,10 @@ def _install_names(monkeypatch, outcomes: dict[str, dict] | None = None):
     calls: list[tuple[str, int]] = []
     mapping = outcomes or {}
 
-    def lookup(reader, base, key):
+    def lookup(reader, base, key, *, observer):
         assert isinstance(reader, models._BudgetReader)
         assert reader.module_base == base
+        assert observer == 'FRA'
         calls.append((key, base))
         if key in mapping:
             return mapping[key]
@@ -156,6 +157,18 @@ def _install_names(monkeypatch, outcomes: dict[str, dict] | None = None):
 
     monkeypatch.setattr(models._localization_name, "read_cached_name", lookup)
     return calls
+
+
+def test_model_localization_uses_authorized_observer(monkeypatch):
+    mem, profile = _scenario()
+    observers = []
+    def lookup(_reader, _base, _key, *, observer):
+        observers.append(observer)
+        return {'status': 'known', 'raw_hex': '4669656c64', 'language': 'l_english'}
+    monkeypatch.setattr(models._localization_name, 'read_cached_name', lookup)
+    result = models.read_models(mem, BASE, _binding(), model_profile=profile, observer='TUR')
+    assert observers and set(observers) == {'TUR'}
+    assert result['navy.heavy_ship_model']['value']['name']['status'] == 'known'
 
 
 def test_inline_and_heap_string32_keys_keep_raw_localized_names(monkeypatch):

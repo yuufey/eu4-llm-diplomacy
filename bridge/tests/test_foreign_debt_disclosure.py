@@ -87,6 +87,7 @@ class FakeSession:
     def __init__(self, *, controlled_countries=None):
         self.session_id = SESSION_ID
         self.creation_filetime = CREATION_FILETIME
+        self.controlled_country = "FRA"
         self.record = {
             "session_id": SESSION_ID,
             "creation_filetime": CREATION_FILETIME,
@@ -175,9 +176,9 @@ def test_visible_selector_is_known_even_when_legality_is_unavailable_and_reasons
 
 @pytest.mark.parametrize(
     ("target", "expected_reason"),
-    [("FRA", "TARGET_CONTROLLED_BY_HOST"), ("POR", "TARGET_PHYSICAL_PLAYER_TAG")],
+    [("FRA", "TARGET_CONTROLLED_BY_HOST")],
 )
-def test_controlled_or_physical_player_target_is_refused_without_inspection(target, expected_reason):
+def test_controlled_target_is_refused_without_inspection(target, expected_reason):
     _, tools, source = make_source()
 
     result = read_scope(source, valid_context(), target)
@@ -188,6 +189,39 @@ def test_controlled_or_physical_player_target_is_refused_without_inspection(targ
     assert result["native_inspection_calls"] == 0
     assert tools.calls == []
     assert validate_scope(result)
+
+
+def test_observer_and_target_use_bound_tags_not_historical_tags():
+    inspection = inspection_shape(recipient="FRA")
+    inspection["actor"] = "POR"
+    session, tools, source = make_source(controlled_countries=["POR"], response=inspection)
+    context = valid_context() | {"observer": "POR"}
+    result = read_scope(source, context, "FRA")
+    assert result["observer"] == "POR" and result["status"] == "known"
+    assert result["admitted"] is True and validate_scope(result)
+    assert tools.calls == [("trade_favors_for_gold", "POR", "FRA", "initiate", {})]
+    forged = deepcopy(result)
+    forged["raw_inputs"]["inspection"]["actor"] = "FRA"
+    assert not validate_scope(forged)
+
+
+def test_legacy_fallback_uses_session_controlled_country():
+    inspection = inspection_shape(recipient="FRA")
+    inspection["actor"] = "ENG"
+    session, tools, source = make_source(response=inspection)
+    session.controlled_country = "ENG"
+    result = read_scope(source, valid_context() | {"observer": "ENG"}, "FRA")
+    assert result["status"] == "known" and validate_scope(result)
+    assert tools.calls == [("trade_favors_for_gold", "ENG", "FRA", "initiate", {})]
+
+
+def test_missing_host_control_authority_fails_closed():
+    session, tools, source = make_source()
+    del session.controlled_country
+    result = read_scope(source, valid_context(), "ENG")
+    assert result["status"] == "unknown"
+    assert result["reason"] == "CONTROLLED_COUNTRY_AUTHORITY_UNAVAILABLE"
+    assert tools.calls == [] and validate_scope(result)
 
 
 def test_invalid_target_and_invalid_controlled_policy_are_unknown_without_inspection():

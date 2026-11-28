@@ -3,7 +3,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from bridge.diplomacy import DiplomacyTools, ObserverSession
+from bridge.tests.legacy_france_adapter import FixedFranceDiplomacyTools as DiplomacyTools, FixedFranceObserverSession as ObserverSession
 from bridge.diplomacy_journal import DurableJournal
 from bridge.favor_resources import NATIVE_ACCEPT, NATIVE_REJECT, project_result
 from bridge.tests.test_favor_resources_tools import ResourceQuerySession

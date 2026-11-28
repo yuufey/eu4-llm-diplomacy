@@ -8,14 +8,31 @@ import time
 import unittest
 from unittest.mock import patch
 
-from bridge.diplomacy import DiplomacyTools, ObserverSession
+from bridge.diplomacy import DiplomacyTools as _DiplomacyTools, ObserverSession as _ObserverSession
 from bridge.diplomacy_journal import DurableJournal
+
+
+class ObserverSession(_ObserverSession):
+    """Explicit adapter for the historical FRA wire fixtures in this module."""
+
+    def __init__(self, installation, game_exe):
+        super().__init__(installation, game_exe, controlled_country="FRA")
+
+
+class DiplomacyTools(_DiplomacyTools):
+    """Bind the historical offline fixture to its explicit decision country."""
+
+    def __init__(self, journal, session=None):
+        super().__init__(journal, session)
+        if session is None:
+            self.controlled_country = "FRA"
 
 
 class ReadySession:
     def __init__(self):
         self.checks = 0
         self.inspect_calls = 0
+        self.controlled_country = "FRA"
 
     def health(self):
         self.checks += 1
@@ -32,6 +49,7 @@ class ReadySession:
 class NativeSession(ReadySession):
     def __init__(self, **overrides):
         super().__init__()
+        self.record = {"preflight_player_tag": "POR"}
         self.native = {"display_predicate": True, "common_action_gate": True,
                        "validity_called": True, "native_validity": True, "initiation_gate": True,
                        "score_applicable": True, "score_available": True, "native_total_raw": 64,
@@ -511,7 +529,9 @@ class DiplomacyToolsTests(unittest.TestCase):
         self.assertEqual("NATIVE_OFFER_SUBMISSION_CAPABILITY_ACKNOWLEDGED",
                          initiate["authorization"]["reasons"][0]["code"])
 
-        accept = api.inspect_diplomatic_action("offer_alliance", "FRA", "ENG", "accept")
+        # Exercise the old unsupported phase projection directly; this
+        # direction is not authorized by the public FRA connection.
+        accept = api._inspect_diplomatic_action("offer_alliance", "FRA", "ENG", "accept")
         self.assertEqual("unimplemented", accept["interface_support"]["execute"])
         self.assertEqual("unavailable", accept["authorization"]["status"])
 
@@ -917,6 +937,21 @@ class DiplomacyToolsTests(unittest.TestCase):
         self.assertEqual(64, result["acceptance"]["native_total"])
         self.assertEqual("unknown", result["visibility"]["status"])
 
+    def test_legacy_prediction_requires_verified_physical_player(self):
+        session = NativeSession()
+        session.record = {}
+        tools = DiplomacyTools(self.journal, session)
+        unknown = tools.inspect_diplomatic_action("offer_alliance", "FRA", "SAV")
+        self.assertIsNone(unknown["acceptance"]["native_total"])
+
+        session.record = {"preflight_player_tag": "---", "verified_loaded_player_tag": "SAV"}
+        player = tools.inspect_diplomatic_action("offer_alliance", "FRA", "SAV")
+        self.assertIsNone(player["acceptance"]["native_total"])
+
+        session.record["verified_loaded_player_tag"] = "SWE"
+        ai = tools.inspect_diplomatic_action("offer_alliance", "FRA", "SAV")
+        self.assertEqual(64, ai["acceptance"]["native_total"])
+
     def test_native_total_is_not_a_probability_or_complete_rule_proof(self):
         result = DiplomacyTools(self.journal, NativeSession()).inspect_diplomatic_action("offer_alliance", "FRA", "SAV")
         self.assertEqual("unknown", result["legality"]["status"])
@@ -945,7 +980,8 @@ class DiplomacyToolsTests(unittest.TestCase):
         for action, actor, recipient in (("offer_alliance", "FRA", "POR"),
                                          ("offer_alliance", "SAV", "FRA"),
                                          ("dissolve_alliance", "FRA", "PRO")):
-            result = api.inspect_diplomatic_action(action, actor, recipient)
+            result = (api._inspect_diplomatic_action(action, actor, recipient)
+                      if actor != "FRA" else api.inspect_diplomatic_action(action, actor, recipient))
             self.assertFalse(result["acceptance"]["prediction_available"])
             self.assertNotIn("prediction_basis", result["acceptance"])
             self.assertNotIn("native_would_accept", result["acceptance"])
@@ -999,7 +1035,8 @@ class DiplomacyToolsTests(unittest.TestCase):
     def test_player_or_llm_receiver_cannot_inherit_a_native_ai_prediction(self):
         api = DiplomacyTools(self.journal, NativeSession())
         for actor, recipient in (("FRA", "POR"), ("SAV", "FRA")):
-            result = api.inspect_diplomatic_action("offer_alliance", actor, recipient)
+            result = (api._inspect_diplomatic_action("offer_alliance", actor, recipient)
+                      if actor != "FRA" else api.inspect_diplomatic_action("offer_alliance", actor, recipient))
             self.assertFalse(result["acceptance"]["prediction_available"])
             self.assertIsNone(result["acceptance"]["native_total"])
 
@@ -1168,7 +1205,8 @@ class DiplomacyToolsTests(unittest.TestCase):
         native = NativeSession(reason_items=[{"name": "条件", "native_value": 5}], reason_count=1)
         api = DiplomacyTools(self.journal, native)
         for actor, recipient in (("SAV", "FRA"), ("FRA", "POR")):
-            result = api.inspect_diplomatic_action("offer_alliance", actor, recipient)
+            result = (api._inspect_diplomatic_action("offer_alliance", actor, recipient)
+                      if actor != "FRA" else api.inspect_diplomatic_action("offer_alliance", actor, recipient))
             self.assertFalse(result["acceptance"]["prediction_available"])
             self.assertIsNone(result["acceptance"]["native_total"])
             self.assertEqual([], result["acceptance"]["items"])

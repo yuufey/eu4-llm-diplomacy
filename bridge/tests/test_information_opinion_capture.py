@@ -96,10 +96,10 @@ def test_one_direction_changes_between_passes_without_losing_other(monkeypatch):
     assert 'value' not in fields[capture.FIELDS[1]]
 
 
-def test_nonplayer_role_is_required_before_field_read(monkeypatch):
+def test_human_role_preserves_actual_country_view_admission(monkeypatch):
     monkeypatch.setattr(capture._owner, '_bound_admission', lambda *args:{
         'status':'known','admitted':True,'observer_nonplayer_role':{'verified':False}})
     gate = capture._admission(None, 0, {}, 'FRA', 'ENG')
-    assert gate['status'] == 'unknown' and gate['admitted'] is None
-    assert gate['reason'] == 'OBSERVER_NONPLAYER_ROLE_UNVERIFIED'
+    assert gate['status'] == 'known' and gate['admitted'] is True
+    assert gate['observer_nonplayer_role']['verified'] is False
     assert gate['field_scope']['physical_player_equals_observer_required'] is False

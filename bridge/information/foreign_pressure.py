@@ -10,6 +10,7 @@ from . import foreign_country_memory as _countries
 from . import foreign_technology_capture as _owner
 from . import country_occupation_memory as _occupation
 from . import average_unrest_memory as _unrest
+from . import province_discovery_capture as _province_discovery
 from .model import InformationError
 from .sources import _result, _source_info
 from .trade_income import NativeTradeIncomeSource, _observer_context_reason, _session_binding
@@ -43,8 +44,16 @@ def _load_occupation_profile():
         raise ValueError('FOREIGN_OCCUPATION_PROFILE_PIN')
     spec = json.loads(raw)
     for entry in [spec['source_evidence'], *spec['dependencies']]:
-        if _owner._sha(ROOT / entry['path']) != entry['sha256']:
-            raise ValueError('FOREIGN_OCCUPATION_SOURCE_PIN')
+        path = ROOT / entry['path']
+        if _owner._sha(path) == entry['sha256']:
+            continue
+        if (path == _province_discovery.PROFILE_FILE
+                and entry['sha256'] == _province_discovery._LEGACY_PROFILE_SHA256):
+            # The current discovery profile updates dependency pins while
+            # preserving the layout and guards used by the occupation reader.
+            _province_discovery._load_profile()
+            continue
+        raise ValueError('FOREIGN_OCCUPATION_SOURCE_PIN')
     profile = _load_legacy_profile()
     profile['code_guards'].extend(spec['code_guards'])
     profile['occupation'] = spec['layout']

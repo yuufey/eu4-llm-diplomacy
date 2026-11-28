@@ -187,7 +187,7 @@ def _observe(reader, module_base: int, country: str, profile: dict[str, Any],
         _owner._same(context_before, context_after)
         and _owner._same(_base_state(first), _base_state(second))
         and _owner._same(guards_before, guards_after)
-        and all(item.get("observer_nonplayer", {}).get("verified") is True
+        and all(item.get("observer_binding", {}).get("verified") is True
                 for item in (first, second))
     )
     first_reforms = first.get("reforms", {})

@@ -307,8 +307,8 @@ def _recorded_fixture_with_manifest():
 
 def test_catalog_has_all_74_topics_and_field_level_statuses():
     topics = catalog()
-    assert len(topics) == 74
-    assert len({item["topic_id"] for item in topics}) == 74
+    assert len(topics) == 75
+    assert len({item["topic_id"] for item in topics}) == 75
     assert {item["status"] for item in topics} == {"available", "planned"}
     for item in topics:
         assert item["catalog_ids"]
@@ -396,6 +396,22 @@ def test_live_source_reads_health_inspection_and_inbound_without_execution():
     assert events["events"][0]["source"]["mode"] == "live"
     assert events["events"][0]["event_type"] == "diplomatic_proposal"
     assert "execute" not in {call[0] for call in tools.inspect_calls}
+
+
+def test_r05_balance_query_defaults_to_trust_and_identifies_favor_direction():
+    backend = _LiveTools(_LiveSession())
+    source = DiplomacySource(backend)
+    result = source.read(_query(
+        "R05", {"type": "country_pair", "actor": "FRA", "recipient": "PAP"},
+        ["trust", "favors_available", "favors_direction"]), source.context())
+
+    assert backend.inspect_calls[-1] == (
+        "trade_favors_for_trust", "FRA", "PAP", "initiate", {})
+    assert result["fields"]["trust"] == {"status": "known", "value": 50}
+    assert result["fields"]["favors_available"] == {
+        "status": "known", "value": 23466}
+    assert result["fields"]["favors_direction"] == {
+        "status": "known", "value": "actor_holds_for_recipient"}
 
 
 @pytest.mark.parametrize("required", [True, False])
@@ -504,7 +520,8 @@ def test_recorded_real_fixture_preserves_provenance_and_raw_date():
     assert result["source"]["provenance"]["sha256"]
     assert result["fields"]["trust"] == {"status": "known", "value": 50}
     assert result["fields"]["favors_available"] == {"status": "known", "value": 23466}
-    assert result["fields"]["favors_direction"]["status"] == "unknown"
+    assert result["fields"]["favors_direction"] == {
+        "status": "known", "value": "actor_holds_for_recipient"}
     r05 = next(item for item in catalog() if item["topic_id"] == "R05")
     assert r05["fields"]["favors_available"]["unit"] == "favors_raw"
     assert r05["fields"]["favors_available"]["scale"] == 1000

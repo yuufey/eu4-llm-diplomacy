@@ -56,8 +56,8 @@ static void test_parse_and_replace() {
         && request.countries.contains("FRA"),"country_set_parsed");
 
     policy::PolicyState state{};
-    check(state.countries.count==1 && state.countries.contains("FRA"),
-        "default_legacy_country_is_fra");
+    check(state.countries.count==0 && state.revision==0,
+        "initial_policy_has_no_implicit_country");
     check(state.apply(request,"1234-1abc")==policy::ApplyError::ok,
         "session_bound_set_replaced");
     check(state.revision==7 && state.countries.count==3
@@ -78,7 +78,7 @@ static void test_policy_binding() {
     policy::PolicyState state{};
     check(state.apply(request,"9999-1abc")==policy::ApplyError::invalid_session,
         "wrong_session_rejected");
-    check(state.revision==0 && state.countries.contains("FRA"),
+    check(state.revision==0 && state.countries.count==0,
         "wrong_session_preserves_default");
     check(state.apply(request,"1234-1abc")==policy::ApplyError::ok,
         "correct_session_accepted");

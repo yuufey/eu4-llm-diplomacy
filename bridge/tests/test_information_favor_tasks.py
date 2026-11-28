@@ -152,6 +152,27 @@ def test_mixed_exchange_query_does_not_append_a_curry_query():
     }
 
 
+def test_mixed_unselected_balance_query_defaults_to_trust_and_explains_task_gap():
+    source, _session, tools = _source(_Tools(active=True))
+    result = source.read(
+        _query(
+            {"type": "country_pair", "actor": "FRA", "recipient": "SAV"},
+            fields=("trust", "favors_available", "favor_tasks"),
+        ),
+        source.context(),
+    )
+
+    assert tools.inspect_calls == [
+        ("trade_favors_for_trust", "FRA", "SAV", "initiate", {})]
+    assert result["fields"]["trust"] == {"status": "known", "value": 50}
+    assert result["fields"]["favors_available"] == {
+        "status": "known", "value": 23466}
+    assert result["fields"]["favor_tasks"] == {
+        "status": "unknown",
+        "reason": "FAVOR_TASKS_REQUIRES_CURRY_INSPECTION",
+    }
+
+
 def test_invalid_curry_payload_is_unknown_and_never_false():
     source, _session, _tools = _source(_Tools(family="native_alliance_inspection"))
     result = source.read(

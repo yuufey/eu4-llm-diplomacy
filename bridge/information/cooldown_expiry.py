@@ -14,6 +14,29 @@ _MONTHS = {name.lower(): index for index, name in enumerate((
     'January', 'February', 'March', 'April', 'May', 'June', 'July',
     'August', 'September', 'October', 'November', 'December'), 1)}
 _TAG = re.compile(r'[A-Z0-9]{3}')
+_ENROUTE_PATTERNS = (
+    re.compile(
+        r'^(?:- )?最近已经派遣过外交官，所以直到(?P<date>\d+年\d+月\d+日)我们才能再次派遣。$',
+        re.MULTILINE,
+    ),
+    re.compile(
+        r'^(?:- )?We have recently sent a diplomat, so we cannot send another until '
+        r'(?P<date>[^\n]{1,80})\.$',
+        re.MULTILINE,
+    ),
+)
+
+
+def parse_enroute_cooldown(text):
+    """Return the preview-compatible relation cooldown from an ENROUTE tooltip."""
+    if not isinstance(text, str):
+        return None
+    text = re.sub(r'§.', '', text[:4096]).replace('\r\n', '\n')
+    for pattern in _ENROUTE_PATTERNS:
+        match = pattern.search(text)
+        if match:
+            return {'blocked': True, 'available_on': match['date']}
+    return None
 
 
 def deadline_raw(text):

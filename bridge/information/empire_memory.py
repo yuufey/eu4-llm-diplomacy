@@ -166,11 +166,8 @@ def _read_state(reader, module_base: int, observer: str, phase: str) -> dict[str
 
     physical_raw = bytes.fromhex(context_before["physical_client_reference_raw_hex"])
     physical_ref, physical_tag = _fullref(physical_raw, "physical_client")
-    if physical_tag == observer:
-        raise EmpireMemoryError("EMPIRE_OBSERVER_IS_PHYSICAL_PLAYER")
-
     expected: dict[str, int] = {physical_tag: physical_ref}
-    requested = [observer, physical_tag]
+    requested = [observer] if observer == physical_tag else [observer, physical_tag]
     for tag, fullref, _raw_hex in [(emperor_tag, emperor_ref, emperor_raw.hex()), *elector_refs]:
         previous = expected.get(tag)
         if previous is not None and previous != fullref:
@@ -219,9 +216,6 @@ def _read_state(reader, module_base: int, observer: str, phase: str) -> dict[str
         controller_pointer + slot * 4, 4, f"empire.{phase}.observer_controller")
     human_count = int.from_bytes(human_raw, "little", signed=True)
     controller_type = int.from_bytes(controller_raw_value, "little", signed=True)
-    if human_count != 1 or controller_type != 0:
-        raise EmpireMemoryError("EMPIRE_OBSERVER_NOT_NONPLAYER")
-
     context_after = _owner._context(reader, module_base)
     if not _owner._same(context_before, context_after):
         raise EmpireMemoryError("EMPIRE_CONTEXT_CHANGED_WITHIN_PASS")
@@ -241,7 +235,7 @@ def _read_state(reader, module_base: int, observer: str, phase: str) -> dict[str
             "slot": resolved[physical_tag]["slot"],
             "country_pointer": resolved[physical_tag]["country_pointer"],
         },
-        "observer_nonplayer": {
+        "observer_binding": {
             "tag": observer,
             "slot": slot,
             "human_count": human_count,
@@ -250,7 +244,7 @@ def _read_state(reader, module_base: int, observer: str, phase: str) -> dict[str
             "controller_type_raw_hex": controller_raw_value.hex(),
             "controllers_pointer_raw_hex": controller_raw.hex(),
             "verified": True,
-            "basis": "copied_native_controller_array_not_hre_ui_visibility",
+            "basis": "canonical_country_binding_with_controller_diagnostics",
         },
         "emperor": {
             "tag": emperor_tag,

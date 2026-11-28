@@ -256,10 +256,8 @@ def _read_province_state(read: Any, module_base: int, province_id: int,
             return _unknown("province_state_target_binding_unverified")
 
         admission = admissions.get(phase) if isinstance(admissions, Mapping) else None
-        role = admission.get("observer_nonplayer_role") if isinstance(admission, Mapping) else None
         if (not isinstance(admission, Mapping) or admission.get("status") != "known"
-                or admission.get("admitted") is not True
-                or not isinstance(role, Mapping) or role.get("verified") is not True):
+                or admission.get("admitted") is not True):
             reason = admission.get("reason") if isinstance(admission, Mapping) else None
             return _unknown(reason if type(reason) is str else "province_admission_not_established")
 

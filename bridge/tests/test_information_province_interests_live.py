@@ -108,9 +108,9 @@ def make_capture_report(*, province_id=PROVINCE_ID, observer="FRA",
         "admitted": admission,
         "observer_nonplayer_role": {
             "verified": role_verified,
-            "observer": "FRA",
+            "observer": observer,
             "human_count": 1,
-            "controller_type": 0,
+            "controller_type": 0 if role_verified else 1,
         },
         "raw_inputs": {"country_pointer": "0x123456789abcdef0"},
     }
@@ -279,14 +279,12 @@ def test_known_empty_is_distinct_from_unknown_and_fields_fail_independently(
     assert "0x2" not in repr(result)
 
 
-@pytest.mark.parametrize("gate", ["admission", "role", "discovery_clear", "discovery_unknown"])
-def test_role_or_discovery_gate_failure_publishes_no_membership(
+@pytest.mark.parametrize("gate", ["admission", "discovery_clear", "discovery_unknown"])
+def test_admission_or_discovery_gate_failure_publishes_no_membership(
         tmp_path, monkeypatch, gate):
     options = {}
     if gate == "admission":
         options["admission"] = False
-    elif gate == "role":
-        options["role_verified"] = False
     elif gate == "discovery_clear":
         options["discovered"] = False
     else:
@@ -303,6 +301,15 @@ def test_role_or_discovery_gate_failure_publishes_no_membership(
     assert len(captures) == len(validations) == len(projections) == 1
     for private in ("0x123456789abcdef0", "0x0fedcba987654321", "raw_inputs"):
         assert private not in repr(result)
+
+
+def test_human_observer_with_positive_discovery_can_read_membership(tmp_path, monkeypatch):
+    report = make_capture_report(role_verified=False)
+    source, base, _, captures, validations, projections = make_source(tmp_path, monkeypatch, report=report)
+    result = source.read(make_query(), base.context())
+    assert all(field['status'] == 'known' for field in result['fields'].values())
+    assert len(captures) == len(validations) == len(projections) == 1
+    assert report['capture']['observation']['backend']['targets'][0]['admission_by_pass']['pass1']['observer_nonplayer_role']['verified'] is False
 
 
 def test_capture_object_identity_mismatch_is_rejected_by_validator(

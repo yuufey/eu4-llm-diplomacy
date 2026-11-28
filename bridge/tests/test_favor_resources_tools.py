@@ -1,6 +1,6 @@
 import unittest
 
-from bridge.diplomacy import DiplomacyTools
+from bridge.tests.legacy_france_adapter import FixedFranceDiplomacyTools as DiplomacyTools
 from bridge.favor_resources import (
     MEN_QUERY_CAPABILITY,
     MEN_SUBMISSION_CAPABILITY,
@@ -118,7 +118,7 @@ class FavorResourceToolsTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "FAVOR_TRADE_PARAMETERS_UNSUPPORTED"):
             api.inspect_diplomatic_action(
                 "trade_favors_for_trust", "FRA", "PAP", parameters={"amount": 2})
-        result = api.inspect_diplomatic_action(
+        result = api._inspect_diplomatic_action(
             "trade_favors_for_men", "PAP", "FRA")
         self.assertEqual("unknown", result["legality"]["status"])
         self.assertEqual("unimplemented", result["interface_support"]["execute"])

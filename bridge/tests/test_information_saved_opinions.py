@@ -265,15 +265,17 @@ def test_invalid_pair_or_nonempty_parameters_are_rejected(tmp_path, query):
         SavedOpinionSource(snapshot).read(query, snapshot.context())
 
 
-def test_pair_must_involve_observer_and_observer_cannot_be_saved_player(tmp_path):
+def test_pair_must_involve_observer_including_saved_player(tmp_path):
     _save, snapshot, _calls = _snapshot(tmp_path)
     source = SavedOpinionSource(snapshot)
     unrelated = _field(_read(source, _query("ENG", "POR")))
     assert unrelated == {"status": "not_applicable", "reason": "OBSERVER_COUNTRY_PAIR_REQUIRED"}
 
     _save2, player_snapshot, _calls2 = _snapshot(tmp_path / "player", observer="POR")
-    player = _field(_read(SavedOpinionSource(player_snapshot), _query("POR", "ENG")))
-    assert player == {"status": "not_applicable", "reason": "NON_PLAYER_OBSERVER_REQUIRED"}
+    player = _field(_read(SavedOpinionSource(player_snapshot), _query("POR", "FRA")))
+    assert player["status"] == "known"
+    assert player["value"][1]["holder"] == "FRA"
+    assert player["value"][1]["records"][0]["modifier_id"] == "guarantee"
 
 
 def test_other_r04_fields_remain_unsupported(tmp_path):

@@ -574,12 +574,10 @@ def _member_gate(reader: _shared._BoundedReader, base: int, observer: dict[str, 
     else:
         raw_gate = deepcopy(dict(gate)) if isinstance(gate, Mapping) else {
             "status": "unknown", "reason": "MEMBER_ADMISSION_RESULT_INVALID"}
-    role = raw_gate.get("observer_nonplayer_role")
-    role_verified = isinstance(role, Mapping) and role.get("verified") is True
-    if (role_verified and raw_gate.get("status") == "known"
+    if (raw_gate.get("status") == "known"
             and raw_gate.get("admitted") is True):
         descriptor = {"status": "known", "country": target_tag}
-    elif (role_verified and raw_gate.get("status") == "known"
+    elif (raw_gate.get("status") == "known"
           and raw_gate.get("admitted") is False):
         descriptor = {"status": "invisible", "reason": "NOT_ADMITTED"}
     else:

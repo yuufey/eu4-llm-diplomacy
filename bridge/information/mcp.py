@@ -261,6 +261,17 @@ class InformationMCPServer:
                     })}],
                     "isError": True,
                 })
+            if isinstance(result, dict) and "_mcp_content" in result:
+                content = result.get("_mcp_content")
+                if (not isinstance(content, list)
+                        or any(not isinstance(item, dict) or item.get("type") not in {"text", "image"}
+                               for item in content)):
+                    return _response(request_id, result={
+                        "content": [{"type": "text", "text": _json_text({
+                            "error": {"code": "invalid_tool_result", "message": "Invalid MCP content"}
+                        })}], "isError": True,
+                    })
+                return _response(request_id, result={"content": content, "isError": False})
             return _response(request_id, result={
                 "content": [{"type": "text", "text": _json_text(result)}],
                 "isError": False,

@@ -186,5 +186,21 @@ int main() {
         || std::strstr(event,"\"alliance_before\"")) return 18;
     std::fputs(event,stdout);
 
+    // Every response family must identify the country named by the parsed
+    // request, including synthetic evidence for a non-sample player.
+    std::strcpy(request.decision_country,"SWE");
+    for (unsigned family=0;family<6;++family) {
+        observed={};
+        observed.peace_offer=family==0;
+        observed.military_access=family==1;
+        observed.favor_gold=family==2;
+        observed.favor_trust=family==3;
+        observed.favor_men=family==4;
+        if (!bridge::alliance_inbound_inspection_event::format(
+                event,sizeof(event),request,observed)
+            || !std::strstr(event,"\"recipient\":\"SWE\"")
+            || !std::strstr(event,"\"decision_country\":\"SWE\"")) return 22;
+    }
+
     return 0;
 }

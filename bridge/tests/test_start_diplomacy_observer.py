@@ -14,6 +14,18 @@ from tools import start_diplomacy_observer as subject
 
 
 class ObserverStartTests(unittest.TestCase):
+    def test_expiry_ack_accepts_legacy_or_checked_append_without_ambiguous_duplicates(self):
+        legacy = subject.LAND_PROMISE_ACK_BLOCK
+        checked = r'''#ifdef BRIDGE_LAND_PROMISE_OBSERVATION
+    if (!append_ack_fields(
+            ",\"native_land_promise_observation\":true,\"native_land_promise_wire\":1,"
+            "\"native_land_promise_scope\":\"FRA_member_in_observed_promise_war\"}\n")) return 32;
+#endif'''
+        self.assertTrue(subject._has_unique_append_ack(legacy, legacy))
+        self.assertTrue(subject._has_unique_append_ack(checked, legacy))
+        self.assertFalse(subject._has_unique_append_ack(legacy + checked, legacy))
+        self.assertFalse(subject._has_unique_append_ack(checked.replace('return 32;', 'return 0;'), legacy))
+
     def test_native_text_codec_uses_local_configuration_and_explicit_override(self):
         cases = (
             (None, None, "utf8"),

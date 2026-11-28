@@ -79,11 +79,12 @@ def test_profile_closure_keeps_old_base_immutable_and_adds_calendar_guards():
     assert len(profile['source_pins']) == 13
 
 
-def test_admission_rejects_unverified_nonplayer_role(monkeypatch):
+def test_admission_accepts_human_observer_without_forging_role(monkeypatch):
     monkeypatch.setattr(capture._owner, '_bound_admission', lambda *args: {
         'status': 'known', 'admitted': True, 'observer_nonplayer_role': {'verified': False}})
     gate = capture._admission(None, 0x300000, {}, 'FRA', 'NAV')
-    assert gate['status'] == 'unknown' and gate['admitted'] is None
+    assert gate['status'] == 'known' and gate['admitted'] is True
+    assert gate['observer_nonplayer_role']['verified'] is False
 
 
 def test_guard_load_returns_independent_dicts():

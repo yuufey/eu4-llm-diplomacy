@@ -199,8 +199,6 @@ def _snapshot(reader, base, base_profile, contract, session_id, budget, observer
         return resolved[reference]['tag']
 
     player_tag = resolve_country(player)
-    if player == recipient:
-        raise ValueError('NATIVE_PENDING_OBSERVER_IS_PLAYER')
     queue = read_queue(read, country, recipient, base, session_id, resolve_country,
                        contract, game_date=date)
     queue.update(game_date=date, player_country=player_tag,

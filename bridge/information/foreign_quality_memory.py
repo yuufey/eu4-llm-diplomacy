@@ -429,7 +429,7 @@ def _read_discipline(trace: _TraceReader, base: int, country_pointer: int,
 
 
 def _read_models(trace: _TraceReader, base: int, target_binding: Any,
-                 model_profile: Any) -> dict[str, dict[str, Any]]:
+                 model_profile: Any, observer: str) -> dict[str, dict[str, Any]]:
     start = len(trace.reads)
 
     def trace_reference(end: int) -> dict[str, int]:
@@ -448,7 +448,7 @@ def _read_models(trace: _TraceReader, base: int, target_binding: Any,
         read_models = getattr(helper, "read_models", None)
         if not callable(read_models):
             raise _Failure("MODEL_HELPER_API_UNAVAILABLE")
-        result = read_models(trace, base, target_binding, model_profile=model_profile)
+        result = read_models(trace, base, target_binding, model_profile=model_profile, observer=observer)
         if not isinstance(result, Mapping):
             raise _Failure("MODEL_HELPER_RESULT_INVALID")
         end = len(trace.reads)
@@ -664,7 +664,7 @@ def read_fields(reader: Any, base: int, target_binding: Any, fields: Any, *,
         else:
             components["army.discipline"] = _empty_component("SHARED_READ_BUDGET_EXCEEDED")
 
-        model_components = _read_models(trace, base, retained, model_profile)
+        model_components = _read_models(trace, base, retained, model_profile, permission["observer"]["tag"])
         for name in MODEL_COMPONENTS:
             component = model_components[name]
             component_raw = component.get("raw_inputs")

@@ -242,16 +242,16 @@ def test_raw_current_ref_does_not_replace_controller_type_as_human_authority(pin
     assert report["observation"]["backend"]["observer"]["tag"] == "FRA"
 
 
-def test_human_fra_controller_is_rejected_even_with_physical_por_reference(pinned_profile):
+def test_human_observer_is_valid_and_role_evidence_remains_truthful(pinned_profile):
     report, context, creation, fixture = _make_fixture(
         physical_tag="POR", human_fra=True, profile=pinned_profile)
 
     assert fixture["physical_fullref"] != fixture["observer_fullref"]
     assert fixture["fra_controller_type"] == 1
-    assert not _assert_valid(report, context, creation)
-    if report["observation"] is not None:
-        role = report["observation"]["backend"]["targets"][0]["admission_by_pass"]["pass1"]["observer_nonplayer_role"]
-        assert role["verified"] is False
+    assert _assert_valid(report, context, creation)
+    role = report["observation"]["backend"]["targets"][0]["admission_by_pass"]["pass1"]["observer_nonplayer_role"]
+    assert role["verified"] is False
+    assert role["controller_type"] == 1
 
 
 def test_capture_entrypoint_uses_only_fake_process_and_closes_successfully(monkeypatch, pinned_profile):

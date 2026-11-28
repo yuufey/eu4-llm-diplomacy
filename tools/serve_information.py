@@ -206,12 +206,13 @@ def _build_runtime(args: argparse.Namespace):
     journal = None
     diplomacy_tools = None
     session = None
+    map_live = None
     game_time_control = None
     game_time_control_error = None
     diplomacy_execution_error = None
     allow_time_control = getattr(args, "allow_time_control", False)
     if allow_time_control and not args.operator_session:
-        raise ValueError("--allow-time-control requires --operator-session with an O00 observer")
+        raise ValueError("--allow-time-control requires --operator-session")
     if args.operator_session:
         # One session and journal serve both the read-only information source
         # and explicit diplomacy tool calls. Sources still call query methods.
@@ -220,6 +221,23 @@ def _build_runtime(args: argparse.Namespace):
         from work.local_config import game_exe
 
         session = ObserverSession(args.operator_session, game_exe())
+        # The map adapter is optional.  A missing local map installation must
+        # leave the existing information service usable, while an operator
+        # session with a configured logical country gets one bounded live-map
+        # cache shared by all map tool calls in this process.
+        map_observer = controlled_country or args.observer
+        if not battle_only and map_observer:
+            try:
+                from bridge.map_live_service import LivePoliticalMap
+                from work.local_config import get_path
+
+                map_live = LivePoliticalMap(
+                    args.operator_session, map_observer,
+                    args.static_game_root or get_path("EU4_GAME_ROOT", required=False),
+                    args.static_user_data or get_path("EU4_USER_DATA", required=False),
+                )
+            except (ImportError, OSError, RuntimeError, ValueError) as error:
+                logging.warning("Live political map unavailable: %s", error)
         if allow_time_control:
             try:
                 game_time_control = bind_game_time_control(session)
@@ -460,6 +478,7 @@ def _build_runtime(args: argparse.Namespace):
         adapters.append(diplomats_total)
         adapters.append(NativeGovernanceCapacitySource(source))
     static_trade = None
+    estuary_reader = None
     if args.static_game_data:
         from bridge.information.static_data import StaticTradeSource
         from bridge.information.straits import StaticStraitsSource
@@ -486,6 +505,9 @@ def _build_runtime(args: argparse.Namespace):
                                            user_data=args.static_user_data,
                                            context_provider=source.context))
     if live_adapters:
+        from bridge.information.country_provinces import NativeCountryProvincesSource
+        adapters.append(NativeCountryProvincesSource(
+            source, province_state=province_state, static_trade=static_trade, estuary_reader=estuary_reader))
         from bridge.information.geographic_trade_transfer import GeographicTradeTransferSource
         adapters.append(GeographicTradeTransferSource(source, trade_transfers, static_trade))
     if empire_game_data:
@@ -615,10 +637,23 @@ def _build_runtime(args: argparse.Namespace):
     if battle_ingestor is not None:
         setattr(service, "battle_ingestor", battle_ingestor)
     service.diplomacy_tools = diplomacy_tools
+    service.map_live = map_live
     service.diplomacy_control = control
     service.game_time_control = game_time_control
     service.game_time_control_error = game_time_control_error
     service.diplomacy_execution_error = diplomacy_execution_error
+    if (map_live is not None or any(getattr(args, key, None) is not None for key in
+            ("map_export_root", "map_export_directory", "map_export_months"))):
+        try:
+            from bridge.map_export_host import attach_map_exports
+            attach_map_exports(service, map_live, session, args)
+        except Exception:
+            service.close()
+            if battle_ingestor is not None:
+                battle_ingestor.close()
+            if journal is not None:
+                journal.close()
+            raise
     return service, journal
 
 
@@ -664,7 +699,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--operator-session", type=Path,
                         help="Verified observer installation.json; omit for offline discovery")
     parser.add_argument("--allow-time-control", action="store_true",
-                        help="Expose clock control for a no-player test with a verified O00 observer")
+                        help="Expose clock control for a verified installation when its native capability supports the player")
     parser.add_argument("--observer", default=None,
                         help="Trusted operator country tag; kept distinct from the game's player tag")
     parser.add_argument("--controlled-country", default=None,
@@ -724,6 +759,12 @@ def build_parser() -> argparse.ArgumentParser:
                         help="Operator-assigned caller identity and information namespace")
     parser.add_argument("--tick-seconds", type=_positive_seconds, default=0.0,
                         help="Run the background scheduler every N real seconds; 0 disables it")
+    parser.add_argument("--map-export-root", type=Path,
+                        help="Root directory available to the MCP map export tool")
+    parser.add_argument("--map-export-directory", type=Path,
+                        help="Start periodic map export to this directory when the service starts")
+    parser.add_argument("--map-export-months", type=int,
+                        help="Game calendar months between exports (default 6)")
     parser.add_argument("--jsonl", action="store_true",
                         help="Use simple tool/arguments JSONL instead of MCP stdio")
     return parser

@@ -8,7 +8,7 @@ import time
 import unittest
 from unittest.mock import patch
 
-from bridge.diplomacy import DiplomacyTools, ObserverSession
+from bridge.tests.legacy_france_adapter import FixedFranceDiplomacyTools as DiplomacyTools, FixedFranceObserverSession as ObserverSession
 from bridge.diplomacy_journal import DurableJournal
 
 
@@ -209,7 +209,7 @@ class ImproveRelationsToolsTests(unittest.TestCase):
                 api.inspect_diplomatic_action(
                     action_id, "FRA", "SAV", parameters={"diplomat_id": 1})
             with self.assertRaisesRegex(ValueError, "IMPROVE_RELATIONS_INITIATE_ONLY"):
-                api.inspect_diplomatic_action(action_id, "FRA", "SAV", "accept")
+                api._inspect_diplomatic_action(action_id, "FRA", "SAV", "accept")
 
     def test_improve_ack_is_exact_and_does_not_infer_other_families(self):
         with tempfile.TemporaryDirectory() as temporary:

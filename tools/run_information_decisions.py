@@ -39,13 +39,14 @@ def codex_command(executable: str, port: int, env: dict[str, str], *, check_only
         "startup_timeout_sec=90",
         "tool_timeout_sec=90",
     ]
-    approved = ["information_query", "information_get_result", "information_discover"]
+    approved = ["information_query", "information_get_result", "information_discover",
+                "render_political_map", "inspect_political_map"]
     if check_only:
         server.append("enabled_tools=" + json.dumps(approved))
     else:
         server.append('disabled_tools=["information_tick"]')
         approved.extend([
-            "information_list_results", "information_status", "information_manage_report",
+            "manage_political_map_export", "information_list_results", "information_status", "information_manage_report",
             "information_manage_subscription", "list_diplomatic_actions", "inspect_diplomatic_action",
             "execute_diplomatic_action", "get_diplomatic_result", "recall_diplomat", "set_game_speed",
         ])
@@ -67,7 +68,12 @@ def due_brief(service, queue, subscription_id, *, turn_id=None):
             context.get(key) != value for key, value in queue.binding.items()):
         raise RuntimeError("The source changed away from the bound decision session")
     if subscription_id and tick.get("state") == "processed":
-        return queue.claim_latest(subscription_id, context, active_turn_id=turn_id)
+        brief = queue.claim_latest(subscription_id, context, active_turn_id=turn_id)
+        map_service = getattr(service, "map_live", None)
+        if brief and map_service is not None:
+            map_service.invalidate()
+            brief["political_map"] = {"tool": "render_political_map", "arguments": {}}
+        return brief
     return None
 
 

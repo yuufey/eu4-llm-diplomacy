@@ -9,7 +9,7 @@ from types import SimpleNamespace
 import pytest
 
 from bridge import native_result_date as dates
-from bridge.diplomacy import DiplomacyTools, ObserverSession
+from bridge.tests.legacy_france_adapter import FixedFranceDiplomacyTools as DiplomacyTools, FixedFranceObserverSession as ObserverSession
 from bridge.diplomacy_journal import DurableJournal
 from bridge.information import InformationService
 from bridge.information.sources import DiplomacySource

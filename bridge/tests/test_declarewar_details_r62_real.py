@@ -7,7 +7,7 @@ from pathlib import Path
 import unittest
 
 from bridge.declarewar_details import valid_declare_war_details
-from bridge.diplomacy import DiplomacyTools, ObserverSession
+from bridge.tests.legacy_france_adapter import FixedFranceDiplomacyTools as DiplomacyTools, FixedFranceObserverSession as ObserverSession
 from bridge.native_text import EU4_ESCAPE_CODEC
 
 

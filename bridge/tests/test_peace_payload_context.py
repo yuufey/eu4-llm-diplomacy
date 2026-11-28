@@ -5,7 +5,7 @@ from pathlib import Path
 import tempfile
 import unittest
 
-from bridge.diplomacy import ObserverSession
+from bridge.tests.legacy_france_adapter import FixedFranceObserverSession as ObserverSession
 
 try:
     import test_peace_tools as _peace_tools

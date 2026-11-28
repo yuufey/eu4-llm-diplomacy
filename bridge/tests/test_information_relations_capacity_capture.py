@@ -28,16 +28,20 @@ def test_projection_keeps_count_above_capacity_and_strips_private_inputs(observe
     assert 'private_address' not in repr(output) and '0x12345678' not in repr(output)
 
 @pytest.mark.parametrize('phase', ['pass1', 'pass2'])
-@pytest.mark.parametrize('change', ['role', 'admitted'])
-def test_either_pass_role_or_admission_failure_refuses_publication(phase, change):
+def test_either_pass_admission_failure_refuses_publication(phase):
     report = _report()
     gate = report['observation']['backend']['targets'][0]['admission_by_pass'][phase]
-    if change == 'role':
-        gate['observer_nonplayer_role']['verified'] = False
-    else:
-        gate['admitted'] = False
+    gate['admitted'] = False
     with pytest.raises(ValueError, match='PUBLICATION_GATE'):
         capture.project_fields(report)
+
+@pytest.mark.parametrize('phase', ['pass1', 'pass2'])
+def test_human_observer_role_does_not_refuse_publication(phase):
+    report = _report('TUR')
+    gate = report['observation']['backend']['targets'][0]['admission_by_pass'][phase]
+    gate['observer_nonplayer_role']['verified'] = False
+    assert capture.project_fields(report)['relations_count']['value'] == 5
+    assert gate['observer_nonplayer_role']['verified'] is False
 
 def test_one_unknown_scalar_does_not_remove_the_other():
     report = _report()

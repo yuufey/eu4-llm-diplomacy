@@ -122,8 +122,6 @@ class SavedOpinionSource:
                 item = {'status': 'unavailable', 'reason': 'SAVED_OPINION_CONTEXT_MISMATCH'}
             elif before.get('status') != 'ready':
                 item = {'status': 'unavailable', 'reason': 'SAVED_OPINION_SOURCE_UNREADY'}
-            elif before['observer'] == before['archive']['player']:
-                item = {'status': 'not_applicable', 'reason': 'NON_PLAYER_OBSERVER_REQUIRED'}
             elif before['observer'] not in (obj['actor'], obj['recipient']):
                 item = {'status': 'not_applicable', 'reason': 'OBSERVER_COUNTRY_PAIR_REQUIRED'}
             else:

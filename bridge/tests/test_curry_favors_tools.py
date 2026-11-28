@@ -8,7 +8,7 @@ import time
 import unittest
 from unittest.mock import patch
 
-from bridge.diplomacy import DiplomacyTools, ObserverSession
+from bridge.tests.legacy_france_adapter import FixedFranceDiplomacyTools as DiplomacyTools, FixedFranceObserverSession as ObserverSession
 from bridge.diplomacy_journal import DurableJournal
 
 
@@ -221,7 +221,7 @@ class CurryFavorsToolsTests(unittest.TestCase):
                 api.inspect_diplomatic_action(
                     action_id, "FRA", "SAV", parameters={"diplomat_id": 1})
             with self.assertRaisesRegex(ValueError, "CURRY_FAVORS_INITIATE_ONLY"):
-                api.inspect_diplomatic_action(action_id, "FRA", "SAV", "accept")
+                api._inspect_diplomatic_action(action_id, "FRA", "SAV", "accept")
 
     def test_ack_is_exact_and_isolated_from_other_families(self):
         with tempfile.TemporaryDirectory() as temporary:

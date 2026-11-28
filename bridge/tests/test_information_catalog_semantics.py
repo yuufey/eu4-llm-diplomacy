@@ -24,10 +24,13 @@ def _extract(topic_id: str, field: str, payload: dict) -> dict:
     return fields[field]
 
 
-def test_catalog_shape_remains_74_topics_and_405_fields():
+def test_catalog_shape_has_75_topics_and_406_fields():
     topics = list_topics()
-    assert len(topics) == 74
-    assert sum(len(topic["fields"]) for topic in topics) == 405
+    assert len(topics) == 75
+    assert sum(len(topic["fields"]) for topic in topics) == 406
+    battle = next(topic for topic in topics if topic["topic_id"] == "B01")
+    assert "H01.battle_sequence" in battle["query_guidance"]["message"]
+    assert "W03.battle_losses" in battle["query_guidance"]["message"]
     assert {"max_manpower", "max_sailors"} <= set(get_topic("N02")["fields"])
 
 

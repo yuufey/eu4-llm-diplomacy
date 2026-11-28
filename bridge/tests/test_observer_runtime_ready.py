@@ -16,7 +16,7 @@ class FakeSession:
     def __init__(self, root: Path, *, final_status: str = "ready"):
         self.directory = root
         self.session_id = "runtime-ready-session"
-        self.record = {"pid": 463486}
+        self.record = {"pid": 463486, "preflight_player_tag": "POR"}
         self.game_exe = root / "eu4.exe"
         self.final_status = final_status
         self.health_calls = 0
@@ -83,6 +83,21 @@ class ObserverRuntimeReadyTests(unittest.TestCase):
             self.assertEqual(session.initial_health, result)
             self.assertEqual("unready", result["status"])
             self.assertEqual(1, session.health_calls)
+
+    def test_matching_heartbeat_requires_recorded_player_and_accepts_other_seats(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            events = (heartbeat("runtime-ready-session", frames=i, player="SWE") for i in (2, 3))
+            (root / "control-probe.jsonl").write_text(
+                "\n".join(json.dumps(event) for event in events) + "\n", encoding="utf-8")
+            session = FakeSession(root)
+            session.record.pop("preflight_player_tag")
+            self.assertEqual("unready", wait_runtime_ready(session, timeout=0.05)["status"])
+            self.assertEqual(1, session.health_calls)
+            session.record["verified_loaded_player_tag"] = "SWE"
+            session.health_calls = 0
+            self.assertEqual("ready", wait_runtime_ready(session, timeout=0.05)["status"])
+            self.assertEqual(2, session.health_calls)
 
     def test_date_change_needs_two_new_heartbeats(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:

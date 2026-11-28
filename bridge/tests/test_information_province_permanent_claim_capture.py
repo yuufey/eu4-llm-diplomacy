@@ -29,12 +29,19 @@ def test_bad_private_members_are_not_promoted(tags):
 
 
 @pytest.mark.parametrize('phase',['pass1','pass2'])
-@pytest.mark.parametrize('failed_gate',['role','discovery','admission'])
+@pytest.mark.parametrize('failed_gate',['discovery','admission'])
 def test_both_passes_need_their_own_positive_gate(phase,failed_gate):
     value=packet(['BUR'])
     target=value['capture']['observation']['backend']['targets'][0]
-    if failed_gate=='role':target['admission_by_pass'][phase]['observer_nonplayer_role']['verified']=False
-    elif failed_gate=='discovery':target['discovery_by_pass'][phase]['value']=False
+    if failed_gate=='discovery':target['discovery_by_pass'][phase]['value']=False
     else:target['admission_by_pass'][phase]['admitted']=False
     with pytest.raises(ValueError,match='PUBLICATION_GATE'):
         capture.project_fields(value)
+
+@pytest.mark.parametrize('phase',['pass1','pass2'])
+def test_human_observer_does_not_refuse_admitted_permanent_claims(phase):
+    value=packet(['BUR'])
+    role=value['capture']['observation']['backend']['targets'][0]['admission_by_pass'][phase]['observer_nonplayer_role']
+    role['verified']=False
+    assert capture.project_fields(value)['permanent_claims']['value']==['BUR']
+    assert role['verified'] is False

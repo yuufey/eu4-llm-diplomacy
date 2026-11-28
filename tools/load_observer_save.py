@@ -19,7 +19,7 @@ from bridge.diplomacy import ObserverSession
 from bridge.diplomacy_session import file_hash
 from bridge.information.truce_date_math import MONTH_DAYS, decode_date
 from tools.save_observer_experiment import _inspect_save, _probe_control_state
-from tools.start_diplomacy_observer import bounded_wait_ready, load_warning_save_name
+from tools.start_diplomacy_observer import MAX_WAIT_READY, bounded_wait_ready, load_warning_save_name
 from work.local_config import game_exe, user_data
 from work.observer_runtime_ready import wait_runtime_ready
 
@@ -106,7 +106,7 @@ def _verify_loaded(installation: Path, pid: int, meta: dict,
             "load_warning": load_warning}
 
 
-def load_save(save: Path, manifest: Path, *, wait_ready: int = 180,
+def load_save(save: Path, manifest: Path, *, wait_ready: int = MAX_WAIT_READY,
               replace_running: bool = False) -> dict:
     save = save.resolve(strict=True)
     manifest = manifest.resolve(strict=True)
@@ -137,7 +137,8 @@ def load_save(save: Path, manifest: Path, *, wait_ready: int = 180,
         pid = int(match[1])
         subprocess.run([*python, str(ROOT / "tools/start_diplomacy_observer.py"),
                         "--pid", str(pid), "--manifest", str(work_dir / "build-manifest.json"),
-                        "--wait-ready", str(wait_ready), "--confirm-load-warning"],
+                        "--wait-ready", str(wait_ready), "--confirm-load-warning",
+                        "--load-warning-save-name", launch_save.name],
                        cwd=ROOT, env={**os.environ, "EU4_PYTHON": sys.executable},
                        check=True, timeout=wait_ready + 95)
         installation = work_dir / "installation.json"
@@ -161,7 +162,8 @@ def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--save", required=True, type=Path)
     parser.add_argument("--manifest", required=True, type=Path)
-    parser.add_argument("--wait-ready", type=bounded_wait_ready, default=180)
+    parser.add_argument("--wait-ready", type=bounded_wait_ready, default=MAX_WAIT_READY,
+                        help=f"seconds to wait after launch (default: {MAX_WAIT_READY})")
     parser.add_argument("--replace-running", action="store_true",
                         help="replace the running local EU4 test session")
     args = parser.parse_args()

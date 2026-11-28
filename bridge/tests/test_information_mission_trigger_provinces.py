@@ -408,9 +408,9 @@ def test_real_two_pass_reader_shares_common_inputs_but_keeps_province_values_fre
     assert counts["province_state.discovery.word_u32"] == 4
     assert counts[f"province_reference.id[{second_id}]"] == 2
 
-    # An outer snapshot must start new shared samples. A new player controller
-    # cannot inherit the preceding snapshot's non-player admission.
+    # A fresh snapshot reads the new controller state, but identity and
+    # province discovery remain the admission conditions.
     image.put_i32(fixture.CONTROLLERS + fixture.FRA_SLOT * 4, 1)
     fresh = adapter.make_province_reader()(image.read, base, fixture.PROVINCE_ID)
-    assert fresh["status"] == "unknown"
+    assert fresh["status"] == "known"
 

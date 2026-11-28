@@ -268,12 +268,12 @@ def _read_model_key(trace: _BudgetReader, model_pointer: int,
 
 
 def _name_status(trace: _BudgetReader, base: int, key: str,
-                 cache: dict[str, dict[str, Any]]) -> tuple[dict[str, Any], dict[str, Any]]:
+                 cache: dict[str, dict[str, Any]], observer: str) -> tuple[dict[str, Any], dict[str, Any]]:
     if key in cache:
         result = deepcopy(cache[key])
         return result["public"], {"cache_reused": True, "lookup": result["private"]}
     try:
-        found = _localization_name.read_cached_name(trace, base, key)
+        found = _localization_name.read_cached_name(trace, base, key, observer=observer)
     except Exception as exc:
         found = {"status": "unknown", "reason": "LOCALIZATION_LOOKUP_FAILED",
                  "raw_inputs": {"error_type": type(exc).__name__}}
@@ -298,7 +298,7 @@ def _name_status(trace: _BudgetReader, base: int, key: str,
 
 
 def read_models(reader: Any, base: int, target_binding: Any, *,
-                model_profile: Any) -> dict[str, dict[str, Any]]:
+                model_profile: Any, observer: str = "FRA") -> dict[str, dict[str, Any]]:
     """Read selected naval model keys and raw localized-name cache values.
 
     Shared target/profile/method/vtable failures withdraw all three components.
@@ -430,7 +430,7 @@ def read_models(reader: Any, base: int, target_binding: Any, *,
                 raise _LeafFailure("MODEL_VTABLE_MISMATCH")
             key, key_evidence = _read_model_key(trace, model_pointer, component)
             inputs["model_key"] = key_evidence
-            name, name_evidence = _name_status(trace, base, key, name_cache)
+            name, name_evidence = _name_status(trace, base, key, name_cache, observer)
             inputs["localization_cache"] = name_evidence
             inputs["reads"] = deepcopy(trace.reads[start:])
             inputs["budget"] = trace.summary()

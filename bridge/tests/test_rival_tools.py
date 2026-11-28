@@ -8,7 +8,7 @@ import time
 import unittest
 from unittest.mock import patch
 
-from bridge.diplomacy import DiplomacyTools, ObserverSession
+from bridge.tests.legacy_france_adapter import FixedFranceDiplomacyTools as DiplomacyTools, FixedFranceObserverSession as ObserverSession
 from bridge.diplomacy_journal import DurableJournal
 from work.run_rival_queries import _rival_query_shape
 
@@ -96,7 +96,7 @@ class RivalToolsTests(unittest.TestCase):
                 api.inspect_diplomatic_action(action_id, "FRA", "SAV",
                                               parameters={"foo": 1})
             with self.assertRaisesRegex(ValueError, "RIVAL_INITIATE_ONLY"):
-                api.inspect_diplomatic_action(action_id, "FRA", "SAV", "accept")
+                api._inspect_diplomatic_action(action_id, "FRA", "SAV", "accept")
 
     def test_rival_query_ack_is_exact_and_not_inferred(self):
         with tempfile.TemporaryDirectory() as temporary:

@@ -62,10 +62,6 @@ def _load_profile() -> dict[str, Any]:
 def _admission(read: Any, base: int, bindings: Mapping[str, Any],
                observer: str, target: str) -> dict[str, Any]:
     gate = _owner._bound_admission(read, base, bindings, observer, target)
-    role = gate.get("observer_nonplayer_role")
-    if not isinstance(role, Mapping) or role.get("verified") is not True:
-        gate.update(status="unknown", admitted=None,
-                    reason="OBSERVER_NONPLAYER_ROLE_UNVERIFIED")
     return gate
 
 

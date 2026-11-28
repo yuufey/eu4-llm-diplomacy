@@ -165,7 +165,7 @@ def test_projection_is_whitelist_only_and_preserves_ui_boundary():
         "schema": "information.empire_memory.v1",
         "status": "known",
         "observer": "FRA",
-        "observer_nonplayer": {"tag": "FRA", "verified": True},
+        "observer_binding": {"tag": "FRA", "verified": True},
         "physical_client": {"tag": "POR", "fullref_raw_hex": _raw_ref(2, "POR")},
         "emperor": {"tag": "HAB", "fullref_raw_hex": _raw_ref(3, "HAB"), "country_pointer": "private"},
         "electors": [
@@ -192,12 +192,15 @@ def test_projection_is_whitelist_only_and_preserves_ui_boundary():
     assert "publication_admitted" not in repr(projected)
     text = repr(projected)
     assert "country_pointer" not in text and "fullref" not in text and "sensitive" not in text
+    state['physical_client'] = {'tag': 'FRA', 'fullref_raw_hex': _raw_ref(1, 'FRA')}
+    inner['observation']['passes'] = [deepcopy(state), deepcopy(state)]
+    assert capture.project_fields(_outer(inner))['emperor']['value'] == 'HAB'
 
 
 def test_projection_rejects_unstable_or_unbound_role():
     inner = _inner_report([])
     one = {"status": "known", "observer": "FRA",
-           "observer_nonplayer": {"verified": True},
+           "observer_binding": {"verified": True},
            "physical_client": {"tag": "POR", "fullref_raw_hex": _raw_ref(2, "POR")},
            "emperor": {"tag": "HAB"}, "electors": []}
     two = deepcopy(one)
@@ -210,7 +213,7 @@ def test_projection_rejects_unstable_or_unbound_role():
         capture.project_fields(_outer(inner))
 
     one = deepcopy(one)
-    one["observer_nonplayer"]["verified"] = False
+    one["observer_binding"]["verified"] = False
     two = deepcopy(one)
     inner["observation"] = {"status": "observed", "stable": True,
                             "visibility_evaluated": False,

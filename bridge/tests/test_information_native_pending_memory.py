@@ -6,6 +6,7 @@ import struct
 
 import pytest
 
+from bridge.information import native_pending_memory as native
 from bridge.information.native_pending_memory import (
     load_contract,
     read_queue,
@@ -25,6 +26,31 @@ _PRIVATE_KEYS = {
     "node", "clone", "vtable", "token", "native_proposal_id",
     "response_authority", "response_authorized",
 }
+
+
+def test_snapshot_reads_player_controlled_observer_queue(monkeypatch):
+    game, country, table = 0x200000, 0x300000, 0x400000
+    layout = {'game_global_rva': 0x100, 'game_date_offset': 0x10, 'country_fullref_offset': 0x20}
+    memory_bytes = {
+        (_MODULE_BASE + 0x100, 8): game.to_bytes(8, 'little'),
+        (game + 0x10, 4): (56553384).to_bytes(4, 'little', signed=True),
+        (game + 0x1e60, 8): _TUR.to_bytes(8, 'little'),
+        (table + 5 * 8, 8): country.to_bytes(8, 'little'),
+        (country + 0x20, 8): _TUR.to_bytes(8, 'little'),
+    }
+    monkeypatch.setattr(native.memory, '_profile_layout', lambda _: layout)
+    monkeypatch.setattr(native.memory, '_reader_read',
+                        lambda _reader, address, size, *_args: memory_bytes[(address, size)])
+    monkeypatch.setattr(native.memory, '_find_country', lambda *_args: (
+        country, {'country_handle': hex(_TUR), 'table_pointer': hex(table), 'country_count': 6}))
+    seen = {}
+    def read_queue(_read, pointer, recipient, _base, _session, resolver, _contract, **_options):
+        seen.update(pointer=pointer, recipient=recipient, tag=resolver(recipient))
+        return {'value': {'entries': []}}
+    monkeypatch.setattr(native, 'read_queue', read_queue)
+    result = native._snapshot(None, _MODULE_BASE, {}, {'code_guards': []}, _SESSION_ID, None, 'TUR')
+    assert seen == {'pointer': country, 'recipient': _TUR, 'tag': 'TUR'}
+    assert result['player_country'] == 'TUR'
 
 
 @pytest.fixture(scope="module")

@@ -9,8 +9,10 @@
 #include <memory>
 
 #include "information-mission-conditions.h"
+#include "information-mission-province-conditions.h"
 
 namespace mc = information::mission_conditions;
+namespace pc = information::mission_province_condition;
 
 namespace {
 
@@ -408,6 +410,35 @@ void test_invalid_and_capacity() {
     std::printf("BASELINES_BYTES=%zu (heap allocated)\n", sizeof(mc::Baselines));
 }
 
+#ifdef BRIDGE_NATIVE_COUNTRY_CONTROL
+void test_scoped_province_baselines() {
+    auto store = std::make_unique<pc::Baselines>();
+    pc::Value first{};
+    first.binding.country = UINT64_C(0x0100004200455753); // SWE, slot 66
+    first.binding.province = 10;
+    first.binding.root_index = 1;
+    first.binding.child_index = 0;
+    first.binding.child_count = 1;
+    first.mission = make_name("mission_swe");
+    first.date = 100;
+    first.returned = 1;
+    pc::Change change{};
+    check(store->observe(first, change) == pc::Result::baseline,
+          "province_baseline_accepts_configured_non_fra_country");
+    pc::Value second = first;
+    second.date++;
+    second.returned = 0;
+    check(store->observe(second, change) == pc::Result::changed
+          && change.before.binding.country == first.binding.country
+          && change.after.binding.country == first.binding.country,
+          "province_change_preserves_country_reference");
+    pc::Value invalid = first;
+    invalid.binding.country = 0;
+    check(store->observe(invalid, change) == pc::Result::invalid,
+          "province_baseline_rejects_missing_country");
+}
+#endif
+
 } // namespace
 
 int main() {
@@ -417,6 +448,9 @@ int main() {
     test_evaluation_capture();
     test_baselines();
     test_invalid_and_capacity();
+#ifdef BRIDGE_NATIVE_COUNTRY_CONTROL
+    test_scoped_province_baselines();
+#endif
     std::printf("CHECKS=%u FAILURES=%u\n", g_checks, g_failures);
     return g_failures == 0 ? 0 : 1;
 }

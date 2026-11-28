@@ -1,4 +1,5 @@
 import json
+from pathlib import Path
 from types import SimpleNamespace
 
 import pytest
@@ -60,3 +61,32 @@ def test_read_save_preserves_the_physical_player(tmp_path, player, date):
 
     assert metadata["player"] == player
     assert numeric_date == tuple(map(int, date.split(".")))
+
+
+def test_save_loader_gives_slow_startup_time_and_binds_the_confirmation_shortcut(tmp_path, monkeypatch):
+    saves = tmp_path / "save games"
+    saves.mkdir()
+    save = saves / "观察者测试.eu4"
+    save.write_bytes(b"save contents")
+    manifest = tmp_path / "candidate" / "build-manifest.json"
+    manifest.parent.mkdir()
+    manifest.write_text("{}", encoding="utf-8")
+    monkeypatch.setattr(subject, "_read_save", lambda _: ({"player": "POR"}, (1445, 2, 5)))
+    monkeypatch.setattr(subject, "user_data", lambda: tmp_path)
+    monkeypatch.setattr(subject.shutil, "which", lambda _: "pwsh")
+    monkeypatch.setattr(subject, "_verify_loaded", lambda *args: {"paused": True})
+    staged_names = []
+
+    def run(command, **kwargs):
+        if "-SaveName" in command:
+            staged_names.append(command[command.index("-SaveName") + 1])
+            assert (saves / staged_names[-1]).read_bytes() == save.read_bytes()
+            return SimpleNamespace(stdout=b"Game restarted; new PID: 123")
+        if any(Path(arg).name == "start_diplomacy_observer.py" for arg in command):
+            assert command[command.index("--wait-ready") + 1] == "300"
+            assert command[command.index("--load-warning-save-name") + 1] == staged_names[-1]
+            assert "--confirm-load-warning" in command
+
+    monkeypatch.setattr(subject.subprocess, "run", run)
+    assert subject.load_save(save, manifest)["pid"] == 123
+    assert len(staged_names) == 1 and not (saves / staged_names[0]).exists()

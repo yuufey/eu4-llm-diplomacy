@@ -106,8 +106,6 @@ def _shared_snapshot(limiter, base, province_id, anchor, countries):
     observer_binding, observer_gate = _admission_for(
         limiter, base, scan, observer, label="province_trade_value.observer")
     _country._require(_country._allowed(observer_gate), "OBSERVER_ADMISSION_CHANGED")
-    _country._require(observer_gate.get("observer_nonplayer_role", {}).get("verified") is True,
-                      "OBSERVER_ROLE_NOT_VERIFIED")
     _country._require(_shared._same_raw(observer_gate, anchor.get("admission"))
                       and _shared._same_raw(observer_gate, parent_gates.get("observer")),
                       "OBSERVER_ADMISSION_CHANGED")

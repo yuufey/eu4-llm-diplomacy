@@ -80,6 +80,17 @@ PAGE_SIZE = 64
 MAX_PAYLOAD = MAX_WIRE_BYTES
 MAX_HISTORY_PAGE = 256
 _HISTORY_FIELDS = {"H01": "battle_sequence", "W03": "battle_losses"}
+_B01_DISCOVERY_GUIDANCE = {
+    "requires": "parameters.event_id",
+    "single_record": True,
+    "message": "B01 按 event_id 读取单场战斗。先从 H01.battle_sequence 或 W03.battle_losses 的 event_refs 取得 event_id。",
+    "discovery_queries": [
+        {"topic": "H01", "field": "battle_sequence",
+         "purpose": "按观察国或会话发现已保留的战斗 event_id"},
+        {"topic": "W03", "field": "battle_losses",
+         "purpose": "按战争分页发现已保留的战斗 event_id"},
+    ],
+}
 _HISTORY_PAGE_GAPS = [
     "ONLY_DIRECT_PARTICIPATION_SUPPORTED",
     "WAR_AND_BATTLE_IDENTITIES_UNRESOLVED",
@@ -257,6 +268,12 @@ class BattleObservationAdapter:
                 "coverage": "partial", "source": "IBOW.v2/v3/v4/v5/v6/v7/v8/v9/v10/v11",
                 "description": "观察国直接参战的已采集记录；完整战报仍有缺口",
             } for field in implemented}
+            if topic_id == "B01":
+                topic["query_guidance"] = deepcopy(_B01_DISCOVERY_GUIDANCE)
+                topic["fields"]["event_id"].update(
+                    selection="one_captured_battle_record",
+                    discovery_topics=["H01.battle_sequence", "W03.battle_losses"],
+                )
             if topic_id == "B01":
                 topic["fields"]["sides"].update(
                     battle_role_basis="fixed1374_combat_save_keys",
@@ -936,8 +953,11 @@ class BattleObservationAdapter:
                         event = None
         reason = "BATTLE_EVENT_ID_REQUIRED" if requested is None else "BATTLE_RECORD_NOT_AVAILABLE_IN_OBSERVER_SCOPE"
         values = event["payload"]["battle_fields"] if event else {}
+        unavailable = {"status": "unavailable", "reason": reason}
+        if requested is None:
+            unavailable["guidance"] = deepcopy(_B01_DISCOVERY_GUIDANCE)
         return {"query": query, "fields": {field: deepcopy(values[field]) if field in values else
-                {"status": "unavailable", "reason": reason} for field in query["fields"]},
+                deepcopy(unavailable) for field in query["fields"]},
                 "objects": [deepcopy(query["object"])], "complete": False,
                 "source": deepcopy(event["source"]) if event else {"name": "IBOW.battle_stream", "complete": False}}
 

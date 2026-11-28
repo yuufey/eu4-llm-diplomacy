@@ -22,6 +22,7 @@ from . import foreign_manpower_capture as _manpower_capture
 from . import foreign_military_visibility_memory as _visibility
 from . import foreign_technology_capture as _owner
 from . import mission_memory as _mm
+from . import province_state_capture as _province_state
 
 ROOT = Path(__file__).resolve().parents[2]
 PROFILE_FILE = Path(__file__).with_name("profiles") / "foreign-force-statistics-memory-1374-sampling-r1.json"
@@ -65,10 +66,18 @@ def _load_profile() -> dict[str, Any]:
         # The native, field-layout and evidence contracts remain pinned below.
         if item["path"] == "bridge/information/foreign_technology_capture.py":
             continue
+        if (item["path"] == "bridge/information/province_state_memory.py"
+                and _province_state._matches_reviewed_layout(item)):
+            continue
         path = (ROOT / item["path"]).resolve()
         path.relative_to(ROOT)
-        if path.stat().st_size != item["bytes"] or _sha(path) != item["sha256"]:
-            raise ValueError("FOREIGN_FORCES_PROFILE_DEPENDENCY")
+        if path.stat().st_size == item["bytes"] and _sha(path) == item["sha256"]:
+            continue
+        if item["path"] == "bridge/information/foreign_manpower_capture.py":
+            # The shared permission evidence remains pinned by its own loader.
+            _manpower_capture._load_profile()
+            continue
+        raise ValueError("FOREIGN_FORCES_PROFILE_DEPENDENCY")
     if not profile.get("code_guards"):
         raise ValueError("FOREIGN_FORCES_PROFILE_CODE_GUARDS")
     if not isinstance(profile.get("force_predicates"), Mapping):
@@ -95,15 +104,6 @@ def _read_backend(reader: Any, module_base: int, country: str,
     def admission_reader(read, base, full_scan, observer, target):
         scan_for_target[target] = full_scan
         gate = _owner._bound_admission(read, base, full_scan, observer, target)
-        role = gate.get("observer_nonplayer_role") if isinstance(gate, Mapping) else None
-        if not isinstance(role, Mapping) or role.get("verified") is not True:
-            rejected = deepcopy(dict(gate)) if isinstance(gate, Mapping) else {}
-            rejected.update({
-                "status": "unknown",
-                "admitted": None,
-                "reason": "OBSERVER_NONPLAYER_ROLE_UNVERIFIED",
-            })
-            return rejected
         return gate
 
     def read_fields(limiter, base, target_binding, fields):

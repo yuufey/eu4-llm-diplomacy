@@ -82,7 +82,7 @@ def test_native_inventory_retains_journal_and_sanitizes_private_proof(setup):
 
 
 @pytest.mark.parametrize('damage', [
-    'session', 'date', 'player', 'write', 'close', 'private_value', 'exception',
+    'session', 'date', 'invalid_player', 'write', 'close', 'private_value', 'exception',
 ])
 def test_bad_native_report_preserves_valid_journal(setup, damage):
     source, base, _state, journal = setup
@@ -92,8 +92,8 @@ def test_bad_native_report_preserves_valid_journal(setup, damage):
         report['identity']['installation_session_id'] = 'other-session'
     elif damage == 'date':
         report['game_date'] += 24
-    elif damage == 'player':
-        report['player_country'] = 'FRA'
+    elif damage == 'invalid_player':
+        report['player_country'] = 'not-a-country'
     elif damage == 'write':
         report['target_memory_written'] = True
     elif damage == 'close':
@@ -114,6 +114,15 @@ def test_bad_native_report_preserves_valid_journal(setup, damage):
     assert field['value']['native_inbound_pending']['status'] == 'unknown'
     assert source.change_comparison(_query(), result, base.context()) is None
     assert 'private-' not in json.dumps(result)
+
+
+def test_player_controlled_observer_may_read_own_pending_queue(setup):
+    source, base, _state, _journal = setup
+    report = capture_report(base.context())
+    report['player_country'] = report['country']
+    source.pending_capture = lambda *_args: report
+    result = source.read(_query(), base.context())
+    assert result['fields']['pending_matters']['value']['native_inbound_pending']['status'] == 'known'
 
 
 @pytest.mark.parametrize('mode', ['unready', 'invalid_observer', 'disabled'])

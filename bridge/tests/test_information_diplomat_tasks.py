@@ -7,7 +7,7 @@ from pathlib import Path
 
 import pytest
 
-from bridge.diplomacy import DiplomacyTools
+from bridge.tests.legacy_france_adapter import FixedFranceDiplomacyTools as DiplomacyTools
 from bridge.diplomacy_journal import DurableJournal
 from bridge.information import InformationService
 from bridge.information import diplomat_tasks_memory

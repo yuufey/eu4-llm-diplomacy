@@ -3,7 +3,7 @@ from pathlib import Path
 import tempfile
 import unittest
 
-from bridge.diplomacy import DiplomacyTools, ObserverSession
+from bridge.tests.legacy_france_adapter import FixedFranceDiplomacyTools as DiplomacyTools, FixedFranceObserverSession as ObserverSession
 from bridge.diplomacy_journal import DurableJournal
 from bridge.gift_influence import (
     GIFT_ACTION_ID, INFLUENCE_ACTION_ID, GIFT_QUERY_CAPABILITY,
@@ -190,8 +190,8 @@ class GiftInfluenceTests(unittest.TestCase):
             tools.inspect_diplomatic_action(INFLUENCE_ACTION_ID, "FRA", "PAP",
                                             parameters={"months": 60})
         with self.assertRaisesRegex(ValueError, "GIFT_INITIATE_ONLY"):
-            tools.inspect_diplomatic_action(GIFT_ACTION_ID, "FRA", "PAP", "accept",
-                                            parameters={"ducats": 25})
+            tools._inspect_diplomatic_action(GIFT_ACTION_ID, "FRA", "PAP", "accept",
+                                             parameters={"ducats": 25})
 
     def test_native_query_preserves_native_amount_and_influence_cost(self):
         session = GiftInfluenceQuerySession()

@@ -13,6 +13,16 @@ constexpr uintptr_t kHeldMethodRva = 0xbe9300;
 constexpr uintptr_t kAreaChildReturnRva = 0xc1bf0e;
 constexpr unsigned kMaxBaselines = 16384;
 
+inline bool supported_country(uint64_t country) noexcept {
+#ifdef BRIDGE_NATIVE_COUNTRY_CONTROL
+    // The enclosing task was admitted by the configured observer and its
+    // canonical country reference was checked before this code is reached.
+    return country != 0;
+#else
+    return (country & 0xffffffu) == 0x415246u;
+#endif
+}
+
 struct Binding final {
     uintptr_t group = 0, slots = 0, child = 0, context = 0, root_context = 0;
     unsigned root_index = 0, child_index = 0, child_count = 0, province = 0;
@@ -30,7 +40,7 @@ inline bool same(const Binding& left, const Binding& right) noexcept {
 template <typename Reader>
 root::CaptureResult bind(Reader& reader, uintptr_t base, const root::Evaluation& task,
                          uintptr_t child, uintptr_t context, uintptr_t caller, Binding& output) noexcept {
-    if (caller != base+kAreaChildReturnRva || !task.valid || (task.country&0xffffffu) != 0x415246u
+    if (caller != base+kAreaChildReturnRva || !task.valid || !supported_country(task.country)
         || task.root.count > root::kMaxConditions) return root::CaptureResult::ignored;
     Binding binding{};
     unsigned matches = 0;
@@ -139,7 +149,7 @@ struct Baselines final {
     Result observe(const Value& value, Change& change) noexcept {
         change = {};
         if (!names::valid(value.mission) || value.date <= 0 || !value.binding.province
-            || (value.binding.country&0xffffffu) != 0x415246u
+            || !supported_country(value.binding.country)
             || value.binding.root_index >= root::kMaxConditions
             || !value.binding.child_count || value.binding.child_count > root::kMaxConditions
             || value.binding.child_index >= value.binding.child_count) return Result::invalid;

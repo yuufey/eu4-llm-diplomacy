@@ -249,19 +249,30 @@ def test_invalid_or_aliased_discovery_pointer_never_projects_fields(bitset: int,
     assert not any(label.startswith("province_state.G02_") for _, _, label in image.reads)
 
 
-@pytest.mark.parametrize("role_verified,admitted,reason", [
-    (False, True, "OBSERVER_ROLE_NOT_VERIFIED"),
-    (True, False, "PROVINCE_SELF_ADMISSION_NOT_ESTABLISHED"),
-])
-def test_role_or_self_admission_failure_short_circuits_private_fields(
-        role_verified: bool, admitted: bool, reason: str):
-    image = make_image(role_verified=role_verified, admitted=admitted)
+def test_self_admission_failure_short_circuits_private_fields():
+    image = make_image(admitted=False)
     result = memory.read_two_pass(image, BASES[0], PROVINCE_ID)
     assert result["status"] == "observed"
-    assert result["targets"][0]["discovery_by_pass"]["pass1"]["reason"] == reason
+    assert result["targets"][0]["discovery_by_pass"]["pass1"]["reason"] == "PROVINCE_SELF_ADMISSION_NOT_ESTABLISHED"
     assert _field(result, "G02.owner")["status"] == "unknown"
     assert _field(result, "G02.controller")["status"] == "unknown"
     assert not any(label.startswith("province_state.G02_") for _, _, label in image.reads)
+
+
+def test_observer_role_is_not_used_as_admission():
+    image = make_image(role_verified=False)
+    result = memory.read_two_pass(image, BASES[0], PROVINCE_ID)
+    assert _field(result, "G02.owner")["status"] == "known"
+    assert result["targets"][0]["admission_by_pass"]["pass1"]["observer_nonplayer_role"]["verified"] is False
+
+
+def test_unbound_positive_gate_cannot_forge_observer_evidence(monkeypatch):
+    image = make_image()
+    monkeypatch.setattr(memory._owner, '_bound_admission',
+                        lambda *_args: {'status': 'known', 'admitted': True})
+    result = memory.read_two_pass(image, BASES[0], PROVINCE_ID)
+    assert _field(result, 'G02.owner')['status'] == 'unknown'
+    assert not any(label.startswith('province_state.G02_') for _, _, label in image.reads)
 
 
 @pytest.mark.parametrize("bad_ref,reason", [

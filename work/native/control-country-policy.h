@@ -232,8 +232,6 @@ struct PolicyState {
     CountrySet countries{};
     std::uint64_t revision=0;
 
-    PolicyState() noexcept { countries.add("FRA"); }
-
     ApplyError apply(const Request& request,const char* expected_session) noexcept {
         if (!expected_session || std::strcmp(request.session_id,expected_session)!=0)
             return ApplyError::invalid_session;

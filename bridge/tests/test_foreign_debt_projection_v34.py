@@ -6,7 +6,9 @@ import struct
 
 from bridge.information import foreign_economy as source_module
 from bridge.information import foreign_economy_projection_v7 as economy_projection
+from bridge.information import foreign_debt_disclosure as disclosure
 from bridge.information import target_debt_principal_memory_v34 as principal_adapter
+from bridge.tests import test_foreign_debt_disclosure as disclosure_fixture
 from bridge.tests import test_foreign_debt_projection as v2_projection_fixture
 from bridge.tests import test_information_foreign_economy as country_view_fixture
 from bridge.tests import test_target_debt_principal_memory_v34 as v34_memory_fixture
@@ -18,8 +20,9 @@ NODE = 0x51000000
 RECORD = 0x51001000
 
 
-def _v34_item() -> dict:
-    image, observer, target = v34_memory_fixture._environment()
+def _v34_item(*, observer_tag='FRA', observer_controller=0) -> dict:
+    image, observer, target = v34_memory_fixture._environment(
+        observer_tag=observer_tag, observer_controller=observer_controller)
     target_pointer = int(target["country_pointer"], 0)
     observer_ref = int(observer["fullref"], 0)
     target_ref = int(target["fullref"], 0)
@@ -64,6 +67,25 @@ def _country_view_evidence() -> dict:
 
 def _disclosure_scope() -> dict:
     return v2_projection_fixture._scope_record(target=TARGET)
+
+
+def test_non_fra_player_observer_requires_matching_real_scope_and_principal():
+    item = _v34_item(observer_tag='POR', observer_controller=1)
+    inspection = disclosure_fixture.inspection_shape(recipient=TARGET)
+    inspection['actor'] = 'POR'
+    _session, tools, source = disclosure_fixture.make_source(
+        controlled_countries=['POR'], response=inspection)
+    scope = disclosure.read_scope(source, disclosure_fixture.valid_context() | {'observer': 'POR'}, TARGET)
+    assert disclosure.validate_scope(scope) and scope['admitted'] is True
+    assert tools.calls == [('trade_favors_for_gold', 'POR', TARGET, 'initiate', {})]
+    field = economy_projection.project(item, TARGET, ['debt'], debt_scope=scope, observer='POR')['debt']
+    assert field['value']['total_debt']['status'] == 'known'
+    assert field['value']['total_debt']['raw'] == PRINCIPAL * 1000
+
+    wrong_scope = economy_projection.project(
+        item, TARGET, ['debt'], debt_scope=_disclosure_scope(), observer='POR')['debt']
+    assert wrong_scope['status'] == 'unknown' and 'value' not in wrong_scope
+    assert wrong_scope['reason'] == 'DEBT_DISCLOSURE_SCOPE_BINDING_OR_DATE_MISMATCH'
 
 
 def test_real_v34_private_permission_and_leaf_reach_v7_public_f03_total():

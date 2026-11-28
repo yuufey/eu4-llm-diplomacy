@@ -59,7 +59,7 @@ class LogSession(ObserverSession):
     observer = "FRA"
 
     def __init__(self, installation, game_exe, *, observer="FRA"):
-        super().__init__(installation, game_exe)
+        super().__init__(installation, game_exe, controlled_country=observer)
         self.observer = observer
         self.game_date = COLLECTED_DATE
 

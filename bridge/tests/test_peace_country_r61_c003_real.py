@@ -5,7 +5,7 @@ import json
 from pathlib import Path
 import unittest
 
-from bridge.diplomacy import DiplomacyTools, ObserverSession
+from bridge.tests.legacy_france_adapter import FixedFranceDiplomacyTools as DiplomacyTools, FixedFranceObserverSession as ObserverSession
 from bridge.native_text import EU4_ESCAPE_CODEC
 from bridge.tests.test_peace_country_r61_real import (
     PeaceCountryR61RealTests,

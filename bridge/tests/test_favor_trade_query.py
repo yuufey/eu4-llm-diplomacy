@@ -1,6 +1,6 @@
 import unittest
 
-from bridge.diplomacy import DiplomacyTools
+from bridge.tests.legacy_france_adapter import FixedFranceDiplomacyTools as DiplomacyTools
 from bridge.favor_trade import validate_query, project_query
 
 

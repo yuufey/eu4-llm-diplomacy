@@ -81,11 +81,10 @@ def _report(target=None):
     }
 
 
-def test_projector_requires_positive_self_admission_and_nonplayer_role_each_pass():
+def test_projector_requires_positive_self_admission_and_discovery_each_pass():
     for phase in ("pass1", "pass2"):
         cases = (
             ("admission", lambda row: row["admission_by_pass"][phase].update(admitted=False)),
-            ("role", lambda row: row["admission_by_pass"][phase]["observer_nonplayer_role"].update(verified=False)),
             ("discovery", lambda row: row["discovery_by_pass"][phase].update(value=False)),
         )
         for _, mutate in cases:
@@ -100,7 +99,7 @@ def test_projector_requires_positive_self_admission_and_nonplayer_role_each_pass
 
 def test_projector_rejects_nonpositive_or_missing_gate_evidence():
     target = _target()
-    del target["admission_by_pass"]["pass2"]["observer_nonplayer_role"]
+    del target["admission_by_pass"]["pass2"]["admitted"]
     projected = capture.project_fields(_report(target))
     assert all(projected[name.removeprefix("T03.")]["status"] == "unknown"
                for name in capture.FIELDS[:-1])
@@ -108,6 +107,16 @@ def test_projector_rejects_nonpositive_or_missing_gate_evidence():
     malformed = _report()
     malformed["capture"]["observation"]["backend"]["consistency"]["status"] = "unstable"
     assert all(field["status"] == "unknown" for field in capture.project_fields(malformed).values())
+
+
+def test_projector_accepts_human_role_without_changing_role_evidence():
+    target = _target()
+    for gate in target["admission_by_pass"].values():
+        gate["observer_nonplayer_role"]["verified"] = False
+    projected = capture.project_fields(_report(target))
+    assert projected["local_value"]["status"] == "known"
+    assert all(not gate["observer_nonplayer_role"]["verified"]
+               for gate in target["admission_by_pass"].values())
 
 
 def test_field_projection_is_independently_gated_by_two_pass_stability():

@@ -77,7 +77,7 @@ def _one_pass(reader, base, number, *, existence_reader=None, observer=OBSERVER)
         'bindings': {'observer': binding, 'physical_client': physical}, 'admission': gate,
         'context': {'before': context, 'after': None}, 'header': None, 'candidates': []}
     if (binding is None or physical is None or gate.get('status') != 'known'
-            or gate.get('admitted') is not True or role.get('verified') is not True
+            or gate.get('admitted') is not True
             or role.get('observer') != observer or type(role.get('slot')) is not int
             or role['slot'] != binding.get('slot')):
         result['reason'] = ('FRA_SELF_ADMISSION_OR_ROLE_NOT_VERIFIED' if observer == OBSERVER

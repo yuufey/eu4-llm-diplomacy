@@ -5,7 +5,7 @@ from pathlib import Path
 import tempfile
 import unittest
 
-from bridge.diplomacy import DiplomacyTools, ObserverSession
+from bridge.tests.legacy_france_adapter import FixedFranceDiplomacyTools as DiplomacyTools, FixedFranceObserverSession as ObserverSession
 from bridge.diplomacy_journal import DurableJournal
 
 
@@ -171,6 +171,9 @@ class SavedPendingDiscoveryTests(unittest.TestCase):
 
     def test_restored_proof_is_strict_about_identity_and_queue_state(self):
         base = self._event("offer_alliance", "alliance", 300)
+        missing_country = {**base, "recipient": None, "decision_country": None}
+        self.assertFalse(ObserverSession._valid_native_inbound_pending_restored_event(
+            missing_country, SESSION_ID, controlled_country=None))
         invalid = [
             {"pending_source": None},
             {"source_verified": False},

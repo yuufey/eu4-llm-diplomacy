@@ -1,4 +1,4 @@
-"""Observer-only game clock control through a fixed native request."""
+"""Game clock control through a session-bound native request."""
 from __future__ import annotations
 
 import json
@@ -16,7 +16,7 @@ REQUEST_NAME = "game-speed.req"
 RESULT_EVENT = "native_game_speed_result"
 TOOL_DEFINITION = {
     "name": TOOL_NAME,
-    "description": "控制观察者测试的游戏时间。0 暂停，1 至 5 恢复并设置对应速度。",
+    "description": "控制当前游戏时间。0 暂停，1 至 5 恢复并设置对应速度。",
     "inputSchema": {
         "type": "object",
         "properties": {"speed": {"type": "integer", "minimum": 0, "maximum": 5}},
@@ -36,15 +36,23 @@ _LOG_CHUNK_BYTES = 65536
 
 
 def bind_game_time_control(session):
-    """Grant the tool only for an explicitly selected observer installation."""
+    """Bind an explicitly enabled clock to a verified installation and seat."""
     from work.observer_runtime_ready import expected_physical_player
 
-    if session is None or expected_physical_player(session.record) != "O00":
-        raise InformationError("permission_denied", "Clock control requires a verified O00 observer installation")
+    if session is None:
+        raise InformationError("permission_denied", "Clock control requires a verified installation")
+    player = expected_physical_player(session.record)
+    if player is None:
+        raise InformationError("source_unavailable", "The installation has no verified physical player")
     ack = session._installation_ack()
     if (ack is None or ack.get("native_game_speed_control") is not True
             or ack.get("native_game_speed_control_protocol") != PROTOCOL):
         raise InformationError("source_unavailable", "The observer DLL does not support clock control")
+    # Existing DLLs did not advertise a scope and only accept O00.  New builds
+    # advertise the wider range only after retaining native seat validation.
+    scope = ack.get("native_game_speed_player_scope")
+    if scope != "canonical_player" and not (scope is None and player == "O00"):
+        raise InformationError("source_unavailable", "The observer DLL does not support this player's clock")
     return GameTimeControl(session)
 
 
@@ -63,7 +71,7 @@ class GameTimeControl:
                 if not acquired:
                     raise InformationError("game_time_busy", "A clock request is already in progress")
                 if self.session.physical_player_health(allow_date_progress=True).get("status") != "ready":
-                    raise InformationError("source_unavailable", "The live O00 observer session is unready")
+                    raise InformationError("source_unavailable", "The live player session is unready")
                 offset = self.log.stat().st_size
                 revision = time.time_ns()
                 expires = (_FILETIME_EPOCH + revision // 100

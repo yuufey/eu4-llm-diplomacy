@@ -241,10 +241,6 @@ def _admission(read: Any, base: int, bindings: Mapping[str, Any],
         return {"status": "unknown", "admitted": None,
                 "reason": "TRUCE_DATE_ADMISSION_INVALID"}
     result = deepcopy(dict(gate))
-    role = result.get("observer_nonplayer_role")
-    if not isinstance(role, Mapping) or role.get("verified") is not True:
-        result.update(status="unknown", admitted=None,
-                      reason="OBSERVER_NONPLAYER_ROLE_UNVERIFIED")
     return result
 
 

@@ -51,9 +51,6 @@ def _load_profile():
 def _read_backend(reader, base, country):
     def admission(read, module, scan, observer, target):
         gate = _owner._bound_admission(read, module, scan, observer, target)
-        if not isinstance(gate, Mapping) or gate.get('observer_nonplayer_role', {}).get('verified') is not True:
-            gate = deepcopy(dict(gate)) if isinstance(gate, Mapping) else {}
-            gate.update(status='unknown', admitted=None, reason='OBSERVER_NONPLAYER_ROLE_UNVERIFIED')
         return gate
     return _backend.read_two_pass(reader, base, country, [country], FIELDS,
         read_fields=partial(_memory.read_fields, observer=country), admission_reader=admission)
@@ -84,8 +81,7 @@ def project_fields(report):
     item = _technology._backend_item(report, report['request']['observer'])
     for phase in ('pass1', 'pass2'):
         gate = item['admission_by_pass'][phase]
-        if (gate.get('status') != 'known' or gate.get('admitted') is not True
-                or gate.get('observer_nonplayer_role', {}).get('verified') is not True):
+        if gate.get('status') != 'known' or gate.get('admitted') is not True:
             raise ValueError('DIPLOMATIC_REPUTATION_PUBLICATION_GATE')
     field = item.get('fields', {}).get(_memory.FIELD)
     if (not isinstance(field, Mapping)

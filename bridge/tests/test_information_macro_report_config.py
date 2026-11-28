@@ -8,7 +8,7 @@ from tools.serve_information import _build_runtime, build_parser
 
 
 ROOT = Path(__file__).resolve().parents[2]
-CONFIG_PATH = ROOT / "docs" / "02-使用与接口" / "宏观战略报告配置.json"
+CONFIG_PATH = ROOT / "docs" / "信息导出" / "接口" / "宏观战略报告配置.json"
 
 
 def test_macro_report_public_create_query_and_reopen(tmp_path):

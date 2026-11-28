@@ -65,10 +65,8 @@ def _country_view(item: Mapping[str, Any]) -> dict[str, Any]:
     admitted=[]
     for name in ('pass1','pass2'):
         gate=passes.get(name)
-        role=gate.get('observer_nonplayer_role') if isinstance(gate,Mapping) else None
         if (not isinstance(gate,Mapping) or gate.get('status')!='known'
-                or type(gate.get('admitted')) is not bool
-                or not isinstance(role,Mapping) or role.get('verified') is not True):
+                or type(gate.get('admitted')) is not bool):
             return {'status':_UNKNOWN,'reason':'COUNTRY_VIEW_ADMISSION_UNKNOWN'}
         admitted.append(gate['admitted'])
     if admitted[0] is not admitted[1]:

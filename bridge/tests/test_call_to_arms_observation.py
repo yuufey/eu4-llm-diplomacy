@@ -51,7 +51,7 @@ def test_native_vector_limit_and_queue_overflow_are_preserved(native_fixture, mo
     calls = [event for event in events if event["event"] == "native_call_to_arms_observed"]
     assert len(calls) == expected
     assert sum(event.get("dropped", 0) for event in events) == lost
-    assert all(public_observation(event, event["session_id"]) is not None for event in calls)
+    assert all(public_observation(event, event["session_id"], controlled_country="FRA") is not None for event in calls)
     if mode == "full":
         assert calls[0]["specific_enemies_count"] == 128
         assert len(calls[0]["specific_enemies"]) == 128
@@ -59,6 +59,9 @@ def test_native_vector_limit_and_queue_overflow_are_preserved(native_fixture, mo
 
 class LogSession(ObserverSession):
     observer = "FRA"
+
+    def __init__(self, installation, game_exe, *, controlled_country="FRA"):
+        super().__init__(installation, game_exe, controlled_country=controlled_country)
 
     def health(self):
         return {"status": "ready", "date_raw": 56566584, "complete": True, "reasons": []}
@@ -94,7 +97,7 @@ def test_native_fixture_keeps_each_observation_and_reports_copy_gaps(native_even
 def test_recorded_call_without_specific_opponent_reaches_query_and_subscription(tmp_path):
     fixture = ROOT / 'bridge/tests/fixtures/information_call_to_arms_SAV_FRA_live_1374.json'
     event = json.loads(fixture.read_text(encoding='utf-8'))['event']
-    public = public_observation(event, event['session_id'])
+    public = public_observation(event, event['session_id'], controlled_country='FRA')
     assert public is not None
     assert public['parameters']['versus'] == {'status': 'known', 'value': None}
     session = make_session(tmp_path, [event], version=61)
@@ -151,12 +154,12 @@ def test_recorded_call_without_specific_opponent_reaches_query_and_subscription(
 ])
 def test_malformed_or_out_of_scope_observation_is_rejected(native_events, changes):
     event = dict(native_events[0], **changes)
-    assert public_observation(event, event["session_id"]) is None
+    assert public_observation(event, event["session_id"], controlled_country="FRA") is None
 
 
 def test_public_projection_preserves_inverse_flags_and_unknown_enum(native_events):
     event = native_events[0]
-    public = public_observation(event, event["session_id"])
+    public = public_observation(event, event["session_id"], controlled_country="FRA")
     params = public["parameters"]
     assert params["defensive_war_with"]["value"] is True
     assert params["replace"]["value"] is True
@@ -167,9 +170,21 @@ def test_public_projection_preserves_inverse_flags_and_unknown_enum(native_event
     assert public["identity_scope"] == "captured_observation"
     assert "native_token3c" not in json.dumps(public)
     unknown = public_observation(dict(event, versus_verified=False, specific_enemies_verified=False,
-                                      specific_enemies=[]), event["session_id"])
+                                      specific_enemies=[]), event["session_id"], controlled_country="FRA")
     assert unknown["parameters"]["versus"]["status"] == "unknown"
     assert unknown["parameters"]["specific_enemies"]["native_count"] == 1
+
+
+def test_call_to_arms_is_bound_to_configured_country(tmp_path, native_events):
+    event = dict(native_events[0], recipient="SWE")
+    assert public_observation(event, event["session_id"], controlled_country="FRA") is None
+    assert public_observation(event, event["session_id"], controlled_country=None) is None
+    accepted = public_observation(event, event["session_id"], controlled_country="SWE")
+    assert accepted["recipient"] == "SWE"
+    session = make_session(tmp_path, [event])
+    session.controlled_country = "SWE"
+    calls = session.read_native_inbound_offers()
+    assert len(calls) == 1 and calls[0]["recipient"] == "SWE"
 
 
 @pytest.mark.parametrize("options", [{"version": 40}, {"version": 41.0}, {"enabled": False}, {"top_level": False}])

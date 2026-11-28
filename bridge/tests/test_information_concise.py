@@ -34,6 +34,37 @@ def test_pending_matters_preserve_business_status_unknown_inventory_and_cursor(n
     assert result == before
 
 
+def test_concise_keeps_route_amounts_missing_reasons_and_both_loan_views():
+    game_date = 56868456
+    result = {"context": {"game_date": game_date - 25}, "items": [
+        {"topic": "T03", "fields": {"outgoing_value": {
+            "status": "known", "scale": 1000, "value": {"total_raw": 4409, "routes": [
+                {"node_id": "genua", "raw": 0}, {"node_id": "english_channel", "raw": 4409},
+            ]}}
+        }},
+        {"topic": "F02", "fields": {
+            "visible_army": {"status": "invisible", "reason": "NOT_DISCOVERED"},
+            "manpower": {"status": "unsupported", "reason": "NOT_IMPLEMENTED"},
+            "navy": {"status": "known", "value": []},
+        }},
+        {"topic": "N01", "fields": {
+            "loans": {"status": "known", "value": [{"due_raw": game_date}]},
+            "loan_summary": {"status": "known", "value": {"loan_count": 1, "total_principal": 100}},
+        }},
+    ]}
+
+    trade, forces, finance = present_concise(result)["items"]
+    assert trade["outgoing_value"] == {"total_ducats": 4.409, "routes": [
+        {"node_id": "genua", "ducats": 0.0}, {"node_id": "english_channel", "ducats": 4.409},
+    ]}
+    assert forces == {"visible_army": None, "manpower": None, "navy": [], "missing_fields": {
+        "visible_army": {"status": "invisible", "reason": "NOT_DISCOVERED"},
+        "manpower": {"status": "unsupported", "reason": "NOT_IMPLEMENTED"},
+    }}
+    assert finance["loans"] == [{"due_raw": game_date, "due_date": "1491.11.1", "days_until_due": 2}]
+    assert finance["loan_summary"] == {"count": 1, "principal": 100}
+
+
 def test_pending_matters_empty_last_page_has_no_next_cursor():
     result = {"items": [{"query": {"topic": "C03"}, "fields": {"pending_matters": _known({
         "journal_requests": [], "native_inbound_pending": _known({"entries": []}),
